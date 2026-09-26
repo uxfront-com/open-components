@@ -1,6 +1,10 @@
+<script setup lang="ts">
+useHead({
+  titleTemplate: (title) => (title ? `${title} - Open Components` : "Open Components"),
+});
+</script>
+
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
-  </div>
+  <NuxtRouteAnnouncer />
+  <NuxtPage />
 </template>
