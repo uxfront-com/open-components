@@ -1,5 +1,10 @@
 allowBuilds:
+  # Only an auto-installed peer of @nuxt/content: Docus reads content with the
+  # built-in node:sqlite, so the native binding is never built.
+  better-sqlite3: false
   esbuild: true
+  # Its postinstall only switches the build to Vue 2; the default build is Vue 3's.
+  vue-demi: false
 minimumReleaseAgeExclude:
-  - '@uxfront/layer-ui@0.1.1'
-  - '@uxfront/ui@0.2.0'
+  - '@uxfront/layer-ui@0.1.2'
+  - '@uxfront/ui@0.3.0'

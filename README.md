@@ -1,6 +1,6 @@
 # Open Components
 
-Static Nuxt site for https://opencomponents.dev, prerendered and deployed to Cloudflare Workers as static assets. It's part of the UXFront family, built on the same homepage kit as [uxfront.com](https://github.com/uxfront-com/uxfront/tree/main/apps/web).
+Static Nuxt site for https://opencomponents.dev: the homepage and the documentation at `/docs`, prerendered and deployed to Cloudflare Workers as static assets. It's part of the UXFront family, built on the same homepage kit as [uxfront.com](https://github.com/uxfront-com/uxfront/tree/main/apps/web), with the docs on [Docus](https://docus.dev).
 
 ## Commands
 
@@ -8,9 +8,11 @@ Static Nuxt site for https://opencomponents.dev, prerendered and deployed to Clo
 pnpm dev          # dev server on http://localhost:3000
 pnpm build        # nuxt generate → dist
 pnpm preview      # serve the generated site
-pnpm check-types  # type-check the .ts and .vue sources
+pnpm check-types  # type-check the .ts and .vue sources (see "The docs" for what it skips)
 pnpm lighthouse   # Lighthouse CI against dist, fails below 100 in any category (add new routes to `url` in `lighthouserc.json`)
 ```
+
+Building needs Node 22.13 or later: Nuxt Content reads the docs with the built-in `node:sqlite`. `better-sqlite3`, its fallback, is installed but never built (`allowBuilds` in `pnpm-workspace.yaml`).
 
 ## Deploying to Cloudflare
 
@@ -42,9 +44,26 @@ Every section but the finale shows the `plates` formation, Open Components' thre
 
 Motion follows `prefers-reduced-motion` and the Motion toggle in the HUD. Below 1100px wide, or on screens squarer than 5:4, the formations move to the top and the copy scrolls over them (`STACKED_QUERY` in `@uxfront/scene`).
 
+## The docs
+
+The documentation is built with [Docus](https://docus.dev), the second layer in `nuxt.config.ts`. Pages are markdown files in `content/docs/`, served under `/docs` (`content/docs/index.md` is `/docs` itself). Number files and folders to order them in the sidebar, as in `1.getting-started/2.installation.md`. From those files, Docus builds the sidebar, search, table of contents, a markdown copy of each page at `/raw/<path>.md`, `llms.txt`, `llms-full.txt`, `sitemap.xml` and each page's Open Graph image.
+
+How it shares the app with the homepage:
+
+- `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
+- Docus adds Tailwind CSS and Nuxt UI to the entry stylesheet. On the homepage, `@uxfront/layer-ui` loads that stylesheet after first paint, and the `.ux-site` styles take precedence over it. Keep `app/app.css`, which Docus imports into the same stylesheet, off `.ux-site` too.
+- `nuxt.config.ts` turns off Nuxt's prefetch hints. Otherwise every page, the homepage included, would prefetch the docs' lazy chunks, which delays the homepage's fonts and stylesheet, and with them its LCP.
+- `app/app.config.ts` sets the theme colors and the GitHub, "Edit this page" and "Report an issue" links. `app/app.css` darkens Nuxt UI's light-mode primary to pass WCAG AA contrast. Nuxt UI's callouts (`::tip`, `::note`, …) still draw their text in fixed shades that fail it in light mode, so avoid them until they're themed.
+- Docus reads the site URL from `NUXT_SITE_URL`, which `nuxt.config.ts` defaults to the production origin, and generates `robots.txt` (with `@nuxtjs/robots`). Don't add a `public/robots.txt`: the module renames it to `_robots.txt` and merges it in.
+- The site is static, so Docus's MCP server is off (`mcp.enabled` in `nuxt.config.ts`), and so is its AI assistant, which only starts with an `AI_GATEWAY_API_KEY`.
+- In content, link to the generated files (`/llms.txt`, `/raw/…`) with `{external}`, as `content/docs/index.md` does. Otherwise the router handles the click and shows the 404 page.
+
+Docus ships its sources uncompiled, and they don't type-check against this app's dependencies. `pnpm check-types` runs `vue-tsc` and fails on any error outside them.
+
 ## Keeping 100s as the site grows
 
 - The first paint depends on the prerendered HTML alone: the `@uxfront/ui` components inline every style they use, and `@uxfront/layer-ui` loads the web fonts, the entry stylesheet and the app bundle only after the browser reports the first contentful paint. Don't add render-blocking resources, and load heavy code with dynamic `import()` (the WebGL engine is only imported once the page is idle).
 - Images: use `@nuxt/image` (explicit width/height, AVIF/WebP, lazy loading below the fold).
 - Third-party scripts: avoid them, or load via `@nuxt/scripts` with `trigger: 'onNuxtReady'`.
 - Every page needs a title, a meta description, a canonical link and a single `<h1>` (see `app/pages/index.vue`).
+- `lighthouserc.json` covers the homepage. The docs pages are Docus's theme as it ships, which scores below 100 in performance and accessibility, so they're not in it yet. The Lighthouse CI server also doesn't resolve `/docs` to `docs.html` the way Cloudflare does: measure them on `npx wrangler dev` instead.

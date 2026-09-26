@@ -108,6 +108,9 @@ const ax = [
             <span><strong>UX</strong>Front</span>
           </a>
         </template>
+        <template #actions>
+          <NuxtLink :to="DOCS_URL">Documentation</NuxtLink>
+        </template>
       </UxHeader>
     </template>
 
