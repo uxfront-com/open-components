@@ -8,13 +8,14 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "check-types": "vue-tsc -b",
+    "check-types": "vue-tsc -b --pretty false 2>&1 | awk '/^[^ ]/ { own = !/^node_modules\\/(.*\\/)?docus\\// } own { print; failed = 1 } END { exit failed }'",
     "lighthouse": "pnpm dlx @lhci/cli autorun"
   },
   "dependencies": {
-    "@uxfront/layer-ui": "^0.1.1",
+    "@uxfront/layer-ui": "^0.1.2",
     "@uxfront/scene": "^0.1.0",
-    "@uxfront/ui": "^0.2.0",
+    "@uxfront/ui": "^0.3.0",
+    "docus": "^5.13.0",
     "nuxt": "^4.5.2",
     "vue": "^3.5.43",
     "vue-router": "^5.3.1"
