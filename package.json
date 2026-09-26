@@ -3,15 +3,25 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
+    "build": "nuxt generate",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "check-types": "vue-tsc -b",
+    "lighthouse": "pnpm dlx @lhci/cli autorun"
   },
   "dependencies": {
+    "@uxfront/layer-ui": "^0.1.0",
+    "@uxfront/scene": "^0.1.0",
+    "@uxfront/ui": "^0.1.0",
     "nuxt": "^4.5.2",
     "vue": "^3.5.43",
     "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.11"
   }
 }
