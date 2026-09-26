@@ -98,7 +98,17 @@ const ax = [
       />
     </template>
     <template #header>
-      <OcHeader :nav="nav" nav-label="The standard" :github="GITHUB_URL" />
+      <UxHeader brand="Open Components" :nav="nav" nav-label="The standard" :github="GITHUB_URL">
+        <template #mark />
+        <template #brand><strong>Open</strong>Components</template>
+        <template #byline>
+          by
+          <a href="https://uxfront.com">
+            <UxFrontMark />
+            <span><strong>UX</strong>Front</span>
+          </a>
+        </template>
+      </UxHeader>
     </template>
 
     <UxHero
@@ -144,17 +154,21 @@ const ax = [
       <UxTraits :items="ax" />
     </UxChapter>
 
-    <OcFinale :href="DOCS_URL" link-label="Read the documentation">
+    <UxFinale>
+      <template #mark><UxFrontMark /></template>
       <template #title>Build to the <strong>standard</strong>.</template>
       <template #lead>
         Learn the guidelines once, then hold every component to the same high standards, whether you or your agents
         write it.
       </template>
+      <template #actions>
+        <UxPillLink :href="DOCS_URL" label="Read the documentation" />
+      </template>
       <template #footer>
         <span>© 2026 UXFront</span>
         <a :href="GITHUB_URL">GitHub</a>
       </template>
-    </OcFinale>
+    </UxFinale>
   </UxSite>
 </template>
 

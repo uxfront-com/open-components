@@ -32,7 +32,7 @@ The page (`app/pages/index.vue`) holds the copy and the order of the formations.
 - [`@uxfront/ui`](https://github.com/uxfront-com/uxfront/tree/main/packages/ui): the Vue components (`UxSite`, `UxHero`, `UxChapter`, `UxFinale`, the HUD, the header, the pinned labels) and the design tokens.
 - [`@uxfront/scene`](https://github.com/uxfront-com/uxfront/tree/main/packages/scene): the WebGL particle scene and its formations.
 
-Every section but the finale shows the `plates` formation, Open Components' three glass plates drawn with the UX, DX and AX line art. The hero shows the stack drawn apart, with a callout per plate, and the UX, DX and AX chapters close in on one plate each, lighting it. The finale closes on the `corridor`. It's `app/components/OcFinale.vue`, `UxFinale`'s layout with the UXFront mark and a link to the documentation, since `UxFinale` has no slot for either. Likewise, `app/components/OcHeader.vue` is `UxHeader` with a "by UXFront" link beside the wordmark, since `UxHeader`'s brand is a single link.
+Every section but the finale shows the `plates` formation, Open Components' three glass plates drawn with the UX, DX and AX line art. The hero shows the stack drawn apart, with a callout per plate, and the UX, DX and AX chapters close in on one plate each, lighting it. The finale closes on the `corridor`. It shows the UXFront mark and a link to the documentation (`UxFinale`'s `mark` and `actions` slots), and the header signs the wordmark "by UXFront" (`UxHeader`'s `byline` slot).
 
 `app/lib/formations.ts` adapts the catalog formation for that:
 
