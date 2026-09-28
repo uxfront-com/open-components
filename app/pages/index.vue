@@ -115,7 +115,6 @@ const ax = [
     </template>
 
     <UxHero
-      kicker="Open Components - The UXFront component standard"
       title="The standard for perfect UI components"
       :index="nav"
       index-label="The standard"
@@ -129,11 +128,13 @@ const ax = [
       <template #lead>
         Guidelines for building UI components with a perfect user experience, developer experience
         and agentic experience, whether humans or AI agents write them.
+        <br />
+        <UxPillLink class="mt-8" :href="DOCS_URL" label="Read the documentation" />
       </template>
     </UxHero>
 
 
-    <UxChapter id="ux" index="01" role="UX" title="User experience" :steps="4">
+    <UxChapter id="ux" index="01" role="UX" title="User Experience" :steps="4">
       <template #lead>
         Components behave the way people expect them to, with any input, on any device and for
         every ability.
@@ -141,7 +142,7 @@ const ax = [
       <UxTraits :items="ux" />
     </UxChapter>
 
-    <UxChapter id="dx" index="02" role="DX" title="Developer experience" :steps="4" align="end">
+    <UxChapter id="dx" index="02" role="DX" title="Developer Experience" :steps="4" align="end">
       <template #lead>
         One clear API, learned once and used everywhere. Knowing one component means knowing them
         all.
@@ -149,7 +150,7 @@ const ax = [
       <UxTraits :items="dx" />
     </UxChapter>
 
-    <UxChapter id="ax" index="03" role="AX" title="Agentic experience" :steps="4" valign="end">
+    <UxChapter id="ax" index="03" role="AX" title="Agentic Experience" :steps="4" valign="end">
       <template #lead>
         Components that AI agents can read, reason about and build with, so their output meets the
         same bar as yours.
@@ -174,4 +175,3 @@ const ax = [
     </UxFinale>
   </UxSite>
 </template>
-
