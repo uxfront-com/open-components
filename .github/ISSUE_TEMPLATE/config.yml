@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://opencomponents.dev/docs
+    about: Read the standard first. Your question may already be answered there.

@@ -1,77 +1,121 @@
-# Open Components
+<p align="center">
+    <a href="https://opencomponents.dev/">
+        <img src="./public/favicon.svg" alt="Open Components" width=72 height=72>
+    </a>
+</p>
 
-Static Nuxt site for https://opencomponents.dev: the homepage and the documentation at `/docs`, prerendered and deployed to Cloudflare Workers as static assets. It's part of the UXFront family, built on the same homepage kit as [uxfront.com](https://github.com/uxfront-com/uxfront/tree/main/apps/web), with the docs on [Docus](https://docus.dev).
+<h1 align="center">Open Components</h1>
 
-## Commands
+<p align="center">
+    Open Components is the standard for perfect UI components: guidelines for building UI components with a perfect user experience, developer experience and agentic experience, whether humans or AI agents write them.<br/><br/> Open Components is part of <a href="https://uxfront.com">UXFront</a>, written and maintained by <a href="https://github.com/alexgrozav">@alexgrozav</a>.
+    <br/>
+    <br/>
+    <br/>
+    <a href="https://opencomponents.dev">
+        <img src="./.github/assets/homepage.jpg" width="1009" alt="Open Components - The standard for perfect UI components" />
+    </a>
+    <br/>
+    <br/>
+    <br/>
+    <a href="https://opencomponents.dev">Homepage</a>
+    ·
+    <a href="https://opencomponents.dev/docs">Documentation</a>
+    ·
+    <a href="https://opencomponents.dev/llms.txt">llms.txt</a>
+    ·
+    <a href="https://github.com/uxfront-com/open-components/issues">Issue Tracker</a>
+</p>
 
-```bash
-pnpm dev          # dev server on http://localhost:3000
-pnpm build        # nuxt generate → dist
-pnpm preview      # serve the generated site
-pnpm check-types  # type-check the .ts and .vue sources (see "The docs" for what it skips)
-pnpm lighthouse   # Lighthouse CI against dist, fails below 100 in any category (add new routes to `url` in `lighthouserc.json`)
-```
+<br/>
 
-Building needs Node 22.13 or later: Nuxt Content reads the docs with the built-in `node:sqlite`. `better-sqlite3`, its fallback, is installed but never built (`allowBuilds` in `pnpm-workspace.yaml`).
+<p align="center">
+    <a href="https://opencomponents.dev">
+        <img src="https://img.shields.io/website?url=https%3A%2F%2Fopencomponents.dev&label=opencomponents.dev" alt="Website">
+    </a>
+    <a href="https://opencomponents.dev/llms.txt">
+        <img src="https://img.shields.io/badge/llms.txt-available-6366f1" alt="llms.txt">
+    </a>
+    <a href="https://github.com/uxfront-com/open-components/commits/main">
+        <img src="https://img.shields.io/github/last-commit/uxfront-com/open-components" alt="Last commit">
+    </a>
+</p>
 
-## Deploying to Cloudflare
+<br/>
+<br/>
 
-Workers Builds deploys `dist` as a static-assets-only Worker, configured in `wrangler.jsonc`:
+## Table of contents
 
-- Build command: `pnpm run build`
-- Deploy command: `npx wrangler deploy`
-- Non-production branch deploy command: `npx wrangler preview`
+-   [The standard](#the-standard)
+-   [Reading the standard](#reading-the-standard)
+-   [For agents](#for-agents)
+-   [Bugs and feature requests](#bugs-and-feature-requests)
+-   [Contributing](#contributing)
+-   [Creator](#creator)
+-   [Copyright and license](#copyright-and-license)
 
-Keep `wrangler.jsonc`: without it, `wrangler deploy` auto-configures Nuxt for SSR and fails on the static build. Keep its `previews` block too, even though it's empty: `wrangler preview` refuses to run without it. Run `npx wrangler dev` after `pnpm build` to serve `dist` the way Cloudflare will.
+## The standard
 
-The `cloudflare_pages_static` preset turns `routeRules` headers in `nuxt.config.ts` into a `_headers` file (immutable caching for `/_nuxt/**`, security headers for every route), which Workers static assets apply. The preset also writes a `/* /404.html 404` fallback to `_redirects`, which the Workers API rejects, so a `nitro:init` hook in `nuxt.config.ts` strips 404 rules; `not_found_handling` in `wrangler.jsonc` serves `404.html` with a 404 instead.
+The standard has three layers, one for each audience a component serves. A component meets the
+standard when it meets all three.
 
-## The homepage
+-   **User experience (UX)**: components behave the way people expect them to, with any input, on
+    any device and for every ability. _Accessible, predictable, every state, adaptive._
+-   **Developer experience (DX)**: one clear API, learned once and used everywhere. Knowing one
+    component means knowing them all. _Consistent, type-safe, composable, controllable._
+-   **Agentic experience (AX)**: components that AI agents can read, reason about and build with,
+    so their output meets the same bar as yours. _Semantic, described, deterministic, verifiable._
 
-The page (`app/pages/index.vue`) holds the copy and the order of the formations. Everything else comes from the UXFront homepage kit:
+Learn the guidelines once, then hold every component to the same high standards, whether you or
+your agents write it.
 
-- [`@uxfront/layer-ui`](https://github.com/uxfront-com/uxfront/tree/main/packages/layer-ui), extended in `nuxt.config.ts`: auto-imports the components, self-hosts the fonts, adds `useUxHead()` and keeps the critical path clean.
-- [`@uxfront/ui`](https://github.com/uxfront-com/uxfront/tree/main/packages/ui): the Vue components (`UxSite`, `UxHero`, `UxChapter`, `UxFinale`, the HUD, the header, the pinned labels) and the design tokens.
-- [`@uxfront/scene`](https://github.com/uxfront-com/uxfront/tree/main/packages/scene): the WebGL particle scene and its formations.
+## Reading the standard
 
-Every section but the finale shows the `plates` formation, Open Components' three glass plates drawn with the UX, DX and AX line art. The hero shows the stack drawn apart, with a callout per plate, and the UX, DX and AX chapters close in on one plate each, lighting it. The finale closes on the `corridor`. It shows the UXFront mark and a link to the documentation (`UxFinale`'s `mark` and `actions` slots), and the header signs the wordmark "by UXFront" (`UxHeader`'s `byline` slot).
+Start with the [Introduction](https://opencomponents.dev/docs), which walks through the three
+layers and what each one asks of a component. The guidelines live as markdown in
+[`content/docs/`](./content/docs), so you can also read them right here on GitHub.
 
-`app/lib/formations.ts` adapts the catalog formation for that:
+## For agents
 
-- `hold(formation, local)` freezes a formation's progress. The scene jumps a formation to its end state once the page scrolls past its section, which only a pinned section reaches smoothly. The hero isn't pinned, so it holds the stack drawn apart from the start.
-- `spotlight(formation, plate)` lights one plate and dims the other two.
-- `share(formation, source)` reads the artwork's uniforms from an earlier `plates` in the scene instead of declaring its own. WebGL2 only guarantees 256 vertex uniform vectors, and about four in ten Android devices stop there ([Web3D Survey](https://web3dsurvey.com/webgl2/parameters/MAX_VERTEX_UNIFORM_VECTORS)). One `plates` declares ~146, so without sharing, even two of them would send those devices to the static fallback.
+Every page of the documentation is also published as markdown, so agents can read the standard
+and check their work against it:
 
-Motion follows `prefers-reduced-motion` and the Motion toggle in the HUD. Below 1100px wide, or on screens squarer than 5:4, the formations move to the top and the copy scrolls over them (`STACKED_QUERY` in `@uxfront/scene`).
+-   `https://opencomponents.dev/raw/<path>.md` holds one page, as in
+    [`/raw/docs.md`](https://opencomponents.dev/raw/docs.md) for the introduction.
+-   [`/llms.txt`](https://opencomponents.dev/llms.txt) lists every page.
+-   [`/llms-full.txt`](https://opencomponents.dev/llms-full.txt) holds them all in one file. Point
+    your agent at it to give it the whole standard in one request.
 
-## The docs
+## Bugs and feature requests
 
-The documentation is built with [Docus](https://docus.dev), the second layer in `nuxt.config.ts`. Pages are markdown files in `content/docs/`, served under `/docs` (`content/docs/index.md` is `/docs` itself). Number files and folders to order them in the sidebar, as in `1.getting-started/2.installation.md`. From those files, Docus builds the sidebar, search, table of contents, a markdown copy of each page at `/raw/<path>.md`, `llms.txt`, `llms-full.txt`, `sitemap.xml` and each page's Open Graph image.
+Found a bug on the site, a gap in the guidelines or an idea for a new one? Please first search for
+existing and closed issues. If your problem or idea is not addressed yet,
+[please open a new issue](https://github.com/uxfront-com/open-components/issues/new/choose).
 
-How it shares the app with the homepage:
+## Contributing
 
-- `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
-- Docus adds Tailwind CSS and Nuxt UI to the entry stylesheet. On the homepage, `@uxfront/layer-ui` loads that stylesheet after first paint, and the `.ux-site` styles take precedence over it. Keep `app/app.css`, which Docus imports into the same stylesheet, off `.ux-site` too.
-- `nuxt.config.ts` turns off Nuxt's prefetch hints. Otherwise every page, the homepage included, would prefetch the docs' lazy chunks, which delays the homepage's fonts and stylesheet, and with them its LCP.
-- `app/app.config.ts` sets the theme colors and the GitHub, "Edit this page" and "Report an issue" links. `app/app.css` darkens Nuxt UI's light-mode primary to pass WCAG AA contrast. Nuxt UI's callouts (`::tip`, `::note`, …) still draw their text in fixed shades that fail it in light mode, so avoid them until they're themed.
-- Docus reads the site URL from `NUXT_SITE_URL`, which `nuxt.config.ts` defaults to the production origin, and generates `robots.txt` (with `@nuxtjs/robots`). Don't add a `public/robots.txt`: the module renames it to `_robots.txt` and merges it in.
-- The site is static, so Docus's MCP server is off (`mcp.enabled` in `nuxt.config.ts`), and so is its AI assistant, which only starts with an `AI_GATEWAY_API_KEY`.
-- In content, link to the generated files (`/llms.txt`, `/raw/…`) with `{external}`, as `content/docs/index.md` does. Otherwise the router handles the click and shows the 404 page.
+Please read through our [contributing guide](./.github/CONTRIBUTING.md). There you can find how to
+run the site locally, edit the guidelines (in the browser too, with Nuxt Studio) and deploy.
+Everyone taking part in the project agrees to follow our [Code of Conduct](./.github/CODE_OF_CONDUCT.md).
 
-Docus ships its sources uncompiled, and they don't type-check against this app's dependencies. `pnpm check-types` runs `vue-tsc` and fails on any error outside them.
+Thanks goes to these wonderful people:
 
-## Editing with Nuxt Studio
+<a href="https://github.com/uxfront-com/open-components/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=uxfront-com/open-components" alt="Contributors" />
+</a>
 
-[Nuxt Studio](https://nuxt.studio) (`nuxt-studio` in `nuxt.config.ts`) edits the docs in the browser, in a visual or a markdown editor, with a live preview. It only runs on `pnpm dev`: open any docs page and press `⌘ .` (or "Edit this page", bottom left). Studio writes straight to `content/` and `public/`; commit the changes as usual.
+## Creator
 
-It's left out of builds (`$production: { studio: false }`). Its production mode commits from the live site, which needs a server, and this one is static.
+### **Alex Grozav**
 
-The Cloudflare preset is build-only too (`$production.nitro.preset`): under it, `nuxt dev` serves Nuxt Content's in-browser database from a dump taken at startup, so after a reload Studio would open the old content and save it back over your edits. On the dev server, `app/app.config.ts` also turns off Docus's `d` shortcut for the color mode, which swallows every "d" typed in Studio's editor.
+-   <https://github.com/alexgrozav>
+-   <https://uxfront.com>
 
-## Keeping 100s as the site grows
+If you use Open Components in your daily work and feel that it has made your life easier, please
+consider sponsoring me on [GitHub Sponsors](https://github.com/sponsors/alexgrozav). 💖
 
-- The first paint depends on the prerendered HTML alone: the `@uxfront/ui` components inline every style they use, and `@uxfront/layer-ui` loads the web fonts, the entry stylesheet and the app bundle only after the browser reports the first contentful paint. Don't add render-blocking resources, and load heavy code with dynamic `import()` (the WebGL engine is only imported once the page is idle).
-- Images: use `@nuxt/image` (explicit width/height, AVIF/WebP, lazy loading below the fold).
-- Third-party scripts: avoid them, or load via `@nuxt/scripts` with `trigger: 'onNuxtReady'`.
-- Every page needs a title, a meta description, a canonical link and a single `<h1>` (see `app/pages/index.vue`).
-- `lighthouserc.json` covers the homepage. The docs pages are Docus's theme as it ships, which scores below 100 in performance and accessibility, so they're not in it yet. The Lighthouse CI server also doesn't resolve `/docs` to `docs.html` the way Cloudflare does: measure them on `npx wrangler dev` instead.
+## Copyright and license
+
+Copyright © 2026 [UXFront](https://uxfront.com). The site code is released under the
+[MIT License](./LICENSE). The guidelines in [`content/`](./content) are released under the
+[Creative Commons Attribution 4.0 License](./content/LICENSE): you can share and adapt them,
+commercially too, as long as you credit Open Components.

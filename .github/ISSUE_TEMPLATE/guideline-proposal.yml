@@ -1,0 +1,61 @@
+name: Guideline proposal
+description: Propose a new guideline, or a change to an existing one.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping shape the standard. Please [search the existing issues](https://github.com/uxfront-com/open-components/issues?q=is%3Aissue) first, and read the guideline in [the documentation](https://opencomponents.dev/docs) if you'd change one.
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Layer
+      description: Which experience does the guideline serve?
+      options:
+        - User experience (UX)
+        - Developer experience (DX)
+        - Agentic experience (AX)
+        - More than one
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: change
+    attributes:
+      label: Change
+      options:
+        - A new guideline
+        - A change to an existing guideline
+        - The removal of an existing guideline
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Existing guideline
+      description: The page of the guideline you'd change or remove, if any.
+      placeholder: https://opencomponents.dev/docs
+  - type: textarea
+    id: guideline
+    attributes:
+      label: Guideline
+      description: The guideline, worded the way you'd like it to read in the standard.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What goes wrong for users, developers or agents without it?
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources
+      description: Specs, research or component libraries that back it up, such as WAI-ARIA or WCAG.
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples
+      description: A component that meets the guideline and one that doesn't. Code, screenshots and links all work.

@@ -22,7 +22,7 @@ export default defineNuxtConfig({
   ],
 
   // Edits content/ in the browser on `pnpm dev`, writing straight to the files
-  // (see "Editing with Nuxt Studio" in the README). Left out of builds below.
+  // (see "Editing with Nuxt Studio" in .github/CONTRIBUTING.md). Left out of builds below.
   modules: ["nuxt-studio"],
 
   runtimeConfig: {

@@ -1,0 +1,47 @@
+name: Site bug
+description: Report something broken on opencomponents.dev, including typos and broken links.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. Please [search the existing issues](https://github.com/uxfront-com/open-components/issues?q=is%3Aissue) first. To change what a guideline says, open a guideline proposal instead.
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      placeholder: https://opencomponents.dev/docs
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the page
+        2. Scroll to …
+        3. Click …
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: Safari on an iPhone, Chrome on Windows, …
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images or recordings here, if they help.
