@@ -10,7 +10,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "check-types": "vue-tsc -b --pretty false 2>&1 | awk '/^[^ ]/ { own = !/^node_modules\\/(.*\\/)?docus\\// } own { print; failed = 1 } END { exit failed }'",
-    "lighthouse": "pnpm dlx @lhci/cli autorun"
+    "lighthouse": "pnpm dlx @lhci/cli@0.15.1 autorun"
   },
   "dependencies": {
     "@uxfront/layer-ui": "^0.1.2",
