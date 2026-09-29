@@ -97,11 +97,7 @@ Please read through our [contributing guide](./.github/CONTRIBUTING.md). There y
 run the site locally, edit the guidelines (in the browser too, with Nuxt Studio) and deploy.
 Everyone taking part in the project agrees to follow our [Code of Conduct](./.github/CODE_OF_CONDUCT.md).
 
-Thanks goes to these wonderful people:
-
-<a href="https://github.com/uxfront-com/open-components/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=uxfront-com/open-components" alt="Contributors" />
-</a>
+Thanks goes to these [wonderful people](https://github.com/uxfront-com/open-components/graphs/contributors)!
 
 ## Creator
 
