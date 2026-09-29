@@ -128,19 +128,16 @@ const ax = [
           </a>
         </template>
         <template #actions>
-          <NuxtLink :to="DOCS_URL">Documentation</NuxtLink>
+          <NuxtLink class="header-link header-docs" :to="DOCS_URL">Documentation</NuxtLink>
           <a
-            class="inline-flex min-h-11 items-center"
+            class="header-link"
             :href="GITHUB_URL"
             :aria-label="starCount ? `GitHub, ${stars} stars` : 'GitHub'"
           >
-            <UxGithubIcon class="size-[1.125rem]" />
-            <span>GitHub</span>
-            <span
-              v-if="starCount"
-              class="inline-flex items-center gap-1 rounded-full border border-(--ux-line-strong) px-2 py-0.5 font-(family-name:--font-ux-mono) text-xs tabular-nums"
-            >
-              <svg class="size-3" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <UxGithubIcon class="header-icon" />
+            <span class="header-label">GitHub</span>
+            <span v-if="starCount" class="header-stars">
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                 <path
                   fill="currentColor"
                   d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
@@ -214,3 +211,50 @@ const ax = [
     </UxFinale>
   </UxSite>
 </template>
+
+<style scoped>
+/* The first frame only has the components' inline styles (Tailwind loads after
+   it), so the header links are styled here rather than with utilities. */
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.header-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.header-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--ux-line-strong);
+  border-radius: 999px;
+  font-family: var(--font-ux-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.header-stars svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* Phones can't fit the byline beside both links. The hero links to the docs just
+   below, and the GitHub link's aria-label still names it without the label. */
+@media (max-width: 639px) {
+  .header-docs,
+  .header-label {
+    display: none;
+  }
+
+  .header-link {
+    min-width: 2.75rem;
+    justify-content: flex-end;
+  }
+}
+</style>
