@@ -60,6 +60,14 @@ How it shares the app with the homepage:
 
 Docus ships its sources uncompiled, and they don't type-check against this app's dependencies. `pnpm check-types` runs `vue-tsc` and fails on any error outside them.
 
+## Editing with Nuxt Studio
+
+[Nuxt Studio](https://nuxt.studio) (`nuxt-studio` in `nuxt.config.ts`) edits the docs in the browser, in a visual or a markdown editor, with a live preview. It only runs on `pnpm dev`: open any docs page and press `⌘ .` (or "Edit this page", bottom left). Studio writes straight to `content/` and `public/`; commit the changes as usual.
+
+It's left out of builds (`$production: { studio: false }`). Its production mode commits from the live site, which needs a server, and this one is static.
+
+The Cloudflare preset is build-only too (`$production.nitro.preset`): under it, `nuxt dev` serves Nuxt Content's in-browser database from a dump taken at startup, so after a reload Studio would open the old content and save it back over your edits. On the dev server, `app/app.config.ts` also turns off Docus's `d` shortcut for the color mode, which swallows every "d" typed in Studio's editor.
+
 ## Keeping 100s as the site grows
 
 - The first paint depends on the prerendered HTML alone: the `@uxfront/ui` components inline every style they use, and `@uxfront/layer-ui` loads the web fonts, the entry stylesheet and the app bundle only after the browser reports the first contentful paint. Don't add render-blocking resources, and load heavy code with dynamic `import()` (the WebGL engine is only imported once the page is idle).

@@ -42,4 +42,4 @@ Components that AI agents can read, reason about and build with, so their output
 
 ## For agents
 
-Every page of these docs is also published as markdown: prefix its path with `/raw` and add `.md`, as in [`/raw/docs.md`](/raw/docs.md){external}. [`/llms.txt`](/llms.txt){external} lists every page, and [`/llms-full.txt`](/llms-full.txt){external} holds them all in one file.
+Every page of these docs is also published as markdown: prefix its path with `/raw` and add `.md`, as in [`/raw/docs.md`](/raw/docs.md){external=""}. [`/llms.txt`](/llms.txt){external=""} lists every page, and [`/llms-full.txt`](/llms-full.txt){external=""} holds them all in one file.
