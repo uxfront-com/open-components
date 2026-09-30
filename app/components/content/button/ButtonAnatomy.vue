@@ -86,7 +86,7 @@ import "~/reference/button/tokens.css";
 
 /* The button, focused, with its parts outlined and numbered like the list. */
 .anatomy-button {
-  outline: 2px solid var(--color-focus);
+  outline: 2px solid var(--color--focus);
   outline-offset: 2px;
 }
 .anatomy-button :deep([data-slot]) {
