@@ -37,6 +37,8 @@ jobs:
       # Also runs `nuxt prepare` (postinstall), which writes the .nuxt tsconfigs.
       - run: pnpm install --frozen-lockfile
       - run: pnpm check-types
+      # The component pages show app/reference/ as code: fails if they drift apart.
+      - run: pnpm check-reference
 
   build:
     name: Build
