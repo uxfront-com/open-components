@@ -40,6 +40,18 @@ Components that AI agents can read, reason about and build with, so their output
 - **Deterministic**: the same input always renders the same structure.
 - **Verifiable**: rules agents can check their work against before shipping.
 
+## Components
+
+Each component page holds one component to the three layers, and also covers how it looks, which we call its UI. Every page follows the same structure, so you and your agents always know where to look:
+
+- **At a glance**: a single table with its element, role, keyboard support and options.
+- **UI**: its anatomy, variants, colours, sizes, states and tokens.
+- **UX**, **DX** and **AX**: the three layers, one trait at a time.
+- **Checklist**: every rule, with a stable ID like `button/keep-focus`, a level and a way to check it.
+- **Reference implementation**: a component that meets every rule, along with its tests. The code is in Vue for now.
+
+The [Button](/docs/components/button) is a great place to start.
+
 ## For agents
 
 Every page of these docs is also published as markdown: prefix its path with `/raw` and add `.md`, as in [`/raw/docs.md`](/raw/docs.md){external=""}. [`/llms.txt`](/llms.txt){external=""} lists every page, and [`/llms-full.txt`](/llms-full.txt){external=""} holds them all in one file.

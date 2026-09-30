@@ -9,11 +9,12 @@ The site code is released under the [MIT License](../LICENSE), and the guideline
 ## Commands
 
 ```bash
-pnpm dev          # dev server on http://localhost:3000
-pnpm build        # nuxt generate → dist
-pnpm preview      # serve the generated site
-pnpm check-types  # type-check the .ts and .vue sources (see "The docs" for what it skips)
-pnpm lighthouse   # Lighthouse CI against dist, fails below 100 in any category (add new routes to `url` in `lighthouserc.json`)
+pnpm dev              # dev server on http://localhost:3000
+pnpm build            # nuxt generate → dist
+pnpm preview          # serve the generated site
+pnpm check-types      # type-check the .ts and .vue sources (see "The docs" for what it skips)
+pnpm check-reference  # check the component pages show app/reference/ as it is
+pnpm lighthouse       # Lighthouse CI against dist, fails below 100 in any category (add new routes to `url` in `lighthouserc.json`)
 ```
 
 Building needs Node 22.13 or later: Nuxt Content reads the docs with the built-in `node:sqlite`. `better-sqlite3`, its fallback, is installed but never built (`allowBuilds` in `pnpm-workspace.yaml`).
@@ -61,6 +62,8 @@ How it shares the app with the homepage:
 - Docus reads the site URL from `NUXT_SITE_URL`, which `nuxt.config.ts` defaults to the production origin, and generates `robots.txt` (with `@nuxtjs/robots`). Don't add a `public/robots.txt`: the module renames it to `_robots.txt` and merges it in.
 - The site is static, so Docus's MCP server is off (`mcp.enabled` in `nuxt.config.ts`), and so is its AI assistant, which only starts with an `AI_GATEWAY_API_KEY`.
 - In content, link to the generated files (`/llms.txt`, `/raw/…`) with `{external}`, as `content/docs/index.md` does. Otherwise the router handles the click and shows the 404 page.
+- `server/middleware/raw-markdown.ts` serves `/raw/<path>.md` from the page's source file. Nuxt Content's own route rebuilds it from the parsed page and writes tables as unescaped HTML, which agents, and Docus's "Copy page", then read.
+- Live examples are Vue components in `app/components/content/` (like `ButtonExample.vue`), which `app/app.css` adds to Tailwind's sources. They render the reference implementations in `app/reference/`, which the component pages also show as code: when you change one, update the other, and `pnpm check-reference` (run in CI) confirms they match.
 
 Docus ships its sources uncompiled, and they don't type-check against this app's dependencies. `pnpm check-types` runs `vue-tsc` and fails on any error outside them.
 
