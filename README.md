@@ -94,7 +94,7 @@ existing and closed issues. If your problem or idea is not addressed yet,
 ## Contributing
 
 Please read through our [contributing guide](./.github/CONTRIBUTING.md). There you can find how to
-run the site locally, edit the guidelines (in the browser too, with Nuxt Studio) and deploy.
+run the site locally, edit the guidelines and deploy.
 Everyone taking part in the project agrees to follow our [Code of Conduct](./.github/CODE_OF_CONDUCT.md).
 
 Thanks goes to these [wonderful people](https://github.com/uxfront-com/open-components/graphs/contributors)!

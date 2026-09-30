@@ -22,10 +22,6 @@ export default defineNuxtConfig({
     "@uxfront/layer-docs",
   ],
 
-  // Edits content/ in the browser on `pnpm dev`, writing straight to the files
-  // (see "Editing with Nuxt Studio" in .github/CONTRIBUTING.md). Left out of builds below.
-  modules: ["nuxt-studio"],
-
   runtimeConfig: {
     public: {
       siteUrl: SITE_URL,
@@ -90,13 +86,10 @@ export default defineNuxtConfig({
   },
 
   $production: {
-    // Studio's production mode commits from the live site, which needs a server.
-    studio: false,
     nitro: {
       // Emits _headers/_redirects for Cloudflare Pages from routeRules. Build-only:
       // under a Cloudflare preset, `nuxt dev` serves Nuxt Content's browser database
-      // from a dump frozen at startup, so after a reload Studio opens (and saves
-      // back) stale content.
+      // from a dump frozen at startup, so after a reload the docs show stale content.
       preset: "cloudflare_pages_static",
     },
   },
