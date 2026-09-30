@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@uxfront/layer-docs':
+        specifier: ^0.5.0
+        version: 0.5.0(f3e19b08bf6a199118ef51ece72d9168)
       '@uxfront/layer-ui':
         specifier: ^0.1.2
         version: 0.1.2(e2b781dad393a8080e7097adc90526c2)
@@ -3064,6 +3067,12 @@ packages:
         optional: true
       webpack:
         optional: true
+
+  '@uxfront/layer-docs@0.5.0':
+    resolution: {integrity: sha512-uTbZo3Yvbyu0LDO5kx4nKwSSkxCag7tyWHtcY05ZqG+KJd8HQEZTUkoUtmesIFw01CCd7GR8EcrZuRCMu2YwrA==}
+    peerDependencies:
+      nuxt: ^4.5.0
+      vue: ^3.5.0
 
   '@uxfront/layer-ui@0.1.2':
     resolution: {integrity: sha512-KETC8qqGA66RJAXY/Bjqudg1064xQA6kXIx1+v9HqkuZBmYlXIGxJfNhWphTnHaBtNb2BoCpyB4/d93WehlkzQ==}
@@ -10219,6 +10228,133 @@ snapshots:
       - rolldown
       - rollup
       - unloader
+
+  '@uxfront/layer-docs@0.5.0(f3e19b08bf6a199118ef51ece72d9168)':
+    dependencies:
+      '@vueuse/core': 14.4.0(vue@3.5.43(typescript@5.9.3))
+      docus: 5.13.0(f3e19b08bf6a199118ef51ece72d9168)
+      nuxt: 4.5.2(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@oxc-project/types@0.151.0)(@types/node@24.13.6)(@vue/compiler-sfc@3.5.43)(better-sqlite3@13.0.3)(db0@0.3.4(better-sqlite3@13.0.3))(esbuild@0.28.2)(eslint@10.11.0(jiti@2.7.0))(ioredis@5.11.1)(lightningcss@1.33.0)(magicast@0.5.5)(optionator@0.9.4)(oxc-parser@0.143.0)(rolldown@1.2.11)(rollup-plugin-visualizer@7.1.1(rolldown@1.2.11)(rollup@4.63.5))(rollup@4.63.5)(srvx@0.11.22)(terser@5.51.2)(typescript@5.9.3)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue-tsc@3.3.11(typescript@5.9.3))(yaml@2.9.1)
+      vue: 3.5.43(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@cfworker/json-schema'
+      - '@deno/kv'
+      - '@electric-sql/pglite'
+      - '@farmfe/core'
+      - '@inertiajs/vue3'
+      - '@internationalized/date'
+      - '@internationalized/number'
+      - '@libsql/client'
+      - '@netlify/blobs'
+      - '@nuxt/schema'
+      - '@oxc-project/types'
+      - '@pinia/colada'
+      - '@planetscale/database'
+      - '@resvg/resvg-js'
+      - '@resvg/resvg-wasm'
+      - '@rsbuild/core'
+      - '@rspack/core'
+      - '@takumi-rs/wasm'
+      - '@tiptap/core'
+      - '@tiptap/extension-bubble-menu'
+      - '@tiptap/extension-code'
+      - '@tiptap/extension-collaboration'
+      - '@tiptap/extension-drag-handle'
+      - '@tiptap/extension-drag-handle-vue-3'
+      - '@tiptap/extension-floating-menu'
+      - '@tiptap/extension-horizontal-rule'
+      - '@tiptap/extension-image'
+      - '@tiptap/extension-mention'
+      - '@tiptap/extension-node-range'
+      - '@tiptap/extension-placeholder'
+      - '@tiptap/markdown'
+      - '@tiptap/pm'
+      - '@tiptap/starter-kit'
+      - '@tiptap/suggestion'
+      - '@tiptap/vue-3'
+      - '@types/node'
+      - '@unhead/cli'
+      - '@unhead/vue'
+      - '@unocss/config'
+      - '@unocss/core'
+      - '@upstash/redis'
+      - '@valibot/to-json-schema'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - '@vitejs/devtools-kit'
+      - '@vue/compiler-dom'
+      - '@vue/compiler-sfc'
+      - '@vue/composition-api'
+      - '@vue/test-utils'
+      - agents
+      - async-validator
+      - aws4fetch
+      - axios
+      - beautiful-mermaid
+      - better-sqlite3
+      - bufferutil
+      - bun-types-no-globals
+      - change-case
+      - csstype
+      - db0
+      - drauu
+      - embla-carousel
+      - esbuild
+      - eslint
+      - focus-trap
+      - fontless
+      - h3
+      - idb-keyval
+      - ioredis
+      - joi
+      - jwt-decode
+      - katex
+      - lightningcss
+      - magic-string
+      - magicast
+      - nitropack
+      - nprogress
+      - oxc-parser
+      - petite-vue-i18n
+      - pinia
+      - playwright-core
+      - preact
+      - qrcode
+      - rangi
+      - react
+      - react-dom
+      - rolldown
+      - rollup
+      - satori
+      - secure-exec
+      - sharp
+      - shiki
+      - solid-js
+      - sortablejs
+      - sqlite3
+      - superstruct
+      - supports-color
+      - svelte
+      - typescript
+      - unifont
+      - universal-cookie
+      - unloader
+      - unplugin
+      - unstorage
+      - uploadthing
+      - utf-8-validate
+      - valibot
+      - vite
+      - vue-router
+      - webpack
+      - yup
 
   '@uxfront/layer-ui@0.1.2(e2b781dad393a8080e7097adc90526c2)':
     dependencies:

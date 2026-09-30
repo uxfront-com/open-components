@@ -17,8 +17,9 @@ export default defineNuxtConfig({
   extends: [
     // The homepage kit: components, fonts, head helpers and critical-path loading.
     "@uxfront/layer-ui",
-    // The docs theme: renders content/docs/ at /docs (see app/app.vue).
-    "docus",
+    // The docs theme: Docus, which renders content/docs/ at /docs (see app/app.vue),
+    // plus the framework switcher (`docsTheme.frameworks` in app/app.config.ts).
+    "@uxfront/layer-docs",
   ],
 
   // Edits content/ in the browser on `pnpm dev`, writing straight to the files

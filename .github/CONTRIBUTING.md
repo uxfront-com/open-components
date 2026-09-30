@@ -51,7 +51,7 @@ Motion follows `prefers-reduced-motion` and the Motion toggle in the HUD. Below 
 
 ## The docs
 
-The documentation is built with [Docus](https://docus.dev), the second layer in `nuxt.config.ts`. Pages are markdown files in `content/docs/`, served under `/docs` (`content/docs/index.md` is `/docs` itself). Number files and folders to order them in the sidebar, as in `1.getting-started/2.installation.md`. From those files, Docus builds the sidebar, search, table of contents, a markdown copy of each page at `/raw/<path>.md`, `llms.txt`, `llms-full.txt`, `sitemap.xml` and each page's Open Graph image.
+The documentation is built with [Docus](https://docus.dev), through [`@uxfront/layer-docs`](https://github.com/uxfront-com/uxfront/tree/main/packages/layer-docs), the second layer in `nuxt.config.ts`. Pages are markdown files in `content/docs/`, served under `/docs` (`content/docs/index.md` is `/docs` itself). Number files and folders to order them in the sidebar, as in `1.getting-started/2.installation.md`. From those files, Docus builds the sidebar, search, table of contents, a markdown copy of each page at `/raw/<path>.md`, `llms.txt`, `llms-full.txt`, `sitemap.xml` and each page's Open Graph image.
 
 How it shares the app with the homepage:
 
@@ -66,6 +66,28 @@ How it shares the app with the homepage:
 - Live examples are Vue components in `app/components/content/` (like `ButtonExample.vue`), which `app/app.css` adds to Tailwind's sources. They render the reference implementations in `app/reference/`, which the component pages also show as code: when you change one, update the other, and `pnpm check-reference` (run in CI) confirms they match.
 
 Docus ships its sources uncompiled, and they don't type-check against this app's dependencies. `pnpm check-types` runs `vue-tsc` and fails on any error outside them.
+
+### Examples per framework
+
+Write an example once per framework in a `::framework-switcher`, one slot per framework:
+
+````md
+::framework-switcher
+#react
+```tsx [Button.tsx]
+…
+```
+
+#vue
+```vue [Button.vue]
+…
+```
+::
+````
+
+It shows one tab per framework. The reader's pick switches every switcher on the site and the Framework select above the sidebar, and is kept across visits. The frameworks, their order and their slot names (the `value`s) are `docsTheme.frameworks` in `app/app.config.ts`, as in [styleframe's docs](https://www.styleframe.dev/docs/theme/components/button). A page doesn't have to cover them all: a missing framework shows the first one the page has, with a note saying so.
+
+The switcher and the select come from `@uxfront/layer-docs`, which also bundles the framework icons named in `app/app.config.ts`.
 
 ## Editing with Nuxt Studio
 
