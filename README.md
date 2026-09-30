@@ -70,7 +70,7 @@ your agents write it.
 
 ## Reading the standard
 
-Start with the [Introduction](https://opencomponents.dev/docs), which walks through the three
+Start with the [Introduction](https://opencomponents.dev/docs/getting-started/introduction), which walks through the three
 layers and what each one asks of a component. The guidelines live as markdown in
 [`content/docs/`](./content/docs), so you can also read them right here on GitHub.
 
@@ -80,7 +80,7 @@ Every page of the documentation is also published as markdown, so agents can rea
 and check their work against it:
 
 -   `https://opencomponents.dev/raw/<path>.md` holds one page, as in
-    [`/raw/docs.md`](https://opencomponents.dev/raw/docs.md) for the introduction.
+    [`/raw/docs/getting-started/introduction.md`](https://opencomponents.dev/raw/docs/getting-started/introduction.md) for the introduction.
 -   [`/llms.txt`](https://opencomponents.dev/llms.txt) lists every page.
 -   [`/llms-full.txt`](https://opencomponents.dev/llms-full.txt) holds them all in one file. Point
     your agent at it to give it the whole standard in one request.

@@ -64,6 +64,10 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    // The docs open on the introduction. The raw copy of the page that used to
+    // live at /docs keeps working too, since agents may have it bookmarked.
+    "/docs": { redirect: "/docs/getting-started/introduction" },
+    "/raw/docs.md": { redirect: "/raw/docs/getting-started/introduction.md" },
     // Hashed build assets never change, so cache them forever.
     "/_nuxt/**": {
       headers: { "cache-control": "public, max-age=31536000, immutable" },
@@ -84,7 +88,8 @@ export default defineNuxtConfig({
     compressPublicAssets: false,
     prerender: {
       crawlLinks: true,
-      routes: ["/", "/docs"],
+      // /docs only redirects, so crawling the docs starts from the introduction.
+      routes: ["/", "/docs", "/docs/getting-started/introduction"],
       failOnError: true,
     },
   },
