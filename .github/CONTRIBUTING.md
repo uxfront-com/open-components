@@ -2,7 +2,7 @@
 
 This repository holds the Open Components standard and the static Nuxt site that publishes it at https://opencomponents.dev: the homepage and the documentation at `/docs`, prerendered and deployed to Cloudflare Workers as static assets. It's part of the UXFront family, built on the same homepage kit as [uxfront.com](https://github.com/uxfront-com/uxfront/tree/main/apps/web), with the docs on [Docus](https://docus.dev).
 
-Found a bug, or a gap in the guidelines? Search the [existing issues](https://github.com/uxfront-com/open-components/issues?q=is%3Aissue) first, then [open a new one](https://github.com/uxfront-com/open-components/issues/new/choose): a guideline proposal, or a site bug. To change the guidelines themselves, edit the markdown in `content/docs/` (see [The docs](#the-docs) and [Editing with Nuxt Studio](#editing-with-nuxt-studio)) and open a pull request. Everyone taking part agrees to follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
+Found a bug, or a gap in the guidelines? Search the [existing issues](https://github.com/uxfront-com/open-components/issues?q=is%3Aissue) first, then [open a new one](https://github.com/uxfront-com/open-components/issues/new/choose): a guideline proposal, or a site bug. To change the guidelines themselves, edit the markdown in `content/docs/` (see [The docs](#the-docs)) and open a pull request. Everyone taking part agrees to follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 The site code is released under the [MIT License](../LICENSE), and the guidelines in `content/` under [CC BY 4.0](../content/LICENSE). By contributing, you agree to release your changes under the same licenses.
 
@@ -88,14 +88,6 @@ Write an example once per framework in a `::framework-switcher`, one slot per fr
 It shows one tab per framework. The reader's pick switches every switcher on the site and the Framework select above the sidebar, and is kept across visits. The frameworks, their order and their slot names (the `value`s) are `docsTheme.frameworks` in `app/app.config.ts`, as in [styleframe's docs](https://www.styleframe.dev/docs/theme/components/button). A page doesn't have to cover them all: a missing framework shows the first one the page has, with a note saying so.
 
 The switcher and the select come from `@uxfront/layer-docs`, which also bundles the framework icons named in `app/app.config.ts`.
-
-## Editing with Nuxt Studio
-
-[Nuxt Studio](https://nuxt.studio) (`nuxt-studio` in `nuxt.config.ts`) edits the docs in the browser, in a visual or a markdown editor, with a live preview. It only runs on `pnpm dev`: open any docs page and press `⌘ .` (or "Edit this page", bottom left). Studio writes straight to `content/` and `public/`; commit the changes as usual.
-
-It's left out of builds (`$production: { studio: false }`). Its production mode commits from the live site, which needs a server, and this one is static.
-
-The Cloudflare preset is build-only too (`$production.nitro.preset`): under it, `nuxt dev` serves Nuxt Content's in-browser database from a dump taken at startup, so after a reload Studio would open the old content and save it back over your edits. On the dev server, `app/app.config.ts` also turns off Docus's `d` shortcut for the color mode, which swallows every "d" typed in Studio's editor.
 
 ## Keeping 100s as the site grows
 

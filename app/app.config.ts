@@ -21,14 +21,6 @@ export default defineAppConfig({
       { value: "vanilla", label: "Vanilla", icon: "i-simple-icons-javascript" },
     ],
   },
-  docus: {
-    shortcuts: {
-      // Docus toggles the color mode on a bare `d`. On `pnpm dev`, Nuxt Studio's editor
-      // lives in a shadow root, so the shortcut can't tell you're typing there and
-      // swallows every "d". The header's button still toggles it.
-      toggleColorMode: import.meta.dev ? "" : "d",
-    },
-  },
   ui: {
     colors: {
       // The periwinkle of the homepage's glow (see app/app.css for its shades).
