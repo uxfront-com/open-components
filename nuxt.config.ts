@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { Features } from "lightningcss";
 import { buildContract } from "./server/lib/contract";
 
 const SITE_URL = "https://opencomponents.dev";
@@ -77,6 +78,19 @@ export default defineNuxtConfig({
         { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       ],
+    },
+  },
+
+  vite: {
+    css: {
+      lightningcss: {
+        // Lightning CSS minifies the build, and for older browsers it rewrites
+        // light-dark() into variables that only a color-scheme on the same element
+        // sets. The Button's tokens are on :root, but the examples set color-scheme
+        // on their frame, so every token came out invalid and the buttons lost
+        // their colours. light-dark() has been Baseline since May 2024, so keep it.
+        exclude: Features.LightDark,
+      },
     },
   },
 
