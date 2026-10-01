@@ -1,3 +1,5 @@
+import { queryCollection } from "@nuxt/content/server";
+
 // The fields read below. Nitro's types don't see the collections Docus defines.
 interface DocsPage {
   path: string;
