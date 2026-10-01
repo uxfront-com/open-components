@@ -6,9 +6,9 @@ import "~/reference/button/tokens.css";
  * the reference implementation, above the code that renders it. Each example is
  * its own component, like ButtonVariantsExample, that passes the page's markdown
  * on as the `code` slot: a `::framework-switcher` with the code in every framework,
- * which the frame shows as the code's header. Nest it with as many colons as the
- * example, since remark-mdc only gives `#react` and the other slots to a nested
- * component written that way:
+ * which shows the reader's pick. Nest it with as many colons as the example, since
+ * remark-mdc only gives `#react` and the other slots to a nested component written
+ * that way:
  *
  * ```md
  * ::button-variants-example
@@ -37,7 +37,10 @@ import "~/reference/button/tokens.css";
       <slot />
     </div>
 
-    <div v-if="$slots.code" class="button-example-code [&>div>pre]:rounded-t-none [&>div]:my-0">
+    <div
+      v-if="$slots.code"
+      class="[&>div>pre]:rounded-t-none [&>div]:my-0 [&>p]:my-0 [&>p]:border-x [&>p]:border-muted [&>p]:px-4 [&>p]:py-2"
+    >
       <slot name="code" />
     </div>
   </div>
@@ -50,27 +53,5 @@ import "~/reference/button/tokens.css";
 }
 .dark .button-example {
   color-scheme: dark;
-}
-
-/* The framework switcher joins the example to its code: its tabs are the code's header. */
-.button-example-code .framework-switcher {
-  margin: 0;
-  gap: 0;
-}
-.button-example-code .framework-switcher > [data-slot="list"] {
-  border: 1px solid var(--ui-border-muted);
-  border-bottom: 0;
-  background-color: var(--ui-bg);
-  box-shadow: inset 0 -1px 0 var(--ui-border-muted);
-}
-.button-example-code .framework-switcher > [role="tabpanel"] > p {
-  margin: 0;
-  border-inline: 1px solid var(--ui-border-muted);
-  padding: 0.5rem 1rem;
-}
-.button-example-code .framework-switcher > [role="tabpanel"] > div > pre {
-  border-top: 0;
-  border-start-start-radius: 0;
-  border-start-end-radius: 0;
 }
 </style>
