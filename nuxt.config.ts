@@ -1,12 +1,24 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { buildContract } from "./server/lib/contract";
 
 const SITE_URL = "https://opencomponents.dev";
 
 // Docus reads the site URL from the environment: for canonical URLs, robots.txt
 // and llms.txt at build time, and for the sitemap when it's prerendered.
 process.env.NUXT_SITE_URL ||= SITE_URL;
+
+// The docs pages with a contract, which server/middleware/raw-contract.ts serves at
+// /raw/<path>.yaml: 3.components/1.button.md has /raw/docs/components/button.yaml.
+const contracts = readdirSync("content/docs", { recursive: true, encoding: "utf8" }).flatMap((file) => {
+  const source = file.endsWith(".md") ? readFileSync(join("content/docs", file), "utf8") : "";
+  if (!buildContract(source)) return [];
+  return {
+    title: source.match(/^title: (.+)$/m)?.[1] ?? file,
+    path: `/raw/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1")}.yaml`,
+  };
+});
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -31,6 +43,21 @@ export default defineNuxtConfig({
   // The docs header and title template (Docus falls back to the package name).
   site: {
     name: "Open Components",
+  },
+
+  // llms.txt lists the contracts, ahead of the pages Nuxt Content adds.
+  llms: {
+    sections: [
+      {
+        title: "Contracts",
+        description: "Every requirement for a component or convention, rules included, in one YAML file.",
+        links: contracts.map(({ title, path }) => ({
+          title,
+          description: `The ${title} contract, with every rule from its checklist`,
+          href: `${SITE_URL}${path}`,
+        })),
+      },
+    ],
   },
 
   // Docus's MCP server needs a server at runtime, and the site is static.
@@ -84,8 +111,10 @@ export default defineNuxtConfig({
     compressPublicAssets: false,
     prerender: {
       crawlLinks: true,
-      // /docs only redirects, so crawling the docs starts from the introduction.
-      routes: ["/", "/docs", "/docs/getting-started/introduction"],
+      // /docs only redirects, so crawling the docs starts from the introduction. The
+      // crawler only follows links without an extension or to .json, so the contracts
+      // are listed too.
+      routes: ["/", "/docs", "/docs/getting-started/introduction", ...contracts.map(({ path }) => path)],
       failOnError: true,
     },
   },

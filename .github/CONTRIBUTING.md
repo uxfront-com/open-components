@@ -14,6 +14,7 @@ pnpm build            # nuxt generate → dist
 pnpm preview          # serve the generated site
 pnpm check-types      # type-check the .ts and .vue sources (see "The docs" for what it skips)
 pnpm check-reference  # check the component pages show app/reference/ as it is
+pnpm test             # run the reference implementations' tests (app/reference/<component>/*.test.ts)
 pnpm lighthouse       # Lighthouse CI against dist, fails below 100 in any category (add new routes to `url` in `lighthouserc.json`)
 ```
 
@@ -63,7 +64,8 @@ How it shares the app with the homepage:
 - The site is static, so Docus's MCP server is off (`mcp.enabled` in `nuxt.config.ts`), and so is its AI assistant, which only starts with an `AI_GATEWAY_API_KEY`.
 - In content, link to the generated files (`/llms.txt`, `/raw/…`) with `{external}`, as the introduction does. Otherwise the router handles the click and shows the 404 page.
 - `server/middleware/raw-markdown.ts` serves `/raw/<path>.md` from the page's source file. Nuxt Content's own route rebuilds it from the parsed page and writes tables as unescaped HTML, which agents, and Docus's "Copy page", then read.
-- Live examples are Vue components in `app/components/content/<component>/` (like `button/examples/ButtonVariantsExample.vue`), which `app/app.css` adds to Tailwind's sources. They render the reference implementations in `app/reference/`, which the component pages also show as code: when you change one, update the other, and `pnpm check-reference` (run in CI) confirms they match.
+- `server/middleware/raw-contract.ts` serves `/raw/<path>.yaml`, the page's contract: the YAML block under its `### Described` heading, with every row of its `## Checklist` tables in place of the `rules:` link (`server/lib/contract.ts`). The tables are read by their header row, so keep the column names (Rule, Level, Scope, Requirement and Check), and name a table's heading after its layer, as in `### UX rules`. `nuxt.config.ts` lists the contracts to prerender, and in `llms.txt`.
+- Live examples are Vue components in `app/components/content/<component>/` (like `button/examples/ButtonVariantsExample.vue`), which `app/app.css` adds to Tailwind's sources. They render the reference implementations in `app/reference/`, which the component pages also show as code: when you change one, update the other, and `pnpm check-reference` (run in CI) confirms they match. That includes each component's tests, like `app/reference/button/Button.test.ts`, which `pnpm test` runs on [Vitest](https://vitest.dev) (also in CI).
 - Name the CSS variables in the reference implementations as token paths, with a double dash between groups and single dashes inside a name, like `--color--primary-contrast` or `--button--icon--size`. The [Design Tokens](../content/docs/2.foundations/1.design-tokens.md) page describes the convention, and has a Stylelint rule that checks it.
 
 Docus ships its sources uncompiled, and they don't type-check against this app's dependencies. `pnpm check-types` runs `vue-tsc` and fails on any error outside them.
