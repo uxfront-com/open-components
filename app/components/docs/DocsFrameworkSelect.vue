@@ -1,27 +1,30 @@
 <script setup lang="ts">
-// Replaces @uxfront/layer-docs's, which sits flush with the sidebar while the
-// navigation below it is inset: its list bleeds out by its items' padding, so
-// their icons and labels line up with the sidebar's edge. The select bleeds out
-// the same way and takes their icon size, so its icon and label line up too.
-// A button doesn't stretch to fill its parent, so a wrapper bleeds out instead,
-// and the attributes, like DocsAsideLeftTop's aria-labelledby, go to the select.
+// Replaces @uxfront/layer-docs's, which sits flush with the sidebar. The
+// Framework label above it lines up with the navigation's categories, so the
+// select sits like one of their pages: indented behind the same guide line, at
+// the same width, with the same icon size, so its icon and label line up with
+// theirs. The wrappers mirror the navigation's child list and its items. The
+// classes go to the outer one, so a margin stays outside the guide line, and
+// the other attributes, like DocsAsideLeftTop's aria-labelledby, to the select.
 defineOptions({ inheritAttrs: false });
 
 const { framework, frameworks, current } = useFramework();
 </script>
 
 <template>
-  <div class="-mx-2.5">
-    <USelect
-      v-bind="$attrs"
-      :model-value="current?.value"
-      :items="frameworks"
-      variant="ghost"
-      color="neutral"
-      :icon="current?.icon"
-      :ui="{ leadingIcon: 'size-4 mx-0.5' }"
-      class="w-full"
-      @update:model-value="framework = $event"
-    />
+  <div :class="$attrs.class" class="ms-2.5 -me-2.5 border-s border-default">
+    <div class="ps-1.5 -ms-px">
+      <USelect
+        v-bind="{ ...$attrs, class: undefined }"
+        :model-value="current?.value"
+        :items="frameworks"
+        variant="ghost"
+        color="neutral"
+        :icon="current?.icon"
+        :ui="{ leadingIcon: 'size-4 mx-0.5' }"
+        class="w-full"
+        @update:model-value="framework = $event"
+      />
+    </div>
   </div>
 </template>
