@@ -61,6 +61,18 @@ export default defineNuxtConfig({
     ],
   },
 
+  // The languages of the per-framework examples, on top of the ones Docus highlights
+  // (Vue, TypeScript, HTML, CSS, …).
+  content: {
+    build: {
+      markdown: {
+        highlight: {
+          langs: ["tsx", "svelte", "angular-html", "angular-ts", "astro"],
+        },
+      },
+    },
+  },
+
   // Docus's MCP server needs a server at runtime, and the site is static.
   mcp: {
     enabled: false,
