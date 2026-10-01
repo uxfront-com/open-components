@@ -265,6 +265,8 @@ onMounted(() => {
     padding-inline: 0;
     background-image: none;
     color: var(--button--text);
+    /* Underlined at rest, so it doesn't rely on colour alone to stand out from the text around it. */
+    text-decoration-line: underline;
     text-underline-offset: 0.25em;
   }
 
@@ -274,8 +276,8 @@ onMounted(() => {
     .button:hover {
       --button--state: 8%;
     }
-    .button[data-variant="link"]:hover {
-      text-decoration-line: underline;
+    .button[data-variant="link"]:hover:not(:disabled, [aria-disabled="true"]) {
+      text-decoration-thickness: 2px;
     }
   }
   .button:active,
@@ -295,7 +297,6 @@ onMounted(() => {
   .button:disabled:not([data-loading]),
   .button[aria-disabled="true"]:not([data-loading]) {
     opacity: 0.5;
-    text-decoration-line: none;
   }
   .button[data-loading] {
     cursor: progress;
@@ -370,6 +371,14 @@ onMounted(() => {
   @media (prefers-reduced-motion: reduce) {
     [data-slot="spinner"] {
       animation: button-pulse 1.6s ease-in-out infinite;
+    }
+  }
+
+  /* With more contrast, borders are drawn in the label's colour at full strength. */
+  @media (prefers-contrast: more) {
+    .button[data-variant="outline"],
+    .button[data-variant="subtle"] {
+      border-color: currentColor;
     }
   }
 
