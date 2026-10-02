@@ -27,6 +27,7 @@ Workers Builds deploys `dist` as a static-assets-only Worker, configured in `wra
 - Build command: `pnpm run build`
 - Deploy command: `npx wrangler deploy`
 - Non-production branch deploy command: `npx wrangler preview`
+- Build variable: `NUXT_PUBLIC_AMPLITUDE_API_KEY`, the Amplitude project's API key (see [Analytics](#analytics))
 
 Keep `wrangler.jsonc`: without it, `wrangler deploy` auto-configures Nuxt for SSR and fails on the static build. Keep its `previews` block too, even though it's empty: `wrangler preview` refuses to run without it. Run `npx wrangler dev` after `pnpm build` to serve `dist` the way Cloudflare will.
 
@@ -112,10 +113,23 @@ A live example takes the switcher as its code. Nest the switcher with as many co
 
 The code is written for a component with the same API in every framework, in each one's idiom. React and Solid take `leading` and `trailing` as props, Svelte as snippets and Astro as named slots. Angular puts the component on the native element (`<button appButton>`), so it can stay the root, and projects icons by attribute (`<lucide-icon leading … />`). Vanilla writes out the markup from the component's DOM contract, with a script for the behaviour.
 
+## Analytics
+
+Amplitude Analytics and Session Replay come from `modules/amplitude.ts`, a local Nuxt module, and are built in when `NUXT_PUBLIC_AMPLITUDE_API_KEY` is set (`.env.example` lists it for local builds; use a separate project's key there). Without it, as in CI, none of it is built in, Partytown included.
+
+- The Browser SDK runs in a web worker with [Partytown](https://partytown.qwik.dev), loaded from Amplitude's CDN at a pinned version (`SDK_URL`). It tracks sessions, marketing attribution and page views, client-side navigations included and the homepage's chapter links (hash changes) not.
+- The SDK's two scripts are rendered on the server only. Partytown retypes the scripts it has run, so the client's head would no longer find them, add them again, and Partytown would run the SDK twice.
+- Element interactions (autocaptured clicks) stay off: from the worker, the SDK can't read the clicked element. Web vitals and network tracking would watch the worker instead of the page, so leave them off in the project's remote autocapture settings too.
+- The rest of the site tracks events with `window.amplitude?.track()`, which Partytown forwards to the worker. `app/plugins/framework-selected.client.ts` tracks "Framework Selected" when a reader picks a framework in the Framework select. Only track what keeps the reader on the page: an event tracked as it unloads, like a click on a link to another page, doesn't reach the worker in time.
+- Session Replay records the DOM, which a worker can't, so it runs on the main thread with the standalone SDK, once the page is idle (`modules/amplitude/runtime/session-replay.ts`). The worker hands it the device and session IDs the Browser SDK tracks under, and the new ones when a session ends, and Amplitude links each replay to its session's events by them. `amplitude.sessionReplaySampleRate` in `nuxt.config.ts` sets the share of sessions it records until the project's Session Replay settings set one.
+- `pnpm-workspace.yaml` overrides the Partytown version `@nuxtjs/partytown` asks for: 0.11 reads the deprecated `attributionSrc` of every element, and the deprecation it logs costs the homepage its Best Practices 100.
+
+With Amplitude built in, the homepage keeps its Lighthouse scores in Performance (no added Total Blocking Time), Accessibility and SEO, and in Best Practices as long as the key is valid: Amplitude's errors for a wrong key fail it.
+
 ## Keeping 100s as the site grows
 
 - The first paint depends on the prerendered HTML alone: the `@uxfront/ui` components inline every style they use, and `@uxfront/layer-ui` loads the web fonts, the entry stylesheet and the app bundle only after the browser reports the first contentful paint. Don't add render-blocking resources, and load heavy code with dynamic `import()` (the WebGL engine is only imported once the page is idle).
 - Images: use `@nuxt/image` (explicit width/height, AVIF/WebP, lazy loading below the fold).
-- Third-party scripts: avoid them, or load via `@nuxt/scripts` with `trigger: 'onNuxtReady'`.
+- Third-party scripts: avoid them, run them in Partytown's worker like Amplitude (see [Analytics](#analytics)), or load via `@nuxt/scripts` with `trigger: 'onNuxtReady'`.
 - Every page needs a title, a meta description, a canonical link and a single `<h1>` (see `app/pages/index.vue`).
 - `lighthouserc.json` covers the homepage. The docs pages are Docus's theme as it ships, which scores below 100 in performance and accessibility, so they're not in it yet. The Lighthouse CI server also doesn't resolve `/docs` to `docs.html` the way Cloudflare does: measure them on `npx wrangler dev` instead.
