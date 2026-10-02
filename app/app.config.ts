@@ -20,6 +20,10 @@ export default defineAppConfig({
       { value: "astro", label: "Astro", icon: "i-simple-icons-astro" },
       { value: "vanilla", label: "Vanilla", icon: "i-simple-icons-javascript" },
     ],
+    // The docs header's site name, set and signed "by UXFront" the way the
+    // homepage header does.
+    wordmark: { bold: "Open", regular: "Components" },
+    byline: true,
   },
   ui: {
     colors: {
