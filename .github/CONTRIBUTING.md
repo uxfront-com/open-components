@@ -91,7 +91,7 @@ Write an example once per framework in a `::framework-switcher`, one slot per fr
 
 It shows the code for the framework picked in the Framework select above the sidebar, which is kept across visits. The frameworks, their order and their slot names (the `value`s) are `docsTheme.frameworks` in `app/app.config.ts`, as in [styleframe's docs](https://www.styleframe.dev/docs/theme/components/button). A page doesn't have to cover them all: a missing framework shows the first one the page has, with a note saying so.
 
-The switcher and the select come from `@uxfront/layer-docs`, which also bundles the framework icons named in `app/app.config.ts`. `app/components/content/FrameworkSwitcher.vue` replaces its switcher, which adds a tab per framework to every example, since the select already picks one for the whole site. Docus only highlights a few languages, so `nuxt.config.ts` adds the ones the examples need (`tsx`, `svelte`, `angular-html`, `angular-ts` and `astro`): add any new one there too.
+The switcher and the select come from `@uxfront/layer-docs`, which also bundles the framework icons named in `app/app.config.ts`, and on phones puts the select in the header's menu. Docus only highlights a few languages, and the layer adds the ones the examples need (`tsx`, `svelte`, `angular-html`, `angular-ts` and `astro`). Add any other to `content.build.markdown.highlight.langs` in `nuxt.config.ts`.
 
 A live example takes the switcher as its code. Nest the switcher with as many colons as the example: remark-mdc only gives `#react` and the other slots to a nested component written that way, and with `:::framework-switcher` they'd go to the example instead.
 
