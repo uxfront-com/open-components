@@ -12,5 +12,6 @@ overrides:
   # 0.14 skips it. Drop this once @nuxtjs/partytown depends on 0.14.
   '@nuxtjs/partytown>@qwik.dev/partytown': 0.14.4
 minimumReleaseAgeExclude:
-  - '@uxfront/layer-ui@0.1.2'
-  - '@uxfront/ui@0.3.0'
+  - '@uxfront/layer-ui@0.1.5'
+  - '@uxfront/scene@0.3.0'
+  - '@uxfront/ui@0.4.2'
