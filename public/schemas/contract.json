@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://opencomponents.dev/schemas/contract.json",
   "title": "Open Components contract",
-  "description": "Every requirement for a component or a convention in one file: the YAML block under a docs page's Described heading, published at https://opencomponents.dev/raw/<path>.yaml with every rule from the page's checklist. A contract with a `component` field describes a component, and any other describes a convention, like token paths.",
+  "description": "A component's API and every rule it has to meet, or a convention's rules, in one file: the YAML block under a docs page's Described heading, published at https://opencomponents.dev/raw/<path>.yaml with every rule from the page's checklist. A contract with a `component` field describes a component, and any other describes a convention, like token paths.",
   "type": "object",
   "if": { "required": ["component"] },
   "then": { "$ref": "#/$defs/component" },
@@ -40,7 +40,7 @@
           "pattern": "^[a-z]+$"
         },
         "props": {
-          "description": "Its props, by name, in camelCase.",
+          "description": "Its props, by name, in camelCase. Its rules say which of them the standard requires, like the names every component shares.",
           "type": "object",
           "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" },
           "additionalProperties": { "$ref": "#/$defs/prop" }
@@ -91,7 +91,7 @@
           }
         },
         "rules": {
-          "description": "The page's checklist: a link to it on the page, or every rule in it, each with its layer and scope.",
+          "description": "The page's checklist, which is what the standard requires: a link to it on the page, or every rule in it, each with its layer and scope.",
           "if": { "type": "string" },
           "then": { "$ref": "#/$defs/url" },
           "else": {
@@ -123,7 +123,7 @@
           "$ref": "#/$defs/url"
         },
         "rules": {
-          "description": "The page's checklist: a link to it on the page, or every rule in it.",
+          "description": "The page's checklist, which is what the standard requires: a link to it on the page, or every rule in it.",
           "if": { "type": "string" },
           "then": { "$ref": "#/$defs/url" },
           "else": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rule" } }
@@ -177,6 +177,10 @@
         },
         "requirement": {
           "description": "What the rule requires.",
+          "$ref": "#/$defs/text"
+        },
+        "basis": {
+          "description": "Where the rule comes from: the WCAG 2.2 success criteria behind it, with their level, as in `WCAG 1.4.3, 1.4.11 (AA)`, the HTML standard, WAI-ARIA or the APG, or `Open Components` for a rule of the standard's own. `beyond` marks a rule that asks for more than the criteria it names, as in `Open Components, beyond WCAG 1.4.1 (A)`.",
           "$ref": "#/$defs/text"
         },
         "check": {
