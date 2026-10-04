@@ -34,7 +34,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      # Also runs `nuxt prepare` (postinstall), which writes the .nuxt tsconfigs.
+      # Also runs `nuxt prepare` for the site and the MCP server (postinstall), which
+      # writes the .nuxt tsconfigs.
       - run: pnpm install --frozen-lockfile
       - run: pnpm check-types
       # The component pages show app/reference/ as code: fails if they drift apart.
@@ -73,7 +74,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Fails on any page that doesn't prerender (`failOnError` in nuxt.config.ts).
+      # Also builds the MCP server (mcp/).
       - run: pnpm build
+      # Serves dist/ and the MCP server with wrangler dev, the way Cloudflare will,
+      # and checks every tool, resource and prompt against the built site.
+      - run: pnpm check-mcp
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dist

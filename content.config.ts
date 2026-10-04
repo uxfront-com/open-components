@@ -9,7 +9,9 @@ export default defineContentConfig({
       type: "page",
       source: "changelog/*.md",
       schema: z.object({
-        // The day it was published, as in 2026-09-30. Entries are listed newest first.
+        // The day it was published, as in 2026-09-30. Entries are listed newest first,
+        // so one that shares its day with another gets a time too, in UTC, as in
+        // 2026-10-04T12:00:00Z, which still shows as the day.
         date: z.string(),
         // The badge beside the date: the docs section it's in, like Components.
         category: z.string(),

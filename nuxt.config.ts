@@ -2,7 +2,10 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Features } from "lightningcss";
+import { MCP_DEV_PORT } from "./mcp/port.mjs";
 import { buildContract } from "./server/lib/contract";
+import { SECURITY_HEADERS } from "./server/lib/headers";
+import { docsPath } from "./server/lib/raw";
 
 const SITE_URL = "https://opencomponents.dev";
 
@@ -17,7 +20,7 @@ const contracts = readdirSync("content/docs", { recursive: true, encoding: "utf8
   if (!buildContract(source)) return [];
   return {
     title: source.match(/^title: (.+)$/m)?.[1] ?? file,
-    path: `/raw/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1")}.yaml`,
+    path: `/raw${docsPath(file)}.yaml`,
   };
 });
 
@@ -46,10 +49,29 @@ export default defineNuxtConfig({
     name: "Open Components",
   },
 
-  // llms.txt lists the contracts and their schema (public/schemas/contract.json),
-  // ahead of the pages Nuxt Content adds.
+  // llms.txt points agents at the MCP server (mcp/), then lists the contracts and
+  // their schema (public/schemas/contract.json), ahead of the pages Nuxt Content adds.
   llms: {
     sections: [
+      {
+        // The title newer versions of the MCP toolkit give the section they add to
+        // llms.txt, on sites where it's on.
+        title: "MCP Server",
+        description:
+          "This site's MCP server, over streamable HTTP: the contracts, every rule and the docs, a section at a time, for agents to build and review components with.",
+        links: [
+          {
+            title: "Open Components MCP server",
+            description: "Connect an MCP client to this URL, with no authentication",
+            href: `${SITE_URL}/mcp`,
+          },
+          {
+            title: "MCP Server",
+            description: "How to connect it to Claude Code, Cursor, VS Code and other clients, and what it offers",
+            href: `${SITE_URL}/raw${docsPath("1.getting-started/3.mcp-server.md")}.md`,
+          },
+        ],
+      },
       {
         title: "Contracts",
         description: "Every requirement for a component or convention, rules included, in one YAML file.",
@@ -69,7 +91,8 @@ export default defineNuxtConfig({
     ],
   },
 
-  // Docus's MCP server needs a server at runtime, and the site is static.
+  // The site is static, so Docus's MCP server is off: our own, in mcp/, serves /mcp
+  // as a Worker (see wrangler.jsonc). Docus's page menu still links to /mcp.
   mcp: {
     enabled: false,
   },
@@ -130,13 +153,7 @@ export default defineNuxtConfig({
       headers: { "cache-control": "public, max-age=31536000, immutable" },
     },
     "/**": {
-      headers: {
-        "X-Content-Type-Options": "nosniff",
-        "Referrer-Policy": "strict-origin-when-cross-origin",
-        "X-Frame-Options": "DENY",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-        "Cross-Origin-Opener-Policy": "same-origin",
-      },
+      headers: SECURITY_HEADERS,
     },
   },
 
@@ -155,7 +172,21 @@ export default defineNuxtConfig({
         "/changelog",
         ...contracts.map(({ path }) => path),
       ],
+      // The MCP server (mcp/) answers /mcp and the install links under it, which
+      // the MCP Server page links to, so the crawler leaves /mcp and below alone.
+      ignore: [/^\/mcp(\/|\?|$)/],
       failOnError: true,
+    },
+  },
+
+  $development: {
+    nitro: {
+      // `pnpm dev:mcp` serves the MCP server (mcp/port.mjs), and this sends /mcp and
+      // /mcp/* to it, so the page menu's MCP links work in development too. Not
+      // routeRules' `proxy`, which drops the Accept header MCP requests need.
+      devProxy: {
+        "/mcp": { target: `http://localhost:${MCP_DEV_PORT}/mcp`, changeOrigin: true },
+      },
     },
   },
 

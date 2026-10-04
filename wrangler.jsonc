@@ -1,12 +1,26 @@
-// Deploys the `nuxt generate` output as static assets (no Worker script).
-// Without this file, `wrangler deploy` auto-configures Nuxt for SSR and fails.
+// Deploys the `nuxt generate` output as static assets, with the MCP server (mcp/,
+// built by `nuxt build mcp`) as the Worker behind /mcp. Without this file,
+// `wrangler deploy` auto-configures Nuxt for SSR and fails.
 {
   "name": "open-components",
   "compatibility_date": "2026-09-21",
+  // For the MCP server's AsyncLocalStorage and Buffer (`cloudflare.nodeCompat` in
+  // mcp/nuxt.config.ts).
+  "compatibility_flags": ["nodejs_compat"],
+  // Only runs for the paths in assets.run_worker_first.
+  "main": "./mcp/.output/server/index.mjs",
   "assets": {
     "directory": "./dist",
     // Serve dist/404.html with a 404 status for unknown paths.
     "not_found_handling": "404-page",
+    // The MCP endpoint, and the toolkit's /mcp/deeplink, which Docus's page menu
+    // links to ("Copy MCP Server URL", "Add MCP Server"). Every other path is a
+    // static asset or the 404 page, and never runs the Worker: without this list,
+    // requests that aren't navigations, like an agent's fetch, would reach it
+    // instead of the 404 page. It lists routes rather than /mcp/*, so the toolkit's
+    // others stay off the site, like /mcp/badge.svg, which writes its query into
+    // the SVG unescaped, letting a crafted link run script on the site.
+    "run_worker_first": ["/mcp", "/mcp/", "/mcp/deeplink"],
   },
   // Required by `wrangler preview` (non-production branch builds). Empty because
   // previews need no separate bindings; `assets` stays at the top level.

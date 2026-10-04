@@ -1,0 +1,10 @@
+{
+  // The MCP server's tests (lib/*.test.ts), which no Nuxt tsconfig includes:
+  // `pnpm check-types` checks them too.
+  "extends": "./.nuxt/tsconfig.node.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "tsBuildInfoFile": "./.nuxt/tsconfig.test.tsbuildinfo"
+  },
+  "include": ["lib/**/*.test.ts"]
+}
