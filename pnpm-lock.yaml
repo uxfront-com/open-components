@@ -27,8 +27,8 @@ importers:
         specifier: ^0.1.6
         version: 0.1.6(6193ce76ab59ed0a9c6493ab4e57b426)
       '@uxfront/scene':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.4.1
+        version: 0.4.1
       '@uxfront/ui':
         specifier: ^0.5.0
         version: 0.5.0(vue@3.5.43(typescript@5.9.3))
@@ -3251,8 +3251,8 @@ packages:
       nuxt: ^4.5.0
       vue: ^3.5.0
 
-  '@uxfront/scene@0.4.0':
-    resolution: {integrity: sha512-pGqqZ0g7eurv3YLEar/MpoSJPNhbGzm9nHvq/7TLWiIEbmIed44DiE33cYTIUKJbSMJphxhUkT7DzQUHU82kMg==}
+  '@uxfront/scene@0.4.1':
+    resolution: {integrity: sha512-nuJEx2ZXrQosbbjiat5R+FHQ/ZkpgnybiEMHI2xBvdVQ3cMrDzHyv8xMfWiixaFF5JZ6+PbByH/oHLKdKWoOSw==}
 
   '@uxfront/ui@0.5.0':
     resolution: {integrity: sha512-I8UOFiwdul6hekwbb/IF2yIrHxZLR/vAWUUBY5ADdzrrF/PkwJCHtF833X4+TqcSki9VaFaOcGfatlWEQWekjA==}
@@ -10988,7 +10988,7 @@ snapshots:
     dependencies:
       '@nuxt/fonts': 0.14.0(db0@0.3.4(better-sqlite3@13.0.3))(esbuild@0.28.2)(ioredis@5.11.1)(magic-string@1.4.2)(magicast@0.5.5)(oxc-parser@0.143.0)(rolldown@1.2.11)(rollup@4.63.5)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
       '@nuxt/kit': 4.5.2(magic-string@1.4.2)(magicast@0.5.5)(oxc-parser@0.143.0)(rolldown@1.2.11)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.11)(rollup@4.63.5)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
-      '@uxfront/scene': 0.4.0
+      '@uxfront/scene': 0.4.1
       '@uxfront/ui': 0.5.0(vue@3.5.43(typescript@5.9.3))
       nuxt: 4.5.2(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@oxc-project/types@0.151.0)(@types/node@24.13.6)(@vue/compiler-sfc@3.5.43)(better-sqlite3@13.0.3)(commander@14.0.3)(db0@0.3.4(better-sqlite3@13.0.3))(esbuild@0.28.2)(eslint@10.11.0(jiti@2.7.0))(ioredis@5.11.1)(lightningcss@1.33.0)(magicast@0.5.5)(optionator@0.9.4)(oxc-parser@0.143.0)(rolldown@1.2.11)(rollup-plugin-visualizer@7.1.1(rolldown@1.2.11)(rollup@4.63.5))(rollup@4.63.5)(srvx@0.11.22)(terser@5.51.2)(typescript@5.9.3)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue-tsc@3.3.11(typescript@5.9.3))(yaml@2.9.1)
       vue: 3.5.43(typescript@5.9.3)
@@ -11027,11 +11027,11 @@ snapshots:
       - vite
       - webpack
 
-  '@uxfront/scene@0.4.0': {}
+  '@uxfront/scene@0.4.1': {}
 
   '@uxfront/ui@0.5.0(vue@3.5.43(typescript@5.9.3))':
     dependencies:
-      '@uxfront/scene': 0.4.0
+      '@uxfront/scene': 0.4.1
       vue: 3.5.43(typescript@5.9.3)
 
   '@vercel/nft@1.11.0(rollup@4.63.5)':
