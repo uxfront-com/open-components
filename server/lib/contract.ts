@@ -35,8 +35,8 @@ function section(markdown: string, heading: string): string | undefined {
 }
 
 // Every rule in the checklist's tables, as YAML list items. The tables are read by
-// their header row, so a column like Scope only shows up on pages that have it, and
-// a heading like "### UX rules" gives the rules below it their layer.
+// their header row, so a column like Scope or Basis only shows up on pages that have
+// it, and a heading like "### UX rules" gives the rules below it their layer.
 function checklist(markdown: string): string[] {
   const items: string[] = [];
   let layer: string | undefined;
@@ -60,6 +60,7 @@ function checklist(markdown: string): string[] {
 
     const cell = (column: string) => cells[columns!.indexOf(column)];
     const scope = cell("scope");
+    const basis = cell("basis");
     items.push(
       `  - id: ${cell("rule")?.replaceAll("`", "")}`,
       ...(layer ? [`    layer: ${layer.toLowerCase()}`] : []),
@@ -67,6 +68,7 @@ function checklist(markdown: string): string[] {
       ...(scope ? [`    scope: ${scope.toLowerCase()}`] : []),
       // JSON strings are valid YAML, and these hold backticks, colons and quotes.
       `    requirement: ${JSON.stringify(cell("requirement"))}`,
+      ...(basis ? [`    basis: ${JSON.stringify(basis)}`] : []),
       `    check: ${JSON.stringify(cell("check"))}`,
     );
   }

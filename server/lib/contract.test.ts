@@ -31,6 +31,12 @@ describe("Contracts", () => {
     expect(errors(contract)).toEqual([]);
   });
 
+  // The schema leaves the basis optional, for contracts written elsewhere, but every
+  // checklist on this site has a Basis column.
+  it.each(contracts)("%s's contract says where each rule comes from", (_, contract) => {
+    expect(contract.rules.filter((rule: any) => !rule.basis)).toEqual([]);
+  });
+
   // A schema that accepts anything would pass every contract above, so these break
   // the Button's contract one way at a time.
   const [, button] = contracts.find(([file]) => file.endsWith("button.md"))!;
@@ -46,6 +52,7 @@ describe("Contracts", () => {
     ["has a variable that isn't a token path", (contract) => ({ ...contract, tokens: { variables: ["--button-height"] } })],
     ["has a rule with a level other than must or should", withRule((rule) => ({ ...rule, level: "may" }))],
     ["has a rule without a scope", withRule(({ scope, ...rule }) => rule)],
+    ["has a rule with an empty basis", withRule((rule) => ({ ...rule, basis: "" }))],
     ["has a rule with an ID that doesn't name its page", withRule((rule) => ({ ...rule, id: "keep-focus" }))],
   ])("rejects a contract that %s", (_, change) => {
     expect(errors(change(button))).not.toEqual([]);
