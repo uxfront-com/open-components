@@ -46,17 +46,25 @@ export default defineNuxtConfig({
     name: "Open Components",
   },
 
-  // llms.txt lists the contracts, ahead of the pages Nuxt Content adds.
+  // llms.txt lists the contracts and their schema (public/schemas/contract.json),
+  // ahead of the pages Nuxt Content adds.
   llms: {
     sections: [
       {
         title: "Contracts",
         description: "Every requirement for a component or convention, rules included, in one YAML file.",
-        links: contracts.map(({ title, path }) => ({
-          title,
-          description: `The ${title} contract, with every rule from its checklist`,
-          href: `${SITE_URL}${path}`,
-        })),
+        links: [
+          ...contracts.map(({ title, path }) => ({
+            title,
+            description: `The ${title} contract, with every rule from its checklist`,
+            href: `${SITE_URL}${path}`,
+          })),
+          {
+            title: "Contract schema",
+            description: "The JSON Schema every contract follows, for validating them, and contracts of your own",
+            href: `${SITE_URL}/schemas/contract.json`,
+          },
+        ],
       },
     ],
   },
@@ -112,6 +120,11 @@ export default defineNuxtConfig({
     // live at /docs keeps working too, since agents may have it bookmarked.
     "/docs": { redirect: "/docs/getting-started/introduction" },
     "/raw/docs.md": { redirect: "/raw/docs/getting-started/introduction.md" },
+    // Editors that run in the browser, like vscode.dev, fetch the contract schema
+    // from their own origin.
+    "/schemas/**": {
+      headers: { "Access-Control-Allow-Origin": "*" },
+    },
     // Hashed build assets never change, so cache them forever.
     "/_nuxt/**": {
       headers: { "cache-control": "public, max-age=31536000, immutable" },
@@ -132,10 +145,16 @@ export default defineNuxtConfig({
     compressPublicAssets: false,
     prerender: {
       crawlLinks: true,
-      // /docs only redirects, so crawling the docs starts from the introduction. The
-      // crawler only follows links without an extension or to .json, so the contracts
-      // are listed too.
-      routes: ["/", "/docs", "/docs/getting-started/introduction", ...contracts.map(({ path }) => path)],
+      // /docs only redirects, so crawling the docs starts from the introduction, and
+      // the changelog's entries are crawled from /changelog. The crawler only follows
+      // links without an extension or to .json, so the contracts are listed too.
+      routes: [
+        "/",
+        "/docs",
+        "/docs/getting-started/introduction",
+        "/changelog",
+        ...contracts.map(({ path }) => path),
+      ],
       failOnError: true,
     },
   },

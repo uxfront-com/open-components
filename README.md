@@ -21,6 +21,8 @@
     ·
     <a href="https://opencomponents.dev/docs">Documentation</a>
     ·
+    <a href="https://opencomponents.dev/changelog">Changelog</a>
+    ·
     <a href="https://opencomponents.dev/llms.txt">llms.txt</a>
     ·
     <a href="https://github.com/uxfront-com/open-components/issues">Issue Tracker</a>
@@ -84,6 +86,9 @@ and check their work against it:
 -   `https://opencomponents.dev/raw/<path>.yaml` holds a page's contract, with every rule from its
     checklist, as in [`/raw/docs/components/button.yaml`](https://opencomponents.dev/raw/docs/components/button.yaml).
     It's every requirement in a fraction of the page's length.
+-   [`/schemas/contract.json`](https://opencomponents.dev/schemas/contract.json) is the JSON Schema
+    every contract follows, so you can validate them, and contracts of your own. Each contract names
+    it on its first line, so editors that use the YAML language server check it as you type.
 -   [`/llms.txt`](https://opencomponents.dev/llms.txt) lists every page and every contract.
 -   [`/llms-full.txt`](https://opencomponents.dev/llms-full.txt) holds them all in one file. Point
     your agent at it to give it the whole standard in one request.

@@ -14,7 +14,7 @@ pnpm build            # nuxt generate → dist
 pnpm preview          # serve the generated site
 pnpm check-types      # type-check the .ts and .vue sources (see "The docs" for what it skips)
 pnpm check-reference  # check the component pages show app/reference/ as it is
-pnpm test             # run the reference implementations' tests (app/reference/<component>/*.test.ts)
+pnpm test             # run the reference implementations' tests (app/reference/<component>/*.test.ts) and validate the contracts
 pnpm lighthouse       # Lighthouse CI against dist, fails below 100 in any category (add new routes to `url` in `lighthouserc.json`)
 ```
 
@@ -45,7 +45,7 @@ Every section but the finale shows the `plates` formation, Open Components' thre
 
 `app/lib/formations.ts` adapts the catalog formation for that:
 
-- `hold(formation, local)` freezes a formation's progress. The scene jumps a formation to its end state once the page scrolls past its section, which only a pinned section reaches smoothly. The hero isn't pinned, so it holds the stack drawn apart from the start.
+- `hold(formation, local)` freezes a formation's progress. A section plays its formation through while it fills the screen, give or take a quarter screen. The hero starts at the top of the page, so it only gets the first quarter screen of scroll and the stack would rush apart the moment the page scrolls. It holds the stack drawn apart from the start instead.
 - `spotlight(formation, plate)` lights one plate and dims the other two.
 - `share(formation, source)` reads the artwork's uniforms from an earlier `plates` in the scene instead of declaring its own. WebGL2 only guarantees 256 vertex uniform vectors, and about four in ten Android devices stop there ([Web3D Survey](https://web3dsurvey.com/webgl2/parameters/MAX_VERTEX_UNIFORM_VECTORS)). One `plates` declares ~146, so without sharing, even two of them would send those devices to the static fallback.
 
@@ -57,7 +57,8 @@ The documentation is built with [Docus](https://docus.dev), through [`@uxfront/l
 
 How it shares the app with the homepage:
 
-- `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
+- `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs`, `/changelog` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
+- The docs header links to the docs and the changelog (`useHeaderLinks()`): beside its buttons from 768px up (`app/components/app/AppHeaderCTA.vue`), and at the top of its menu on smaller screens (`app/components/app/AppHeaderBody.vue`, which replaces the one from `@uxfront/layer-docs`, so keep it in step with the layer's).
 - Docus adds Tailwind CSS and Nuxt UI to the entry stylesheet. On the homepage, `@uxfront/layer-ui` loads that stylesheet after first paint, and the `.ux-site` styles take precedence over it. Keep `app/app.css`, which Docus imports into the same stylesheet, off `.ux-site` too.
 - `nuxt.config.ts` turns off Nuxt's prefetch hints. Otherwise every page, the homepage included, would prefetch the docs' lazy chunks, which delays the homepage's fonts and stylesheet, and with them its LCP.
 - `app/app.config.ts` sets the theme colors and the GitHub, "Edit this page" and "Report an issue" links. `app/app.css` darkens Nuxt UI's light-mode primary to pass WCAG AA contrast. Nuxt UI's callouts (`::tip`, `::note`, …) still draw their text in fixed shades that fail it in light mode, so avoid them until they're themed.
@@ -65,7 +66,8 @@ How it shares the app with the homepage:
 - The site is static, so Docus's MCP server is off (`mcp.enabled` in `nuxt.config.ts`), and so is its AI assistant, which only starts with an `AI_GATEWAY_API_KEY`.
 - In content, link to the generated files (`/llms.txt`, `/raw/…`) with `{external}`, as the introduction does. Otherwise the router handles the click and shows the 404 page.
 - `server/middleware/raw-markdown.ts` serves `/raw/<path>.md` from the page's source file. Nuxt Content's own route rebuilds it from the parsed page and writes tables as unescaped HTML, which agents, and Docus's "Copy page", then read.
-- `server/middleware/raw-contract.ts` serves `/raw/<path>.yaml`, the page's contract: the YAML block under its `### Described` heading, with every row of its `## Checklist` tables in place of the `rules:` link (`server/lib/contract.ts`). The tables are read by their header row, so keep the column names (Rule, Level, Scope, Requirement and Check), and name a table's heading after its layer, as in `### UX rules`. `nuxt.config.ts` lists the contracts to prerender, and in `llms.txt`.
+- `server/middleware/raw-contract.ts` serves `/raw/<path>.yaml`, the page's contract: the YAML block under its `### Described` heading, with every row of its `## Checklist` tables in place of the `rules:` link (`server/lib/contract.ts`). The tables are read by their header row, so keep the column names (Rule, Level, Scope, Requirement, Basis and Check), and name a table's heading after its layer, as in `### UX rules`. Basis says where a rule comes from, as in `WCAG 1.4.3, 1.4.11 (AA)`, `HTML`, `APG` or `Open Components`, with `beyond` for a rule that asks for more than the criteria it names; `pnpm test` fails on a rule without one. `nuxt.config.ts` lists the contracts to prerender, and in `llms.txt`.
+- `public/schemas/contract.json` is the JSON Schema every contract follows, published at `/schemas/contract.json` and named on each contract's first line for editors that use the YAML language server. `pnpm test` validates every contract against it (`server/lib/contract.test.ts`, also in CI), so when a Described block gains a field, or a checklist a new level or column, add it to the schema in the same change.
 - Live examples are Vue components in `app/components/content/<component>/` (like `button/examples/ButtonVariantsExample.vue`), which `app/app.css` adds to Tailwind's sources. They render the reference implementations in `app/reference/`, which the component pages also show as code: when you change one, update the other, and `pnpm check-reference` (run in CI) confirms they match. That includes each component's tests, like `app/reference/button/Button.test.ts`, which `pnpm test` runs on [Vitest](https://vitest.dev) (also in CI).
 - Name the CSS variables in the reference implementations as token paths, with a double dash between groups and single dashes inside a name, like `--color--primary-contrast` or `--button--icon--size`. The [Design Tokens](../content/docs/2.foundations/1.design-tokens.md) page describes the convention, and has a Stylelint rule that checks it.
 
@@ -112,6 +114,34 @@ A live example takes the switcher as its code. Nest the switcher with as many co
 ````
 
 The code is written for a component with the same API in every framework, in each one's idiom. React and Solid take `leading` and `trailing` as props, Svelte as snippets and Astro as named slots. Angular puts the component on the native element (`<button appButton>`), so it can stay the root, and projects icons by attribute (`<lucide-icon leading … />`). Vanilla writes out the markup from the component's DOM contract, with a script for the behaviour.
+
+## The changelog
+
+`/changelog` lists what's new in the standard, newest first, with each entry in full, and every entry also has a page of its own at `/changelog/<file name>`. Entries are markdown files in `content/changelog/`, in the `changelog` collection (`content.config.ts`):
+
+```md
+---
+title: The Button
+description: Our first component page, on building a button that looks right, …
+date: 2026-10-01
+category: Components
+link:
+  label: Read the Button page
+  to: /docs/components/button
+---
+
+Buttons are the most common interactive component in any interface, and also the one we most often get wrong. …
+
+## New
+
+- It covers how a button looks, how it behaves for every person and every input, …
+```
+
+- Keep it high level: a couple of sentences on what's new and why it matters, then a few short points, leaving the details to the page it links to. Write it the way the docs pages are written, talking to the reader in full sentences rather than lists of features.
+- `date` is the day it was published, and orders the entries. `category` is the badge beside it, usually the docs section, and `link` the page to read more on.
+- Group the notes under `## New`, `## Improved` and `## Fixed`, leaving out any you don't need. On `/changelog`, where each entry's title is an `<h2>`, they move down a level, and only get anchor links on the entry's own page, since every entry has a New section.
+- Name the file after what it adds, as in `design-tokens.md`, since it's the entry's URL. The crawler finds the entries' pages from `/changelog`, and `sitemap.xml` lists them all.
+- `app/pages/changelog/` holds the two pages, and `app/components/changelog/ChangelogEntry.vue` the entry they both show. Their Tailwind classes are listed in `app/app.css`'s sources, along with the header's.
 
 ## Analytics
 

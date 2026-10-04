@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencomponents.dev/schemas/contract.json",
+  "title": "Open Components contract",
+  "description": "Every requirement for a component or a convention in one file: the YAML block under a docs page's Described heading, published at https://opencomponents.dev/raw/<path>.yaml with every rule from the page's checklist. A contract with a `component` field describes a component, and any other describes a convention, like token paths.",
+  "type": "object",
+  "if": { "required": ["component"] },
+  "then": { "$ref": "#/$defs/component" },
+  "else": { "$ref": "#/$defs/convention" },
+  "$defs": {
+    "component": {
+      "title": "Component contract",
+      "description": "A component's API, its DOM contract, its tokens and its rules.",
+      "type": "object",
+      "required": ["component", "summary", "standard", "element", "rules"],
+      "additionalProperties": false,
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schema" },
+        "component": {
+          "description": "The component's name, in PascalCase, as in `Button`.",
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "summary": {
+          "description": "What the component does, in a sentence or two.",
+          "$ref": "#/$defs/text"
+        },
+        "standard": {
+          "description": "The page of the standard the contract comes from, which explains why each rule exists.",
+          "$ref": "#/$defs/url"
+        },
+        "element": {
+          "description": "The HTML element it renders, as in `button`. A comment can name the alternative, as in `# a, with href`.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "role": {
+          "description": "Its ARIA role, as in `button`.",
+          "type": "string",
+          "pattern": "^[a-z]+$"
+        },
+        "props": {
+          "description": "Its props, by name, in camelCase.",
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" },
+          "additionalProperties": { "$ref": "#/$defs/prop" }
+        },
+        "slots": {
+          "description": "Its slots, by name, with what each one holds. `default` holds the content between its tags.",
+          "$ref": "#/$defs/descriptions"
+        },
+        "events": {
+          "description": "The events it emits, by name, with their payload and when they're emitted, as in `MouseEvent. Never emitted while disabled.`",
+          "$ref": "#/$defs/descriptions"
+        },
+        "states": {
+          "description": "Its states, by name, with the selector that matches each one, as in `[aria-pressed=true]`.",
+          "$ref": "#/$defs/descriptions"
+        },
+        "keyboard": {
+          "description": "The keys it responds to, by name, as in `Enter`, with what each one does.",
+          "$ref": "#/$defs/descriptions"
+        },
+        "parts": {
+          "description": "Its parts, as marked with `data-slot`, in the order they render.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" }
+        },
+        "tokens": {
+          "description": "The CSS variables it reads, named as token paths (see https://opencomponents.dev/docs/foundations/design-tokens).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theme": {
+              "description": "The shared theme tokens it reads. `{color}` stands for each value of the `color` prop.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/tokenPath" }
+            },
+            "variables": {
+              "description": "Its own variables, which start with its name and are set on its root, as in `--button--height`.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/tokenPath" }
+            },
+            "layer": {
+              "description": "The cascade layer it styles itself in, out of Tailwind's order: theme, base, components and utilities.",
+              "enum": ["theme", "base", "components", "utilities"]
+            }
+          }
+        },
+        "rules": {
+          "description": "The page's checklist: a link to it on the page, or every rule in it, each with its layer and scope.",
+          "if": { "type": "string" },
+          "then": { "$ref": "#/$defs/url" },
+          "else": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/rule", "type": "object", "required": ["layer", "scope"] }
+          }
+        }
+      }
+    },
+    "convention": {
+      "title": "Convention contract",
+      "description": "A convention every component follows, like token paths. Past the fields every contract has, each convention has fields of its own.",
+      "type": "object",
+      "required": ["convention", "standard", "rules"],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schema" },
+        "convention": {
+          "description": "The convention's name, in kebab-case, as in `token-paths`.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+        },
+        "summary": {
+          "description": "What the convention covers, in a sentence or two.",
+          "$ref": "#/$defs/text"
+        },
+        "standard": {
+          "description": "The page of the standard the contract comes from, which explains why each rule exists.",
+          "$ref": "#/$defs/url"
+        },
+        "rules": {
+          "description": "The page's checklist: a link to it on the page, or every rule in it.",
+          "if": { "type": "string" },
+          "then": { "$ref": "#/$defs/url" },
+          "else": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rule" } }
+        }
+      }
+    },
+    "prop": {
+      "description": "A prop's type, and its default value, if it has one.",
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "description": "A type, like `string` or `boolean`, or the values of a union, as in `[sm, md, lg]`.",
+          "if": { "type": "string" },
+          "then": { "$ref": "#/$defs/text" },
+          "else": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "anyOf": [{ "type": "string" }, { "type": "number" }] }
+          }
+        },
+        "default": {
+          "description": "The value it takes when it isn't set. For a union, one of its values."
+        }
+      }
+    },
+    "rule": {
+      "description": "A rule from the page's checklist.",
+      "type": "object",
+      "required": ["id", "level", "requirement", "check"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Its stable ID, to cite in reviews and commits, as in `button/keep-focus`.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "layer": {
+          "description": "The layer it belongs to: the UI, or the user, developer or agentic experience.",
+          "enum": ["ui", "ux", "dx", "ax"]
+        },
+        "level": {
+          "description": "`must` for a rule every component meets, and `should` for one that's expected unless there's a good reason not to follow it.",
+          "enum": ["must", "should"]
+        },
+        "scope": {
+          "description": "Who meets it: the component, the code that uses it, or both together.",
+          "enum": ["component", "usage", "both"]
+        },
+        "requirement": {
+          "description": "What the rule requires.",
+          "$ref": "#/$defs/text"
+        },
+        "basis": {
+          "description": "Where the rule comes from: the WCAG 2.2 success criteria behind it, with their level, as in `WCAG 1.4.3, 1.4.11 (AA)`, the HTML standard, WAI-ARIA or the APG, or `Open Components` for a rule of the standard's own. `beyond` marks a rule that asks for more than the criteria it names, as in `Open Components, beyond WCAG 1.4.1 (A)`.",
+          "$ref": "#/$defs/text"
+        },
+        "check": {
+          "description": "How to check it, like `Unit test`, `Review` or an axe rule.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "tokenPath": {
+      "description": "A CSS variable named as a token path, with `-` between words and `--` between groups, as in `--color--primary-contrast`. A word in braces, like `{color}`, stands for each value of the prop it names.",
+      "type": "string",
+      "pattern": "^--(?:[a-z0-9]+|\\{[a-z][A-Za-z0-9]*\\})(?:-(?:[a-z0-9]+|\\{[a-z][A-Za-z0-9]*\\}))*(?:--(?:[a-z0-9]+|\\{[a-z][A-Za-z0-9]*\\})(?:-(?:[a-z0-9]+|\\{[a-z][A-Za-z0-9]*\\}))*)+$"
+    },
+    "descriptions": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/text" }
+    },
+    "schema": {
+      "description": "The URL of this schema, for tools that read it from the contract.",
+      "type": "string",
+      "format": "uri"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    }
+  }
+}

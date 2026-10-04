@@ -2,7 +2,7 @@
 import type { FormationOptions } from "@uxfront/scene";
 import { corridor, plates } from "@uxfront/scene/formations";
 
-import { DOCS_URL, GITHUB_API_URL, GITHUB_URL } from "~/data/site";
+import { CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL } from "~/data/site";
 import { hold, share, spotlight } from "~/lib/formations";
 
 useUxHead({
@@ -128,7 +128,8 @@ const ax = [
           </a>
         </template>
         <template #actions>
-          <NuxtLink class="header-link header-docs" :to="DOCS_URL">Documentation</NuxtLink>
+          <NuxtLink class="header-link header-page" :to="DOCS_URL">Documentation</NuxtLink>
+          <NuxtLink class="header-link header-page" :to="CHANGELOG_URL">Changelog</NuxtLink>
           <a
             class="header-link"
             :href="GITHUB_URL"
@@ -244,10 +245,11 @@ const ax = [
   height: 0.75rem;
 }
 
-/* Phones can't fit the byline beside both links. The hero links to the docs just
-   below, and the GitHub link's aria-label still names it without the label. */
+/* Phones can't fit the byline beside the links. The hero links to the docs just
+   below, the docs header links to the changelog, and the GitHub link's
+   aria-label still names it without the label. */
 @media (max-width: 639px) {
-  .header-docs,
+  .header-page,
   .header-label {
     display: none;
   }
