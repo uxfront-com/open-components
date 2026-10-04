@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, useTemplateRef, watch } from "vue";
+import Spinner from "../spinner/Spinner.vue";
 import { announce, prepareAnnouncer } from "./announce";
 
 export interface ButtonProps {
@@ -120,10 +121,7 @@ onMounted(() => {
     <span v-if="$slots.trailing && !iconOnly" data-slot="trailing" aria-hidden="true">
       <slot name="trailing" />
     </span>
-    <svg v-if="loading" data-slot="spinner" viewBox="0 0 16 16" aria-hidden="true">
-      <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="2" opacity="0.25" />
-      <path d="M8 1.5a6.5 6.5 0 0 1 6.5 6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-    </svg>
+    <Spinner v-if="loading" data-slot="spinner" />
   </component>
 </template>
 
@@ -324,23 +322,14 @@ onMounted(() => {
   .button[data-loading] > :not([data-slot="spinner"]) {
     opacity: 0;
   }
-  [data-slot="spinner"] {
+  /* The Spinner turns, and pulses with reduced motion, while the Button places and
+     sizes it. `.button >` outranks the Spinner's own `.spinner`, whichever loads first. */
+  .button > [data-slot="spinner"] {
+    --spinner--size: var(--button--icon--size);
+
     position: absolute;
     inset: 0;
-    width: var(--button--icon--size);
-    height: var(--button--icon--size);
     margin: auto;
-    animation: button-spin 0.8s linear infinite;
-  }
-  @keyframes button-spin {
-    to {
-      rotate: 1turn;
-    }
-  }
-  @keyframes button-pulse {
-    50% {
-      opacity: 0.4;
-    }
   }
 
   /* When the button is icon-only, the label is visually hidden, but it still names the button. */
@@ -364,13 +353,6 @@ onMounted(() => {
       width: max(100%, 2.75rem);
       height: max(100%, 2.75rem);
       translate: -50% -50%;
-    }
-  }
-
-  /* With reduced motion, the spinner pulses instead of turning. */
-  @media (prefers-reduced-motion: reduce) {
-    [data-slot="spinner"] {
-      animation: button-pulse 1.6s ease-in-out infinite;
     }
   }
 
