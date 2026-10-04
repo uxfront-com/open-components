@@ -40,11 +40,13 @@ ${body}
 /**
  * Holds a formation at a fixed `local` progress, whatever the scroll.
  *
- * The scene hands formation `k` `local = 1` as soon as the stage passes `k`,
- * which a pinned section reaches smoothly as it is read. The hero isn't
- * pinned, so a formation that moves with `local`, like `plates`, would jump
- * to its end state the moment the page scrolls. Held, it stays put while it
- * morphs into the next formation. Anchors and `update()` see the same `local`.
+ * A section plays its formation through (`local` 0 → 1) while it fills the
+ * screen, give or take a quarter screen (`HOLD_MARGIN`). The hero starts at
+ * the top of the page, so it only gets the first quarter screen of scroll: a
+ * formation that moves with `local`, like `plates`, would start at the
+ * beginning and rush to its end state the moment the page scrolls. Held, it
+ * stays put while it morphs into the next formation. Anchors and `update()`
+ * see the same `local`.
  */
 export function hold(formation: Formation, local: number): Formation {
   const at = <T extends FormationProgress>(progress: T): T => ({ ...progress, local });

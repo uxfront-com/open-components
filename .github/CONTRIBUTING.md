@@ -45,7 +45,7 @@ Every section but the finale shows the `plates` formation, Open Components' thre
 
 `app/lib/formations.ts` adapts the catalog formation for that:
 
-- `hold(formation, local)` freezes a formation's progress. The scene jumps a formation to its end state once the page scrolls past its section, which only a pinned section reaches smoothly. The hero isn't pinned, so it holds the stack drawn apart from the start.
+- `hold(formation, local)` freezes a formation's progress. A section plays its formation through while it fills the screen, give or take a quarter screen. The hero starts at the top of the page, so it only gets the first quarter screen of scroll and the stack would rush apart the moment the page scrolls. It holds the stack drawn apart from the start instead.
 - `spotlight(formation, plate)` lights one plate and dims the other two.
 - `share(formation, source)` reads the artwork's uniforms from an earlier `plates` in the scene instead of declaring its own. WebGL2 only guarantees 256 vertex uniform vectors, and about four in ten Android devices stop there ([Web3D Survey](https://web3dsurvey.com/webgl2/parameters/MAX_VERTEX_UNIFORM_VECTORS)). One `plates` declares ~146, so without sharing, even two of them would send those devices to the static fallback.
 
