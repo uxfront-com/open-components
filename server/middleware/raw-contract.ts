@@ -7,6 +7,9 @@ import { readDocsPage } from "../lib/docs";
  * server/lib/contract.ts). It's read from the page's source file, like
  * `/raw/<path>.md`, and prerendered from the list in nuxt.config.ts, since
  * crawling doesn't reach it.
+ *
+ * Its first line names the schema it follows, public/schemas/contract.json, which
+ * editors that use the YAML language server check it against.
  */
 export default defineEventHandler(async (event) => {
   const match = event.path.match(/^\/raw(\/.+?)\.yaml$/);
@@ -19,6 +22,7 @@ export default defineEventHandler(async (event) => {
   const { siteUrl } = useRuntimeConfig(event).public;
   setHeader(event, "Content-Type", "application/yaml; charset=utf-8");
   return [
+    `# yaml-language-server: $schema=${siteUrl}/schemas/contract.json`,
     `# The ${docs.page.title} contract, with every rule from its checklist.`,
     `# The page explains why each one exists: ${siteUrl}/raw${match[1]}.md`,
     "",
