@@ -1,10 +1,9 @@
 /**
  * Turns away the toolkit's install badge, /mcp/badge.svg, which writes its
  * `color`, `textColor` and `borderColor` query parameters into the SVG unescaped,
- * so a crafted link would run script on the site. wrangler.jsonc already keeps
- * the path off the Worker, and this keeps it off the server too, should the
- * Worker ever get it. It's a middleware, which runs before every route, since
- * the toolkit's route would win over one of ours.
+ * so a crafted link would run script on mcp.opencomponents.dev. It's a
+ * middleware, which runs before every route, since the toolkit's route would win
+ * over one of ours.
  */
 export default defineEventHandler((event) => {
   // However the path is written: the router also matches it with a trailing slash.

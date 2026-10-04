@@ -1,7 +1,7 @@
 // `pnpm dev:mcp`: serves the MCP server (mcp/) in development on the port in
-// mcp/port.mjs, which `pnpm dev` proxies /mcp to. It's passed as --port, since
+// mcp/port.mjs, which the docs' page menu links to. It's passed as --port, since
 // `nuxt dev` would take a PORT, NUXT_PORT or NITRO_PORT from the environment over
-// the one in mcp/nuxt.config.ts, and the proxy would miss it.
+// the one in mcp/nuxt.config.ts, and the page menu would miss it.
 import { spawn } from "node:child_process";
 import { MCP_DEV_PORT } from "../mcp/port.mjs";
 

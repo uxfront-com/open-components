@@ -4,7 +4,8 @@
   "private": true,
   "packageManager": "pnpm@10.33.4",
   "scripts": {
-    "build": "nuxt generate && nuxt build mcp",
+    "build": "nuxt generate",
+    "build:mcp": "nuxt build mcp",
     "dev": "nuxt dev",
     "dev:mcp": "node scripts/dev-mcp.mjs",
     "generate": "nuxt generate",

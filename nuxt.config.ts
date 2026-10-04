@@ -9,6 +9,9 @@ import { docsPath } from "./server/lib/raw";
 
 const SITE_URL = "https://opencomponents.dev";
 
+// The MCP server (mcp/), which runs as a Worker of its own (mcp/wrangler.jsonc).
+const MCP_URL = "https://mcp.opencomponents.dev/mcp";
+
 // Docus reads the site URL from the environment: for canonical URLs, robots.txt
 // and llms.txt at build time, and for the sitemap when it's prerendered.
 process.env.NUXT_SITE_URL ||= SITE_URL;
@@ -41,6 +44,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       siteUrl: SITE_URL,
+      // Where the page menu's "Copy MCP Server URL" and "Add MCP Server" point
+      // (app/components/docs/DocsPageHeaderLinks.vue).
+      mcpUrl: MCP_URL,
     },
   },
 
@@ -58,12 +64,12 @@ export default defineNuxtConfig({
         // llms.txt, on sites where it's on.
         title: "MCP Server",
         description:
-          "This site's MCP server, over streamable HTTP: the contracts, every rule and the docs, a section at a time, for agents to build and review components with.",
+          "The Open Components MCP server, over streamable HTTP: the contracts, every rule and the docs, a section at a time, for agents to build and review components with.",
         links: [
           {
             title: "Open Components MCP server",
             description: "Connect an MCP client to this URL, with no authentication",
-            href: `${SITE_URL}/mcp`,
+            href: MCP_URL,
           },
           {
             title: "MCP Server",
@@ -91,8 +97,8 @@ export default defineNuxtConfig({
     ],
   },
 
-  // The site is static, so Docus's MCP server is off: our own, in mcp/, serves /mcp
-  // as a Worker (see wrangler.jsonc). Docus's page menu still links to /mcp.
+  // The site is static, so Docus's MCP server is off: our own, in mcp/, runs at
+  // mcp.opencomponents.dev, which the page menu links to (`mcpUrl` above).
   mcp: {
     enabled: false,
   },
@@ -172,20 +178,15 @@ export default defineNuxtConfig({
         "/changelog",
         ...contracts.map(({ path }) => path),
       ],
-      // The MCP server (mcp/) answers /mcp and the install links under it, which
-      // the MCP Server page links to, so the crawler leaves /mcp and below alone.
-      ignore: [/^\/mcp(\/|\?|$)/],
       failOnError: true,
     },
   },
 
   $development: {
-    nitro: {
-      // `pnpm dev:mcp` serves the MCP server (mcp/port.mjs), and this sends /mcp and
-      // /mcp/* to it, so the page menu's MCP links work in development too. Not
-      // routeRules' `proxy`, which drops the Accept header MCP requests need.
-      devProxy: {
-        "/mcp": { target: `http://localhost:${MCP_DEV_PORT}/mcp`, changeOrigin: true },
+    runtimeConfig: {
+      public: {
+        // The MCP server `pnpm dev:mcp` serves (mcp/port.mjs).
+        mcpUrl: `http://localhost:${MCP_DEV_PORT}/mcp`,
       },
     },
   },

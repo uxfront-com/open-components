@@ -78,10 +78,10 @@ layers and what each one asks of a component. The guidelines live as markdown in
 
 ## For agents
 
-If your agent supports MCP, connect it to our MCP server at `https://opencomponents.dev/mcp`, free
-and with no sign-in. It gives agents the contracts, every rule and the docs a section at a time, as
-tools. The [MCP Server](https://opencomponents.dev/docs/getting-started/mcp-server) page shows how
-to connect Claude Code, Cursor, VS Code and other clients.
+If your agent supports MCP, connect it to our MCP server at `https://mcp.opencomponents.dev/mcp`,
+free and with no sign-in. It gives agents the contracts, every rule and the docs a section at a
+time, as tools. The [MCP Server](https://opencomponents.dev/docs/getting-started/mcp-server) page
+shows how to connect Claude Code, Cursor, VS Code and other clients.
 
 Every page of the documentation is also published as markdown, so agents can read the standard
 and check their work against it:

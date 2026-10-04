@@ -74,10 +74,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Fails on any page that doesn't prerender (`failOnError` in nuxt.config.ts).
-      # Also builds the MCP server (mcp/).
       - run: pnpm build
-      # Serves dist/ and the MCP server with wrangler dev, the way Cloudflare will,
-      # and checks every tool, resource and prompt against the built site.
+      # The MCP server (mcp/), a Worker of its own.
+      - run: pnpm build:mcp
+      # Serves the MCP server with wrangler dev, the way Cloudflare will, and checks
+      # every tool, resource and prompt against the built site.
       - run: pnpm check-mcp
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

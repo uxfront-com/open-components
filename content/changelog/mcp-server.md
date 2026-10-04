@@ -8,7 +8,7 @@ link:
   to: /docs/getting-started/mcp-server
 ---
 
-Agents do their best work with just what a task needs, but a component page holds far more than that: the Button's alone is about 35,000 tokens. Our MCP server, at `https://opencomponents.dev/mcp`, gives your agents the standard as tools instead, so they read a component's contract first, then only the sections and rules their task needs.
+Agents do their best work with just what a task needs, but a component page holds far more than that: the Button's alone is about 35,000 tokens. Our MCP server, at `https://mcp.opencomponents.dev/mcp`, gives your agents the standard as tools instead, so they read a component's contract first, then only the sections and rules their task needs.
 
 ## New
 

@@ -9,6 +9,6 @@ command = "pnpm dev --port $CONDUCTOR_PORT"
 default = true
 icon = "play"
 
-# The MCP server, which `pnpm dev` proxies /mcp to (mcp/port.mjs picks its port).
+# The MCP server, which the docs' page menu links to (mcp/port.mjs picks its port).
 [scripts.run.mcp]
 command = "pnpm dev:mcp"

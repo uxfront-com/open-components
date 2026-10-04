@@ -1,10 +1,10 @@
-// Checks the MCP server the way Cloudflare will serve it, after `pnpm build`:
-// serves dist/ and the Worker (mcp/.output) with `wrangler dev`, then calls every
-// tool, resource and prompt with an MCP client and checks them against the built
-// site. Contracts and pages must come back as the same bytes as /raw/<path>.yaml
+// Checks the MCP server the way Cloudflare will serve it, after `pnpm build` and
+// `pnpm build:mcp`: serves the Worker (mcp/.output) with `wrangler dev`, then calls
+// every tool, resource and prompt with an MCP client and checks them against the
+// built site, in dist/. Contracts and pages must come back as the same bytes as /raw/<path>.yaml
 // and /raw/<path>.md, and every anchor the server points agents at must exist on
 // its page. Pass --url to check a server that's already running, like a preview's,
-// against your local `pnpm build` of the same commit.
+// against your local builds of the same commit.
 import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
@@ -26,6 +26,15 @@ const check = (ok, problem) => ok || problems.push(problem);
 
 const url = process.argv.includes("--url") ? process.argv[process.argv.indexOf("--url") + 1] : undefined;
 if (!existsSync("dist/raw/docs")) throw new Error("dist is missing: run `pnpm build` first.");
+// The site's security headers, which dist/_headers gives every static file.
+const HEADERS = Object.fromEntries(
+  (readFileSync("dist/_headers", "utf8").split(/^(?=\S)/m).find((block) => block.startsWith("/*\n")) ?? "")
+    .split("\n")
+    .flatMap((line) => {
+      const header = line.match(/^\s+([^:]+):\s*(.+)$/);
+      return header ? [[header[1].toLowerCase(), header[2]]] : [];
+    }),
+);
 const wrangler = url ? undefined : await serve();
 const base = url ?? wrangler.url;
 
@@ -42,16 +51,16 @@ if (problems.length) {
 }
 console.log(`✓ The MCP server at ${base}/mcp serves the standard as the site publishes it.`);
 
-// Serves the build on a free port, the way `npx wrangler dev` does.
+// Serves the Worker on a free port, the way `npx wrangler dev -c mcp/wrangler.jsonc` does.
 async function serve() {
-  if (!existsSync("mcp/.output/server/index.mjs")) throw new Error("mcp/.output is missing: run `pnpm build` first.");
+  if (!existsSync("mcp/.output/server/index.mjs")) throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
   const port = await new Promise((resolve) => {
     const server = createServer().listen(0, "127.0.0.1", () => {
       const { port } = server.address();
       server.close(() => resolve(port));
     });
   });
-  const child = spawn("node_modules/.bin/wrangler", ["dev", "--ip", "127.0.0.1", "--port", String(port)], {
+  const child = spawn("node_modules/.bin/wrangler", ["dev", "-c", "mcp/wrangler.jsonc", "--ip", "127.0.0.1", "--port", String(port)], {
     env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -61,30 +70,34 @@ async function serve() {
   const url = `http://127.0.0.1:${port}`;
   for (let attempt = 0; attempt < 120; attempt++) {
     if (child.exitCode !== null) break;
-    if (await fetch(url).then((response) => response.ok, () => false)) return { url, process: child };
+    // Any response will do: `/` redirects to the site.
+    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) return { url, process: child };
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   child.kill();
   throw new Error(`wrangler dev didn't start:\n${log}`);
 }
 
-// The site's routes stay static, and only /mcp, /mcp/ and /mcp/deeplink reach the Worker.
+// What browsers and other routes get from the Worker.
 async function checkRoutes() {
-  const home = await fetch(`${base}/`);
-  check(home.status === 200, `GET / returned ${home.status}, not the homepage`);
-
-  // The toolkit's install badge, which writes its query into the SVG unescaped,
-  // stays off the Worker along with every other path it doesn't need.
-  for (const path of ["/nope", "/raw/docs/nope.md", "/mcpx", "/mcp/badge.svg?color=%22%3E", "/mcp/nope"]) {
-    const response = await fetch(`${base}${path}`);
-    const body = await response.text();
-    check(response.status === 404 && body.includes("<html"), `GET ${path} returned ${response.status}, not the 404 page`);
+  // People who open the server, or its subdomain, land on the page about connecting to it.
+  for (const path of ["/", "/mcp"]) {
+    const browser = await fetch(`${base}${path}`, { headers: { accept: "text/html" }, redirect: "manual" });
+    const location = new URL(browser.headers.get("location") ?? "", base);
+    check(browser.status === 302, `GET ${path} from a browser returned ${browser.status}, not a redirect`);
+    check(
+      location.origin === SITE && existsSync(join("dist", `${location.pathname}.html`)),
+      `GET ${path} from a browser redirects to ${location}, which isn't a page on ${SITE}`,
+    );
   }
 
-  const browser = await fetch(`${base}/mcp`, { headers: { accept: "text/html" }, redirect: "manual" });
-  const location = browser.headers.get("location") ?? "";
-  check(browser.status === 302, `GET /mcp from a browser returned ${browser.status}, not a redirect`);
-  check(existsSync(join("dist", `${location}.html`)), `GET /mcp from a browser redirects to ${location}, which isn't a page`);
+  // The toolkit's install badge, which writes its query into the SVG unescaped,
+  // is turned away, along with anything else the server doesn't have.
+  for (const path of ["/mcp/badge.svg?color=%22%3E%3Cscript%3E", "/mcp/nope", "/nope"]) {
+    const response = await fetch(`${base}${path}`);
+    const body = await response.text();
+    check(response.status === 404 && !body.includes("<script"), `GET ${path} returned ${response.status}, not a 404`);
+  }
 
   const deeplink = await fetch(`${base}/mcp/deeplink`);
   const install = await deeplink.text();
@@ -108,10 +121,9 @@ async function checkRoutes() {
   });
   check(crossOrigin.status === 200, `A request to /mcp from another origin returned ${crossOrigin.status}`);
 
-  // The Worker's responses carry the site's security headers, which dist/_headers
-  // only gives static assets.
-  for (const [name, value] of home.headers) {
-    if (!/^(x-|referrer-policy|strict-transport-security|cross-origin-)/.test(name)) continue;
+  // The Worker's responses carry the site's security headers.
+  check(Object.keys(HEADERS).length > 0, "dist/_headers has no headers for every path");
+  for (const [name, value] of Object.entries(HEADERS)) {
     check(crossOrigin.headers.get(name) === value, `/mcp responses don't have the site's ${name} header`);
   }
 }

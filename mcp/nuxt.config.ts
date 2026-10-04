@@ -1,19 +1,21 @@
 import { SECURITY_HEADERS } from "../server/lib/headers";
 import { MCP_DEV_PORT } from "./port.mjs";
 
-// The MCP server at https://opencomponents.dev/mcp, built on the Nuxt MCP Toolkit
-// (https://mcp-toolkit.nuxt.dev). It's a Nuxt app of its own: the site is static
-// (`nuxt generate`), and the toolkit needs a server. `nuxt build mcp` builds it for
-// Cloudflare Workers into mcp/.output, and wrangler.jsonc runs it for /mcp, /mcp/
-// and /mcp/deeplink (assets.run_worker_first), while dist/ serves everything else,
-// the 404 page included.
+// The site's pages, which the server points browsers at.
+const SITE_URL = "https://opencomponents.dev";
+
+// The MCP server at https://mcp.opencomponents.dev/mcp, built on the Nuxt MCP
+// Toolkit (https://mcp-toolkit.nuxt.dev). It's a Nuxt app of its own: the site is
+// static (`nuxt generate`), and the toolkit needs a server. `pnpm build:mcp`
+// (`nuxt build mcp`) builds it for Cloudflare Workers into mcp/.output, which
+// mcp/wrangler.jsonc deploys as a Worker of its own.
 //
 // It serves the standard as it is in content/docs/ and app/reference/ when it's
 // built (modules/standard.ts): a Worker has no file system or Nuxt Content database.
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: false },
-  // `pnpm dev:mcp`, which `pnpm dev` proxies /mcp to.
+  // `pnpm dev:mcp`, which the docs' page menu links to in development.
   devServer: { port: MCP_DEV_PORT },
 
   // Local modules in mcp/modules/ register themselves: standard.ts bundles the
@@ -40,7 +42,7 @@ export default defineNuxtConfig({
       "The guidelines are licensed under CC BY 4.0, so credit Open Components when you reuse them.",
     ].join("\n"),
     // Browsers that open /mcp land on the page about connecting to it.
-    browserRedirect: "/docs/getting-started/mcp-server",
+    browserRedirect: `${SITE_URL}/docs/getting-started/mcp-server`,
     // Any origin can call it: the toolkit's check stops sites calling a server on
     // your own machine, while this one is public, read-only and takes no
     // credentials. Web-based clients may send their own origin (server/mcp/index.ts
@@ -57,16 +59,17 @@ export default defineNuxtConfig({
   // security headers on its own responses.
   routeRules: {
     "/**": { headers: SECURITY_HEADERS },
+    // mcp.opencomponents.dev itself, for people who open it.
+    "/": { redirect: { to: `${SITE_URL}/docs/getting-started/mcp-server`, statusCode: 302 } },
   },
 
   nitro: {
     preset: "cloudflare_module",
     cloudflare: {
-      // wrangler.jsonc at the repository's root deploys it, along with dist/, so
-      // Nitro doesn't write a config of its own. Workers Builds sets WORKERS_CI,
-      // which would otherwise have it write one pointing at mcp/.output/public.
+      // mcp/wrangler.jsonc deploys it, so Nitro doesn't write a config of its own,
+      // as it otherwise would on Workers Builds, which sets WORKERS_CI.
       deployConfig: false,
-      // wrangler.jsonc turns on nodejs_compat, for AsyncLocalStorage and Buffer.
+      // mcp/wrangler.jsonc turns on nodejs_compat, for AsyncLocalStorage and Buffer.
       nodeCompat: true,
     },
   },
