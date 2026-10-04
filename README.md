@@ -21,6 +21,8 @@
     ·
     <a href="https://opencomponents.dev/docs">Documentation</a>
     ·
+    <a href="https://opencomponents.dev/changelog">Changelog</a>
+    ·
     <a href="https://opencomponents.dev/llms.txt">llms.txt</a>
     ·
     <a href="https://github.com/uxfront-com/open-components/issues">Issue Tracker</a>

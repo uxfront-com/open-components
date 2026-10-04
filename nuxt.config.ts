@@ -132,10 +132,16 @@ export default defineNuxtConfig({
     compressPublicAssets: false,
     prerender: {
       crawlLinks: true,
-      // /docs only redirects, so crawling the docs starts from the introduction. The
-      // crawler only follows links without an extension or to .json, so the contracts
-      // are listed too.
-      routes: ["/", "/docs", "/docs/getting-started/introduction", ...contracts.map(({ path }) => path)],
+      // /docs only redirects, so crawling the docs starts from the introduction, and
+      // the changelog's entries are crawled from /changelog. The crawler only follows
+      // links without an extension or to .json, so the contracts are listed too.
+      routes: [
+        "/",
+        "/docs",
+        "/docs/getting-started/introduction",
+        "/changelog",
+        ...contracts.map(({ path }) => path),
+      ],
       failOnError: true,
     },
   },

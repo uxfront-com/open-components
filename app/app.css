@@ -2,8 +2,12 @@
    the docs pages load. Keep it off `.ux-site`: the homepage loads it too. */
 
 /* Docus has Tailwind scan content/ and its own layer, not this app: add the
-   live examples the docs pages render, in components/content/. */
+   live examples the docs pages render, in components/content/, the header
+   overrides in components/app/ and the changelog. */
 @source "./components/content";
+@source "./components/app";
+@source "./components/changelog";
+@source "./pages/changelog";
 
 /* Identifiers in a table's first column, like prop names and rule IDs, read as
    one word: don't break them at their hyphens. */
