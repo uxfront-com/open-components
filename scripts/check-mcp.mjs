@@ -248,7 +248,13 @@ async function checkServer() {
 
   // Resources: the same bytes as the files the site publishes at their URIs.
   const { resources } = await client.listResources();
+  const { resourceTemplates } = await client.listResourceTemplates();
   check(resources.length > pages.length, `There are only ${resources.length} resources`);
+  // Codex reads a resource's priority as a number type that values like 0.9 don't
+  // fit, and then drops every resource the server lists.
+  for (const resource of [...resources, ...resourceTemplates]) {
+    check(resource.annotations?.priority === undefined, `${resource.uri ?? resource.uriTemplate} has a priority, which Codex can't read`);
+  }
   for (const resource of resources) {
     const { contents } = await client.readResource({ uri: resource.uri });
     const path = resource.uri.slice(SITE.length);

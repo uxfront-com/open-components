@@ -29,7 +29,9 @@ export default defineMcpResource({
       };
     },
   }),
-  metadata: { mimeType: "application/yaml", annotations: { audience: ["assistant"], priority: 0.9 } },
+  // No `priority` in the annotations, here or on the other resources: Codex reads it
+  // as a number type that 0.9 doesn't fit, and drops every resource the server lists.
+  metadata: { mimeType: "application/yaml", annotations: { audience: ["assistant"] } },
   // An unknown URI is a bad argument, as the SDK reports for one no template matches.
   handler: async (uri: URL, { path }: Variables) => {
     const standard = await useStandard();

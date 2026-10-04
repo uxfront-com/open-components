@@ -12,6 +12,6 @@ Agents do their best work with just what a task needs, but a component page hold
 
 ## New
 
-- Connect it to Claude Code, Cursor, VS Code, Claude or any other client that supports remote MCP servers. It's free, with no sign-in.
+- Connect it to Claude, Codex, Cursor, VS Code, GitHub Copilot, Gemini CLI, Grok, Hermes Agent or any other client that supports remote MCP servers. It's free, with no sign-in.
 - Its tools read a contract, list the rules that apply to your task, read a page a section at a time in your framework, search the whole standard and return the reference implementation.
 - Its prompts build a component, review one or how a screen uses it, reporting every rule by its ID, and move your CSS variables to token paths.

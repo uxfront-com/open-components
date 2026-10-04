@@ -23,7 +23,7 @@ export default defineMcpResource({
       };
     },
   }),
-  metadata: { mimeType: "text/markdown", annotations: { audience: ["user", "assistant"], priority: 0.5 } },
+  metadata: { mimeType: "text/markdown", annotations: { audience: ["user", "assistant"] } },
   // An unknown URI is a bad argument, as the SDK reports for one no template matches.
   handler: async (uri: URL, { path }: Variables) => {
     const standard = await useStandard();
