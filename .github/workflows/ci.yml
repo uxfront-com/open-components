@@ -54,7 +54,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # The reference implementations' tests, which the component pages show as code.
+      # The reference implementations' tests, which the component pages show as code,
+      # and the contracts, validated against public/schemas/contract.json.
       - run: pnpm test
 
   build:
