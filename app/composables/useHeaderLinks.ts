@@ -7,7 +7,7 @@ export function useHeaderLinks() {
 
   return computed(() => [
     // The introduction, rather than /docs, which only redirects to it.
-    { label: "Docs", to: "/docs/getting-started/introduction", active: isIn("/docs") },
+    { label: "Documentation", to: "/docs/getting-started/introduction", active: isIn("/docs") },
     { label: "Changelog", to: CHANGELOG_URL, active: isIn(CHANGELOG_URL) },
   ]);
 }
