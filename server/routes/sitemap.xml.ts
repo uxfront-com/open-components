@@ -12,7 +12,8 @@ interface DocsPage {
  * collection when the app has its own app/pages/index.vue, so the homepage
  * never made it in. This lists the homepage first, then the docs pages by
  * Docus's rules: `sitemap: false` in a page's frontmatter leaves it out, and
- * `modifiedAt` sets its `<lastmod>`.
+ * `modifiedAt` sets its `<lastmod>`. Then the changelog, which is last modified
+ * with its newest entry, and each entry, on the day it was published.
  *
  * Nitro keeps the first handler for a route, and it scans the app's server/
  * before the layers'. Docus still adds the route to the prerendered ones.
@@ -20,12 +21,15 @@ interface DocsPage {
 export default defineEventHandler(async (event) => {
   const { siteUrl } = useRuntimeConfig(event).public;
   const pages = (await queryCollection(event, "docs" as never).all()) as DocsPage[];
+  const entries = await queryCollection(event, "changelog").order("date", "DESC").all();
 
   const urls = [
     { loc: "/", lastmod: undefined },
     ...pages
       .filter((page) => page.meta.sitemap !== false && !isNavigationPath(page.path))
       .map((page) => ({ loc: page.path, lastmod: page.meta.modifiedAt?.split("T")[0] })),
+    { loc: "/changelog", lastmod: entries[0]?.date },
+    ...entries.map((entry) => ({ loc: entry.path, lastmod: entry.date })),
   ];
 
   setHeader(event, "Content-Type", "application/xml");

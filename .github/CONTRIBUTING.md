@@ -57,7 +57,8 @@ The documentation is built with [Docus](https://docus.dev), through [`@uxfront/l
 
 How it shares the app with the homepage:
 
-- `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
+- `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs`, `/changelog` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
+- The docs header links to the docs and the changelog (`useHeaderLinks()`): beside its buttons from 640px up (`app/components/app/AppHeaderCTA.vue`), and at the top of its menu on phones (`app/components/app/AppHeaderBody.vue`, which replaces the one from `@uxfront/layer-docs`, so keep it in step with the layer's).
 - Docus adds Tailwind CSS and Nuxt UI to the entry stylesheet. On the homepage, `@uxfront/layer-ui` loads that stylesheet after first paint, and the `.ux-site` styles take precedence over it. Keep `app/app.css`, which Docus imports into the same stylesheet, off `.ux-site` too.
 - `nuxt.config.ts` turns off Nuxt's prefetch hints. Otherwise every page, the homepage included, would prefetch the docs' lazy chunks, which delays the homepage's fonts and stylesheet, and with them its LCP.
 - `app/app.config.ts` sets the theme colors and the GitHub, "Edit this page" and "Report an issue" links. `app/app.css` darkens Nuxt UI's light-mode primary to pass WCAG AA contrast. Nuxt UI's callouts (`::tip`, `::note`, …) still draw their text in fixed shades that fail it in light mode, so avoid them until they're themed.
@@ -112,6 +113,34 @@ A live example takes the switcher as its code. Nest the switcher with as many co
 ````
 
 The code is written for a component with the same API in every framework, in each one's idiom. React and Solid take `leading` and `trailing` as props, Svelte as snippets and Astro as named slots. Angular puts the component on the native element (`<button appButton>`), so it can stay the root, and projects icons by attribute (`<lucide-icon leading … />`). Vanilla writes out the markup from the component's DOM contract, with a script for the behaviour.
+
+## The changelog
+
+`/changelog` lists what's new in the standard, newest first, with each entry in full, and every entry also has a page of its own at `/changelog/<file name>`. Entries are markdown files in `content/changelog/`, in the `changelog` collection (`content.config.ts`):
+
+```md
+---
+title: The Button
+description: Our first component page, on building a button that looks right, …
+date: 2026-10-01
+category: Components
+link:
+  label: Read the Button page
+  to: /docs/components/button
+---
+
+Buttons are the most common interactive component in any interface, and also the one we most often get wrong. …
+
+## New
+
+- It covers how a button looks, how it behaves for every person and every input, …
+```
+
+- Keep it high level: a couple of sentences on what's new and why it matters, then a few short points, leaving the details to the page it links to. Write it the way the docs pages are written, talking to the reader in full sentences rather than lists of features.
+- `date` is the day it was published, and orders the entries. `category` is the badge beside it, usually the docs section, and `link` the page to read more on.
+- Group the notes under `## New`, `## Improved` and `## Fixed`, leaving out any you don't need. On `/changelog`, where each entry's title is an `<h2>`, they move down a level, and only get anchor links on the entry's own page, since every entry has a New section.
+- Name the file after what it adds, as in `design-tokens.md`, since it's the entry's URL. The crawler finds the entries' pages from `/changelog`, and `sitemap.xml` lists them all.
+- `app/pages/changelog/` holds the two pages, and `app/components/changelog/ChangelogEntry.vue` the entry they both show. Their Tailwind classes are listed in `app/app.css`'s sources, along with the header's.
 
 ## Analytics
 
