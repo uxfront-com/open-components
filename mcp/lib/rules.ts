@@ -7,6 +7,7 @@ const KINDS: Record<string, CheckKind> = {
   stylelint: "lint",
   "visual regression test": "visual-regression",
   keyboard: "keyboard",
+  "aria snapshot": "aria-snapshot",
   "screen reader": "screen-reader",
   emulation: "emulation",
   "200% zoom": "zoom",
