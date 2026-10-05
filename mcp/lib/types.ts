@@ -79,6 +79,7 @@ export type CheckKind =
   | "lint"
   | "visual-regression"
   | "keyboard"
+  | "aria-snapshot"
   | "screen-reader"
   | "emulation"
   | "zoom"
