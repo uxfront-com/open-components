@@ -5,6 +5,9 @@ allowBuilds:
   esbuild: true
   # Its postinstall only switches the build to Vue 2; the default build is Vue 3's.
   vue-demi: false
+  # Wrangler's runtime, for `wrangler dev`. Its postinstall only checks for the
+  # platform's binary, which pnpm installs as an optional dependency.
+  workerd: false
 overrides:
   # @nuxtjs/partytown (2.0.0) asks for ^0.11.0, which reads the deprecated
   # attributionSrc of every element when it mirrors the page for its worker:

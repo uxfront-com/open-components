@@ -1,0 +1,16 @@
+// Deploys the MCP server (`pnpm build:mcp`, into mcp/.output) as a Worker of its
+// own, at https://mcp.opencomponents.dev/mcp, apart from the site's static assets
+// (wrangler.jsonc at the root). Workers Builds runs it as its own project:
+// `npx wrangler deploy -c mcp/wrangler.jsonc` (see CONTRIBUTING).
+{
+  "name": "open-components-mcp",
+  "compatibility_date": "2026-09-21",
+  // For the server's AsyncLocalStorage and Buffer (`cloudflare.nodeCompat` in
+  // nuxt.config.ts).
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./.output/server/index.mjs",
+  "routes": [{ "pattern": "mcp.opencomponents.dev", "custom_domain": true }],
+  // Required by `wrangler preview` (non-production branch builds). Empty because
+  // previews need no separate bindings.
+  "previews": {},
+}
