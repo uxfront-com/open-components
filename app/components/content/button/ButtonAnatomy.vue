@@ -47,7 +47,7 @@ import "~/reference/button/tokens.css";
 
 <style scoped>
 .anatomy-marker,
-.anatomy-button :deep([data-slot])::after,
+.anatomy-button > :deep([data-slot])::after,
 .anatomy-parts :deep(li)::before {
   display: inline-flex;
   flex-shrink: 0;
@@ -64,49 +64,88 @@ import "~/reference/button/tokens.css";
   line-height: 1;
 }
 
+/* Every number sits right beside what it names, and a line joins the two. */
 .anatomy-stage {
+  /* How far a number sits from the button, and how far a part's outline sits from the part. */
+  --anatomy--distance: 0.625rem;
+  --anatomy--outline: 2px;
+
   position: relative;
   display: inline-flex;
 }
-.anatomy-marker-container,
-.anatomy-marker-focus {
+.anatomy-marker {
   position: absolute;
 }
-/* The container's number sits before it, the focus ring's below it. */
+.anatomy-marker::before,
+.anatomy-button > :deep([data-slot])::before {
+  content: "";
+  position: absolute;
+  background: var(--ui-bg-inverted);
+}
+
+/* The container's number sits before the button, and its line crosses the focus ring
+   to end on the container. */
 .anatomy-marker-container {
   top: 50%;
-  right: calc(100% + 0.875rem);
+  right: calc(100% + var(--anatomy--distance) + 4px);
   translate: 0 -50%;
 }
+.anatomy-marker-container::before {
+  top: 50%;
+  left: 100%;
+  width: calc(var(--anatomy--distance) + 4px);
+  height: 1px;
+}
+/* The focus ring's number sits below the button, and its line ends on the ring,
+   which reaches 4px past the container. */
 .anatomy-marker-focus {
-  top: calc(100% + 0.875rem);
+  top: calc(100% + var(--anatomy--distance) + 4px);
   left: 50%;
   translate: -50% 0;
 }
+.anatomy-marker-focus::before {
+  bottom: 100%;
+  left: 50%;
+  width: 1px;
+  height: var(--anatomy--distance);
+}
 
-/* The button, focused, with its parts outlined and numbered like the list. */
+/* The button, focused. */
 .anatomy-button {
+  /* How far its parts sit below its top, which centres them. At this size, an icon
+     is as tall as a line of the label. */
+  --anatomy--rise: calc((var(--button--height) - var(--button--icon--size)) / 2);
+
   outline: 2px solid var(--color--focus);
   outline-offset: 2px;
 }
-.anatomy-button :deep([data-slot]) {
+/* Each part is outlined. Only the button's own parts, so `>`. */
+.anatomy-button > :deep([data-slot]) {
   position: relative;
   outline: 1px dashed color-mix(in srgb, currentColor 70%, transparent);
-  outline-offset: 3px;
+  outline-offset: var(--anatomy--outline);
 }
-.anatomy-button :deep([data-slot])::after {
+/* A part's number sits above the button, over the part, and its line runs down
+   to the part's outline. */
+.anatomy-button > :deep([data-slot])::after {
   position: absolute;
-  bottom: calc(100% + 0.875rem);
+  bottom: calc(100% + var(--anatomy--rise) + var(--anatomy--distance) + 4px);
   left: 50%;
   translate: -50% 0;
 }
-.anatomy-button :deep([data-slot="leading"])::after {
+.anatomy-button > :deep([data-slot])::before {
+  bottom: calc(100% + var(--anatomy--outline));
+  left: 50%;
+  width: 1px;
+  height: calc(var(--anatomy--rise) + var(--anatomy--distance) + 4px - var(--anatomy--outline));
+}
+.anatomy-button > :deep([data-slot="leading"])::after {
   content: "2";
 }
-.anatomy-button :deep([data-slot="label"])::after {
+.anatomy-button > :deep([data-slot="label"])::after {
   content: "3";
 }
-.anatomy-button :deep([data-slot="trailing"])::after {
+.anatomy-button > :deep([data-slot="trailing"])::after {
   content: "4";
 }
 
