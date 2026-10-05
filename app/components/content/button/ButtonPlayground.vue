@@ -4,7 +4,8 @@ import type { ButtonProps } from "~/reference/button/Button.vue";
 import "~/reference/button/tokens.css";
 
 /**
- * Pick a variant, colour, size and state, and see the reference Button and its code.
+ * Pick a variant, colour, size and state, and see the reference Button and its
+ * code, in the framework picked in the Framework select.
  *
  * ```md
  * ::button-playground
@@ -27,27 +28,90 @@ const icons: Icon[] = ["none", "leading", "trailing", "icon only"];
 
 const LABEL = "Save changes";
 
-// Only the props that differ from the defaults, the way you'd write them.
+const { current } = useFramework();
+const framework = computed(() => current.value?.value ?? "react");
+
+// Highlighted the way the page's own examples for each framework are.
+const LANGUAGES: Record<string, string> = {
+  react: "tsx",
+  vue: "vue",
+  svelte: "svelte",
+  angular: "angular-html",
+  solid: "tsx",
+  astro: "astro",
+  vanilla: "html",
+};
+
+// How each framework fills the `leading` and `trailing` slots, when it does so
+// with a child rather than a prop (JSX).
+function slot(name: "leading" | "trailing", component: string) {
+  switch (framework.value) {
+    case "vue":
+      return `<template #${name}><${component} /></template>`;
+    case "svelte":
+      return `{#snippet ${name}()}<${component} />{/snippet}`;
+    case "angular":
+      return `<lucide-icon ${name} [img]="${component}" />`;
+    default:
+      return `<${component} slot="${name}" />`;
+  }
+}
+
+// Only the props that differ from the defaults, the way you'd write them, or
+// for Vanilla, the markup from the DOM contract.
 const code = computed(() => {
+  const iconOnly = icon.value === "icon only";
+  const leading = icon.value === "leading" || iconOnly;
+  const trailing = icon.value === "trailing";
+
+  if (framework.value === "vanilla") {
+    const attributes = [
+      'class="button"',
+      'type="button"',
+      disabled.value && !loading.value && "disabled",
+      loading.value && 'aria-disabled="true"',
+      `data-variant="${variant.value}"`,
+      `data-color="${color.value}"`,
+      `data-size="${size.value}"`,
+      iconOnly && "data-icon-only",
+      loading.value && "data-loading",
+    ].filter(Boolean);
+    const parts = [
+      leading && '<span data-slot="leading" aria-hidden="true"><svg class="lucide-check">…</svg></span>',
+      `<span data-slot="label">${LABEL}</span>`,
+      trailing &&
+        '<span data-slot="trailing" aria-hidden="true"><svg class="lucide-arrow-right">…</svg></span>',
+      loading.value &&
+        '<svg class="spinner" viewBox="0 0 16 16" aria-hidden="true" data-slot="spinner">…</svg>',
+    ].filter(Boolean);
+    return [`<button ${attributes.join(" ")}>`, ...parts.map((part) => `  ${part}`), "</button>"].join(
+      "\n",
+    );
+  }
+
+  const jsx = framework.value === "react" || framework.value === "solid";
   const props = [
     variant.value !== "solid" && `variant="${variant.value}"`,
     color.value !== "neutral" && `color="${color.value}"`,
     size.value !== "md" && `size="${size.value}"`,
-    icon.value === "icon only" && `label="${LABEL}" icon-only`,
+    iconOnly && `label="${LABEL}" ${framework.value === "vue" ? "icon-only" : "iconOnly"}`,
     disabled.value && "disabled",
     loading.value && "loading",
+    jsx && leading && "leading={<CheckIcon />}",
+    jsx && trailing && "trailing={<ArrowRightIcon />}",
   ].filter(Boolean);
-  const open = `<Button${props.length ? ` ${props.join(" ")}` : ""}>`;
-  const lines = [open];
-  if (icon.value === "leading" || icon.value === "icon only") {
-    lines.push("  <template #leading><CheckIcon /></template>");
-  }
-  if (icon.value !== "icon only") lines.push(`  ${LABEL}`);
-  if (icon.value === "trailing") {
-    lines.push("  <template #trailing><ArrowRightIcon /></template>");
-  }
-  lines.push("</Button>");
-  return lines.join("\n");
+  const children = [
+    !jsx && leading && slot("leading", "CheckIcon"),
+    !iconOnly && LABEL,
+    !jsx && trailing && slot("trailing", "ArrowRightIcon"),
+  ].filter(Boolean);
+
+  // Angular's Button is a directive on the native element.
+  const tag = framework.value === "angular" ? "button" : "Button";
+  if (framework.value === "angular") props.unshift("appButton");
+  const open = `<${tag}${props.length ? ` ${props.join(" ")}` : ""}`;
+  if (!children.length) return `${open} />`;
+  return [`${open}>`, ...children.map((child) => `  ${child}`), `</${tag}>`].join("\n");
 });
 </script>
 
@@ -92,7 +156,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      language="vue"
+      :language="LANGUAGES[framework]"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>
