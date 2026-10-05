@@ -50,7 +50,7 @@
           "$ref": "#/$defs/descriptions"
         },
         "events": {
-          "description": "The events it emits, by name, with their payload and when they're emitted, as in `MouseEvent. Never emitted while disabled.`",
+          "description": "The events it fires, by name, with their payload and when they fire, as in `MouseEvent. Never fires while disabled.`",
           "$ref": "#/$defs/descriptions"
         },
         "states": {
