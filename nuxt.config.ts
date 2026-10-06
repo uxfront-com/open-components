@@ -55,8 +55,9 @@ export default defineNuxtConfig({
     name: "Open Components",
   },
 
-  // llms.txt points agents at the MCP server (mcp/), then lists the contracts and
-  // their schema (public/schemas/contract.json), ahead of the pages Nuxt Content adds.
+  // llms.txt points agents at the MCP server (mcp/) and the agent plugin
+  // (plugins/open-components/), then lists the contracts and their schema
+  // (public/schemas/contract.json), ahead of the pages Nuxt Content adds.
   llms: {
     sections: [
       {
@@ -79,6 +80,23 @@ export default defineNuxtConfig({
         ],
       },
       {
+        title: "Agent Plugin",
+        description:
+          "The Open Components agent plugin, for clients that support Agent Plugins: skills that build and review components rule by rule, and the MCP server they read the standard from.",
+        links: [
+          {
+            title: "Agent Plugin",
+            description: "How to install it in VS Code, GitHub Copilot, Cursor, Codex, Claude Code and other clients, and what it offers",
+            href: `${SITE_URL}/raw${docsPath("1.getting-started/4.agent-plugin.md")}.md`,
+          },
+          {
+            title: "Open Components agent plugin",
+            description: "The plugin itself: its manifest, its MCP configuration and its skills",
+            href: "https://github.com/uxfront-com/open-components/tree/main/plugins/open-components",
+          },
+        ],
+      },
+      {
         title: "Contracts",
         description: "Every requirement for a component or convention, rules included, in one YAML file.",
         links: [
@@ -95,6 +113,13 @@ export default defineNuxtConfig({
         ],
       },
     ],
+  },
+
+  // Docus publishes the agent plugin's skills (plugins/open-components/skills/) at
+  // /.well-known/skills/, for agents that discover skills on a site, like
+  // `npx skills add https://opencomponents.dev`.
+  docus: {
+    skills: { dir: "plugins/open-components/skills" },
   },
 
   // The site is static, so Docus's MCP server is off: our own, in mcp/, runs at

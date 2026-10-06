@@ -84,6 +84,13 @@ time, as tools. The [MCP Server](https://opencomponents.dev/docs/getting-started
 shows how to connect Claude, Codex, Cursor, VS Code, Gemini CLI, Grok, Hermes Agent and other
 clients.
 
+Or install our agent plugin, in [`plugins/open-components`](./plugins/open-components), which
+connects the same server along with skills that build and review components the way the standard
+asks. It's an [Agent Plugin](https://agent-plugins.org), so it works in VS Code, GitHub Copilot,
+Cursor, Codex, Claude Code and other clients that support the format. The
+[Agent Plugin](https://opencomponents.dev/docs/getting-started/agent-plugin) page shows how to
+install it.
+
 Every page of the documentation is also published as markdown, so agents can read the standard
 and check their work against it:
 
@@ -126,6 +133,7 @@ consider sponsoring me on [GitHub Sponsors](https://github.com/sponsors/alexgroz
 ## Copyright and license
 
 Copyright © 2026 [UXFront](https://uxfront.com). The site code is released under the
-[MIT License](./LICENSE). The guidelines in [`content/`](./content) are released under the
+[MIT License](./LICENSE). The guidelines in [`content/`](./content) and the agent plugin in
+[`plugins/open-components/`](./plugins/open-components) are released under the
 [Creative Commons Attribution 4.0 License](./content/LICENSE): you can share and adapt them,
 commercially too, as long as you credit Open Components.
