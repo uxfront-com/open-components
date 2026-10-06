@@ -7,4 +7,4 @@ The [Open Components](https://opencomponents.dev) standard for UI components, in
 
 The [Agent Plugin](https://opencomponents.dev/docs/getting-started/agent-plugin) page shows how to install it in your client.
 
-The plugin is released under the [Creative Commons Attribution 4.0 License](https://creativecommons.org/licenses/by/4.0/), like the guidelines, so you can share and adapt it, commercially too, as long as you credit Open Components.
+The plugin is released under the [Creative Commons Attribution 4.0 License](./LICENSE), like the guidelines, so you can share and adapt it, commercially too, as long as you credit Open Components.

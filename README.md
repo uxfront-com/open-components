@@ -133,6 +133,7 @@ consider sponsoring me on [GitHub Sponsors](https://github.com/sponsors/alexgroz
 ## Copyright and license
 
 Copyright © 2026 [UXFront](https://uxfront.com). The site code is released under the
-[MIT License](./LICENSE). The guidelines in [`content/`](./content) are released under the
+[MIT License](./LICENSE). The guidelines in [`content/`](./content) and the agent plugin in
+[`plugins/open-components/`](./plugins/open-components) are released under the
 [Creative Commons Attribution 4.0 License](./content/LICENSE): you can share and adapt them,
 commercially too, as long as you credit Open Components.

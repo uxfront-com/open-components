@@ -84,6 +84,15 @@ describe("The agent plugin", () => {
     expect(files.filter((file) => lstatSync(join(ROOT, file)).isSymbolicLink())).toEqual([]);
   });
 
+  // Clients copy the plugin's folder alone, so it carries a copy of the guidelines'
+  // license, under a header of its own, which has to stay the one its manifest names.
+  it("carries the license its manifest names, as the guidelines do", () => {
+    const text = (file: string) => readFileSync(file, "utf8").split("\nAttribution 4.0 International\n")[1];
+    expect(manifest.license).toBe("CC-BY-4.0");
+    expect(text("content/LICENSE")).toEqual(expect.any(String));
+    expect(text(join(ROOT, "LICENSE"))).toBe(text("content/LICENSE"));
+  });
+
   // Claude Code, Codex, GitHub Copilot, VS Code, OpenClaw and the Cursor CLI find
   // the plugin from .claude-plugin/marketplace.json at the root of the repository.
   // Claude Code reads its manifest from the entry, and its MCP servers only from
