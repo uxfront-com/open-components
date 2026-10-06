@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "open-components",
+  "version": "1.0.0",
+  "description": "The Open Components standard for UI components, in your agent: skills that build and review components rule by rule, and the MCP server that serves the contracts, every rule and the docs.",
+  "author": {
+    "name": "UXFront",
+    "url": "https://uxfront.com"
+  },
+  "homepage": "https://opencomponents.dev/docs/getting-started/agent-plugin",
+  "repository": "https://github.com/uxfront-com/open-components",
+  "license": "CC-BY-4.0",
+  "keywords": ["ui-components", "design-system", "accessibility", "design-tokens", "skills", "mcp"]
+}

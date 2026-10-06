@@ -1,0 +1,10 @@
+{
+  // The agent plugin's test (open-components.test.ts), which no Nuxt tsconfig
+  // includes: `pnpm check-types` checks it too.
+  "extends": "../.nuxt/tsconfig.node.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "tsBuildInfoFile": "../.nuxt/tsconfig.plugins.tsbuildinfo"
+  },
+  "include": ["*.test.ts"]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "open-components",
+  "owner": {
+    "name": "UXFront",
+    "url": "https://uxfront.com"
+  },
+  "description": "The Open Components agent plugin, for building and reviewing UI components that meet the standard.",
+  "plugins": [
+    {
+      "name": "open-components",
+      "source": "./plugins/open-components",
+      "description": "The Open Components standard for UI components, in your agent: skills that build and review components rule by rule, and the MCP server that serves the contracts, every rule and the docs.",
+      "version": "1.0.0",
+      "mcpServers": "./mcp.json"
+    }
+  ]
+}
