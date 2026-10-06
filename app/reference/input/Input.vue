@@ -3,7 +3,7 @@ import { onMounted, useAttrs, useTemplateRef } from "vue";
 
 export interface InputProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
-  /** The kind of text it takes, which picks the keyboard on phones. Other types are other components. */
+  /** The kind of text it takes, which picks the keyboard on phones. The other input types each get a component of their own. */
   type?: "text" | "email" | "password" | "search" | "tel" | "url";
   disabled?: boolean;
 }
