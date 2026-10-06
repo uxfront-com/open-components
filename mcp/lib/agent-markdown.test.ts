@@ -34,6 +34,24 @@ describe("agentMarkdown", () => {
     expect(agent("::accordion", `  ${start}`, "  Not here.", "  :::", "::")).toBe(`**${label}**\n\nNot here.`);
   });
 
+  it("keeps each tab's label, in bold, above its body", () => {
+    expect(
+      agent(
+        "::tabs",
+        `  :::tabs-item{label="Claude Code"}`,
+        "  ```bash",
+        "  claude mcp add",
+        "  ```",
+        "  :::",
+        "",
+        `  :::tabs-item{label="Codex"}`,
+        "  Run `/mcp`.",
+        "  :::",
+        "::",
+      ),
+    ).toBe(["**Claude Code**", "", "```bash", "claude mcp add", "```", "", "**Codex**", "", "Run `/mcp`."].join("\n"));
+  });
+
   it("dedents an accordion item's body, code included", () => {
     expect(
       agent(

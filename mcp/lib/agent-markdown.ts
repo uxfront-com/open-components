@@ -8,7 +8,8 @@ import { collapse, heading, scan } from "./markdown";
  *
  * - `::framework-switcher` blocks are marked, slot by slot, for renderFrameworks()
  *   (frameworks.ts) to keep every framework's examples or one's.
- * - An `:::accordion-item` keeps its label, in bold, as the question it answers.
+ * - An `:::accordion-item` keeps its label, in bold, as the question it answers,
+ *   and a `:::tabs-item` as what its tab is for, like the client it sets up.
  * - Any other component, like `::button-variants-example`, `::code-collapse` or
  *   `::button-anatomy`, keeps its content: examples, code and lists.
  * - `:roadmap-check` becomes `[x]` once a component has shipped, `[ ]` before.
@@ -42,7 +43,7 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
       open.push({ name: name!, indent: space!.length });
       if (name === "framework-switcher") lines.push(SWITCHER);
       const label = props?.match(/label=(?:"([^"]*)"|'([^']*)')/);
-      if (name === "accordion-item" && label) lines.push(`**${label[1] ?? label[2]}**`, "");
+      if ((name === "accordion-item" || name === "tabs-item") && label) lines.push(`**${label[1] ?? label[2]}**`, "");
       continue;
     }
     if (/^\s*:{2,}\s*$/.test(text)) {
