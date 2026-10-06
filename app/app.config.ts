@@ -22,5 +22,18 @@ export default defineAppConfig({
       primary: "indigo",
       neutral: "zinc",
     },
+    prose: {
+      // Tabs in the docs, like the MCP Server page's clients, scroll sideways on
+      // small screens rather than cut their labels short, as code groups do. The
+      // underline under the active tab moves up a pixel, onto the list's border,
+      // where scrolling doesn't clip it.
+      tabs: {
+        slots: {
+          list: "overflow-x-auto",
+          trigger: "shrink-0",
+          indicator: "bottom-0",
+        },
+      },
+    },
   },
 });
