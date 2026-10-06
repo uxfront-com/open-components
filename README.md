@@ -84,6 +84,13 @@ time, as tools. The [MCP Server](https://opencomponents.dev/docs/getting-started
 shows how to connect Claude, Codex, Cursor, VS Code, Gemini CLI, Grok, Hermes Agent and other
 clients.
 
+Or install our agent plugin, in [`plugins/open-components`](./plugins/open-components), which
+connects the same server along with skills that build and review components the way the standard
+asks. It's an [Agent Plugin](https://agent-plugins.org), so it works in VS Code, GitHub Copilot,
+Cursor, Codex, Claude Code and other clients that support the format. The
+[Agent Plugin](https://opencomponents.dev/docs/getting-started/agent-plugin) page shows how to
+install it.
+
 Every page of the documentation is also published as markdown, so agents can read the standard
 and check their work against it:
 

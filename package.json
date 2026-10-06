@@ -11,7 +11,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare && nuxt prepare mcp",
-    "check-types": "vue-tsc -b --pretty false . mcp 2>&1 | awk '/^[^ ]/ { own = !/^node_modules\\/(.*\\/)?docus\\// } own { print; failed = 1 } END { exit failed }'",
+    "check-types": "vue-tsc -b --pretty false . mcp plugins 2>&1 | awk '/^[^ ]/ { own = !/^node_modules\\/(.*\\/)?docus\\// } own { print; failed = 1 } END { exit failed }'",
     "check-reference": "node scripts/check-reference.mjs",
     "check-mcp": "node scripts/check-mcp.mjs",
     "test": "vitest run",
