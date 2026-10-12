@@ -183,15 +183,26 @@ async function checkServer() {
     check(text === file, `get-contract {component: ${component.key}} isn't the same as ${path}`);
     rules += parse(file).rules?.length ?? 0;
   }
-  const { structuredContent: all } = await call("list-rules", {});
-  check(all.total === rules, `list-rules lists ${all.total} rules, while the contracts have ${rules}`);
+  // list-rules pages them, so every page fits under MAX_RESULT, which `call` checks.
+  const all = [];
+  for (let offset = 0; offset !== undefined; ) {
+    const { structuredContent: page, isError, text } = await call("list-rules", offset ? { offset } : {});
+    if (isError) {
+      check(false, `list-rules {offset: ${offset}} failed: ${text.slice(0, 200)}`);
+      break;
+    }
+    check(page.total === rules, `list-rules {offset: ${offset}} has a total of ${page.total} rules, while the contracts have ${rules}`);
+    all.push(...page.rules);
+    offset = page.nextOffset;
+  }
+  check(all.length === rules, `list-rules lists ${all.length} rules across its pages, while the contracts have ${rules}`);
   // An empty list filters nothing, since some clients send every optional field.
   const { structuredContent: empty } = await call("list-rules", { ids: [], scope: [], layer: [], level: [], check: [] });
   check(empty.total === rules, `list-rules with empty lists lists ${empty.total} rules, not ${rules}`);
 
   // Every anchor the server links agents to is on its page.
   const html = (pathname) => readFileSync(join("dist", `${pathname}.html`), "utf8");
-  for (const rule of all.rules) {
+  for (const rule of all) {
     const { pathname, hash } = new URL(rule.url);
     check(html(pathname).includes(`id="${hash.slice(1)}"`), `${rule.id} links to ${rule.url}, which isn't on the page`);
   }
@@ -234,6 +245,8 @@ async function checkServer() {
   // Wrong input gets an error that helps the agent fix it.
   const typo = await call("list-rules", { ids: ["button/keep-focused"] });
   check(typo.isError && typo.text.includes("button/keep-focus"), "list-rules with a mistyped ID doesn't suggest the right one");
+  const past = await call("list-rules", { offset: rules });
+  check(past.isError && past.text.includes("offset"), "list-rules with an offset past the last rule doesn't fail");
   const unknown = await call("get-page", { path: "nope" });
   check(unknown.isError && unknown.text.includes("/docs/components/button"), "get-page with an unknown path doesn't list the pages");
 
