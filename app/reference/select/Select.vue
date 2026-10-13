@@ -53,6 +53,10 @@ function onChange(event: Event) {
 defineExpose({ select });
 
 onMounted(() => {
+  // A server render can't choose the bound option, since a <select> has no `value`
+  // attribute, and hydrating doesn't set it either, so it's chosen here.
+  if (bound() && select.value) select.value.value = model.value ?? "";
+
   if (import.meta.env.DEV) {
     const el = select.value;
     const named = el?.labels?.length || el?.hasAttribute("aria-label") || el?.hasAttribute("aria-labelledby");
@@ -157,7 +161,8 @@ onMounted(() => {
     color: inherit;
     font: inherit;
     letter-spacing: inherit;
-    /* A long option ends in an ellipsis, rather than running under the indicator. */
+    /* A long option ends in an ellipsis, rather than running under the indicator. A styled
+       picker's field clips it instead, below. */
     text-overflow: ellipsis;
     cursor: pointer;
     /* The root draws the focus ring, around the whole field. */
@@ -247,6 +252,15 @@ onMounted(() => {
       .select > [data-slot="control"] {
         /* The chosen option sits in the middle of the field, as it does in a native select. */
         align-items: center;
+        /* The browser draws the chosen option in a box of its own, which text-overflow
+           doesn't reach. So it stays on one line, and the indicator's room is a transparent
+           border rather than padding: overflow clips before a border, so a long option
+           stops short of the indicator, while a press on the border still opens the picker. */
+        padding-inline-end: 0;
+        border-inline-end: calc(var(--select--padding) + var(--select--indicator--size) + var(--select--gap)) solid
+          transparent;
+        white-space: nowrap;
+        overflow: hidden;
       }
       /* The browser draws an arrow of its own, ::picker-icon, which the indicator replaces,
          so a select looks the same in every browser. */

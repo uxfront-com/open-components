@@ -131,7 +131,7 @@ const code = computed(() => {
           id="playground-country"
           v-model="value"
           :size="size"
-          autocomplete="off"
+          autocomplete="country"
           :placeholder="placeholder ? PLACEHOLDER : undefined"
           :required="placeholder"
           :disabled="disabled"

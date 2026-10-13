@@ -71,7 +71,7 @@ import "~/reference/button/tokens.css";
   --anatomy--outline: 2px;
   /* The xl Select's padding and indicator, which place the parts' numbers. */
   --anatomy--padding: 1rem;
-  --anatomy--indicator: 1.25rem;
+  --anatomy--indicator--size: 1.25rem;
   /* How far a line of text sits below the top of the field, which centres it. */
   --anatomy--rise: calc((3rem - 1.25 * 1rem) / 2);
 
@@ -159,7 +159,7 @@ import "~/reference/button/tokens.css";
 }
 /* The indicator's, over its icon. */
 .anatomy-marker-indicator {
-  right: calc(var(--anatomy--padding) + var(--anatomy--indicator) / 2);
+  right: calc(var(--anatomy--padding) + var(--anatomy--indicator--size) / 2);
   translate: 50% 0;
 }
 

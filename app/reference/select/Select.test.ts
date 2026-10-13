@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { createSSRApp, h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { renderToString } from "vue/server-renderer";
 import Select from "./Select.vue";
 
 const label = (id: string, text: string) => h("label", { for: id }, text);
@@ -17,14 +18,18 @@ describe("Select", () => {
     expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["France", "Germany", "Italy"]);
   });
 
-  it("puts attributes, listeners and refs on the select, and classes on its root", async () => {
+  it("puts attributes, listeners and refs on the select, and classes and styles on its root", async () => {
     const user = userEvent.setup();
     const onFocus = vi.fn();
     const instance = ref<ComponentPublicInstance<{ select: HTMLSelectElement }>>();
     render({
       render: () => [
         label("country", "Country"),
-        h(Select, { ref: instance, id: "country", class: "country", name: "country", autocomplete: "country", onFocus }, countries),
+        h(
+          Select,
+          { ref: instance, id: "country", class: "country", style: { width: "320px" }, name: "country", autocomplete: "country", onFocus },
+          countries,
+        ),
       ],
     });
 
@@ -34,6 +39,8 @@ describe("Select", () => {
     expect(select).toHaveAttribute("autocomplete", "country");
     expect(select).not.toHaveClass("country");
     expect(select.parentElement).toHaveClass("select", "country");
+    expect(select).not.toHaveAttribute("style");
+    expect(select.parentElement).toHaveStyle({ width: "320px" });
     expect(onFocus).toHaveBeenCalled();
     expect(instance.value?.select).toBe(select);
   });
@@ -99,6 +106,19 @@ describe("Select", () => {
     expect(screen.getByRole("combobox", { name: "Country" })).toHaveValue("it");
   });
 
+  it("shows its bound option once a server render hydrates", async () => {
+    const App = { render: () => [label("country", "Country"), h(Select, { id: "country", modelValue: "it" }, countries)] };
+    const root = document.createElement("div");
+    root.innerHTML = await renderToString(createSSRApp(App));
+    document.body.append(root);
+    try {
+      createSSRApp(App).mount(root);
+      expect(screen.getByRole("combobox", { name: "Country" })).toHaveValue("it");
+    } finally {
+      root.remove();
+    }
+  });
+
   it("is submitted with its form, by its name", async () => {
     const user = userEvent.setup();
     render({ render: () => h("form", [label("country", "Country"), h(Select, { id: "country", name: "country" }, countries)]) });
@@ -108,7 +128,7 @@ describe("Select", () => {
     expect(new FormData(select.closest("form")!).get("country")).toBe("de");
   });
 
-  it("never submits its form when people choose an option", async () => {
+  it("never submits its form or moves focus when people choose an option", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn((event: Event) => event.preventDefault());
     render({
@@ -120,8 +140,10 @@ describe("Select", () => {
         ]),
     });
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Sort by" }), "Oldest");
+    const select = screen.getByRole("combobox", { name: "Sort by" });
+    await user.selectOptions(select, "Oldest");
     expect(onSubmit).not.toHaveBeenCalled();
+    expect(select).toHaveFocus();
   });
 
   it("starts on its placeholder, an empty first option, which fails validation when it's required", async () => {
@@ -225,7 +247,15 @@ describe("Select", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("no accessible name"), expect.anything());
 
     warn.mockClear();
-    render({ render: () => [label("country", "Country"), h(Select, { id: "country" }, countries)] });
+    render({
+      render: () => [
+        label("country", "Country"),
+        h(Select, { id: "country" }, countries),
+        h(Select, { "aria-label": "Sort by" }, countries),
+        h("span", { id: "region-label" }, "Region"),
+        h(Select, { "aria-labelledby": "region-label" }, countries),
+      ],
+    });
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
