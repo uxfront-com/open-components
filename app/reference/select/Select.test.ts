@@ -111,10 +111,12 @@ describe("Select", () => {
     const root = document.createElement("div");
     root.innerHTML = await renderToString(createSSRApp(App));
     document.body.append(root);
+    const app = createSSRApp(App);
     try {
-      createSSRApp(App).mount(root);
+      app.mount(root);
       expect(screen.getByRole("combobox", { name: "Country" })).toHaveValue("it");
     } finally {
+      app.unmount();
       root.remove();
     }
   });

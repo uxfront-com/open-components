@@ -53,8 +53,8 @@ function onChange(event: Event) {
 defineExpose({ select });
 
 onMounted(() => {
-  // A server render can't choose the bound option, since a <select> has no `value`
-  // attribute, and hydrating doesn't set it either, so it's chosen here.
+  // The options are the caller's, so a server render can't mark the bound one `selected`,
+  // and hydrating doesn't set a <select>'s value either, so it's chosen here.
   if (bound() && select.value) select.value.value = model.value ?? "";
 
   if (import.meta.env.DEV) {
@@ -262,6 +262,13 @@ onMounted(() => {
         white-space: nowrap;
         overflow: hidden;
       }
+      /* Forced colours paint transparent borders in the text colour, which would hide the
+         indicator, so the indicator's room takes the background colour instead. */
+      @media (forced-colors: active) {
+        .select > [data-slot="control"] {
+          border-inline-end-color: Canvas;
+        }
+      }
       /* The browser draws an arrow of its own, ::picker-icon, which the indicator replaces,
          so a select looks the same in every browser. */
       .select > [data-slot="control"]::picker-icon {
@@ -274,9 +281,15 @@ onMounted(() => {
         border-radius: var(--select--radius);
         background-color: Canvas;
         color: var(--color--neutral-text);
+        /* No wider than the screen, so a long option wraps rather than running off it. */
+        max-inline-size: calc(100vw - 1rem);
       }
       .select > [data-slot="control"] :deep(option) {
         min-height: var(--select--height);
+        /* The browser keeps options on one line, so a long one wraps here instead, with
+           room above and below its lines. */
+        white-space: normal;
+        padding-block: 0.25rem;
         padding-inline: calc(var(--select--padding) - 0.25rem);
         border-radius: calc(var(--select--radius) - 0.25rem);
       }
