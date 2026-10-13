@@ -1,7 +1,7 @@
 ---
 title: The Tooltip
 description: Our fourth component page, on a tooltip that shows a short hint on hover and keyboard focus, that people can reach, read and dismiss, and that agents can check.
-date: 2026-10-11
+date: 2026-10-13T15:00:00Z
 category: Components
 link:
   label: Read the Tooltip page
