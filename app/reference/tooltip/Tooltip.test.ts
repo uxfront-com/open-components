@@ -61,6 +61,7 @@ describe("Tooltip", () => {
     await nextTick();
 
     expect(tip()).toHaveAttribute("data-state", "closed");
+    expect(tip()).not.toHaveAttribute("data-delay");
     expect(screen.getByRole("button")).toHaveAccessibleDescription("Visible to everyone");
   });
 
@@ -72,17 +73,17 @@ describe("Tooltip", () => {
     expect(screen.getByRole("button")).toHaveAttribute("aria-describedby", "visibility-hint");
   });
 
-  // An id can hold characters a CSS name can't, like "1:2", which would drop the anchor.
+  // An id can hold characters a CSS name can't, like "form.email:1", which would drop the anchor.
   it("names its anchor from a generated ID, whatever id you pass", async () => {
     let bound: Record<string, any> = {};
     render(
-      h(Tooltip, { label: "Visible to everyone", id: "form.email 1:2" }, {
+      h(Tooltip, { label: "Visible to everyone", id: "form.email:1" }, {
         default: ({ trigger }: { trigger: Record<string, any> }) => ((bound = trigger), h("button", trigger, "Settings")),
       }),
     );
     await nextTick();
 
-    expect(bound["aria-describedby"]).toBe("form.email 1:2");
+    expect(bound["aria-describedby"]).toBe("form.email:1");
     expect(bound.style["anchor-name"]).toMatch(/^--tooltip-v-[\w-]+$/);
   });
 
@@ -125,9 +126,10 @@ describe("Tooltip", () => {
     expect(tip()).toHaveAttribute("data-state", "closed");
   });
 
-  it("takes another delay", async () => {
+  it("takes another delay, and shows it as data-delay", async () => {
     const user = setup();
     render(tooltip({ label: "Visible to everyone", delay: 1000 }));
+    expect(tip()).toHaveAttribute("data-delay", "1000");
 
     await user.hover(screen.getByRole("button"));
     await vi.advanceTimersByTimeAsync(999);

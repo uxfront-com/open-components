@@ -114,9 +114,13 @@ const code = computed(() => {
         "</Tooltip>",
       ].join("\n");
     default: {
-      const data = [`data-state="closed"`, `data-placement="${placement.value}"`];
+      const data = [
+        `data-state="closed"`,
+        `data-placement="${placement.value}"`,
+        delay.value !== "500" && `data-delay="${delay.value}"`,
+      ].filter(Boolean);
       return [
-        "<!-- tooltip.js wires each .tooltip to the element just before it. -->",
+        "<!-- tooltip.js, written out under Label and description, wires each .tooltip to the element just before it. -->",
         icon
           ? '<button class="button" type="button" data-variant="outline" data-color="neutral" data-size="md" data-icon-only>'
           : '<button class="button" type="button" aria-describedby="archive-tooltip" data-variant="outline" data-color="neutral" data-size="md">',

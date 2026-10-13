@@ -51,7 +51,7 @@ defineSlots<{
   default: (props: { trigger: TooltipTrigger }) => unknown;
 }>();
 
-// The ID, and the anchor's name made from it, are set once it mounts: the one you pass, or a
+// The ID, and the anchor's name, are set once it mounts. The ID is the one you pass, or a
 // generated one. Generated IDs can differ between the server and the client, like in content
 // that renders asynchronously, and hydration doesn't fix the trigger's attributes, which
 // would then point at nothing.
@@ -229,6 +229,7 @@ onBeforeUnmount(() => {
     popover="manual"
     :data-state="state"
     :data-placement="placement"
+    :data-delay="delay === 500 ? undefined : delay"
     :style="anchorName && { 'position-anchor': anchorName }"
     @pointerenter="onTooltipEnter"
     @pointerleave="onTooltipLeave"
@@ -245,8 +246,9 @@ onBeforeUnmount(() => {
     /* The neutral fill and the text on it, which have 4.5:1 or more in both colour schemes. */
     --tooltip--background: var(--color--neutral);
     --tooltip--color: var(--color--neutral-contrast);
-    --tooltip--font-size: 0.75rem;
-    --tooltip--padding: 0.25rem 0.5rem;
+    /* The Button's text size, so the hint doesn't read smaller than the control it explains. */
+    --tooltip--font-size: 0.875rem;
+    --tooltip--padding: 0.375rem 0.625rem;
     --tooltip--radius: 0.375rem;
     /* In ch, so long text wraps at about 32 characters, however big the text gets. */
     --tooltip--max-width: 32ch;

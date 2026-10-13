@@ -78,11 +78,11 @@ import "~/reference/button/tokens.css";
 
 /* The reference Tooltip's look, at twice its size so its parts are easy to see. */
 .anatomy-tip {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 0.75rem;
   background-color: var(--color--neutral);
   color: var(--color--neutral-contrast);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 500;
   line-height: 1.4;
   outline: 1px dashed color-mix(in srgb, var(--ui-text-highlighted) 70%, transparent);
@@ -99,14 +99,15 @@ import "~/reference/button/tokens.css";
 
 /* The tooltip's number sits before it, the offset's beside the gap, and the trigger's before it. */
 .anatomy-marker-tip {
-  top: 1.55rem;
+  top: 1.975rem;
   right: calc(100% + 0.875rem);
   translate: 0 -50%;
 }
 .anatomy-marker-offset {
-  /* Halfway down the gap, under the tooltip, which is 3.1rem tall. */
-  top: calc(3.1rem + 0.5rem);
-  left: calc(50% + 2.25rem + 0.875rem);
+  /* Halfway down the gap, under the tooltip, which is 3.95rem tall. */
+  top: calc(3.95rem + 0.5rem);
+  /* Past the tooltip's edge, which is wider than the trigger. */
+  left: calc(100% + 0.875rem);
   translate: 0 -50%;
 }
 .anatomy-marker-trigger {
