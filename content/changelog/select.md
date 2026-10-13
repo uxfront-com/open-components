@@ -1,7 +1,7 @@
 ---
 title: The Select
 description: Our fourth component page, on a select that people can label, open with any keyboard or finger and fill in with autofill, that works before JavaScript loads, and that agents can check.
-date: 2026-10-11
+date: 2026-10-13
 category: Components
 link:
   label: Read the Select page
