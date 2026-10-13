@@ -4,12 +4,14 @@ import { nextTick, onMounted, useAttrs, useTemplateRef, watchEffect } from "vue"
 export interface CheckboxProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   disabled?: boolean;
+  /** Shows a state people can focus and send with the form, but not change. HTML ignores `readonly` on a checkbox, so it's `aria-readonly`, and a click is cancelled. */
+  readonly?: boolean;
 }
 
 // Attributes go on the <input> rather than on the root, so they're declared below.
 defineOptions({ inheritAttrs: false });
 
-const { size = "md", disabled = false } = defineProps<CheckboxProps>();
+const { size = "md", disabled = false, readonly = false } = defineProps<CheckboxProps>();
 
 /** Whether it's checked, which `v-model:checked` binds. Without it, the checkbox keeps its own, and starts from `checked`. */
 const checked = defineModel<boolean>("checked", { default: false });
@@ -34,6 +36,12 @@ const rootAttrs = () => Object.fromEntries(Object.entries(attrs).filter(([key]) 
 const controlAttrs = () => Object.fromEntries(Object.entries(attrs).filter(([key]) => !onRoot(key)));
 
 const input = useTemplateRef<HTMLInputElement>("input");
+
+// A cancelled click puts back the checked and indeterminate states, and fires no
+// change, whether it came from the box, its label or Space.
+function onClick(event: MouseEvent) {
+  if (readonly) event.preventDefault();
+}
 
 // Bound before your own listeners, so a `change` listener of yours already sees the new state.
 async function onChange(event: Event) {
@@ -80,6 +88,8 @@ onMounted(() => {
       data-slot="box"
       type="checkbox"
       :disabled="disabled"
+      :aria-readonly="readonly ? 'true' : undefined"
+      @click="onClick"
       @change="onChange"
       v-bind="controlAttrs()"
       :checked="checked"
@@ -202,7 +212,7 @@ onMounted(() => {
   /* States. Each one reads the <input>, which is what assistive technologies report,
      so what people see and what they hear can't drift apart. */
   @media (hover: hover) {
-    .checkbox:hover:where(:not(:has(> [data-slot="box"]:disabled))) {
+    .checkbox:hover:where(:not(:has(> [data-slot="box"]:is(:disabled, [aria-readonly="true"])))) {
       --checkbox--box--border-color: color-mix(in srgb, currentColor 80%, transparent);
     }
   }
@@ -219,6 +229,21 @@ onMounted(() => {
   .checkbox > [data-slot="box"]:checked:not(:indeterminate) + [data-slot="indicator"] > [data-mark="check"],
   .checkbox > [data-slot="box"]:indeterminate + [data-slot="indicator"] > [data-mark="dash"] {
     display: inline;
+  }
+  /* Read-only: dashed, like a read-only Input, with the check in the text colour and no
+     fill, so it reads as a state you can see but not change. :read-only can't tell it
+     apart, since it matches every checkbox. */
+  .checkbox:has(> [data-slot="box"][aria-readonly="true"]) {
+    cursor: default;
+  }
+  .checkbox > [data-slot="box"][aria-readonly="true"] {
+    /* The container's border colour, which more contrast still strengthens. */
+    --checkbox--box--border-color: inherit;
+    border-style: dashed;
+    background-color: transparent;
+  }
+  .checkbox > [data-slot="box"][aria-readonly="true"] + [data-slot="indicator"] {
+    color: inherit;
   }
   .checkbox > [data-slot="box"][aria-invalid="true"] {
     --checkbox--box--border-color: var(--color--error-text);
@@ -248,6 +273,13 @@ onMounted(() => {
     }
     .checkbox > [data-slot="indicator"] {
       color: HighlightText;
+    }
+    .checkbox > [data-slot="box"][aria-readonly="true"] {
+      --checkbox--box--border-color: CanvasText;
+      background-color: transparent;
+    }
+    .checkbox > [data-slot="box"][aria-readonly="true"] + [data-slot="indicator"] {
+      color: CanvasText;
     }
     .checkbox > [data-slot="box"]:focus-visible {
       outline-color: Highlight;

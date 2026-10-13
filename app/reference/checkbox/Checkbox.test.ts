@@ -217,6 +217,36 @@ describe("Checkbox", () => {
     expect([...new FormData(container.querySelector("form")!)]).toEqual([]);
   });
 
+  it("can be focused and submitted while read-only, but a click, its label or Space never toggle it", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { container } = render({
+      render: () =>
+        h("form", [
+          h(Checkbox, { name: "updates", checked: true, readonly: true, onChange }, () => "Email me updates"),
+          h(Checkbox, { name: "all", indeterminate: true, readonly: true }, () => "Select all"),
+        ]),
+    });
+
+    const updates = screen.getByRole("checkbox", { name: "Email me updates" });
+    const all = screen.getByRole("checkbox", { name: "Select all" });
+    expect(updates).toHaveAttribute("aria-readonly", "true");
+    // HTML ignores readonly on a checkbox, so it's never set.
+    expect(updates).not.toHaveAttribute("readonly");
+
+    await user.tab();
+    expect(updates).toHaveFocus();
+    await user.keyboard(" ");
+    await user.click(updates);
+    await user.click(screen.getByText("Email me updates"));
+    expect(updates).toBeChecked();
+    expect(onChange).not.toHaveBeenCalled();
+
+    await user.click(all);
+    expect(all).toBePartiallyChecked();
+    expect([...new FormData(container.querySelector("form")!)]).toEqual([["updates", "on"]]);
+  });
+
   it("mirrors its size as a data attribute, and hides its indicator from assistive technologies", () => {
     const { container } = render(Checkbox, { props: { size: "lg" }, slots: { default: terms } });
 

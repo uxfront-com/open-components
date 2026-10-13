@@ -17,6 +17,7 @@ const size = ref<NonNullable<CheckboxProps["size"]>>("md");
 const checked = ref(false);
 const indeterminate = ref(false);
 const disabled = ref(false);
+const readonly = ref(false);
 const required = ref(false);
 const invalid = ref(false);
 
@@ -84,6 +85,8 @@ const code = computed(() => {
     fw !== "vanilla" && fw !== "angular" && size.value !== "md" && `size="${size.value}"`,
     mixed,
     disabled.value && "disabled",
+    // Angular and Vanilla write out what the Checkbox renders, and cancel the click themselves.
+    readonly.value && (fw === "angular" || fw === "vanilla" ? 'aria-readonly="true"' : jsx ? "readOnly" : "readonly"),
     required.value && "required",
     invalid.value && 'aria-invalid="true"',
     invalid.value && 'aria-describedby="terms-error"',
@@ -110,6 +113,7 @@ const code = computed(() => {
   const comment = (text: string) => (jsx ? `{/* ${text} */}` : `<!-- ${text} -->`);
   return [
     scripted && indeterminate.value && comment('A script sets it: document.querySelector("#terms").indeterminate = true'),
+    fw === "vanilla" && readonly.value && comment("A script cancels its clicks, as under Read-only."),
     ...checkbox,
     invalid.value && `<p id="terms-error">${error}</p>`,
   ]
@@ -127,6 +131,7 @@ const code = computed(() => {
       <USwitch v-model="checked" label="Checked" size="sm" />
       <USwitch v-model="indeterminate" label="Indeterminate" size="sm" />
       <USwitch v-model="disabled" label="Disabled" size="sm" />
+      <USwitch v-model="readonly" label="Read-only" size="sm" />
       <USwitch v-model="required" label="Required" size="sm" />
       <USwitch v-model="invalid" label="Invalid" size="sm" />
     </div>
@@ -139,6 +144,7 @@ const code = computed(() => {
           :size="size"
           name="terms"
           :disabled="disabled"
+          :readonly="readonly"
           :required="required"
           :aria-invalid="invalid ? 'true' : undefined"
           :aria-describedby="invalid ? 'playground-terms-error' : undefined"

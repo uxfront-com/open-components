@@ -26,7 +26,14 @@ import Checkbox from "~/reference/checkbox/Checkbox.vue";
         </div>
         <figcaption class="text-muted text-xs">Disabled</figcaption>
       </figure>
-      <figure class="flex flex-col gap-1.5 sm:col-span-2">
+      <figure class="flex flex-col gap-1.5">
+        <div class="flex flex-col gap-1">
+          <Checkbox readonly>Text me updates</Checkbox>
+          <Checkbox checked readonly>Email me updates</Checkbox>
+        </div>
+        <figcaption class="text-muted text-xs">Read-only (try clicking or pressing Space)</figcaption>
+      </figure>
+      <figure class="flex flex-col gap-1.5">
         <Checkbox required aria-invalid="true" aria-describedby="states-terms-error">I agree to the terms</Checkbox>
         <p id="states-terms-error" class="ps-6.5 text-sm text-(--color--error-text)">Agree to the terms to create an account</p>
         <figcaption class="text-muted text-xs">Invalid</figcaption>
