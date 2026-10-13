@@ -8,7 +8,7 @@ link:
   to: /docs/components/tooltip
 ---
 
-Tooltips are small and everywhere, which is why they so often only work for a mouse. The Tooltip page walks you through building one that opens for the keyboard too, stays open while people read it and closes with `Escape`, and the other overlays on our Roadmap, like the Popover and the Dialog, will follow its rules for the top layer and `Escape`.
+Tooltips are small and everywhere, which is why they so often only work for a mouse. The Tooltip page walks you through building one that opens for the keyboard too, stays open while people read it and closes with `Escape`. The other overlays on our Roadmap, like the Popover and the Dialog, will follow its rules for the top layer and `Escape`.
 
 ## New
 

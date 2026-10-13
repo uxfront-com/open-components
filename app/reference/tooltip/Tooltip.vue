@@ -58,7 +58,9 @@ defineSlots<{
 const attrs = useAttrs();
 const uid = useId();
 const id = ref<string>();
-const anchorName = computed(() => id.value && `--tooltip-${id.value}`);
+// The anchor's name always comes from the generated ID, since an id you pass can hold
+// characters a CSS name can't, like "1:2", and the browser would drop the anchor.
+const anchorName = computed(() => id.value && `--tooltip-${uid}`);
 onMounted(() => (id.value = (attrs.id as string | undefined) ?? uid));
 const state = ref<"open" | "closed">("closed");
 const tooltip = useTemplateRef<HTMLElement>("tooltip");

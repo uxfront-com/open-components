@@ -114,11 +114,7 @@ const code = computed(() => {
         "</Tooltip>",
       ].join("\n");
     default: {
-      const data = [
-        `data-state="closed"`,
-        `data-placement="${placement.value}"`,
-        delay.value !== "500" && `data-delay="${delay.value}"`,
-      ].filter(Boolean);
+      const data = [`data-state="closed"`, `data-placement="${placement.value}"`];
       return [
         "<!-- tooltip.js wires each .tooltip to the element just before it. -->",
         icon

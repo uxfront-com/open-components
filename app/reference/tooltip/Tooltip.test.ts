@@ -72,6 +72,20 @@ describe("Tooltip", () => {
     expect(screen.getByRole("button")).toHaveAttribute("aria-describedby", "visibility-hint");
   });
 
+  // An id can hold characters a CSS name can't, like "1:2", which would drop the anchor.
+  it("names its anchor from a generated ID, whatever id you pass", async () => {
+    let bound: Record<string, any> = {};
+    render(
+      h(Tooltip, { label: "Visible to everyone", id: "form.email 1:2" }, {
+        default: ({ trigger }: { trigger: Record<string, any> }) => ((bound = trigger), h("button", trigger, "Settings")),
+      }),
+    );
+    await nextTick();
+
+    expect(bound["aria-describedby"]).toBe("form.email 1:2");
+    expect(bound.style["anchor-name"]).toMatch(/^--tooltip-v-[\w-]+$/);
+  });
+
   it("leaves generated IDs out of the server's markup, so hydration can't leave the trigger pointing at nothing", async () => {
     const html = await renderToString(createSSRApp({ render: () => tooltip({ label: "Visible to everyone" }) }));
 
