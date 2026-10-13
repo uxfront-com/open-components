@@ -202,7 +202,7 @@ onMounted(() => {
   .switch > [data-slot="control"][aria-readonly="true"] + [data-slot="track"] {
     border-style: dashed;
   }
-  .switch:has(> [data-slot="control"][aria-readonly="true"]:checked:not([aria-invalid="true"])) {
+  .switch:has(> [data-slot="control"][aria-readonly="true"]:checked:not([aria-invalid="true"], :disabled)) {
     --switch--track--border-color: currentColor;
   }
 
@@ -243,16 +243,16 @@ onMounted(() => {
     .switch > [data-slot="track"] {
       forced-color-adjust: none;
     }
-    /* The invalid border keeps its second pixel, which tells it apart without colour. */
-    .switch:has(> [data-slot="control"][aria-invalid="true"]) {
-      --switch--track--border-color: CanvasText;
-    }
     .switch:has(> [data-slot="control"]:checked) {
       --switch--track--border-color: Highlight;
       --switch--track--background-color: Highlight;
       --switch--thumb--background-color: HighlightText;
     }
-    .switch:has(> [data-slot="control"][aria-readonly="true"]:checked:not([aria-invalid="true"])) {
+    /* On, the read-only dashes and the invalid border are drawn in CanvasText, so they show
+       around the Highlight fill. The read-only selector matches the one above, so it wins.
+       The invalid border keeps its second pixel, which tells it apart without colour. */
+    .switch:has(> [data-slot="control"][aria-readonly="true"]:checked:not([aria-invalid="true"], :disabled)),
+    .switch:has(> [data-slot="control"][aria-invalid="true"]) {
       --switch--track--border-color: CanvasText;
     }
     .switch > [data-slot="control"]:focus-visible + [data-slot="track"] {
