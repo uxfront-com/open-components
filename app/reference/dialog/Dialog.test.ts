@@ -264,9 +264,19 @@ describe("Dialog", () => {
     expect(onClose.mock.calls).toEqual([["escape", ""]]);
   });
 
-  it("says it's closed, and gives focus back, when the browser closes it anyway", async () => {
+  it("stops Escape from closing it, so it only asks once", async () => {
     const user = userEvent.setup();
-    // A page that keeps the dialog open, like for unsaved changes, unless it's already closed.
+    page({}, { default: () => field("name", "Full name") }, { closes: false });
+    await openFrom(user);
+
+    // A cancelled keydown is what keeps a real browser from closing it too.
+    const keydown = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    screen.getByRole("textbox", { name: "Full name" }).dispatchEvent(keydown);
+    expect(keydown.defaultPrevented).toBe(true);
+  });
+
+  // A page that keeps the dialog open, like for unsaved changes, unless it's already closed.
+  function keepsOpen() {
     const open = ref(false);
     const onClose = vi.fn((reason: string) => {
       if (reason === "closed") open.value = false;
@@ -279,18 +289,24 @@ describe("Dialog", () => {
         ),
       ],
     });
+    return { open, onClose };
+  }
+
+  it("says it's closed, and gives focus back, when the browser closes it anyway", async () => {
+    const user = userEvent.setup();
+    const { open, onClose } = keepsOpen();
     await openFrom(user);
     const dialog = screen.getByRole("dialog") as HTMLDialogElement;
 
     await user.keyboard("{Escape}");
     expect(dialog.open).toBe(true);
+    onClose.mockClear();
 
-    // Like a close request the browser no longer lets the page turn down.
+    // A close request the browser no longer lets the page turn down: an uncancelable
+    // `cancel`, then the browser closes it.
+    dialog.dispatchEvent(new Event("cancel", { cancelable: false }));
     dialog.close();
-    expect(onClose.mock.calls).toEqual([
-      ["escape", ""],
-      ["closed", ""],
-    ]);
+    expect(onClose.mock.calls).toEqual([["closed", ""]]);
     await nextTick();
     expect(open.value).toBe(false);
     expect(dialog.open).toBe(open.value);
@@ -299,6 +315,19 @@ describe("Dialog", () => {
     // It opens again, since `open` followed it.
     await openFrom(user);
     expect(dialog.open).toBe(true);
+  });
+
+  it("ignores a close that arrives once it's open again", async () => {
+    const user = userEvent.setup();
+    const { onClose } = keepsOpen();
+    await openFrom(user);
+    const dialog = screen.getByRole("dialog") as HTMLDialogElement;
+
+    // Like the `close` a browser fires after closing and reopening it in one go.
+    dialog.dispatchEvent(new Event("close"));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(dialog.open).toBe(true);
+    expect(dialog).toContainElement(document.activeElement as HTMLElement);
   });
 
   it("doesn't fire close when you close it", async () => {

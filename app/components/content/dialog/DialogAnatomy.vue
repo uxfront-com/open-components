@@ -95,14 +95,14 @@ import "~/reference/button/tokens.css";
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
   box-sizing: border-box;
   width: min(24rem, 100%);
-  padding: 1.5rem;
+  padding: 1.25rem;
   border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
   border-radius: 0.75rem;
   background-color: Canvas;
-  color: CanvasText;
+  color: var(--color--neutral-text);
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -114,23 +114,23 @@ import "~/reference/button/tokens.css";
 }
 .anatomy-title {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
-  line-height: 1.75rem;
+  line-height: 1.375;
 }
 .anatomy-close {
+  margin-block: calc((1.375rem - 2rem) / 2);
   margin-inline-end: -0.5rem;
 }
 .anatomy-description {
   grid-column: 1 / -1;
   margin: 0;
-  color: color-mix(in srgb, currentColor 80%, transparent);
+  color: color-mix(in srgb, currentColor 70%, transparent);
 }
 .anatomy-body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-block: 0.25rem;
 }
 .anatomy-line {
   height: 0.5rem;
@@ -142,8 +142,7 @@ import "~/reference/button/tokens.css";
 }
 .anatomy-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 /* Each part is outlined, with its number on its top corner. */

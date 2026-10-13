@@ -111,15 +111,20 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 // Other close requests, like the back gesture on Android, ask too, rather than closing it.
+// A browser that won't let one be turned down, without a press or a key since the last,
+// makes its `cancel` uncancelable and closes the dialog itself, which `onClose` reports.
 function onCancel(event: Event) {
+  if (!event.cancelable) return;
   event.preventDefault();
   emit("close", "escape", "");
 }
 
-// A browser that won't let a close request be cancelled again, without a press or a key
-// in between, closes the dialog itself. That can't be turned down, so it says so with a
-// reason of its own, `closed`, for `open` to follow, and gives focus back.
+// When the browser closed the dialog itself, it can't be turned down, so it says so with
+// a reason of its own, `closed`, for `open` to follow, and gives focus back. A `close`
+// that arrives once it's open again, like after closing and reopening it in one go, is
+// one it already handled.
 function onClose() {
+  if (dialog.value?.open) return;
   restoreFocus();
   if (open) emit("close", "closed", "");
 }
@@ -217,15 +222,20 @@ onBeforeUnmount(hide);
    style outside a layer, like a class of yours that sets its variables. */
 @layer theme, base, components, utilities;
 
+/* The panel looks like the Card: the same padding, spacing, radius, border and type.
+   Only its background differs, since it has to cover the page. */
 @layer components {
   .dialog {
     /* Set per size. */
     --dialog--width: 32rem;
-    --dialog--padding: 1.5rem;
-    --dialog--gap: 1rem;
+    --dialog--padding: 1.25rem;
+    --dialog--gap: 0.75rem;
     --dialog--radius: 0.75rem;
-    /* The text colour at 20%, which sets the panel apart where the backdrop barely shows, like on a dark page. */
+    /* The panel's border is decoration: the backdrop and the title say what it is, so it
+       doesn't need 3:1. */
     --dialog--border-color: color-mix(in srgb, currentColor 20%, transparent);
+    /* The native dialog's own background, which follows `color-scheme`, so it covers the page. */
+    --dialog--background: Canvas;
     /* The page behind it, dimmed, so people can tell it's out of reach until they're done. */
     --dialog--backdrop--background-color: color-mix(in srgb, #000 50%, transparent);
 
@@ -235,16 +245,16 @@ onBeforeUnmount(hide);
     max-width: none;
     max-height: calc(100% - 2rem);
     margin: auto;
-    padding: var(--dialog--padding) 0;
+    padding: var(--dialog--padding);
     border: 1px solid var(--dialog--border-color);
     border-radius: var(--dialog--radius);
-    /* The native dialog's own colours, which follow `color-scheme`, so it needs no theme tokens. */
-    background-color: Canvas;
-    color: CanvasText;
-    box-shadow: 0 1.5rem 3rem -0.75rem color-mix(in srgb, #000 35%, transparent);
+    background-color: var(--dialog--background);
+    color: var(--color--neutral-text);
     font-family: inherit;
     font-size: 0.875rem;
     line-height: 1.5;
+    /* Long words, like a web address, wrap rather than overflow the panel. */
+    overflow-wrap: break-word;
   }
   /* Only while it's open, since a closed dialog stays hidden by the browser's own styles. */
   .dialog[open] {
@@ -264,10 +274,8 @@ onBeforeUnmount(hide);
     --dialog--width: 48rem;
   }
 
-  /* Parts. The title and the actions stay in view, and the body scrolls between them. */
-  .dialog > [data-slot] {
-    padding-inline: var(--dialog--padding);
-  }
+  /* Parts. They have no borders of their own, like the Card's. The title and the actions
+     stay in view, and the body scrolls between them. */
   .dialog > [data-slot="header"] {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -276,36 +284,36 @@ onBeforeUnmount(hide);
   }
   .dialog [data-slot="title"] {
     margin: 0;
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
-    line-height: 1.75rem;
-    overflow-wrap: anywhere;
+    line-height: 1.375;
   }
   .dialog [data-slot="close"] {
     grid-column: 2;
     grid-row: 1;
-    /* Lined up with the title's first line, and with the edge of the content. */
+    /* Centred on the title's first line, and lined up with the edge of the content. */
+    margin-block: calc((1.375rem - 2rem) / 2);
     margin-inline-end: -0.5rem;
   }
   .dialog [data-slot="description"] {
     grid-column: 1 / -1;
     margin: 0;
-    /* The text colour at 80%, which keeps well above 4.5:1 against the panel. */
-    color: color-mix(in srgb, currentColor 80%, transparent);
+    /* The text colour at 70%, which has 4.5:1 against the panel. */
+    color: color-mix(in srgb, currentColor 70%, transparent);
   }
   .dialog > [data-slot="body"] {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     /* Room for the focus rings of the controls at its edges, which it would clip. */
-    margin-block: -0.25rem;
-    padding-block: 0.25rem;
+    margin: -0.25rem;
+    padding: 0.25rem;
   }
   .dialog > [data-slot="actions"] {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.5rem;
   }
   /* A <form method="dialog"> around the actions lays them out as if it weren't there. */
   .dialog > [data-slot="actions"] > form {
