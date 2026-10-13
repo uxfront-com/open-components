@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useAttrs, useTemplateRef, watch, type TextareaHTMLAttributes } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useTemplateRef, watch, type TextareaHTMLAttributes } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
 
 export interface TextareaProps {
@@ -45,13 +45,16 @@ const onRoot = (key: string) => key === "class" || key === "style";
 const rootAttrs = () => Object.fromEntries(Object.entries(attrs).filter(([key]) => onRoot(key)));
 const controlAttrs = () => Object.fromEntries(Object.entries(attrs).filter(([key]) => !onRoot(key)));
 
+const root = useTemplateRef<HTMLElement>("root");
 const textarea = useTemplateRef<HTMLTextAreaElement>("textarea");
 
 // What people have typed, so the count works without `v-model` too.
 const typed = ref(typeof attrs.value === "string" ? attrs.value : "");
 const value = computed(() => model.value ?? typed.value);
 
-// Characters, rather than UTF-16 code units, so an emoji counts as one, as people see it.
+// Code points rather than UTF-16 code units, which is how most databases count a
+// length limit, like PostgreSQL's varchar(n). An emoji made of several, like a
+// family, counts as several.
 const remaining = computed(() => (limit === undefined ? 0 : limit - [...value.value].length));
 const over = computed(() => remaining.value < 0);
 const countText = computed(() => countLabel(remaining.value));
@@ -61,11 +64,20 @@ const countId = computed(() => (limit !== undefined && attrs.id ? `${attrs.id}-c
 const invalid = () => (over.value ? "true" : (attrs["aria-invalid"] as TextareaHTMLAttributes["aria-invalid"]));
 const describedBy = () => [attrs["aria-describedby"], countId.value].filter(Boolean).join(" ") || undefined;
 
-// Lines rather than pixels, which the styles turn into a minimum and a maximum height.
-const variables = computed(() => ({
-  "--textarea--rows": rows,
-  "--textarea--max-rows": autoGrow ? maxRows : undefined,
-}));
+// `rows` and `maxRows` as variables, in lines, which the styles turn into a minimum
+// and a maximum height. CSS can't read a number from an attribute in every browser
+// yet, so they're set through the CSSOM, which a strict Content Security Policy
+// allows, unlike a style attribute. They run after every render, since a change to
+// your own `style` replaces the root's.
+function setRows() {
+  const el = root.value;
+  if (!el) return;
+  el.style.setProperty("--textarea--rows", String(rows));
+  if (autoGrow && maxRows !== undefined) el.style.setProperty("--textarea--max-rows", String(maxRows));
+  else el.style.removeProperty("--textarea--max-rows");
+}
+onMounted(setRows);
+onUpdated(setRows);
 
 // Browsers with `field-sizing: content` grow the textarea themselves. In the
 // others, it's set to the height of its text, which max-height caps.
@@ -103,6 +115,17 @@ function onInput(event: Event) {
   announceCount();
 }
 
+// A form reset puts back the textarea's first value without an input event, so
+// the count reads it again once the reset is done, which is after the event.
+let form: HTMLFormElement | null = null;
+function onReset() {
+  queueMicrotask(() => {
+    const text = textarea.value?.value ?? "";
+    typed.value = text;
+    if (model.value !== undefined) model.value = text;
+  });
+}
+
 // A ref to the Textarea gets you the <textarea>, through `textarea`.
 defineExpose({ textarea });
 
@@ -110,6 +133,8 @@ onMounted(() => {
   // The live region has to be in the page before anything is announced.
   if (limit !== undefined) prepareAnnouncer();
   grow();
+  form = textarea.value?.form ?? null;
+  form?.addEventListener("reset", onReset);
 
   if (import.meta.env.DEV) {
     const el = textarea.value;
@@ -123,16 +148,20 @@ onMounted(() => {
   }
 });
 
-onBeforeUnmount(() => clearTimeout(timer));
+onBeforeUnmount(() => {
+  clearTimeout(timer);
+  form?.removeEventListener("reset", onReset);
+});
 </script>
 
 <template>
   <div
+    ref="root"
     class="textarea"
     v-bind="rootAttrs()"
-    :style="variables"
     :data-size="size"
     :data-auto-grow="autoGrow ? '' : undefined"
+    :data-max-rows="autoGrow ? maxRows : undefined"
     :data-limit="limit"
   >
     <textarea
@@ -173,8 +202,9 @@ onBeforeUnmount(() => clearTimeout(timer));
     /* What's left of one row's height once its line of text is in, above and below it.
        `lh` is the textarea's line height, so it follows larger text and wider lines. */
     --textarea--padding-block: max(0.125rem, (var(--textarea--height) - 1lh) / 2 - 1px);
-    /* `rows` lines, with their padding and border. Resizing and growing stop there. */
-    --textarea--min-height: calc(var(--textarea--rows, 3) * 1lh + 2 * var(--textarea--padding-block) + 2px);
+    /* `rows` lines, with their padding and border. Resizing and growing stop there.
+       Until the script sets the rows, it has no value, and the `rows` attribute sets the height. */
+    --textarea--min-height: calc(var(--textarea--rows) * 1lh + 2 * var(--textarea--padding-block) + 2px);
     /* Only set with `maxRows`. Without it, max-height has no value, which is none. */
     --textarea--max-height: calc(var(--textarea--max-rows) * 1lh + 2 * var(--textarea--padding-block) + 2px);
 
@@ -260,9 +290,11 @@ onBeforeUnmount(() => clearTimeout(timer));
 
   /* States. Each one reads the attribute on the <textarea> that exposes it, so what
      people see and what assistive technologies report can't drift apart. :invalid
-     isn't one of them: it matches a required textarea before anyone has typed in it. */
+     isn't one of them: it matches a required textarea before anyone has typed in it.
+     The variables are set on the root, as every other one is, so a class of yours
+     still sets them in every state. Hover is in :where(), so invalid always wins. */
   @media (hover: hover) {
-    .textarea > [data-slot="control"]:hover:where(:not(:disabled, [readonly])) {
+    .textarea:where(:has(> [data-slot="control"]:hover:not(:disabled, [readonly]))) {
       --textarea--border-color: color-mix(in srgb, currentColor 80%, transparent);
     }
   }
@@ -274,8 +306,10 @@ onBeforeUnmount(() => clearTimeout(timer));
     /* Dashed, so it reads as something you can't change, while the text keeps its contrast. */
     border-style: dashed;
   }
-  .textarea > [data-slot="control"][aria-invalid="true"] {
+  .textarea:has(> [data-slot="control"][aria-invalid="true"]) {
     --textarea--border-color: var(--color--error-text);
+  }
+  .textarea > [data-slot="control"][aria-invalid="true"] {
     /* A second pixel of border, drawn inside, so the field doesn't grow. */
     box-shadow: inset 0 0 0 1px var(--textarea--border-color);
   }
@@ -299,8 +333,7 @@ onBeforeUnmount(() => clearTimeout(timer));
 
   /* With more contrast, the border is drawn in the text colour at full strength. */
   @media (prefers-contrast: more) {
-    .textarea > [data-slot="control"],
-    .textarea > [data-slot="control"]:hover {
+    .textarea {
       --textarea--border-color: currentColor;
     }
   }

@@ -107,15 +107,15 @@ const code = computed(() => {
 
   let textarea: string[];
   if (fw === "vanilla") {
-    const style = [`--textarea--rows: ${rows.value};`, autoGrow.value && `--textarea--max-rows: ${MAX_ROWS};`];
     const count = `${LIMIT - [...value.value].length} characters left`;
     textarea = element(
       "div",
       [
         'class="textarea"',
-        `style="${style.filter(Boolean).join(" ")}"`,
         `data-size="${size.value}"`,
         autoGrow.value && "data-auto-grow",
+        autoGrow.value && `data-max-rows="${MAX_ROWS}"`,
+        counted.value && `data-limit="${LIMIT}"`,
       ],
       [
         ...element("textarea", control, [], true),

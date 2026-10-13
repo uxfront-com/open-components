@@ -27,7 +27,15 @@ describe("Textarea", () => {
     render({
       render: () => [
         label("address", "Street address"),
-        h(Textarea, { ref: instance, id: "address", class: "address", name: "address", autocomplete: "street-address", onFocus }),
+        h(Textarea, {
+          ref: instance,
+          id: "address",
+          class: "address",
+          style: "max-width: 320px",
+          name: "address",
+          autocomplete: "street-address",
+          onFocus,
+        }),
       ],
     });
 
@@ -37,6 +45,8 @@ describe("Textarea", () => {
     expect(textarea).toHaveAttribute("autocomplete", "street-address");
     expect(textarea).not.toHaveClass("address");
     expect(textarea.parentElement).toHaveClass("textarea", "address");
+    expect(textarea.parentElement).toHaveStyle({ maxWidth: "320px" });
+    expect(textarea).not.toHaveStyle({ maxWidth: "320px" });
     expect(onFocus).toHaveBeenCalled();
     expect(instance.value?.textarea).toBe(textarea);
   });
@@ -67,23 +77,33 @@ describe("Textarea", () => {
     expect(unbound).toHaveValue("Ada");
   });
 
-  it("is submitted with its form, by its name", async () => {
+  it("is submitted with its form, by its name, whether its value is bound or not", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn((event: Event) => event.preventDefault());
+    const subject = ref("");
     render({
       render: () =>
         h("form", { onSubmit }, [
+          label("subject", "Subject"),
+          h(Textarea, {
+            id: "subject",
+            name: "subject",
+            modelValue: subject.value,
+            "onUpdate:modelValue": (value: string | undefined) => (subject.value = value ?? ""),
+          }),
           label("message", "Message"),
           h(Textarea, { id: "message", name: "message" }),
           h("button", { type: "submit" }, "Send"),
         ]),
     });
 
+    await user.type(screen.getByRole("textbox", { name: "Subject" }), "Hi");
     await user.type(screen.getByRole("textbox", { name: "Message" }), "Hello");
     await user.click(screen.getByRole("button", { name: "Send" }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
-    const form = onSubmit.mock.calls[0]![0].target as HTMLFormElement;
-    expect(new FormData(form).get("message")).toBe("Hello");
+    const data = new FormData(onSubmit.mock.calls[0]![0].target as HTMLFormElement);
+    expect(data.get("subject")).toBe("Hi");
+    expect(data.get("message")).toBe("Hello");
   });
 
   it("inserts a new line on Enter, and never submits its form", async () => {
@@ -106,13 +126,22 @@ describe("Textarea", () => {
 
   it("keeps the browser's text editing keys, and lets people paste", async () => {
     const user = userEvent.setup();
-    render({ render: () => [label("message", "Message"), h(Textarea, { id: "message" })] });
+    render({
+      render: () => [label("message", "Message"), h(Textarea, { id: "message" }), h("button", { type: "button" }, "Send")],
+    });
 
     const textarea = screen.getByRole("textbox", { name: "Message" });
     await user.tab();
     expect(textarea).toHaveFocus();
     await user.keyboard("Lovelace{Home}Ada ");
     expect(textarea).toHaveValue("Ada Lovelace");
+
+    // Tab moves focus on, rather than typing a tab.
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Send" })).toHaveFocus();
+    expect(textarea).toHaveValue("Ada Lovelace");
+    await user.tab({ shift: true });
+    expect(textarea).toHaveFocus();
 
     await user.clear(textarea);
     await user.paste("Ada Lovelace");
@@ -180,10 +209,34 @@ describe("Textarea", () => {
     expect(status).toHaveTextContent("2 characters left");
     expect(status.children).toHaveLength(1);
 
+    // A count that's back where it was isn't announced again.
+    await user.type(textarea, "l{Backspace}");
+    vi.advanceTimersByTime(1000);
+    expect(status.children).toHaveLength(1);
+
     await user.type(textarea, "lace");
     vi.advanceTimersByTime(1000);
     expect(status).toHaveTextContent("2 characters too many");
     expect(status.children).toHaveLength(2);
+  });
+
+  it("counts again when its form is reset", async () => {
+    const user = userEvent.setup();
+    const { container } = render({
+      render: () => h("form", [label("bio", "Bio"), h(Textarea, { id: "bio", name: "bio", limit: 10 })]),
+    });
+
+    const textarea = screen.getByRole("textbox", { name: "Bio" });
+    await user.type(textarea, "Ada Lovelace");
+    expect(textarea).toHaveAttribute("aria-invalid", "true");
+
+    // The reset event fires before the values are put back, so the count catches up after it.
+    textarea.closest("form")!.reset();
+    expect(textarea).toHaveValue("");
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-slot="count"]')).toHaveTextContent("10 characters left");
+      expect(textarea).not.toHaveAttribute("aria-invalid");
+    });
   });
 
   it("can't be focused or edited while disabled, and its form leaves it out", async () => {
@@ -216,7 +269,7 @@ describe("Textarea", () => {
     expect(textarea).toHaveAccessibleDescription("Enter a message");
   });
 
-  it("mirrors its size, auto-grow and limit as data attributes, and passes its rows to the textarea", () => {
+  it("mirrors its size, auto-grow, maximum and limit as data attributes, and passes its rows to the textarea", () => {
     const { container } = render(Textarea, {
       attrs: { id: "message", "aria-label": "Message" },
       props: { size: "lg", rows: 2, autoGrow: true, maxRows: 6, limit: 500 },
@@ -226,6 +279,7 @@ describe("Textarea", () => {
     expect(root).toHaveAttribute("data-size", "lg");
     expect(root).toHaveAttribute("data-auto-grow", "");
     expect(root).toHaveAttribute("data-limit", "500");
+    expect(root).toHaveAttribute("data-max-rows", "6");
     expect(root.style.getPropertyValue("--textarea--rows")).toBe("2");
     expect(root.style.getPropertyValue("--textarea--max-rows")).toBe("6");
     expect(screen.getByRole("textbox", { name: "Message" })).toHaveAttribute("rows", "2");
