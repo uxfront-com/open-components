@@ -220,10 +220,15 @@ describe("Checkbox", () => {
   it("can be focused and submitted while read-only, but a click, its label or Space never toggle it", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
+    const onUpdate = vi.fn();
     const { container } = render({
       render: () =>
         h("form", [
-          h(Checkbox, { name: "updates", checked: true, readonly: true, onChange }, () => "Email me updates"),
+          h(
+            Checkbox,
+            { name: "updates", checked: true, readonly: true, onChange, "onUpdate:checked": onUpdate },
+            () => "Email me updates",
+          ),
           h(Checkbox, { name: "all", indeterminate: true, readonly: true }, () => "Select all"),
         ]),
     });
@@ -241,6 +246,7 @@ describe("Checkbox", () => {
     await user.click(screen.getByText("Email me updates"));
     expect(updates).toBeChecked();
     expect(onChange).not.toHaveBeenCalled();
+    expect(onUpdate).not.toHaveBeenCalled();
 
     await user.click(all);
     expect(all).toBePartiallyChecked();

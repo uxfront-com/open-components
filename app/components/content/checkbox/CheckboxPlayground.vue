@@ -85,8 +85,9 @@ const code = computed(() => {
     fw !== "vanilla" && fw !== "angular" && size.value !== "md" && `size="${size.value}"`,
     mixed,
     disabled.value && "disabled",
-    // Angular and Vanilla write out what the Checkbox renders, and cancel the click themselves.
-    readonly.value && (fw === "angular" || fw === "vanilla" ? 'aria-readonly="true"' : jsx ? "readOnly" : "readonly"),
+    // Angular takes it on the <label>, since it's the component's and not the <input>'s, while
+    // Vanilla writes out the attribute the Checkbox renders.
+    readonly.value && fw !== "angular" && (fw === "vanilla" ? 'aria-readonly="true"' : jsx ? "readOnly" : "readonly"),
     required.value && "required",
     invalid.value && 'aria-invalid="true"',
     invalid.value && 'aria-describedby="terms-error"',
@@ -99,7 +100,7 @@ const code = computed(() => {
     checkbox = element(
       "label",
       fw === "angular"
-        ? ["appCheckbox", size.value !== "md" && `size="${size.value}"`]
+        ? ["appCheckbox", size.value !== "md" && `size="${size.value}"`, readonly.value && "readonly"]
         : ['class="checkbox"', `data-size="${size.value}"`],
       [
         ...element("input", attributes),
@@ -113,7 +114,7 @@ const code = computed(() => {
   const comment = (text: string) => (jsx ? `{/* ${text} */}` : `<!-- ${text} -->`);
   return [
     scripted && indeterminate.value && comment('A script sets it: document.querySelector("#terms").indeterminate = true'),
-    fw === "vanilla" && readonly.value && comment("A script cancels its clicks, as under Read-only."),
+    scripted && readonly.value && comment("A script cancels its clicks, as under Read-only."),
     ...checkbox,
     invalid.value && `<p id="terms-error">${error}</p>`,
   ]
