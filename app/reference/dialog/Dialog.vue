@@ -2,8 +2,11 @@
 import { onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
 import Button from "../button/Button.vue";
 
-/** Why people asked to close the dialog. */
-export type DialogCloseReason = "escape" | "close-button" | "backdrop" | "action";
+/**
+ * Why people asked to close the dialog, or `closed` when it's already closed, like when
+ * the browser closed it itself.
+ */
+export type DialogCloseReason = "escape" | "close-button" | "backdrop" | "action" | "closed";
 
 export interface DialogProps {
   /** Shows the dialog, with `showModal()`. It never changes on its own, so set it to false when `close` fires. */
@@ -114,10 +117,11 @@ function onCancel(event: Event) {
 }
 
 // A browser that won't let a close request be cancelled again, without a press or a key
-// in between, closes the dialog itself. It still gives focus back, and says so.
+// in between, closes the dialog itself. That can't be turned down, so it says so with a
+// reason of its own, `closed`, for `open` to follow, and gives focus back.
 function onClose() {
   restoreFocus();
-  if (open) emit("close", "escape", "");
+  if (open) emit("close", "closed", "");
 }
 
 // A <form method="dialog"> would close the dialog itself. It asks instead, with the

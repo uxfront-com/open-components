@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
-import { h, ref, type VNodeChild } from "vue";
+import { h, nextTick, ref, type VNodeChild } from "vue";
 import Dialog, { type DialogProps } from "./Dialog.vue";
 
 // jsdom has <dialog> and its `open`, but not showModal() or close(), so these stand in
@@ -264,15 +264,41 @@ describe("Dialog", () => {
     expect(onClose.mock.calls).toEqual([["escape", ""]]);
   });
 
-  it("says so, and gives focus back, when the browser closes it anyway", async () => {
+  it("says it's closed, and gives focus back, when the browser closes it anyway", async () => {
     const user = userEvent.setup();
-    const { onClose } = page({}, { default: () => field("name", "Full name") }, { closes: false });
+    // A page that keeps the dialog open, like for unsaved changes, unless it's already closed.
+    const open = ref(false);
+    const onClose = vi.fn((reason: string) => {
+      if (reason === "closed") open.value = false;
+    });
+    render({
+      render: () => [
+        button("Edit profile", { onClick: () => (open.value = true) }),
+        h(Dialog, { id: "edit-profile", title: "Edit profile", open: open.value, onClose }, () =>
+          field("name", "Full name"),
+        ),
+      ],
+    });
     await openFrom(user);
+    const dialog = screen.getByRole("dialog") as HTMLDialogElement;
+
+    await user.keyboard("{Escape}");
+    expect(dialog.open).toBe(true);
 
     // Like a close request the browser no longer lets the page turn down.
-    (screen.getByRole("dialog") as HTMLDialogElement).close();
-    expect(onClose.mock.calls).toEqual([["escape", ""]]);
+    dialog.close();
+    expect(onClose.mock.calls).toEqual([
+      ["escape", ""],
+      ["closed", ""],
+    ]);
+    await nextTick();
+    expect(open.value).toBe(false);
+    expect(dialog.open).toBe(open.value);
     expect(screen.getByRole("button", { name: "Edit profile" })).toHaveFocus();
+
+    // It opens again, since `open` followed it.
+    await openFrom(user);
+    expect(dialog.open).toBe(true);
   });
 
   it("doesn't fire close when you close it", async () => {
