@@ -321,6 +321,28 @@ describe("Tooltip", () => {
     expect(button.nextElementSibling).toBe(tip());
   });
 
+  it("has no arrow unless you ask for one", () => {
+    render(tooltip({ label: "Visible to everyone" }));
+
+    expect(tip().querySelector('[data-slot="arrow"]')).toBeNull();
+    expect(tip()).toHaveTextContent("Visible to everyone");
+  });
+
+  it("draws an arrow when asked, hidden from assistive technologies, and says which side it opened on", async () => {
+    const user = setup();
+    render(tooltip({ label: "Visible to everyone", arrow: true }));
+    await nextTick();
+
+    const arrow = tip().querySelector('[data-slot="arrow"]');
+    expect(arrow).toHaveAttribute("aria-hidden", "true");
+    expect(arrow).toBeEmptyDOMElement();
+    expect(screen.getByRole("button")).toHaveAccessibleDescription("Visible to everyone");
+
+    await user.tab();
+    expect(tip()).toHaveAttribute("data-state", "open");
+    expect(["top", "bottom", "left", "right"]).toContain(tip().getAttribute("data-side"));
+  });
+
   it("puts classes and attributes on the tooltip", () => {
     render(tooltip({ label: "Visible to everyone", class: "wide", "data-testid": "hint" }));
 

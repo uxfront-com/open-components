@@ -27,6 +27,8 @@ export interface TooltipProps {
   delay?: number;
   /** The side of the trigger it opens on. It flips to the other side when there's no room. */
   placement?: "top" | "bottom" | "start" | "end";
+  /** Draws an arrow that points at the trigger, on whichever side it opens. */
+  arrow?: boolean;
 }
 
 /** What the trigger binds on its focusable element. */
@@ -44,7 +46,7 @@ export interface TooltipTrigger {
 // tooltip, where a class can set its variables.
 defineOptions({ inheritAttrs: false });
 
-const { label, type = "description", delay = 500, placement = "top" } = defineProps<TooltipProps>();
+const { label, type = "description", delay = 500, placement = "top", arrow = false } = defineProps<TooltipProps>();
 
 defineSlots<{
   /** The trigger, which binds `trigger` on its focusable element. */
@@ -63,7 +65,10 @@ const id = ref<string>();
 const anchorName = computed(() => id.value && `--tooltip-${uid}`);
 onMounted(() => (id.value = (attrs.id as string | undefined) ?? uid));
 const state = ref<"open" | "closed">("closed");
+// The side it opened on, after any flip, which the arrow points from.
+const side = ref<"top" | "bottom" | "left" | "right">();
 const tooltip = useTemplateRef<HTMLElement>("tooltip");
+const arrowPart = useTemplateRef<HTMLElement>("arrow-part");
 
 let anchor: HTMLElement | undefined;
 let hovered = false;
@@ -91,11 +96,11 @@ function show() {
   tooltip.value?.showPopover?.();
   // In the capture phase, so it runs before a dialog's own Escape handler.
   document.addEventListener("keydown", onKeydown, true);
-  if (!anchored()) {
+  if (!anchored() || arrow) {
     // Once it's shown, so it has a size to measure.
-    nextTick(place);
-    addEventListener("scroll", place, { capture: true, passive: true });
-    addEventListener("resize", place);
+    nextTick(update);
+    addEventListener("scroll", update, { capture: true, passive: true });
+    addEventListener("resize", update);
   }
 }
 
@@ -106,8 +111,8 @@ function hide() {
   state.value = "closed";
   tooltip.value?.hidePopover?.();
   document.removeEventListener("keydown", onKeydown, true);
-  removeEventListener("scroll", place, { capture: true });
-  removeEventListener("resize", place);
+  removeEventListener("scroll", update, { capture: true });
+  removeEventListener("resize", update);
   if (closeOpen === hide) {
     closeOpen = undefined;
     warm = true;
@@ -171,6 +176,11 @@ const trigger = computed<TooltipTrigger>(() => ({
   },
 }));
 
+function update() {
+  if (!anchored()) place();
+  if (arrow) aim();
+}
+
 // Without anchor positioning: the chosen side of the trigger, or the other side when it
 // doesn't fit, centred on the trigger and kept inside the viewport.
 function place() {
@@ -179,7 +189,9 @@ function place() {
   // Its margin is the gap, which `left` and `top` place it outside of.
   const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
   const a = anchor.getBoundingClientRect();
-  const { width, height } = el.getBoundingClientRect();
+  // Its size without the scale it grows in from, which getBoundingClientRect() would include.
+  const width = el.offsetWidth;
+  const height = el.offsetHeight;
   const { clientWidth, clientHeight } = document.documentElement;
   const rtl = getComputedStyle(anchor).direction === "rtl";
   const sides = { top: "top", bottom: "bottom", start: rtl ? "right" : "left", end: rtl ? "left" : "right" } as const;
@@ -197,6 +209,28 @@ function place() {
   const y = across ? (side === "top" ? a.top - gap - height : a.bottom + gap) : a.top + (a.height - height) / 2;
   el.style.left = `${Math.max(0, Math.min(x, clientWidth - width)) - gap}px`;
   el.style.top = `${Math.max(0, Math.min(y, clientHeight - height)) - gap}px`;
+}
+
+// With an arrow: the side it opened on, from where its centre is, which its scale doesn't move,
+// and the arrow across from the trigger's centre, clear of the rounded corners.
+function aim() {
+  const el = tooltip.value;
+  const part = arrowPart.value;
+  if (!el || !part || !anchor) return;
+  const a = anchor.getBoundingClientRect();
+  const t = el.getBoundingClientRect();
+  const x = t.left + t.width / 2;
+  const y = t.top + t.height / 2;
+  side.value = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
+  const across = side.value === "top" || side.value === "bottom";
+  const length = across ? el.offsetWidth : el.offsetHeight;
+  // From the inside of its border, where the arrow's left and top start.
+  const offset = across
+    ? a.left + a.width / 2 - (x - length / 2) - el.clientLeft
+    : a.top + a.height / 2 - (y - length / 2) - el.clientTop;
+  const at = `${Math.max(part.offsetWidth, Math.min(offset, length - part.offsetWidth))}px`;
+  part.style.left = across ? at : "";
+  part.style.top = across ? "" : at;
 }
 
 // The pointer can move from the trigger onto the tooltip, and the tooltip stays open.
@@ -230,10 +264,11 @@ onBeforeUnmount(() => {
     :data-state="state"
     :data-placement="placement"
     :data-delay="delay === 500 ? undefined : delay"
+    :data-side="arrow ? side : undefined"
     :style="anchorName && { 'position-anchor': anchorName }"
     @pointerenter="onTooltipEnter"
     @pointerleave="onTooltipLeave"
-  >{{ label }}</span>
+  >{{ label }}<span v-if="arrow" ref="arrow-part" data-slot="arrow" aria-hidden="true" /></span>
 </template>
 
 <style scoped>
@@ -254,6 +289,8 @@ onBeforeUnmount(() => {
     --tooltip--max-width: 32ch;
     /* The gap between the trigger and the tooltip. */
     --tooltip--offset: 0.5rem;
+    /* The arrow's width and height, before it's turned, when it has one. */
+    --tooltip--arrow--size: 0.5rem;
 
     /* Beside the trigger, centred on it, and on the other side when there's no room. */
     position: fixed;
@@ -283,11 +320,49 @@ onBeforeUnmount(() => {
   .tooltip[data-placement="bottom"] {
     position-area: bottom;
   }
+  /* In the tooltip's own direction, which is its trigger's, rather than the page's. */
   .tooltip[data-placement="start"] {
-    position-area: inline-start;
+    position-area: self-inline-start;
   }
   .tooltip[data-placement="end"] {
-    position-area: inline-end;
+    position-area: self-inline-end;
+  }
+
+  /* The arrow: a square turned 45deg, half of it past the edge that faces the trigger, in the
+     tooltip's fill and border, so forced colors mode draws its edge too. The edges inside the
+     tooltip have no border, and it waits for the side it opened on. */
+  .tooltip > [data-slot="arrow"] {
+    position: absolute;
+    box-sizing: border-box;
+    width: var(--tooltip--arrow--size);
+    height: var(--tooltip--arrow--size);
+    border: inherit;
+    background: inherit;
+    translate: -50% -50%;
+    rotate: 45deg;
+  }
+  .tooltip:not([data-side]) > [data-slot="arrow"] {
+    display: none;
+  }
+  .tooltip[data-side="top"] > [data-slot="arrow"] {
+    top: 100%;
+    border-top-width: 0;
+    border-left-width: 0;
+  }
+  .tooltip[data-side="bottom"] > [data-slot="arrow"] {
+    top: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+  }
+  .tooltip[data-side="left"] > [data-slot="arrow"] {
+    left: 100%;
+    border-bottom-width: 0;
+    border-left-width: 0;
+  }
+  .tooltip[data-side="right"] > [data-slot="arrow"] {
+    left: 0;
+    border-top-width: 0;
+    border-right-width: 0;
   }
 
   /* Hidden while it's closed, in browsers without the Popover API too. */

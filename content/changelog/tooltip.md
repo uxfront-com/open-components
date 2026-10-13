@@ -13,6 +13,6 @@ Tooltips are small and everywhere, which is why they so often only work for a mo
 ## New
 
 - A tooltip either shows an icon-only button's own label, hidden from screen readers so they don't hear it twice, or describes its trigger with `aria-describedby`.
-- It opens in the top layer and finds its place with CSS anchor positioning, flipping when there's no room, with a short script for browsers that don't have it yet.
+- It opens in the top layer and finds its place with CSS anchor positioning, flipping when there's no room, with a short script for browsers that don't have it yet. An optional arrow points at its trigger from whichever side it opens on.
 - Its checklist covers WCAG's rules for content on hover or focus, and the rules for the screens that use it, like never putting anything people need only in a tooltip, since a tap never opens one.
 - It comes with its own contract, live examples and a tested reference implementation.

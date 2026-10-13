@@ -5,7 +5,7 @@ import type { TooltipProps } from "~/reference/tooltip/Tooltip.vue";
 import "~/reference/button/tokens.css";
 
 /**
- * Pick a type, a placement and a delay, then hover or focus the trigger to see the
+ * Pick a type, a placement, a delay and an arrow, then hover or focus the trigger to see the
  * reference Tooltip, and its code, in the framework picked in the Framework select.
  *
  * ```md
@@ -19,6 +19,7 @@ type Placement = NonNullable<TooltipProps["placement"]>;
 const type = ref<Type>("label");
 const placement = ref<Placement>("top");
 const delay = ref("500");
+const arrow = ref(false);
 
 const types: Type[] = ["label", "description"];
 const placements: Placement[] = ["top", "bottom", "start", "end"];
@@ -27,7 +28,7 @@ const delays = ["300", "500", "700", "1000"];
 // A label shows an icon-only button's hidden name, and a description adds a hint to a named one.
 const label = computed(() => (type.value === "label" ? "Settings" : "Archived projects stay in search"));
 // Changing the type swaps the trigger, so the Tooltip starts over.
-const key = computed(() => `${type.value}-${placement.value}-${delay.value}`);
+const key = computed(() => `${type.value}-${placement.value}-${delay.value}-${arrow.value}`);
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
@@ -54,6 +55,7 @@ const code = computed(() => {
     icon && 'type="label"',
     delay.value !== "500" && (fw === "vue" ? `:delay="${delay.value}"` : `delay={${delay.value}}`),
     placement.value !== "top" && `placement="${placement.value}"`,
+    arrow.value && "arrow",
   ].filter(Boolean) as string[];
 
   switch (fw) {
@@ -94,6 +96,7 @@ const code = computed(() => {
         icon && 'tooltipType="label"',
         delay.value !== "500" && `[tooltipDelay]="${delay.value}"`,
         placement.value !== "top" && `tooltipPlacement="${placement.value}"`,
+        arrow.value && "tooltipArrow",
       ].filter(Boolean);
       return [
         icon
@@ -119,8 +122,9 @@ const code = computed(() => {
         `data-placement="${placement.value}"`,
         delay.value !== "500" && `data-delay="${delay.value}"`,
       ].filter(Boolean);
+      const part = arrow.value ? '<span data-slot="arrow" aria-hidden="true"></span>' : "";
       return [
-        "<!-- tooltip.js, written out under Label and description, wires each .tooltip to the element just before it. -->",
+        "<!-- tooltip.js, written out under Label and description, wires each .tooltip to the element right before it. -->",
         icon
           ? '<button class="button" type="button" data-variant="outline" data-color="neutral" data-size="md" data-icon-only>'
           : '<button class="button" type="button" aria-describedby="archive-tooltip" data-variant="outline" data-color="neutral" data-size="md">',
@@ -128,8 +132,8 @@ const code = computed(() => {
         `  <span data-slot="label">${icon ? "Settings" : "Archive"}</span>`,
         "</button>",
         icon
-          ? `<span class="tooltip" aria-hidden="true" popover="manual" ${data.join(" ")}>${label.value}</span>`
-          : `<span class="tooltip" id="archive-tooltip" role="tooltip" popover="manual" ${data.join(" ")}>\n  ${label.value}\n</span>`,
+          ? `<span class="tooltip" aria-hidden="true" popover="manual" ${data.join(" ")}>${label.value}${part}</span>`
+          : `<span class="tooltip" id="archive-tooltip" role="tooltip" popover="manual" ${data.join(" ")}>\n  ${label.value}${part}\n</span>`,
       ].join("\n");
     }
   }
@@ -138,7 +142,7 @@ const code = computed(() => {
 
 <template>
   <div class="tooltip-playground not-prose my-5 overflow-hidden rounded-md border border-muted">
-    <div class="grid grid-cols-3 gap-3 border-b border-muted p-4">
+    <div class="grid grid-cols-3 items-end gap-3 border-b border-muted p-4 sm:grid-cols-4">
       <UFormField label="Type" size="sm">
         <USelect v-model="type" :items="types" class="w-full" />
       </UFormField>
@@ -148,10 +152,11 @@ const code = computed(() => {
       <UFormField label="Delay" size="sm">
         <USelect v-model="delay" :items="delays" class="w-full" />
       </UFormField>
+      <USwitch v-model="arrow" label="Arrow" size="sm" class="pb-1.5" />
     </div>
 
     <div class="flex min-h-40 items-center justify-center p-6">
-      <Tooltip :key="key" :label="label" :type="type" :placement="placement" :delay="Number(delay)" v-slot="{ trigger }">
+      <Tooltip :key="key" :label="label" :type="type" :placement="placement" :delay="Number(delay)" :arrow="arrow" v-slot="{ trigger }">
         <Button v-if="type === 'label'" v-bind="trigger" label="Settings" variant="outline" icon-only>
           <template #leading><UIcon name="i-lucide-settings" mode="svg" /></template>
         </Button>

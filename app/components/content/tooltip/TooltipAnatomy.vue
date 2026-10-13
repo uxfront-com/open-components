@@ -13,6 +13,7 @@ import "~/reference/button/tokens.css";
  * 1. **Trigger** — The element it describes.
  * 2. **Tooltip** — The text, on a filled box.
  * 3. **Offset** — The gap between them.
+ * 4. **Arrow** — Optional. A point on the edge that faces the trigger.
  * ::
  * ```
  */
@@ -23,9 +24,10 @@ import "~/reference/button/tokens.css";
     <!-- A picture of the list below it, so it's inert and hidden from assistive technologies. -->
     <div class="flex justify-center px-6 pt-8 pb-12" inert aria-hidden="true">
       <div class="anatomy-stage">
-        <span class="anatomy-tip">Settings</span>
+        <span class="anatomy-tip">Settings<span class="anatomy-arrow" /></span>
         <span class="anatomy-marker anatomy-marker-tip">2</span>
         <span class="anatomy-marker anatomy-marker-offset">3</span>
+        <span class="anatomy-marker anatomy-marker-arrow">4</span>
         <Button label="Settings" variant="outline" icon-only class="anatomy-trigger">
           <template #leading><UIcon name="i-lucide-settings" mode="svg" /></template>
         </Button>
@@ -78,6 +80,7 @@ import "~/reference/button/tokens.css";
 
 /* The reference Tooltip's look, at twice its size so its parts are easy to see. */
 .anatomy-tip {
+  position: relative;
   padding: 0.75rem 1.25rem;
   border-radius: 0.75rem;
   background-color: var(--color--neutral);
@@ -88,6 +91,17 @@ import "~/reference/button/tokens.css";
   outline: 1px dashed color-mix(in srgb, var(--ui-text-highlighted) 70%, transparent);
   outline-offset: 3px;
 }
+/* The arrow, like the reference's: a square turned 45deg, half of it past the edge. */
+.anatomy-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  background: inherit;
+  translate: -50% -50%;
+  rotate: 45deg;
+}
 .anatomy-trigger {
   --button--height: 4.5rem;
   --button--icon--size: 2rem;
@@ -97,7 +111,8 @@ import "~/reference/button/tokens.css";
   outline-offset: 3px;
 }
 
-/* The tooltip's number sits before it, the offset's beside the gap, and the trigger's before it. */
+/* The tooltip's number sits before it, the offset's beside the gap, the arrow's before the gap,
+   and the trigger's before it. */
 .anatomy-marker-tip {
   top: 1.975rem;
   right: calc(100% + 0.875rem);
@@ -108,6 +123,12 @@ import "~/reference/button/tokens.css";
   top: calc(3.95rem + 0.5rem);
   /* Past the tooltip's edge, which is wider than the trigger. */
   left: calc(100% + 0.875rem);
+  translate: 0 -50%;
+}
+.anatomy-marker-arrow {
+  top: calc(3.95rem + 0.5rem);
+  /* Clear of the trigger, which is 4.5rem wide, and its outline. */
+  right: calc(50% + 3rem);
   translate: 0 -50%;
 }
 .anatomy-marker-trigger {
