@@ -194,15 +194,15 @@ onMounted(() => {
     opacity: 0.5;
   }
   /* Read-only, the track's border is dashed, like the Input's, so it reads as something you
-     can't change, while it keeps its colours. On, the dashes take the text colour, so they
-     show against the page and the fill alike. */
+     can't change. On, the dashes take the text colour, which stands out against the page
+     around the fill, unless the switch is invalid, where the error colour wins. */
   .switch > [data-slot="control"][aria-readonly="true"] {
     cursor: default;
   }
   .switch > [data-slot="control"][aria-readonly="true"] + [data-slot="track"] {
     border-style: dashed;
   }
-  .switch:has(> [data-slot="control"][aria-readonly="true"]:checked) {
+  .switch:has(> [data-slot="control"][aria-readonly="true"]:checked:not([aria-invalid="true"])) {
     --switch--track--border-color: currentColor;
   }
 
@@ -252,7 +252,7 @@ onMounted(() => {
       --switch--track--background-color: Highlight;
       --switch--thumb--background-color: HighlightText;
     }
-    .switch:has(> [data-slot="control"][aria-readonly="true"]:checked) {
+    .switch:has(> [data-slot="control"][aria-readonly="true"]:checked:not([aria-invalid="true"])) {
       --switch--track--border-color: CanvasText;
     }
     .switch > [data-slot="control"]:focus-visible + [data-slot="track"] {
