@@ -4,12 +4,14 @@ import { onMounted, useAttrs, useTemplateRef } from "vue";
 export interface SwitchProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   disabled?: boolean;
+  /** Shows a setting people can see and focus, but not change. A checkbox has no `readonly` of its own, so the Switch blocks the flip and sets `aria-readonly`. */
+  readonly?: boolean;
 }
 
 // Attributes go on the <input> rather than on the root, so they're declared below.
 defineOptions({ inheritAttrs: false });
 
-const { size = "md", disabled = false } = defineProps<SwitchProps>();
+const { size = "md", disabled = false, readonly = false } = defineProps<SwitchProps>();
 
 /** Whether it's on, which `v-model:checked` binds. Without it, the switch keeps its own state, and its form submits it while it's on. */
 const checked = defineModel<boolean>("checked", { default: false });
@@ -26,6 +28,13 @@ const input = useTemplateRef<HTMLInputElement>("input");
 
 function onChange(event: Event) {
   checked.value = (event.target as HTMLInputElement).checked;
+}
+
+// Space and a click on the label both click the <input>, so cancelling the click keeps a
+// read-only switch as it is, without a change event. It still takes focus, and its form
+// still sends it, unlike a disabled one.
+function onClick(event: MouseEvent) {
+  if (readonly) event.preventDefault();
 }
 
 // A ref to the Switch gets you the <input>, through `input`.
@@ -53,7 +62,9 @@ onMounted(() => {
       v-bind="controlAttrs()"
       type="checkbox"
       role="switch"
+      :aria-readonly="readonly ? 'true' : undefined"
       :checked="checked"
+      @click="onClick"
       @change="onChange"
     />
     <!-- The track and thumb only draw the state, which the <input> already exposes. -->
@@ -154,7 +165,7 @@ onMounted(() => {
      of yours can set them too. The thumb's colour follows the track's border unless a state
      sets its own. */
   @media (hover: hover) {
-    .switch:hover:where(:has(> [data-slot="control"]:not(:checked, :disabled))) {
+    .switch:hover:where(:has(> [data-slot="control"]:not(:checked, :disabled, [aria-readonly="true"]))) {
       --switch--track--border-color: color-mix(in srgb, currentColor 80%, transparent);
     }
   }
@@ -181,6 +192,18 @@ onMounted(() => {
   }
   .switch > [data-slot="control"]:disabled + [data-slot="track"] {
     opacity: 0.5;
+  }
+  /* Read-only, the track's border is dashed, like the Input's, so it reads as something you
+     can't change, while it keeps its colours. On, the dashes take the text colour, so they
+     show against the page and the fill alike. */
+  .switch > [data-slot="control"][aria-readonly="true"] {
+    cursor: default;
+  }
+  .switch > [data-slot="control"][aria-readonly="true"] + [data-slot="track"] {
+    border-style: dashed;
+  }
+  .switch:has(> [data-slot="control"][aria-readonly="true"]:checked) {
+    --switch--track--border-color: currentColor;
   }
 
   /* On touch screens, the hit area grows to at least 44 × 44px, without the switch
@@ -228,6 +251,9 @@ onMounted(() => {
       --switch--track--border-color: Highlight;
       --switch--track--background-color: Highlight;
       --switch--thumb--background-color: HighlightText;
+    }
+    .switch:has(> [data-slot="control"][aria-readonly="true"]:checked) {
+      --switch--track--border-color: CanvasText;
     }
     .switch > [data-slot="control"]:focus-visible + [data-slot="track"] {
       outline-color: Highlight;

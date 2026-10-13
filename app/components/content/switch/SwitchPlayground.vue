@@ -15,6 +15,7 @@ import "~/reference/button/tokens.css";
 const size = ref<NonNullable<SwitchProps["size"]>>("md");
 const checked = ref(true);
 const disabled = ref(false);
+const readonly = ref(false);
 const invalid = ref(false);
 
 const sizes = ["xs", "sm", "md", "lg", "xl"];
@@ -69,6 +70,10 @@ const code = computed(() => {
     ...binding[fw]!,
     !native && size.value !== "md" && `size="${size.value}"`,
     disabled.value && "disabled",
+    // A checkbox has no readonly of its own: the Switch takes a prop, Angular's on its <span>,
+    // and Vanilla writes out the attribute, with a script that cancels the click.
+    readonly.value && fw === "vanilla" && 'aria-readonly="true"',
+    readonly.value && !native && (fw === "react" || fw === "solid" ? "readOnly" : "readonly"),
     invalid.value && 'aria-invalid="true"',
     invalid.value && 'aria-describedby="wifi-error"',
   ];
@@ -76,7 +81,11 @@ const code = computed(() => {
   let input: string[];
   if (fw === "angular") {
     // The Switch is a component on a <span>, around the <input> you write out.
-    input = element("span", ["appSwitch", size.value !== "md" && `size="${size.value}"`], element("input", control));
+    input = element(
+      "span",
+      ["appSwitch", size.value !== "md" && `size="${size.value}"`, readonly.value && "readonly"],
+      element("input", control),
+    );
   } else if (fw === "vanilla") {
     input = element(
       "span",
@@ -88,6 +97,7 @@ const code = computed(() => {
   }
 
   return [
+    readonly.value && fw === "vanilla" && "<!-- A script cancels the click on it, as under Read-only. -->",
     `<label ${fw === "react" ? "htmlFor" : "for"}="wifi">Wi-Fi</label>`,
     ...input,
     invalid.value && `<p id="wifi-error">Couldn't turn on Wi-Fi. Try again.</p>`,
@@ -104,6 +114,7 @@ const code = computed(() => {
         <USelect v-model="size" :items="sizes" class="w-full" />
       </UFormField>
       <USwitch v-model="disabled" label="Disabled" size="sm" />
+      <USwitch v-model="readonly" label="Read-only" size="sm" />
       <USwitch v-model="invalid" label="Invalid" size="sm" />
     </div>
 
@@ -116,6 +127,7 @@ const code = computed(() => {
             v-model:checked="checked"
             :size="size"
             :disabled="disabled"
+            :readonly="readonly"
             :aria-invalid="invalid ? 'true' : undefined"
             :aria-describedby="invalid ? 'playground-wifi-error' : undefined"
           />

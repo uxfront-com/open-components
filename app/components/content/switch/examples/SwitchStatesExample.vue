@@ -30,6 +30,13 @@ import Switch from "~/reference/switch/Switch.vue";
       </figure>
       <figure class="flex flex-col gap-1.5">
         <div class="flex items-center justify-between gap-4">
+          <label for="states-sso" class="text-sm font-medium">Single sign-on</label>
+          <Switch id="states-sso" checked readonly />
+        </div>
+        <figcaption class="text-muted text-xs">Read-only (try flipping it)</figcaption>
+      </figure>
+      <figure class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-4">
           <label for="states-alerts" class="text-sm font-medium">Price alerts</label>
           <Switch id="states-alerts" aria-invalid="true" aria-describedby="states-alerts-error" />
         </div>

@@ -136,6 +136,29 @@ describe("Switch", () => {
     expect(new FormData(control.closest("form")!).has("sync")).toBe(false);
   });
 
+  it("can be focused but not flipped while read-only, says so, and its form still sends it", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render({
+      render: () =>
+        h("form", [
+          label("sso", "Single sign-on"),
+          h(Switch, { id: "sso", name: "sso", checked: true, readonly: true, onChange }),
+        ]),
+    });
+
+    const control = screen.getByRole("switch", { name: "Single sign-on" });
+    expect(control).toHaveAttribute("aria-readonly", "true");
+    await user.tab();
+    expect(control).toHaveFocus();
+    await user.keyboard(" ");
+    await user.click(control);
+    await user.click(screen.getByText("Single sign-on"));
+    expect(control).toBeChecked();
+    expect(onChange).not.toHaveBeenCalled();
+    expect(new FormData(control.closest("form")!).get("sso")).toBe("on");
+  });
+
   it("passes aria-invalid and its error message to the input", () => {
     render({
       render: () => [
