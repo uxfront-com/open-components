@@ -16,6 +16,7 @@ describe("RadioGroup", () => {
 
     const group = screen.getByRole("radiogroup", { name: "Delivery" });
     expect(group.tagName).toBe("FIELDSET");
+    expect(group).not.toHaveAttribute("aria-describedby");
     expect(group.firstElementChild?.tagName).toBe("LEGEND");
     const standard = within(group).getByRole("radio", { name: "Standard" });
     expect(standard.tagName).toBe("INPUT");
@@ -50,8 +51,9 @@ describe("RadioGroup", () => {
 
   it("moves, selects and wraps with the arrow keys", async () => {
     const user = userEvent.setup();
+    const onUpdate = vi.fn();
     render(RadioGroup, {
-      props: { name: "delivery", legend: "Delivery", modelValue: "standard" },
+      props: { name: "delivery", legend: "Delivery", modelValue: "standard", "onUpdate:modelValue": onUpdate },
       slots: { default: () => radios() },
     });
     const radio = (name: string) => screen.getByRole("radio", { name });
@@ -70,6 +72,7 @@ describe("RadioGroup", () => {
     await user.keyboard("{ArrowLeft}");
     expect(radio("Express")).toBeChecked();
     expect(radio("Next day")).not.toBeChecked();
+    expect(onUpdate.mock.calls.map(([value]) => value)).toEqual(["express", "next day", "standard", "next day", "express"]);
   });
 
   it("selects the focused radio with Space", async () => {
@@ -192,12 +195,14 @@ describe("RadioGroup", () => {
     });
 
     const group = screen.getByRole("radiogroup", { name: "Delivery" });
+    expect(group).toHaveAttribute("aria-describedby", "delivery-hint");
     expect(group).toHaveAccessibleDescription("Express arrives the next working day");
     expect(group).not.toHaveAttribute("aria-invalid");
 
     await rerender({ error: "Choose how you'd like your order delivered" });
     expect(screen.getByRole("radiogroup", { name: "Delivery" })).toBe(group);
     expect(group).toHaveAttribute("aria-invalid", "true");
+    expect(group).toHaveAttribute("aria-describedby", "delivery-hint delivery-error");
     expect(group).toHaveAccessibleDescription("Express arrives the next working day Choose how you'd like your order delivered");
     for (const radio of screen.getAllByRole("radio")) expect(radio).not.toHaveAttribute("aria-invalid");
 

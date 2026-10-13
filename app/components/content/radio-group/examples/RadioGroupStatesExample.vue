@@ -16,7 +16,7 @@ import RadioGroup from "~/reference/radio-group/RadioGroup.vue";
         <figcaption class="text-muted text-xs">At rest, with one checked (try hovering, clicking or tabbing to it)</figcaption>
       </figure>
       <figure class="flex flex-col gap-1.5">
-        <RadioGroup name="states-pickup" legend="Delivery" model-value="standard">
+        <RadioGroup name="states-shipping" legend="Shipping" model-value="standard">
           <Radio value="standard">Standard</Radio>
           <Radio value="pickup" disabled>Collect from a store</Radio>
         </RadioGroup>

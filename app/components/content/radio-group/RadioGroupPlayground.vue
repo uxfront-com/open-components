@@ -105,7 +105,8 @@ const code = computed(() => {
   }
 
   // The value is bound where the framework holds it. Astro has no state on the client,
-  // so it checks the radio it starts with, and its radios take the group's name.
+  // so it checks the radio it starts with, and its radios take the group's name, size
+  // and required state.
   const binding: Record<string, string[]> = {
     react: ["value={delivery}", "onChange={(event) => setDelivery(event.target.value)}"],
     vue: ['v-model="delivery"'],
@@ -129,7 +130,9 @@ const code = computed(() => {
       fw === "astro" && name,
       `value="${option.value}"`,
       fw === "astro" && value.value === option.value && "checked",
+      fw === "astro" && size.value !== "md" && `size="${size.value}"`,
       isDisabled(option.value) && "disabled",
+      fw === "astro" && required.value && "required",
     ]
       .filter(Boolean)
       .join(" ");

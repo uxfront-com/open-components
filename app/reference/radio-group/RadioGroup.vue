@@ -103,8 +103,8 @@ onMounted(() => {
 
 @layer components {
   .radio-group {
-    /* Set per size. The text sizes are the Input's, so a group sits well in a form with one. */
     --radio-group--gap: 0.25rem;
+    /* Set per size. The text sizes are the Input's, so a group sits well in a form with one. */
     --radio-group--font-size: 0.875rem;
 
     display: flex;
