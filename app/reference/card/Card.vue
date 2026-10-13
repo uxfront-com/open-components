@@ -205,10 +205,11 @@ defineSlots<{
     }
   }
 
-  /* With more contrast, the border is drawn in the text colour at full strength. */
+  /* With more contrast, the borders are drawn in the text colour at full strength, on
+     hover too, so this repeats the hover rule's selector, which it comes after. */
   @media (prefers-contrast: more) {
     .card,
-    .card:hover {
+    .card:has(> [data-slot="header"] > [data-slot="heading"] a[href]:hover) {
       --card--border-color: currentColor;
     }
   }

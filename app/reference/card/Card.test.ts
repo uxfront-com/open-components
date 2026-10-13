@@ -51,10 +51,18 @@ describe("Card", () => {
   });
 
   it("links through its heading alone, without wrapping the card in a link or listening for clicks on it", () => {
+    // Testing Library may listen on the root of whatever it renders, so the card's click
+    // listeners are compared with those on a plain <article> rendered the same way.
+    const listen = vi.spyOn(Element.prototype, "addEventListener");
+    const clicks = (root: Element) =>
+      listen.mock.calls.filter(([type], i) => type === "click" && listen.mock.contexts[i] === root).length;
+    const plain = render({ render: () => h("article") }).container.firstElementChild!;
     const { container } = render(Card, {
       props: { heading: "Analytical Engine", href: "/projects/analytical-engine" },
       slots: { eyebrow: () => "Project", default: () => "A mechanical computer." },
     });
+    expect(clicks(container.firstElementChild!)).toBe(clicks(plain));
+    listen.mockRestore();
 
     const link = screen.getByRole("link", { name: "Analytical Engine" });
     expect(link).toHaveAttribute("href", "/projects/analytical-engine");
@@ -66,7 +74,6 @@ describe("Card", () => {
     expect(card.tagName).toBe("ARTICLE");
     expect(card).not.toHaveAttribute("role");
     expect(card).not.toHaveAttribute("tabindex");
-    expect(card).not.toHaveAttribute("onclick");
   });
 
   it("stretches a link from the heading slot, like a router's, as it does its own", () => {

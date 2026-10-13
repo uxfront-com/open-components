@@ -32,7 +32,7 @@ const projects = [
 <style scoped>
 .card-layout-example-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
   gap: 1rem;
   width: 100%;
   margin: 0;
