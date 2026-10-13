@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { h, ref, type VNodeChild } from "vue";
 import Dialog, { type DialogProps } from "./Dialog.vue";
 
@@ -17,6 +17,21 @@ beforeAll(() => {
     this.dispatchEvent(new Event("close"));
   });
 });
+
+beforeEach(() => {
+  vi.mocked(HTMLDialogElement.prototype.showModal).mockClear();
+});
+
+// jsdom lays nothing out, so every box is 0 × 0 at 0, 0. This gives the dialog a real
+// one, at 100, 100 and 400 × 300, so a press can land on the panel or on the backdrop.
+function layOut(dialog: HTMLElement) {
+  dialog.getBoundingClientRect = () => new DOMRect(100, 100, 400, 300);
+}
+
+async function press(target: Element, clientX: number, clientY: number) {
+  await fireEvent.mouseDown(target, { clientX, clientY });
+  await fireEvent.click(target, { clientX, clientY });
+}
 
 const field = (id: string, text: string) => [h("label", { for: id }, text), h("input", { id })];
 const button = (text: string, attrs = {}) => h("button", { type: "button", ...attrs }, text);
@@ -49,9 +64,19 @@ describe("Dialog", () => {
     await openFrom(user);
     const dialog = screen.getByRole("dialog", { name: "Edit profile" });
     expect(dialog.tagName).toBe("DIALOG");
-    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled();
+    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(HTMLDialogElement.prototype.showModal).mock.contexts[0]).toBe(dialog);
     expect(dialog).toHaveAttribute("aria-labelledby", "edit-profile-title");
     expect(screen.getByRole("heading", { level: 2, name: "Edit profile" })).toHaveAttribute("id", "edit-profile-title");
+  });
+
+  it("names its close button Close, or its closeLabel", async () => {
+    const user = userEvent.setup();
+    const { onClose } = page({ closeLabel: "Fermer" }, {}, { closes: false });
+    await openFrom(user);
+
+    await user.click(screen.getByRole("button", { name: "Fermer" }));
+    expect(onClose).toHaveBeenCalledWith("close-button", "");
   });
 
   it("is an alertdialog with role alertdialog, without a close button", async () => {
@@ -111,6 +136,23 @@ describe("Dialog", () => {
     expect(screen.getByRole("textbox", { name: "Email address" })).toHaveFocus();
   });
 
+  it("counts a control marked with autofocus too", async () => {
+    const user = userEvent.setup();
+    page(
+      {},
+      {
+        default: () => [
+          ...field("name", "Full name"),
+          h("label", { for: "email" }, "Email address"),
+          h("input", { id: "email", autofocus: true }),
+        ],
+      },
+    );
+
+    await openFrom(user);
+    expect(screen.getByRole("textbox", { name: "Email address" })).toHaveFocus();
+  });
+
   it("moves focus to the first action without controls in its body, never the close button", async () => {
     const user = userEvent.setup();
     page({}, { default: () => h("p", "Your changes are saved."), actions: () => button("Done") });
@@ -146,11 +188,11 @@ describe("Dialog", () => {
     await openFrom(user);
     const dialog = screen.getByRole("dialog", { name: "Edit profile" });
 
+    layOut(dialog);
+
     await user.keyboard("{Escape}");
     await user.click(screen.getByRole("button", { name: "Close" }));
-    // Outside the dialog's box, which jsdom puts at 0, 0, with no size.
-    await fireEvent.mouseDown(dialog, { clientX: 400, clientY: 300 });
-    await fireEvent.click(dialog, { clientX: 400, clientY: 300 });
+    await press(dialog, 20, 20);
 
     expect(onClose.mock.calls).toEqual([
       ["escape", ""],
@@ -169,9 +211,9 @@ describe("Dialog", () => {
     );
     await openFrom(user);
     const dialog = screen.getByRole("alertdialog");
+    layOut(dialog);
 
-    await fireEvent.mouseDown(dialog, { clientX: 400, clientY: 300 });
-    await fireEvent.click(dialog, { clientX: 400, clientY: 300 });
+    await press(dialog, 20, 20);
     await user.keyboard("{Escape}");
     expect(onClose.mock.calls).toEqual([["escape", ""]]);
   });
@@ -190,11 +232,58 @@ describe("Dialog", () => {
     );
     await openFrom(user);
     const dialog = screen.getByRole("dialog");
+    layOut(dialog);
 
-    await fireEvent.mouseDown(screen.getByRole("heading", { name: "Edit profile" }));
-    await fireEvent.click(dialog, { clientX: 400, clientY: 300 });
+    await fireEvent.mouseDown(screen.getByRole("heading", { name: "Edit profile" }), { clientX: 200, clientY: 120 });
+    await fireEvent.click(dialog, { clientX: 20, clientY: 20 });
     await user.keyboard("{Escape}");
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("ignores a press on its own padding, inside its box", async () => {
+    const user = userEvent.setup();
+    const { onClose } = page({}, { default: () => field("name", "Full name") }, { closes: false });
+    await openFrom(user);
+    const dialog = screen.getByRole("dialog");
+    layOut(dialog);
+
+    // The press lands on the <dialog> itself, as on the backdrop, but inside its box.
+    await press(dialog, 300, 390);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("asks to close on other close requests, like the back gesture on Android, rather than closing", async () => {
+    const user = userEvent.setup();
+    const { onClose } = page({}, { default: () => field("name", "Full name") }, { closes: false });
+    await openFrom(user);
+    const dialog = screen.getByRole("dialog");
+
+    const cancel = new Event("cancel", { cancelable: true });
+    dialog.dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(onClose.mock.calls).toEqual([["escape", ""]]);
+  });
+
+  it("says so, and gives focus back, when the browser closes it anyway", async () => {
+    const user = userEvent.setup();
+    const { onClose } = page({}, { default: () => field("name", "Full name") }, { closes: false });
+    await openFrom(user);
+
+    // Like a close request the browser no longer lets the page turn down.
+    (screen.getByRole("dialog") as HTMLDialogElement).close();
+    expect(onClose.mock.calls).toEqual([["escape", ""]]);
+    expect(screen.getByRole("button", { name: "Edit profile" })).toHaveFocus();
+  });
+
+  it("doesn't fire close when you close it", async () => {
+    const user = userEvent.setup();
+    const { open, onClose } = page({}, { default: () => field("name", "Full name") });
+    await openFrom(user);
+
+    open.value = false;
+    await vi.waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Edit profile" })).toHaveFocus();
   });
 
   it("asks to close with the button's value when a form with method dialog is sent", async () => {
@@ -215,6 +304,37 @@ describe("Dialog", () => {
     await user.click(screen.getByRole("button", { name: "Delete project" }));
     expect(onClose).toHaveBeenCalledWith("action", "delete");
     expect(screen.getByRole("alertdialog")).toHaveAttribute("open");
+  });
+
+  it("leaves any other form alone, unless its button has formmethod dialog", async () => {
+    const user = userEvent.setup();
+    // The page sends the form itself, from a listener further up, once the dialog has
+    // seen the submit, and leaves the Cancel button to the dialog.
+    const onSubmit = vi.fn((event: SubmitEvent) => {
+      if (event.submitter?.getAttribute("formmethod") !== "dialog") event.preventDefault();
+    });
+    document.addEventListener("submit", onSubmit);
+    onTestFinished(() => document.removeEventListener("submit", onSubmit));
+    const { onClose } = page(
+      {},
+      {
+        default: () =>
+          h("form", { method: "post" }, [
+            ...field("name", "Full name"),
+            h("button", { value: "save" }, "Save changes"),
+            h("button", { value: "cancel", formmethod: "dialog" }, "Cancel"),
+          ]),
+      },
+      { closes: false },
+    );
+    await openFrom(user);
+
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onClose.mock.calls).toEqual([["action", "cancel"]]);
   });
 
   it("opens and closes with its open prop alone", async () => {
@@ -249,6 +369,8 @@ describe("Dialog", () => {
 
     const dialog = container.querySelector("dialog")!;
     expect(dialog).toHaveAttribute("data-size", "lg");
+    const fallback = render(Dialog, { props: { id: "rename", title: "Rename file" } });
+    expect(fallback.container.querySelector("dialog")).toHaveAttribute("data-size", "md");
     // The close button is a Button, with parts of its own.
     const parts = [...dialog.querySelectorAll("[data-slot]")]
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))

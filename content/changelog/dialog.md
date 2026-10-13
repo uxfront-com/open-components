@@ -13,6 +13,6 @@ Dialogs ask for someone's full attention, and most of what they do happens out o
 ## New
 
 - The Dialog is a native `<dialog>`, opened with `showModal()`, so the page behind it is inert and `Tab` never wanders off into it.
-- It's named by its title and described by its description, and alert dialogs, for confirmations, start on their least destructive action and ignore a stray click outside.
-- It never closes itself. `Escape`, the close button, the backdrop and a `<form method="dialog">` each fire `close` with the reason, so you can keep it open when people would lose what they've typed.
+- It's named by its title and described by its description, and alert dialogs, for confirmations, have no close button and ignore a stray click outside.
+- It asks, rather than closing itself. `Escape`, the close button, the backdrop and a `<form method="dialog">` each fire `close` with the reason, so you can keep it open when people would lose what they've typed, and `close` still fires when a browser closes it anyway.
 - It comes with its own contract, live examples and a tested reference implementation.

@@ -208,7 +208,7 @@ const code = computed(() => {
       react: ["open={open}", "onClose={() => setOpen(false)}"],
       vue: [':open="open"', '@close="open = false"'],
       svelte: ["{open}", "onclose={() => (open = false)}"],
-      angular: ['[open]="open()"', '(close)="open.set(false)"'],
+      angular: ['[open]="open()"', '(closeRequest)="open.set(false)"'],
       solid: ["open={open()}", "onClose={() => setOpen(false)}"],
       astro: [],
     };
@@ -217,7 +217,8 @@ const code = computed(() => {
       `id="${id}"`,
       role.value === "alertdialog" && 'role="alertdialog"',
       size.value !== "md" && `size="${size.value}"`,
-      `title="${title}"`,
+      // Angular's Dialog is on the <dialog>, which keeps a `title` attribute as a tooltip.
+      `${fw === "angular" ? "dialogTitle" : "title"}="${title}"`,
       described.value && `description="${description}"`,
       ...bound[fw]!,
     ];

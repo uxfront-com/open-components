@@ -85,10 +85,11 @@ function hide() {
   restoreFocus();
 }
 
-// Back to whatever opened the dialog, if it's still in the page, so keyboard and screen
-// reader users carry on where they left off.
+// Back to whatever opened the dialog, so keyboard and screen reader users carry on where
+// they left off. A control that's gone from the page can't take focus, so then it's up
+// to the page to move it somewhere that makes sense.
 function restoreFocus() {
-  if (opener?.isConnected) opener.focus();
+  opener?.focus();
   opener = null;
 }
 
@@ -120,12 +121,14 @@ function onClose() {
 }
 
 // A <form method="dialog"> would close the dialog itself. It asks instead, with the
-// value of the button that submitted it, like `delete`.
+// value of the button that submitted it, like `delete`. A button's own `formmethod`
+// wins over its form's `method`, as it does when the form is sent.
 function onSubmit(event: SubmitEvent) {
-  const form = event.target as HTMLFormElement;
-  if (form.method !== "dialog" || event.defaultPrevented) return;
+  const submitter = event.submitter as HTMLButtonElement | null;
+  const method = submitter?.getAttribute("formmethod")?.toLowerCase() ?? (event.target as HTMLFormElement).method;
+  if (method !== "dialog" || event.defaultPrevented) return;
   event.preventDefault();
-  emit("close", "action", (event.submitter as HTMLButtonElement | null)?.value ?? "");
+  emit("close", "action", submitter?.value ?? "");
 }
 
 // A click on the backdrop lands on the <dialog>, outside its box. Both the press and the
