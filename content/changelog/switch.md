@@ -1,7 +1,7 @@
 ---
 title: The Switch
 description: Our fourth component page, on a switch that turns a setting on or off right away, that everyone can see, label and flip, and that agents can check.
-date: 2026-10-11
+date: 2026-10-13
 category: Components
 link:
   label: Read the Switch page
