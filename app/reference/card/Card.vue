@@ -21,7 +21,9 @@ defineSlots<{
   eyebrow?: () => unknown;
   /** An image, shown at the top, which comes after the heading in the DOM. */
   media?: () => unknown;
-  /** Actions, like Buttons, which sit above the stretched link and stay reachable with Tab. */
+  /** Buttons that act on the card, like Save, which sit above the stretched link and stay reachable with Tab. */
+  actions?: () => unknown;
+  /** A last section, set apart by a border, for details about the card, like who made it or when. */
   footer?: () => unknown;
 }>();
 </script>
@@ -47,6 +49,9 @@ defineSlots<{
     <div v-if="$slots.default" data-slot="body">
       <slot />
     </div>
+    <div v-if="$slots.actions" data-slot="actions">
+      <slot name="actions" />
+    </div>
     <div v-if="$slots.footer" data-slot="footer">
       <slot name="footer" />
     </div>
@@ -62,9 +67,9 @@ defineSlots<{
 @layer components {
   .card {
     --card--padding: 1.25rem;
-    --card--gap: 0.75rem;
     --card--radius: 0.75rem;
-    /* The card's border is decoration: its heading says what it is, so it doesn't need 3:1. */
+    /* The card's border, and the ones that set its header and footer apart, are decoration:
+       its heading says what it is, so they don't need 3:1. */
     --card--border-color: color-mix(in srgb, currentColor 20%, transparent);
     --card--background: transparent;
     --card--media--aspect-ratio: 16 / 9;
@@ -73,12 +78,11 @@ defineSlots<{
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: var(--card--gap);
     box-sizing: border-box;
     /* In a grid or a flex row, it can get narrower than its content, rather than overflow. */
     min-width: 0;
     margin: 0;
-    padding: var(--card--padding);
+    padding: 0;
     border: 1px solid var(--card--border-color);
     border-radius: var(--card--radius);
     background-color: var(--card--background);
@@ -92,11 +96,30 @@ defineSlots<{
     overflow-wrap: break-word;
   }
 
-  /* Parts. No height is fixed anywhere, so the card grows with its text. */
+  /* Parts. Each section has the card's padding, so the borders between them run edge to
+     edge. No height is fixed anywhere, so the card grows with its text. */
+  .card > :is([data-slot="header"], [data-slot="body"], [data-slot="actions"], [data-slot="footer"]) {
+    padding: var(--card--padding);
+  }
   .card > [data-slot="header"] {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+  }
+  /* A border sets the header apart from what follows it, and the footer from what comes
+     before it. The actions belong to the body, so they follow it without one. */
+  .card > [data-slot="body"],
+  .card > :not([data-slot="body"]) + [data-slot="actions"],
+  .card > [data-slot="footer"] {
+    border-block-start: 1px solid var(--card--border-color);
+  }
+  .card > [data-slot="body"] + [data-slot="actions"] {
+    padding-block-start: 0;
+  }
+  /* The body takes the spare height, so actions and footers line up across a row of
+     cards of one height. */
+  .card > [data-slot="body"] {
+    flex-grow: 1;
   }
   .card > [data-slot="header"] > [data-slot="heading"] {
     margin: 0;
@@ -118,8 +141,6 @@ defineSlots<{
      heading in the DOM. Its aspect ratio holds its space while the image loads. */
   .card > [data-slot="media"] {
     order: -1;
-    margin-block-start: calc(-1 * var(--card--padding));
-    margin-inline: calc(-1 * var(--card--padding));
     overflow: hidden;
     border-start-start-radius: calc(var(--card--radius) - 1px);
     border-start-end-radius: calc(var(--card--radius) - 1px);
@@ -132,13 +153,16 @@ defineSlots<{
     height: 100%;
     object-fit: cover;
   }
-  /* The footer sits at the bottom, so footers line up across a row of cards of one height. */
-  .card > [data-slot="footer"] {
+  .card > [data-slot="actions"] {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
-    margin-block-start: auto;
+  }
+  .card > [data-slot="footer"] {
+    /* The text colour at 70%, which has 4.5:1 against the page. */
+    color: color-mix(in srgb, currentColor 70%, transparent);
+    font-size: 0.75rem;
   }
 
   /* A link in the heading, the Card's own or one in the `heading` slot, stretches over
@@ -159,7 +183,7 @@ defineSlots<{
   /* Everything else people can press sits above the stretched link, so it does what
      it says rather than follow the link. */
   .card > [data-slot="header"] > [data-slot="eyebrow"] :deep(a[href]),
-  .card > :is([data-slot="body"], [data-slot="footer"]) :deep(:is(a[href], button, input, select, textarea, summary, [tabindex])) {
+  .card > :is([data-slot="body"], [data-slot="actions"], [data-slot="footer"]) :deep(:is(a[href], button, input, select, textarea, summary, [tabindex])) {
     position: relative;
     z-index: 1;
   }

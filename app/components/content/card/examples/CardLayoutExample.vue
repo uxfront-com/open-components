@@ -2,7 +2,7 @@
 import Button from "~/reference/button/Button.vue";
 import Card from "~/reference/card/Card.vue";
 
-/** `::card-layout-example`: a list of linked cards in a grid, one height per row, with their footers lined up. */
+/** `::card-layout-example`: a list of linked cards in a grid, one height per row, with their actions lined up. */
 const projects = [
   { name: "Analytical Engine", hue: 275, summary: "A general-purpose mechanical computer, first described in 1837." },
   { name: "Difference Engine", hue: 160, summary: "A machine for working out tables of numbers." },
@@ -22,7 +22,7 @@ const projects = [
       >
         <template #media><CardExampleArt :hue="project.hue" /></template>
         <p>{{ project.summary }}</p>
-        <template #footer><Button size="sm" variant="outline">Save</Button></template>
+        <template #actions><Button size="sm" variant="outline">Save</Button></template>
       </Card>
     </ul>
     <template v-if="$slots.default" #code><slot /></template>

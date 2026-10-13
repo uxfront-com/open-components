@@ -11,7 +11,7 @@ import Card from "~/reference/card/Card.vue";
       <template #eyebrow>مشروع</template>
       <template #media><CardExampleArt /></template>
       <p>تصميم تشارلز باباج لحاسوب ميكانيكي عام الغرض، وُصف لأول مرة عام 1837.</p>
-      <template #footer><Button size="sm" variant="outline">حفظ</Button></template>
+      <template #actions><Button size="sm" variant="outline">حفظ</Button></template>
     </Card>
     <template v-if="$slots.default" #code><slot /></template>
   </CardExample>

@@ -31,13 +31,16 @@ import "~/reference/button/tokens.css";
           <template #eyebrow>Project<span class="anatomy-marker anatomy-marker-part">3</span></template>
           <template #heading>Analytical Engine<span class="anatomy-marker anatomy-marker-part">4</span></template>
           <p>A general-purpose mechanical computer.</p>
-          <span class="anatomy-marker anatomy-marker-part">5</span>
-          <template #footer>
+          <span class="anatomy-marker anatomy-marker-part anatomy-marker-edge">5</span>
+          <template #actions>
             <Button size="sm" variant="outline" tabindex="-1">Save</Button>
-            <span class="anatomy-marker anatomy-marker-part">6</span>
+            <span class="anatomy-marker anatomy-marker-part anatomy-marker-edge">6</span>
+          </template>
+          <template #footer>
+            By Charles Babbage<span class="anatomy-marker anatomy-marker-part anatomy-marker-edge">7</span>
           </template>
         </Card>
-        <span class="anatomy-marker anatomy-marker-focus">7</span>
+        <span class="anatomy-marker anatomy-marker-focus">8</span>
       </div>
     </div>
     <figcaption class="anatomy-parts border-t border-muted p-4 text-sm">
@@ -127,16 +130,19 @@ import "~/reference/button/tokens.css";
   outline: 2px solid var(--color--focus);
   outline-offset: 2px;
 }
-.anatomy-card > :deep(:is([data-slot="media"], [data-slot="body"], [data-slot="footer"])),
+.anatomy-card > :deep(:is([data-slot="media"], [data-slot="body"], [data-slot="actions"], [data-slot="footer"])),
 .anatomy-card :deep(:is([data-slot="eyebrow"], [data-slot="heading"])) {
   position: relative;
   outline: 1px dashed color-mix(in srgb, var(--color--neutral-text) 70%, transparent);
   outline-offset: var(--anatomy--outline);
 }
+/* The sections that run edge to edge are outlined inside the card's border. */
+.anatomy-card > :deep(:is([data-slot="media"], [data-slot="body"], [data-slot="actions"], [data-slot="footer"])) {
+  outline-offset: calc(-1 * var(--anatomy--outline) - 1px);
+}
 /* The media's number sits outside it, so the media shows it, and rounds the image instead. */
 .anatomy-card > :deep([data-slot="media"]) {
   overflow: visible;
-  outline-offset: calc(-1 * var(--anatomy--outline));
 }
 .anatomy-card > :deep([data-slot="media"]) img {
   border-start-start-radius: inherit;
@@ -158,13 +164,13 @@ import "~/reference/button/tokens.css";
   width: calc(var(--anatomy--reach) - var(--anatomy--outline));
   height: 1px;
 }
-/* The media reaches the card's edge. */
+/* The media, the body, the actions and the footer reach the card's edge. */
 .anatomy-marker-edge {
   --anatomy--reach: calc(1px + 4px + var(--anatomy--distance));
 }
 
 /* The list from the markdown, numbered with the same markers: four parts down
-   the first column, the rest down the second. */
+   each column. */
 .anatomy-parts :deep(ol) {
   display: grid;
   gap: 0.5rem 1.5rem;

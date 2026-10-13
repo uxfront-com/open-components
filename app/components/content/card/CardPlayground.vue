@@ -18,6 +18,7 @@ const headingLevel = ref<NonNullable<CardProps["headingLevel"]>>(3);
 const link = ref(true);
 const media = ref(true);
 const eyebrow = ref(true);
+const actions = ref(true);
 const footer = ref(true);
 
 const elements = ["article", "section", "div", "li"];
@@ -27,6 +28,7 @@ const HEADING = "Analytical Engine";
 const HREF = "/projects/analytical-engine";
 const BODY = "A general-purpose mechanical computer, first described in 1837.";
 const IMAGE = '<img src="/projects/analytical-engine.jpg" alt="" />';
+const FOOTER = "By Charles Babbage";
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
@@ -61,7 +63,7 @@ const code = computed(() => {
   const fw = framework.value;
   const jsx = fw === "react" || fw === "solid";
   const body = `<p>${BODY}</p>`;
-  // The footer's Button, which Angular puts on the native element, and Vanilla writes out.
+  // The Button among the actions, which Angular puts on the native element, and Vanilla writes out.
   const button = (attributes: string[] = []) => {
     if (fw === "vanilla") {
       return '<button class="button" type="button" data-variant="outline" data-color="neutral" data-size="sm"><span data-slot="label">Save</span></button>';
@@ -80,7 +82,8 @@ const code = computed(() => {
       "</div>",
       ...(media.value ? [`<div data-slot="media">${IMAGE}</div>`] : []),
       `<div data-slot="body">${body}</div>`,
-      ...(footer.value ? ['<div data-slot="footer">', `  ${button()}`, "</div>"] : []),
+      ...(actions.value ? ['<div data-slot="actions">', `  ${button()}`, "</div>"] : []),
+      ...(footer.value ? [`<div data-slot="footer">${FOOTER}</div>`] : []),
     ]);
   } else if (fw === "angular") {
     // Angular's Card is a component on the element it renders, so `as` is the element you write.
@@ -97,7 +100,8 @@ const code = computed(() => {
         ...(eyebrow.value ? ["<span eyebrow>Project</span>"] : []),
         ...(media.value ? [IMAGE.replace("<img ", "<img media ")] : []),
         body,
-        ...(footer.value ? [button(["appButton", "footer"])] : []),
+        ...(actions.value ? [button(["appButton", "actions"])] : []),
+        ...(footer.value ? [`<span footer>${FOOTER}</span>`] : []),
       ],
     );
   } else {
@@ -114,7 +118,8 @@ const code = computed(() => {
           ...props,
           eyebrow.value && 'eyebrow="Project"',
           media.value && `media={${IMAGE}}`,
-          footer.value && `footer={${button()}}`,
+          actions.value && `actions={${button()}}`,
+          footer.value && `footer="${FOOTER}"`,
         ],
         [body],
       );
@@ -132,7 +137,8 @@ const code = computed(() => {
         ...(eyebrow.value ? [slot("eyebrow", "Project")] : []),
         ...(media.value ? [slot("media", IMAGE)] : []),
         body,
-        ...(footer.value ? [slot("footer", button())] : []),
+        ...(actions.value ? [slot("actions", button())] : []),
+        ...(footer.value ? [slot("footer", FOOTER)] : []),
       ]);
     }
   }
@@ -153,6 +159,7 @@ const code = computed(() => {
       <USwitch v-model="link" label="Link" size="sm" class="self-end" />
       <USwitch v-model="media" label="Media" size="sm" class="self-end" />
       <USwitch v-model="eyebrow" label="Eyebrow" size="sm" />
+      <USwitch v-model="actions" label="Actions" size="sm" />
       <USwitch v-model="footer" label="Footer" size="sm" />
     </div>
 
@@ -162,7 +169,8 @@ const code = computed(() => {
           <template v-if="eyebrow" #eyebrow>Project</template>
           <template v-if="media" #media><CardExampleArt /></template>
           <p>{{ BODY }}</p>
-          <template v-if="footer" #footer><Button size="sm" variant="outline">Save</Button></template>
+          <template v-if="actions" #actions><Button size="sm" variant="outline">Save</Button></template>
+          <template v-if="footer" #footer>{{ FOOTER }}</template>
         </Card>
       </component>
     </div>

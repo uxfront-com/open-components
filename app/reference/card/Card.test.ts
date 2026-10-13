@@ -86,7 +86,7 @@ describe("Card", () => {
     document.addEventListener("click", onNavigate);
     render(Card, {
       props: { heading: "Analytical Engine", href: "/projects/analytical-engine" },
-      slots: { footer: () => [button("Share"), button("Save")] },
+      slots: { actions: () => [button("Share"), button("Save")] },
     });
 
     await user.tab();
@@ -107,7 +107,7 @@ describe("Card", () => {
     const onSave = vi.fn();
     render(Card, {
       props: { heading: "Analytical Engine", href: "/projects/analytical-engine" },
-      slots: { footer: () => button("Save", onSave) },
+      slots: { actions: () => button("Save", onSave) },
     });
 
     const save = screen.getByRole("button", { name: "Save" });
@@ -140,14 +140,20 @@ describe("Card", () => {
   it("renders the same markup every time, with its parts in a fixed order", () => {
     const options = {
       props: { heading: "Analytical Engine", href: "/projects/analytical-engine" },
-      slots: { eyebrow: () => "Project", media: image, default: () => "A mechanical computer.", footer: () => button("Save") },
+      slots: {
+        eyebrow: () => "Project",
+        media: image,
+        default: () => "A mechanical computer.",
+        actions: () => button("Save"),
+        footer: () => "By Charles Babbage",
+      },
     };
     const first = render(Card, options).container.innerHTML;
     const { container } = render(Card, options);
     expect(container.innerHTML).toBe(first);
 
     const parts = [...container.querySelectorAll("[data-slot]")].map((part) => part.getAttribute("data-slot"));
-    expect(parts).toEqual(["header", "heading", "link", "eyebrow", "media", "body", "footer"]);
+    expect(parts).toEqual(["header", "heading", "link", "eyebrow", "media", "body", "actions", "footer"]);
     expect(container.innerHTML).not.toMatch(/\bid=/);
   });
 

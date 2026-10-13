@@ -15,7 +15,8 @@ import Card from "~/reference/card/Card.vue";
         <template #eyebrow>Project</template>
         <template #media><CardExampleArt /></template>
         <p>Charles Babbage's design for a general-purpose mechanical computer, first described in 1837.</p>
-        <template #footer><Button size="sm" variant="outline">Save</Button></template>
+        <template #actions><Button size="sm" variant="outline">Save</Button></template>
+        <template #footer>By Charles Babbage</template>
       </Card>
     </div>
     <template v-if="$slots.default" #code><slot /></template>
