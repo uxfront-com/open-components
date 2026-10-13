@@ -23,7 +23,7 @@ defineSlots<{
   media?: () => unknown;
   /** Buttons that act on the card, like Save, which sit above the stretched link and stay reachable with Tab. */
   actions?: () => unknown;
-  /** A last section, set apart by a border, for details about the card, like who made it or when. */
+  /** A last line of details about the card, like who made it or when. */
   footer?: () => unknown;
 }>();
 </script>
@@ -67,9 +67,9 @@ defineSlots<{
 @layer components {
   .card {
     --card--padding: 1.25rem;
+    --card--gap: 0.75rem;
     --card--radius: 0.75rem;
-    /* The card's border, and the ones that set its header and footer apart, are decoration:
-       its heading says what it is, so they don't need 3:1. */
+    /* The card's border is decoration: its heading says what it is, so it doesn't need 3:1. */
     --card--border-color: color-mix(in srgb, currentColor 20%, transparent);
     --card--background: transparent;
     --card--media--aspect-ratio: 16 / 9;
@@ -78,11 +78,12 @@ defineSlots<{
     position: relative;
     display: flex;
     flex-direction: column;
+    gap: var(--card--gap);
     box-sizing: border-box;
     /* In a grid or a flex row, it can get narrower than its content, rather than overflow. */
     min-width: 0;
     margin: 0;
-    padding: 0;
+    padding: var(--card--padding);
     border: 1px solid var(--card--border-color);
     border-radius: var(--card--radius);
     background-color: var(--card--background);
@@ -96,25 +97,13 @@ defineSlots<{
     overflow-wrap: break-word;
   }
 
-  /* Parts. Each section has the card's padding, so the borders between them run edge to
-     edge. No height is fixed anywhere, so the card grows with its text. */
-  .card > :is([data-slot="header"], [data-slot="body"], [data-slot="actions"], [data-slot="footer"]) {
-    padding: var(--card--padding);
-  }
+  /* Parts. They have no borders of their own: a line between two of them is a separator's
+     job, which a page adds where it needs one. No height is fixed anywhere, so the card
+     grows with its text. */
   .card > [data-slot="header"] {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-  }
-  /* A border sets the header apart from what follows it, and the footer from what comes
-     before it. The actions belong to the body, so they follow it without one. */
-  .card > [data-slot="body"],
-  .card > :not([data-slot="body"]) + [data-slot="actions"],
-  .card > [data-slot="footer"] {
-    border-block-start: 1px solid var(--card--border-color);
-  }
-  .card > [data-slot="body"] + [data-slot="actions"] {
-    padding-block-start: 0;
   }
   /* The body takes the spare height, so actions and footers line up across a row of
      cards of one height. */
@@ -141,6 +130,8 @@ defineSlots<{
      heading in the DOM. Its aspect ratio holds its space while the image loads. */
   .card > [data-slot="media"] {
     order: -1;
+    margin-block-start: calc(-1 * var(--card--padding));
+    margin-inline: calc(-1 * var(--card--padding));
     overflow: hidden;
     border-start-start-radius: calc(var(--card--radius) - 1px);
     border-start-end-radius: calc(var(--card--radius) - 1px);
@@ -205,7 +196,7 @@ defineSlots<{
     }
   }
 
-  /* With more contrast, the borders are drawn in the text colour at full strength, on
+  /* With more contrast, the border is drawn in the text colour at full strength, on
      hover too, so this repeats the hover rule's selector, which it comes after. */
   @media (prefers-contrast: more) {
     .card,
