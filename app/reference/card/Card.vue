@@ -106,8 +106,9 @@ defineSlots<{
     gap: 0.25rem;
   }
   /* The body takes the spare height, so actions and footers line up across a row of
-     cards of one height. */
-  .card > [data-slot="body"] {
+     cards of one height. A card without a body gives it to its header instead. */
+  .card > [data-slot="body"],
+  .card:not(:has(> [data-slot="body"])) > [data-slot="header"] {
     flex-grow: 1;
   }
   .card > [data-slot="header"] > [data-slot="heading"] {
