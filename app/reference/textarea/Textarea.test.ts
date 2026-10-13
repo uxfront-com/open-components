@@ -220,23 +220,43 @@ describe("Textarea", () => {
     expect(status.children).toHaveLength(2);
   });
 
-  it("counts again when its form is reset", async () => {
+  it("counts again when its form is reset, whether its value is bound or not", async () => {
     const user = userEvent.setup();
+    const bio = ref("");
     const { container } = render({
-      render: () => h("form", [label("bio", "Bio"), h(Textarea, { id: "bio", name: "bio", limit: 10 })]),
+      render: () =>
+        h("form", [
+          label("bio", "Bio"),
+          h(Textarea, { id: "bio", name: "bio", limit: 10 }),
+          label("motto", "Motto"),
+          h(Textarea, {
+            id: "motto",
+            name: "motto",
+            limit: 10,
+            modelValue: bio.value,
+            "onUpdate:modelValue": (value: string | undefined) => (bio.value = value ?? ""),
+          }),
+        ]),
     });
 
-    const textarea = screen.getByRole("textbox", { name: "Bio" });
-    await user.type(textarea, "Ada Lovelace");
-    expect(textarea).toHaveAttribute("aria-invalid", "true");
+    const unbound = screen.getByRole("textbox", { name: "Bio" });
+    const bound = screen.getByRole("textbox", { name: "Motto" });
+    await user.type(unbound, "Ada Lovelace");
+    await user.type(bound, "Ada Lovelace");
+    expect(unbound).toHaveAttribute("aria-invalid", "true");
+    expect(bound).toHaveAttribute("aria-invalid", "true");
 
     // The reset event fires before the values are put back, so the count catches up after it.
-    textarea.closest("form")!.reset();
-    expect(textarea).toHaveValue("");
+    unbound.closest("form")!.reset();
     await vi.waitFor(() => {
-      expect(container.querySelector('[data-slot="count"]')).toHaveTextContent("10 characters left");
-      expect(textarea).not.toHaveAttribute("aria-invalid");
+      for (const count of container.querySelectorAll('[data-slot="count"]')) {
+        expect(count).toHaveTextContent("10 characters left");
+      }
+      expect(unbound).not.toHaveAttribute("aria-invalid");
+      expect(bound).not.toHaveAttribute("aria-invalid");
     });
+    expect(bio.value).toBe("");
+    expect(bound).toHaveValue("");
   });
 
   it("can't be focused or edited while disabled, and its form leaves it out", async () => {
@@ -269,7 +289,7 @@ describe("Textarea", () => {
     expect(textarea).toHaveAccessibleDescription("Enter a message");
   });
 
-  it("mirrors its size, auto-grow, maximum and limit as data attributes, and passes its rows to the textarea", () => {
+  it("mirrors its size, rows, auto-grow, maximum and limit as data attributes, and passes its rows to the textarea", () => {
     const { container } = render(Textarea, {
       attrs: { id: "message", "aria-label": "Message" },
       props: { size: "lg", rows: 2, autoGrow: true, maxRows: 6, limit: 500 },
@@ -279,6 +299,7 @@ describe("Textarea", () => {
     expect(root).toHaveAttribute("data-size", "lg");
     expect(root).toHaveAttribute("data-auto-grow", "");
     expect(root).toHaveAttribute("data-limit", "500");
+    expect(root).toHaveAttribute("data-rows", "2");
     expect(root).toHaveAttribute("data-max-rows", "6");
     expect(root.style.getPropertyValue("--textarea--rows")).toBe("2");
     expect(root.style.getPropertyValue("--textarea--max-rows")).toBe("6");

@@ -52,7 +52,7 @@ const textarea = useTemplateRef<HTMLTextAreaElement>("textarea");
 const typed = ref(typeof attrs.value === "string" ? attrs.value : "");
 const value = computed(() => model.value ?? typed.value);
 
-// Code points rather than UTF-16 code units, which is how most databases count a
+// Code points rather than UTF-16 code units, which is how many databases count a
 // length limit, like PostgreSQL's varchar(n). An emoji made of several, like a
 // family, counts as several.
 const remaining = computed(() => (limit === undefined ? 0 : limit - [...value.value].length));
@@ -65,10 +65,11 @@ const invalid = () => (over.value ? "true" : (attrs["aria-invalid"] as TextareaH
 const describedBy = () => [attrs["aria-describedby"], countId.value].filter(Boolean).join(" ") || undefined;
 
 // `rows` and `maxRows` as variables, in lines, which the styles turn into a minimum
-// and a maximum height. CSS can't read a number from an attribute in every browser
-// yet, so they're set through the CSSOM, which a strict Content Security Policy
-// allows, unlike a style attribute. They run after every render, since a change to
-// your own `style` replaces the root's.
+// and a maximum height. Browsers with typed attr() read them from `data-rows` and
+// `data-max-rows` before any script runs. The others can't read a number from an
+// attribute yet, so they're also set through the CSSOM, which a strict Content
+// Security Policy allows, unlike a style attribute. They run after every render,
+// since a change to your own `style` replaces the root's.
 function setRows() {
   const el = root.value;
   if (!el) return;
@@ -160,6 +161,7 @@ onBeforeUnmount(() => {
     class="textarea"
     v-bind="rootAttrs()"
     :data-size="size"
+    :data-rows="rows"
     :data-auto-grow="autoGrow ? '' : undefined"
     :data-max-rows="autoGrow ? maxRows : undefined"
     :data-limit="limit"
@@ -203,10 +205,16 @@ onBeforeUnmount(() => {
        `lh` is the textarea's line height, so it follows larger text and wider lines. */
     --textarea--padding-block: max(0.125rem, (var(--textarea--height) - 1lh) / 2 - 1px);
     /* `rows` lines, with their padding and border. Resizing and growing stop there.
-       Until the script sets the rows, it has no value, and the `rows` attribute sets the height. */
-    --textarea--min-height: calc(var(--textarea--rows) * 1lh + 2 * var(--textarea--padding-block) + 2px);
+       The rows come from `data-rows`, in browsers with typed attr(), so it holds before
+       the script runs. In the others, it has no value until then, and the `rows`
+       attribute sets the height. */
+    --textarea--min-height: calc(
+      var(--textarea--rows, attr(data-rows type(<number>))) * 1lh + 2 * var(--textarea--padding-block) + 2px
+    );
     /* Only set with `maxRows`. Without it, max-height has no value, which is none. */
-    --textarea--max-height: calc(var(--textarea--max-rows) * 1lh + 2 * var(--textarea--padding-block) + 2px);
+    --textarea--max-height: calc(
+      var(--textarea--max-rows, attr(data-max-rows type(<number>))) * 1lh + 2 * var(--textarea--padding-block) + 2px
+    );
 
     display: flex;
     flex-direction: column;

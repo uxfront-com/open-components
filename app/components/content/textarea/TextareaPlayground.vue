@@ -113,6 +113,7 @@ const code = computed(() => {
       [
         'class="textarea"',
         `data-size="${size.value}"`,
+        `data-rows="${rows.value}"`,
         autoGrow.value && "data-auto-grow",
         autoGrow.value && `data-max-rows="${MAX_ROWS}"`,
         counted.value && `data-limit="${LIMIT}"`,
