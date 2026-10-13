@@ -70,7 +70,7 @@ import "~/reference/button/tokens.css";
   flex-direction: column;
   align-items: center;
   /* The tooltip's offset, at twice its size like the rest, as the gap between the two. */
-  gap: 1.25rem;
+  gap: 1rem;
 }
 .anatomy-marker {
   position: absolute;
@@ -105,7 +105,7 @@ import "~/reference/button/tokens.css";
 }
 .anatomy-marker-offset {
   /* Halfway down the gap, under the tooltip, which is 3.1rem tall. */
-  top: calc(3.1rem + 0.625rem);
+  top: calc(3.1rem + 0.5rem);
   left: calc(50% + 2.25rem + 0.875rem);
   translate: 0 -50%;
 }

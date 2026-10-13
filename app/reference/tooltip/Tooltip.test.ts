@@ -42,8 +42,9 @@ describe("Tooltip", () => {
     expect(button).not.toHaveAttribute("aria-labelledby");
   });
 
-  it("only shows the trigger's own name with type label, hidden from screen readers and linked to nothing", () => {
+  it("only shows the trigger's own name with type label, hidden from screen readers and linked to nothing", async () => {
     render(tooltip({ label: "Settings", type: "label" }));
+    await nextTick();
 
     const button = screen.getByRole("button", { name: "Settings" });
     const [tooltipElement] = tips();
@@ -61,6 +62,14 @@ describe("Tooltip", () => {
 
     expect(tip()).toHaveAttribute("data-state", "closed");
     expect(screen.getByRole("button")).toHaveAccessibleDescription("Visible to everyone");
+  });
+
+  it("keeps an id you pass, and points the trigger at it", async () => {
+    render(tooltip({ label: "Visible to everyone", id: "visibility-hint" }));
+    await nextTick();
+
+    expect(tip()).toHaveAttribute("id", "visibility-hint");
+    expect(screen.getByRole("button")).toHaveAttribute("aria-describedby", "visibility-hint");
   });
 
   it("leaves generated IDs out of the server's markup, so hydration can't leave the trigger pointing at nothing", async () => {
@@ -130,6 +139,34 @@ describe("Tooltip", () => {
     expect(italicTip).toHaveAttribute("data-state", "open");
   });
 
+  it("skips the delay for a moment after a tooltip closes, and only for a moment", async () => {
+    const user = setup();
+    render({
+      render: () => [
+        tooltip({ label: "Bold", type: "label" }, "Bold"),
+        tooltip({ label: "Italic", type: "label" }, "Italic"),
+        tooltip({ label: "Underline", type: "label" }, "Underline"),
+      ],
+    });
+    const [bold, italic, underline] = screen.getAllByRole("button");
+    const [, italicTip, underlineTip] = tips();
+
+    await user.hover(bold!);
+    await vi.advanceTimersByTimeAsync(500);
+    await user.unhover(bold!);
+    // Closed after its grace period, then on to the next trigger within 300ms.
+    await vi.advanceTimersByTimeAsync(250);
+    await user.hover(italic!);
+    expect(italicTip).toHaveAttribute("data-state", "open");
+
+    await user.unhover(italic!);
+    await vi.advanceTimersByTimeAsync(1000);
+    await user.hover(underline!);
+    expect(underlineTip).toHaveAttribute("data-state", "closed");
+    await vi.advanceTimersByTimeAsync(500);
+    expect(underlineTip).toHaveAttribute("data-state", "open");
+  });
+
   it("lets the pointer move onto the tooltip without closing, and closes once it leaves both", async () => {
     const user = setup();
     render(tooltip({ label: "Visible to everyone" }));
@@ -159,6 +196,22 @@ describe("Tooltip", () => {
     expect(tip()).toHaveAttribute("data-state", "open");
   });
 
+  it("stays open while the pointer is on its trigger after focus leaves, and closes once it leaves too", async () => {
+    const user = setup();
+    render({ render: () => [tooltip({ label: "Visible to everyone" }), h("button", "Next")] });
+    const button = screen.getByRole("button", { name: "Settings" });
+
+    await user.tab();
+    await user.hover(button);
+    await user.tab();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tip()).toHaveAttribute("data-state", "open");
+
+    await user.unhover(button);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tip()).toHaveAttribute("data-state", "closed");
+  });
+
   it("closes with Escape, keeping focus on the trigger", async () => {
     const user = setup();
     render(tooltip({ label: "Visible to everyone" }));
@@ -186,11 +239,17 @@ describe("Tooltip", () => {
     const onKeydown = (event: KeyboardEvent) => event.key === "Escape" && escapes();
     render({ render: () => h("div", { role: "dialog", "aria-label": "Edit project", onKeydown }, [tooltip({ label: "Visible to everyone" })]) });
     document.addEventListener("keydown", onKeydown);
+    // Its default action is cancelled too, which is what keeps a native <dialog> open.
+    let escape: KeyboardEvent | undefined;
+    const record = (event: KeyboardEvent) => event.key === "Escape" && (escape = event);
+    window.addEventListener("keydown", record, true);
 
     await user.tab();
     await user.keyboard("{Escape}");
     expect(tip()).toHaveAttribute("data-state", "closed");
     expect(escapes).not.toHaveBeenCalled();
+    expect(escape?.defaultPrevented).toBe(true);
+    window.removeEventListener("keydown", record, true);
 
     // With no tooltip open, Escape is the dialog's again.
     await user.keyboard("{Escape}");
@@ -223,6 +282,19 @@ describe("Tooltip", () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(button).toHaveFocus();
     expect(tip()).toHaveAttribute("data-state", "closed");
+  });
+
+  it("still opens on keyboard focus after a touch that didn't focus the trigger, like a scroll", async () => {
+    const user = setup();
+    render(tooltip({ label: "Visible to everyone" }));
+    const button = screen.getByRole("button");
+
+    // A touch that turns into a scroll is cancelled, and never focuses anything.
+    button.dispatchEvent(new PointerEvent("pointerdown", { pointerType: "touch", bubbles: true }));
+    button.dispatchEvent(new PointerEvent("pointercancel", { pointerType: "touch", bubbles: true }));
+    await user.tab();
+    expect(button).toHaveFocus();
+    expect(tip()).toHaveAttribute("data-state", "open");
   });
 
   it("passes the trigger props to the element you render, with no wrapper of its own", () => {

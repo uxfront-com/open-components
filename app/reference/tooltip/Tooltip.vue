@@ -12,7 +12,7 @@ const GRACE = 150;
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, useTemplateRef } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useAttrs, useId, useTemplateRef } from "vue";
 
 export interface TooltipProps {
   /** The text it shows. Plain text only, so there's never anything in it to focus or click. */
@@ -51,13 +51,15 @@ defineSlots<{
   default: (props: { trigger: TooltipTrigger }) => unknown;
 }>();
 
-// The ID, and the anchor's name made from it, are set once it mounts. Generated IDs can
-// differ between the server and the client, like in content that renders asynchronously,
-// and hydration doesn't fix the trigger's attributes, which would then point at nothing.
+// The ID, and the anchor's name made from it, are set once it mounts: the one you pass, or a
+// generated one. Generated IDs can differ between the server and the client, like in content
+// that renders asynchronously, and hydration doesn't fix the trigger's attributes, which
+// would then point at nothing.
+const attrs = useAttrs();
 const uid = useId();
 const id = ref<string>();
 const anchorName = computed(() => id.value && `--tooltip-${id.value}`);
-onMounted(() => (id.value = uid));
+onMounted(() => (id.value = (attrs.id as string | undefined) ?? uid));
 const state = ref<"open" | "closed">("closed");
 const tooltip = useTemplateRef<HTMLElement>("tooltip");
 
@@ -65,6 +67,9 @@ let anchor: HTMLElement | undefined;
 let hovered = false;
 let focused = false;
 let touched = false;
+// A tap doesn't always focus the trigger, like in Safari on iOS, or when it turns into a
+// scroll, so the next key press, like the Tab that moves focus, forgets it.
+const untouch = () => (touched = false);
 let opening: ReturnType<typeof setTimeout> | undefined;
 let closing: ReturnType<typeof setTimeout> | undefined;
 
@@ -149,6 +154,7 @@ const trigger = computed<TooltipTrigger>(() => ({
   },
   onPointerdown(event) {
     touched = event.pointerType === "touch";
+    if (touched) document.addEventListener("keydown", untouch, { capture: true, once: true });
   },
   onFocus(event) {
     focused = true;
@@ -201,7 +207,10 @@ function onTooltipLeave() {
   closeSoon();
 }
 
-onBeforeUnmount(hide);
+onBeforeUnmount(() => {
+  hide();
+  document.removeEventListener("keydown", untouch, { capture: true });
+});
 </script>
 
 <template>
@@ -209,9 +218,9 @@ onBeforeUnmount(hide);
   <!-- A span, so it's valid wherever its trigger is, even in a line of text. It stays in the
        page while it's closed, so the trigger's description is there before it opens. -->
   <span
-    :id="id"
     ref="tooltip"
     v-bind="$attrs"
+    :id="id"
     class="tooltip"
     :role="type === 'description' ? 'tooltip' : undefined"
     :aria-hidden="type === 'label' ? 'true' : undefined"
