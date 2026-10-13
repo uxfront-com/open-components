@@ -97,14 +97,14 @@ describe("Switch", () => {
     expect(new FormData(form).has("tips")).toBe(false);
   });
 
-  it("puts attributes, listeners and refs on the input, and classes on its root", async () => {
+  it("puts attributes, listeners and refs on the input, and classes and styles on its root", async () => {
     const user = userEvent.setup();
     const onFocus = vi.fn();
     const instance = ref<ComponentPublicInstance<{ input: HTMLInputElement }>>();
     render({
       render: () => [
         label("wifi", "Wi-Fi"),
-        h(Switch, { ref: instance, id: "wifi", class: "wifi", name: "wifi", value: "enabled", onFocus }),
+        h(Switch, { ref: instance, id: "wifi", class: "wifi", style: "--switch--track--width: 3rem", name: "wifi", value: "enabled", onFocus }),
       ],
     });
 
@@ -114,6 +114,8 @@ describe("Switch", () => {
     expect(control).toHaveAttribute("value", "enabled");
     expect(control).not.toHaveClass("wifi");
     expect(control.parentElement).toHaveClass("switch", "wifi");
+    expect(control).not.toHaveAttribute("style");
+    expect(control.parentElement).toHaveAttribute("style", "--switch--track--width: 3rem;");
     expect(onFocus).toHaveBeenCalled();
     expect(instance.value?.input).toBe(control);
   });

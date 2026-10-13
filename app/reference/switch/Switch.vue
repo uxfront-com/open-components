@@ -72,6 +72,7 @@ onMounted(() => {
     /* Set per size. */
     --switch--track--width: 2.25rem;
     --switch--track--height: 1.25rem;
+    /* The gap between the thumb and the track's border. */
     --switch--thumb--offset: 0.125rem;
     /* The thumb fills the track's height, inside its 1px border, less the offset on each side. */
     --switch--thumb--size: calc(var(--switch--track--height) - 2px - 2 * var(--switch--thumb--offset));
@@ -148,13 +149,13 @@ onMounted(() => {
     transition: inset-inline-start 150ms ease-out;
   }
 
-  /* States. Each one reads the <input> before the track, so what people see and what
-     assistive technologies report can't drift apart. They set the track's variables,
-     which the thumb inherits, so a class on the root sets the switch at rest. */
+  /* States. Each one reads the <input>, so what people see and what assistive technologies
+     report can't drift apart. Like every variable, they're set on the root, where a class
+     of yours can set them too. The thumb's colour follows the track's border unless a state
+     sets its own. */
   @media (hover: hover) {
-    .switch:hover > :where([data-slot="control"]:not(:checked, :disabled)) + [data-slot="track"] {
+    .switch:hover:where(:has(> [data-slot="control"]:not(:checked, :disabled))) {
       --switch--track--border-color: color-mix(in srgb, currentColor 80%, transparent);
-      --switch--thumb--background-color: var(--switch--track--border-color);
     }
   }
   .switch > [data-slot="control"]:focus-visible + [data-slot="track"] {
@@ -163,7 +164,7 @@ onMounted(() => {
   }
   /* On, the track fills and the thumb moves to the end, so on and off differ by more
      than colour. */
-  .switch > [data-slot="control"]:checked + [data-slot="track"] {
+  .switch:has(> [data-slot="control"]:checked) {
     --switch--track--border-color: var(--color--primary);
     --switch--track--background-color: var(--color--primary);
     --switch--thumb--background-color: var(--color--primary-contrast);
@@ -171,8 +172,10 @@ onMounted(() => {
   .switch > [data-slot="control"]:checked + [data-slot="track"] > [data-slot="thumb"] {
     inset-inline-start: calc(100% - var(--switch--thumb--size) - var(--switch--thumb--offset));
   }
-  .switch > [data-slot="control"][aria-invalid="true"] + [data-slot="track"] {
+  .switch:has(> [data-slot="control"][aria-invalid="true"]) {
     --switch--track--border-color: var(--color--error-text);
+  }
+  .switch > [data-slot="control"][aria-invalid="true"] + [data-slot="track"] {
     /* A second pixel of border, drawn inside, so the switch doesn't grow. */
     box-shadow: inset 0 0 0 1px var(--switch--track--border-color);
   }
@@ -196,9 +199,11 @@ onMounted(() => {
     }
   }
 
-  /* With more contrast, the track and thumb are drawn in the text colour at full strength. */
+  /* With more contrast, the track and thumb are drawn in the text colour at full strength,
+     hovered or not. */
   @media (prefers-contrast: more) {
-    .switch {
+    .switch,
+    .switch:hover {
       --switch--track--border-color: currentColor;
     }
   }
@@ -206,18 +211,20 @@ onMounted(() => {
   /* Forced colors mode would paint the track and thumb's backgrounds over with the page's,
      hiding the thumb and the on state, so they keep their colours and use system ones. */
   @media (forced-colors: active) {
-    .switch > [data-slot="track"],
-    .switch:hover > [data-slot="track"] {
+    .switch,
+    .switch:hover {
       --switch--track--border-color: CanvasText;
       --switch--track--background-color: Canvas;
       --switch--thumb--background-color: CanvasText;
+    }
+    .switch > [data-slot="track"] {
       forced-color-adjust: none;
     }
     /* The invalid border keeps its second pixel, which tells it apart without colour. */
-    .switch > [data-slot="control"][aria-invalid="true"] + [data-slot="track"] {
+    .switch:has(> [data-slot="control"][aria-invalid="true"]) {
       --switch--track--border-color: CanvasText;
     }
-    .switch > [data-slot="control"]:checked + [data-slot="track"] {
+    .switch:has(> [data-slot="control"]:checked) {
       --switch--track--border-color: Highlight;
       --switch--track--background-color: Highlight;
       --switch--thumb--background-color: HighlightText;
@@ -225,10 +232,12 @@ onMounted(() => {
     .switch > [data-slot="control"]:focus-visible + [data-slot="track"] {
       outline-color: Highlight;
     }
-    .switch > [data-slot="control"]:disabled + [data-slot="track"] {
+    .switch:has(> [data-slot="control"]:disabled) {
       --switch--track--border-color: GrayText;
       --switch--track--background-color: Canvas;
       --switch--thumb--background-color: GrayText;
+    }
+    .switch > [data-slot="control"]:disabled + [data-slot="track"] {
       opacity: 1;
     }
   }
