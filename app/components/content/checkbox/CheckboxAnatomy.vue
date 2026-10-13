@@ -92,9 +92,9 @@ import "~/reference/button/tokens.css";
   --checkbox--box--radius: 0.75rem;
   --checkbox--gap: 1.5rem;
   --checkbox--font-size: 2.25rem;
-  --checkbox--target-size: 4.5rem;
+  --checkbox--hit-area--size: 4.5rem;
   /* How far the box sits from the top of its hit area. */
-  --anatomy--inset: calc((var(--checkbox--target-size) - var(--checkbox--box--size)) / 2);
+  --anatomy--inset: calc((var(--checkbox--hit-area--size) - var(--checkbox--box--size)) / 2);
 
   outline: 1px dashed color-mix(in srgb, var(--color--neutral-text) 70%, transparent);
   outline-offset: var(--anatomy--container);
@@ -126,7 +126,7 @@ import "~/reference/button/tokens.css";
 }
 .anatomy-marker-part {
   /* Its line of text sits this far below the top of the checkbox. */
-  --anatomy--rise: calc((var(--checkbox--target-size) - 1.25 * var(--checkbox--font-size)) / 2);
+  --anatomy--rise: calc((var(--checkbox--hit-area--size) - 1.25 * var(--checkbox--font-size)) / 2);
 
   bottom: calc(100% + var(--anatomy--rise) + var(--anatomy--container) + var(--anatomy--distance));
   left: 50%;
@@ -144,8 +144,8 @@ import "~/reference/button/tokens.css";
   position: absolute;
   top: 0;
   left: calc(-1 * var(--anatomy--inset));
-  width: var(--checkbox--target-size);
-  height: var(--checkbox--target-size);
+  width: var(--checkbox--hit-area--size);
+  height: var(--checkbox--hit-area--size);
   outline: 1px dashed color-mix(in srgb, var(--color--neutral-text) 70%, transparent);
 }
 

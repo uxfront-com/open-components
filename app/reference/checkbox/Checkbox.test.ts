@@ -69,6 +69,17 @@ describe("Checkbox", () => {
       expect(checkbox).toBeChecked();
     }
     expect(mixed.value).toBe(false);
+
+    // Worked out again from the options it stands for, it follows them after the first render too.
+    const bound = screen.getByRole<HTMLInputElement>("checkbox", { name: "Bound" });
+    mixed.value = true;
+    await nextTick();
+    expect(bound.indeterminate).toBe(true);
+    expect(bound).toBePartiallyChecked();
+    mixed.value = false;
+    await nextTick();
+    expect(bound.indeterminate).toBe(false);
+    expect(bound).not.toBePartiallyChecked();
   });
 
   it("puts attributes, listeners and refs on the input, and classes on its root", async () => {
@@ -114,9 +125,18 @@ describe("Checkbox", () => {
   it("binds checked with v-model, or keeps its own state without it, starting from checked", async () => {
     const user = userEvent.setup();
     const agreed = ref(false);
+    const seen: boolean[] = [];
     render({
       render: () => [
-        h(Checkbox, { checked: agreed.value, "onUpdate:checked": (value: boolean) => (agreed.value = value) }, () => "Bound"),
+        h(
+          Checkbox,
+          {
+            checked: agreed.value,
+            "onUpdate:checked": (value: boolean) => (agreed.value = value),
+            onChange: () => seen.push(agreed.value),
+          },
+          () => "Bound",
+        ),
         h(Checkbox, { checked: true }, () => "Unbound"),
       ],
     });
@@ -124,6 +144,8 @@ describe("Checkbox", () => {
     const bound = screen.getByRole("checkbox", { name: "Bound" });
     await user.click(bound);
     expect(agreed.value).toBe(true);
+    // A change listener of yours already sees the new state.
+    expect(seen).toEqual([true]);
     agreed.value = false;
     await nextTick();
     expect(bound).not.toBeChecked();
@@ -136,17 +158,26 @@ describe("Checkbox", () => {
 
   it("keeps showing the state you hold when a bound change isn't taken", async () => {
     const user = userEvent.setup();
-    const onUpdate = vi.fn();
-    render(Checkbox, {
-      props: { checked: true, "onUpdate:checked": onUpdate },
-      slots: { default: () => "Email" },
+    const onChecked = vi.fn();
+    const onIndeterminate = vi.fn();
+    render({
+      render: () => [
+        h(Checkbox, { checked: true, "onUpdate:checked": onChecked }, () => "Email"),
+        h(Checkbox, { indeterminate: true, "onUpdate:indeterminate": onIndeterminate }, () => "Select all"),
+      ],
     });
 
-    const checkbox = screen.getByRole("checkbox", { name: "Email" });
-    await user.click(checkbox);
-    expect(onUpdate).toHaveBeenCalledWith(false);
+    const email = screen.getByRole("checkbox", { name: "Email" });
+    await user.click(email);
+    expect(onChecked).toHaveBeenCalledWith(false);
     await nextTick();
-    expect(checkbox).toBeChecked();
+    expect(email).toBeChecked();
+
+    const all = screen.getByRole("checkbox", { name: "Select all" });
+    await user.click(all);
+    expect(onIndeterminate).toHaveBeenCalledWith(false);
+    await nextTick();
+    expect(all).toBePartiallyChecked();
   });
 
   it("passes required, aria-invalid and its error message to the input", () => {

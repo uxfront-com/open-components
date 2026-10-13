@@ -8,7 +8,7 @@ link:
   to: /docs/components/checkbox
 ---
 
-Checkboxes let people say yes or no to one thing, and the browser has had one built in for as long as there have been forms, which is why rebuilding it so often goes wrong. The Checkbox page walks you through building one the right way, from a label that toggles the box to a "Select all" that screen readers announce as mixed.
+Checkboxes let people say yes or no to one thing, and the browser has had one built in for as long as there have been forms. Its box is hard to style, though, so many teams rebuild it, and that's where it goes wrong. The Checkbox page walks you through building one the right way, from a label that toggles the box to a "Select all" that screen readers announce as mixed.
 
 ## New
 

@@ -35,6 +35,7 @@ const controlAttrs = () => Object.fromEntries(Object.entries(attrs).filter(([key
 
 const input = useTemplateRef<HTMLInputElement>("input");
 
+// Bound before your own listeners, so a `change` listener of yours already sees the new state.
 async function onChange(event: Event) {
   const box = event.target as HTMLInputElement;
   checked.value = box.checked;
@@ -79,9 +80,9 @@ onMounted(() => {
       data-slot="box"
       type="checkbox"
       :disabled="disabled"
+      @change="onChange"
       v-bind="controlAttrs()"
       :checked="checked"
-      @change="onChange"
     />
     <svg data-slot="indicator" viewBox="0 0 16 16" aria-hidden="true">
       <path data-mark="check" d="M3.5 8.5 6.5 11.5 12.5 4.5" />
@@ -109,7 +110,7 @@ onMounted(() => {
     --checkbox--gap: 0.5rem;
     --checkbox--font-size: 0.875rem;
     /* The hit area around the box, whatever its size (WCAG 2.5.8). */
-    --checkbox--target-size: 1.5rem;
+    --checkbox--hit-area--size: 1.5rem;
 
     position: relative;
     display: inline-grid;
@@ -129,10 +130,10 @@ onMounted(() => {
   .checkbox::before {
     content: "";
     position: absolute;
-    top: max(0px, (var(--checkbox--box--size) - var(--checkbox--target-size)) / 2);
-    inset-inline-start: calc((var(--checkbox--box--size) - var(--checkbox--target-size)) / 2);
-    width: var(--checkbox--target-size);
-    height: var(--checkbox--target-size);
+    top: max(0px, (var(--checkbox--box--size) - var(--checkbox--hit-area--size)) / 2);
+    inset-inline-start: calc((var(--checkbox--box--size) - var(--checkbox--hit-area--size)) / 2);
+    width: var(--checkbox--hit-area--size);
+    height: var(--checkbox--hit-area--size);
   }
 
   /* Sizes */
@@ -164,7 +165,7 @@ onMounted(() => {
     box-sizing: border-box;
     width: var(--checkbox--box--size);
     height: var(--checkbox--box--size);
-    margin: max(0px, (var(--checkbox--target-size) - var(--checkbox--box--size)) / 2) 0;
+    margin: max(0px, (var(--checkbox--hit-area--size) - var(--checkbox--box--size)) / 2) 0;
   }
   .checkbox > [data-slot="box"] {
     /* Above the hit area, which is positioned too, so the box still gets its own hover and press. */
@@ -195,7 +196,7 @@ onMounted(() => {
   .checkbox > [data-slot="label"] {
     grid-row: 1;
     grid-column: 2;
-    padding-block: max(0px, (var(--checkbox--target-size) - 1.25 * var(--checkbox--font-size)) / 2);
+    padding-block: max(0px, (var(--checkbox--hit-area--size) - 1.25 * var(--checkbox--font-size)) / 2);
   }
 
   /* States. Each one reads the <input>, which is what assistive technologies report,
