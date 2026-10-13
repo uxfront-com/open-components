@@ -321,14 +321,19 @@ describe("Tooltip", () => {
     expect(button.nextElementSibling).toBe(tip());
   });
 
-  it("has no arrow unless you ask for one", () => {
+  it("has no arrow, and no data-side, unless you ask for one", async () => {
+    const user = setup();
     render(tooltip({ label: "Visible to everyone" }));
 
+    await user.tab();
+    await vi.advanceTimersByTimeAsync(50);
+    expect(tip()).toHaveAttribute("data-state", "open");
     expect(tip().querySelector('[data-slot="arrow"]')).toBeNull();
+    expect(tip()).not.toHaveAttribute("data-side");
     expect(tip()).toHaveTextContent("Visible to everyone");
   });
 
-  it("draws an arrow when asked, hidden from assistive technologies, and says which side it opened on", async () => {
+  it("draws an arrow when asked, hidden from assistive technologies, and sets data-side once it opens", async () => {
     const user = setup();
     render(tooltip({ label: "Visible to everyone", arrow: true }));
     await nextTick();
@@ -341,6 +346,25 @@ describe("Tooltip", () => {
     await user.tab();
     expect(tip()).toHaveAttribute("data-state", "open");
     expect(["top", "bottom", "left", "right"]).toContain(tip().getAttribute("data-side"));
+  });
+
+  // The browser moves an anchored tooltip after a scroll, or when it flips, so the arrow is
+  // aimed again on every frame while it's open. jsdom has no layout, so the boxes are given.
+  it("moves its arrow to the side that faces the trigger on the next frame, as the tooltip moves", async () => {
+    const user = setup();
+    render(tooltip({ label: "Visible to everyone", arrow: true }));
+    const button = screen.getByRole("button");
+    const at = (top: number) => () => new DOMRect(0, top, 100, 30);
+    button.getBoundingClientRect = at(100);
+    tip().getBoundingClientRect = at(50);
+
+    await user.tab();
+    await vi.advanceTimersByTimeAsync(50);
+    expect(tip()).toHaveAttribute("data-side", "top");
+
+    tip().getBoundingClientRect = at(150);
+    await vi.advanceTimersByTimeAsync(50);
+    expect(tip()).toHaveAttribute("data-side", "bottom");
   });
 
   it("puts classes and attributes on the tooltip", () => {

@@ -71,8 +71,8 @@ import "~/reference/button/tokens.css";
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* The tooltip's offset, at twice its size like the rest, as the gap between the two. */
-  gap: 1rem;
+  /* The tooltip's offset, wider than twice its size, so the arrow's number fits beside the arrow. */
+  gap: 1.75rem;
 }
 .anatomy-marker {
   position: absolute;
@@ -120,15 +120,15 @@ import "~/reference/button/tokens.css";
 }
 .anatomy-marker-offset {
   /* Halfway down the gap, under the tooltip, which is 3.95rem tall. */
-  top: calc(3.95rem + 0.5rem);
+  top: calc(3.95rem + 0.875rem);
   /* Past the tooltip's edge, which is wider than the trigger. */
   left: calc(100% + 0.875rem);
   translate: 0 -50%;
 }
 .anatomy-marker-arrow {
-  top: calc(3.95rem + 0.5rem);
-  /* Clear of the trigger, which is 4.5rem wide, and its outline. */
-  right: calc(50% + 3rem);
+  top: calc(3.95rem + 0.875rem);
+  /* Just before the arrow, at the tooltip's centre. */
+  right: calc(50% + 1.125rem);
   translate: 0 -50%;
 }
 .anatomy-marker-trigger {

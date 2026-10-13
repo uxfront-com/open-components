@@ -65,7 +65,8 @@ const id = ref<string>();
 const anchorName = computed(() => id.value && `--tooltip-${uid}`);
 onMounted(() => (id.value = (attrs.id as string | undefined) ?? uid));
 const state = ref<"open" | "closed">("closed");
-// The side it opened on, after any flip, which the arrow points from.
+// The side it opened on, after any flip, which the arrow points from. Only aim() sets it,
+// so a tooltip without an arrow never has one.
 const side = ref<"top" | "bottom" | "left" | "right">();
 const tooltip = useTemplateRef<HTMLElement>("tooltip");
 const arrowPart = useTemplateRef<HTMLElement>("arrow-part");
@@ -79,6 +80,7 @@ let touched = false;
 const untouch = () => (touched = false);
 let opening: ReturnType<typeof setTimeout> | undefined;
 let closing: ReturnType<typeof setTimeout> | undefined;
+let frame: number | undefined;
 
 // CSS anchor positioning places it, where the browser has it. Elsewhere, place() does.
 // It checks position-area rather than anchor-name, which Chrome had four versions earlier.
@@ -96,12 +98,20 @@ function show() {
   tooltip.value?.showPopover?.();
   // In the capture phase, so it runs before a dialog's own Escape handler.
   document.addEventListener("keydown", onKeydown, true);
-  if (!anchored() || arrow) {
-    // Once it's shown, so it has a size to measure.
-    nextTick(update);
+  // Once it's shown, so it has a size to measure.
+  nextTick(update);
+  if (!anchored()) {
     addEventListener("scroll", update, { capture: true, passive: true });
     addEventListener("resize", update);
   }
+  // The arrow follows it on every frame while it's open: the browser moves an anchored tooltip
+  // after a scroll handler runs, and a flip or a layout shift can move it with no scroll at all.
+  if (arrow) nextTick(follow);
+}
+
+function follow() {
+  aim();
+  frame = requestAnimationFrame(follow);
 }
 
 function hide() {
@@ -113,6 +123,7 @@ function hide() {
   document.removeEventListener("keydown", onKeydown, true);
   removeEventListener("scroll", update, { capture: true });
   removeEventListener("resize", update);
+  if (frame !== undefined) cancelAnimationFrame(frame);
   if (closeOpen === hide) {
     closeOpen = undefined;
     warm = true;
@@ -189,9 +200,9 @@ function place() {
   // Its margin is the gap, which `left` and `top` place it outside of.
   const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
   const a = anchor.getBoundingClientRect();
-  // Its size without the scale it grows in from, which getBoundingClientRect() would include.
-  const width = el.offsetWidth;
-  const height = el.offsetHeight;
+  // Its exact size, without the scale it grows in from, which getBoundingClientRect() would include.
+  const width = parseFloat(getComputedStyle(el).width);
+  const height = parseFloat(getComputedStyle(el).height);
   const { clientWidth, clientHeight } = document.documentElement;
   const rtl = getComputedStyle(anchor).direction === "rtl";
   const sides = { top: "top", bottom: "bottom", start: rtl ? "right" : "left", end: rtl ? "left" : "right" } as const;
@@ -212,7 +223,7 @@ function place() {
 }
 
 // With an arrow: the side it opened on, from where its centre is, which its scale doesn't move,
-// and the arrow across from the trigger's centre, clear of the rounded corners.
+// and the arrow across from the trigger's centre, or as close as the rounded corners allow.
 function aim() {
   const el = tooltip.value;
   const part = arrowPart.value;
@@ -223,14 +234,16 @@ function aim() {
   const y = t.top + t.height / 2;
   side.value = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
   const across = side.value === "top" || side.value === "bottom";
-  const length = across ? el.offsetWidth : el.offsetHeight;
-  // From the inside of its border, where the arrow's left and top start.
-  const offset = across
-    ? a.left + a.width / 2 - (x - length / 2) - el.clientLeft
-    : a.top + a.height / 2 - (y - length / 2) - el.clientTop;
-  const at = `${Math.max(part.offsetWidth, Math.min(offset, length - part.offsetWidth))}px`;
-  part.style.left = across ? at : "";
-  part.style.top = across ? "" : at;
+  const box = getComputedStyle(el);
+  const length = parseFloat(across ? box.width : box.height);
+  const centre = across ? a.left + a.width / 2 - (x - length / 2) : a.top + a.height / 2 - (y - length / 2);
+  // Its centre stays a corner's radius and half its own diagonal from each end, so none of it
+  // overlaps the curve, measured, like the centre, from the outside of the border.
+  const clear = parseFloat(box.borderTopLeftRadius) + parseFloat(getComputedStyle(part).width) / Math.SQRT2;
+  const at = clear * 2 < length ? Math.max(clear, Math.min(centre, length - clear)) : length / 2;
+  // Its left and top start inside the border.
+  part.style.left = across ? `${at - el.clientLeft}px` : "";
+  part.style.top = across ? "" : `${at - el.clientTop}px`;
 }
 
 // The pointer can move from the trigger onto the tooltip, and the tooltip stays open.
@@ -264,7 +277,7 @@ onBeforeUnmount(() => {
     :data-state="state"
     :data-placement="placement"
     :data-delay="delay === 500 ? undefined : delay"
-    :data-side="arrow ? side : undefined"
+    :data-side="side"
     :style="anchorName && { 'position-anchor': anchorName }"
     @pointerenter="onTooltipEnter"
     @pointerleave="onTooltipLeave"
