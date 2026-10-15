@@ -321,21 +321,9 @@ describe("Tooltip", () => {
     expect(button.nextElementSibling).toBe(tip());
   });
 
-  it("has no arrow, and no data-side, unless you ask for one", async () => {
+  it("draws an arrow by default, hidden from assistive technologies, and sets data-side once it opens", async () => {
     const user = setup();
     render(tooltip({ label: "Visible to everyone" }));
-
-    await user.tab();
-    await vi.advanceTimersByTimeAsync(50);
-    expect(tip()).toHaveAttribute("data-state", "open");
-    expect(tip().querySelector('[data-slot="arrow"]')).toBeNull();
-    expect(tip()).not.toHaveAttribute("data-side");
-    expect(tip()).toHaveTextContent("Visible to everyone");
-  });
-
-  it("draws an arrow when asked, hidden from assistive technologies, and sets data-side once it opens", async () => {
-    const user = setup();
-    render(tooltip({ label: "Visible to everyone", arrow: true }));
     await nextTick();
 
     const arrow = tip().querySelector('[data-slot="arrow"]');
@@ -348,11 +336,47 @@ describe("Tooltip", () => {
     expect(["top", "bottom", "left", "right"]).toContain(tip().getAttribute("data-side"));
   });
 
+  it("has no arrow, and no data-side, when you turn it off", async () => {
+    const user = setup();
+    render(tooltip({ label: "Visible to everyone", arrow: false }));
+
+    await user.tab();
+    await vi.advanceTimersByTimeAsync(50);
+    expect(tip()).toHaveAttribute("data-state", "open");
+    expect(tip().querySelector('[data-slot="arrow"]')).toBeNull();
+    expect(tip()).not.toHaveAttribute("data-side");
+    expect(tip()).toHaveTextContent("Visible to everyone");
+  });
+
+  // Following the arrow asks for a frame on every frame, so a loop left behind would run until the page reloads.
+  it("stops following its arrow once it closes, even when it opens and closes in the same task", async () => {
+    const user = setup();
+    render(tooltip({ label: "Visible to everyone" }));
+    const button = screen.getByRole("button");
+    const frames = vi.spyOn(globalThis, "requestAnimationFrame");
+
+    button.focus();
+    button.blur();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(tip()).toHaveAttribute("data-state", "closed");
+    expect(frames).not.toHaveBeenCalled();
+
+    await user.tab();
+    await vi.advanceTimersByTimeAsync(50);
+    expect(frames).toHaveBeenCalled();
+    await user.tab();
+    expect(tip()).toHaveAttribute("data-state", "closed");
+    const calls = frames.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(100);
+    expect(frames).toHaveBeenCalledTimes(calls);
+    frames.mockRestore();
+  });
+
   // The browser moves an anchored tooltip after a scroll, or when it flips, so the arrow is
   // aimed again on every frame while it's open. jsdom has no layout, so the boxes are given.
   it("moves its arrow to the side that faces the trigger on the next frame, as the tooltip moves", async () => {
     const user = setup();
-    render(tooltip({ label: "Visible to everyone", arrow: true }));
+    render(tooltip({ label: "Visible to everyone" }));
     const button = screen.getByRole("button");
     const at = (top: number) => () => new DOMRect(0, top, 100, 30);
     button.getBoundingClientRect = at(100);

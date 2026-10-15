@@ -27,7 +27,10 @@ export interface TooltipProps {
   delay?: number;
   /** The side of the trigger it opens on. It flips to the other side when there's no room. */
   placement?: "top" | "bottom" | "start" | "end";
-  /** Draws an arrow that points at the trigger, on whichever side it opens. */
+  /**
+   * Draws an arrow that points at the trigger, on whichever side it opens, so it's clear which
+   * trigger it belongs to when several sit close together. Turn it off with `false`.
+   */
   arrow?: boolean;
 }
 
@@ -46,7 +49,7 @@ export interface TooltipTrigger {
 // tooltip, where a class can set its variables.
 defineOptions({ inheritAttrs: false });
 
-const { label, type = "description", delay = 500, placement = "top", arrow = false } = defineProps<TooltipProps>();
+const { label, type = "description", delay = 500, placement = "top", arrow = true } = defineProps<TooltipProps>();
 
 defineSlots<{
   /** The trigger, which binds `trigger` on its focusable element. */
@@ -109,7 +112,10 @@ function show() {
   if (arrow) nextTick(follow);
 }
 
+// It stops once the tooltip has closed, since show() queues it for the next tick, and a tooltip
+// that opens and closes in the same task, like with focus() and then blur(), is closed by then.
 function follow() {
+  if (state.value !== "open") return;
   aim();
   frame = requestAnimationFrame(follow);
 }
@@ -124,6 +130,7 @@ function hide() {
   removeEventListener("scroll", update, { capture: true });
   removeEventListener("resize", update);
   if (frame !== undefined) cancelAnimationFrame(frame);
+  frame = undefined;
   if (closeOpen === hide) {
     closeOpen = undefined;
     warm = true;

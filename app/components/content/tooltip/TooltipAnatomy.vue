@@ -13,7 +13,7 @@ import "~/reference/button/tokens.css";
  * 1. **Trigger** — The element it describes.
  * 2. **Tooltip** — The text, on a filled box.
  * 3. **Offset** — The gap between them.
- * 4. **Arrow** — Optional. A point on the edge that faces the trigger.
+ * 4. **Arrow** — On by default. A point on the edge that faces the trigger.
  * ::
  * ```
  */

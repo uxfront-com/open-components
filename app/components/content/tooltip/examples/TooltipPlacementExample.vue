@@ -3,7 +3,7 @@ import Button from "~/reference/button/Button.vue";
 import Tooltip from "~/reference/tooltip/Tooltip.vue";
 import type { TooltipProps } from "~/reference/tooltip/Tooltip.vue";
 
-/** `::tooltip-placement-example`: a tooltip with an arrow on each side of its trigger. */
+/** `::tooltip-placement-example`: a tooltip, with its arrow, on each side of its trigger. */
 const placements = [
   { placement: "top", name: "Top", label: "Opens above the button" },
   { placement: "bottom", name: "Bottom", label: "Opens below the button" },
@@ -20,7 +20,6 @@ const placements = [
         :key="placement"
         :label="label"
         :placement="placement"
-        arrow
         v-slot="{ trigger }"
       >
         <Button v-bind="trigger" variant="outline">{{ name }}</Button>

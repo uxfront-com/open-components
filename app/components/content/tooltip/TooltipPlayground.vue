@@ -19,7 +19,7 @@ type Placement = NonNullable<TooltipProps["placement"]>;
 const type = ref<Type>("label");
 const placement = ref<Placement>("top");
 const delay = ref("500");
-const arrow = ref(false);
+const arrow = ref(true);
 
 const types: Type[] = ["label", "description"];
 const placements: Placement[] = ["top", "bottom", "start", "end"];
@@ -55,7 +55,7 @@ const code = computed(() => {
     icon && 'type="label"',
     delay.value !== "500" && (fw === "vue" ? `:delay="${delay.value}"` : `delay={${delay.value}}`),
     placement.value !== "top" && `placement="${placement.value}"`,
-    arrow.value && "arrow",
+    !arrow.value && (fw === "vue" ? ':arrow="false"' : "arrow={false}"),
   ].filter(Boolean) as string[];
 
   switch (fw) {
@@ -96,7 +96,7 @@ const code = computed(() => {
         icon && 'tooltipType="label"',
         delay.value !== "500" && `[tooltipDelay]="${delay.value}"`,
         placement.value !== "top" && `tooltipPlacement="${placement.value}"`,
-        arrow.value && "tooltipArrow",
+        !arrow.value && '[tooltipArrow]="false"',
       ].filter(Boolean);
       return [
         icon
