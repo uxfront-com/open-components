@@ -12,7 +12,8 @@ import "~/reference/button/tokens.css";
  * ::framework-switcher
  * #vue
  * ```vue
- * <Textarea size="xs" aria-label="Comment" />
+ * <label for="comment">Comment</label>
+ * <Textarea id="comment" size="xs" />
  * ```
  * ::
  * ::

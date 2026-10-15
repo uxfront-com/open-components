@@ -117,10 +117,11 @@ function onInput(event: Event) {
 }
 
 // A form reset puts back the textarea's first value without an input event, so
-// the count reads it again once the reset is done, which is after the event.
+// the count reads it again once the reset is done. That's after the event and,
+// for a click on a reset button, after the microtasks that follow it too.
 let form: HTMLFormElement | null = null;
 function onReset() {
-  queueMicrotask(() => {
+  setTimeout(() => {
     const text = textarea.value?.value ?? "";
     typed.value = text;
     if (model.value !== undefined) model.value = text;
@@ -207,7 +208,8 @@ onBeforeUnmount(() => {
     /* `rows` lines, with their padding and border. Resizing and growing stop there.
        The rows come from `data-rows`, in browsers with typed attr(), so it holds before
        the script runs. In the others, it has no value until then, and the `rows`
-       attribute sets the height. */
+       attribute sets the height, except with auto-grow, whose field-sizing ignores
+       `rows`, so it starts at the height of its text, with no maximum. */
     --textarea--min-height: calc(
       var(--textarea--rows, attr(data-rows type(<number>))) * 1lh + 2 * var(--textarea--padding-block) + 2px
     );
@@ -313,6 +315,7 @@ onBeforeUnmount(() => {
   .textarea > [data-slot="control"][readonly] {
     /* Dashed, so it reads as something you can't change, while the text keeps its contrast. */
     border-style: dashed;
+    cursor: default;
   }
   .textarea:has(> [data-slot="control"][aria-invalid="true"]) {
     --textarea--border-color: var(--color--error-text);
@@ -326,6 +329,8 @@ onBeforeUnmount(() => {
   }
   .textarea > [data-slot="control"]:disabled {
     cursor: not-allowed;
+    /* Nobody can write in it, so there's nothing to make room for. */
+    resize: none;
   }
 
   /* On touch screens, the text is at least 16px, or Safari on iOS zooms in when the

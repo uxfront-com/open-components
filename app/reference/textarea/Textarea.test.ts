@@ -20,7 +20,7 @@ describe("Textarea", () => {
     expect(textarea).not.toHaveAttribute("role");
   });
 
-  it("puts attributes, listeners and refs on the textarea, and classes on its root", async () => {
+  it("puts attributes, listeners and refs on the textarea, and classes and styles on its root", async () => {
     const user = userEvent.setup();
     const onFocus = vi.fn();
     const instance = ref<ComponentPublicInstance<{ textarea: HTMLTextAreaElement }>>();
@@ -220,6 +220,29 @@ describe("Textarea", () => {
     expect(status.children).toHaveLength(2);
   });
 
+  it("waits for people to pause near the limit, however slowly they type", async () => {
+    vi.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render({ render: () => [label("motto", "Motto"), h(Textarea, { id: "motto", limit: 10 })] });
+
+    // The page shares one live region, so clear what earlier tests announced.
+    const status = screen.getByRole("status");
+    status.replaceChildren();
+    const textarea = screen.getByRole("textbox", { name: "Motto" });
+
+    // A key every 600ms is slow, but shorter than a pause, so nothing is announced until the last one.
+    await user.type(textarea, "Ada Lov");
+    for (const key of "ela") {
+      vi.advanceTimersByTime(600);
+      await user.type(textarea, key);
+    }
+    expect(status.children).toHaveLength(0);
+
+    vi.advanceTimersByTime(1000);
+    expect(status.children).toHaveLength(1);
+    expect(status).toHaveTextContent("0 characters left");
+  });
+
   it("counts again when its form is reset, whether its value is bound or not", async () => {
     const user = userEvent.setup();
     const bio = ref("");
@@ -259,6 +282,26 @@ describe("Textarea", () => {
     expect(bound).toHaveValue("");
   });
 
+  it("counts again after a reset button, which puts the text back only after the browser's microtasks", async () => {
+    const user = userEvent.setup();
+    render({ render: () => h("form", [label("bio", "Bio"), h(Textarea, { id: "bio", name: "bio", limit: 10 })]) });
+
+    const textarea = screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Bio" });
+    await user.type(textarea, "Ada Lovelace");
+    expect(textarea).toHaveAttribute("aria-invalid", "true");
+
+    // A click on a reset button fires `reset`, runs microtasks, and only then puts the
+    // text back. jsdom runs them last, so this plays the browser's order step by step.
+    textarea.form!.dispatchEvent(new Event("reset", { cancelable: true }));
+    await Promise.resolve();
+    textarea.value = textarea.defaultValue;
+
+    await vi.waitFor(() => {
+      expect(screen.getByText("10 characters left")).toBeInTheDocument();
+      expect(textarea).not.toHaveAttribute("aria-invalid");
+    });
+  });
+
   it("can't be focused or edited while disabled, and its form leaves it out", async () => {
     const user = userEvent.setup();
     render({
@@ -289,8 +332,8 @@ describe("Textarea", () => {
     expect(textarea).toHaveAccessibleDescription("Enter a message");
   });
 
-  it("mirrors its size, rows, auto-grow, maximum and limit as data attributes, and passes its rows to the textarea", () => {
-    const { container } = render(Textarea, {
+  it("mirrors its size, rows, auto-grow, maximum and limit as data attributes, and passes its rows to the textarea", async () => {
+    const { container, rerender } = render(Textarea, {
       attrs: { id: "message", "aria-label": "Message" },
       props: { size: "lg", rows: 2, autoGrow: true, maxRows: 6, limit: 500 },
     });
@@ -304,6 +347,13 @@ describe("Textarea", () => {
     expect(root.style.getPropertyValue("--textarea--rows")).toBe("2");
     expect(root.style.getPropertyValue("--textarea--max-rows")).toBe("6");
     expect(screen.getByRole("textbox", { name: "Message" })).toHaveAttribute("rows", "2");
+
+    // New rows reach the styles, and a maximum only counts while it grows.
+    await rerender({ size: "lg", rows: 4, autoGrow: false, maxRows: 6, limit: 500 });
+    expect(root).toHaveAttribute("data-rows", "4");
+    expect(root.style.getPropertyValue("--textarea--rows")).toBe("4");
+    expect(root).not.toHaveAttribute("data-max-rows");
+    expect(root.style.getPropertyValue("--textarea--max-rows")).toBe("");
   });
 
   it("renders the same markup every time, with its parts in a fixed order, across states", async () => {
