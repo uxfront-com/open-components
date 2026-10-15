@@ -129,7 +129,6 @@ onMounted(() => {
     column-gap: var(--checkbox--gap);
     align-items: start;
     color: var(--color--neutral-text);
-    font-family: inherit;
     font-size: var(--checkbox--font-size);
     line-height: 1.25;
     cursor: pointer;

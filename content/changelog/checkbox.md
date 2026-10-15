@@ -1,7 +1,7 @@
 ---
 title: The Checkbox
 description: Our fourth component page, on a checkbox that people can check with a click on its label, that says what it means and when it's mixed, that forms send the way they expect, and that agents can check.
-date: 2026-10-13T12:00:00Z
+date: 2026-10-16
 category: Components
 link:
   label: Read the Checkbox page
