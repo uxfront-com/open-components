@@ -194,7 +194,9 @@ describe("Textarea", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render({ render: () => [label("bio", "Bio"), h(Textarea, { id: "bio", limit: 10 })] });
 
+    // The page shares one live region, so clear what other tests announced.
     const status = screen.getByRole("status");
+    status.replaceChildren();
     const textarea = screen.getByRole("textbox", { name: "Bio" });
 
     // Far from the limit, nothing is announced.
@@ -225,7 +227,7 @@ describe("Textarea", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render({ render: () => [label("motto", "Motto"), h(Textarea, { id: "motto", limit: 10 })] });
 
-    // The page shares one live region, so clear what earlier tests announced.
+    // The page shares one live region, so clear what other tests announced.
     const status = screen.getByRole("status");
     status.replaceChildren();
     const textarea = screen.getByRole("textbox", { name: "Motto" });

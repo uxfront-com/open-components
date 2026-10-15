@@ -66,9 +66,6 @@ function element(tag: string, attributes: (string | false | undefined)[], childr
 const code = computed(() => {
   const fw = framework.value;
   const jsx = fw === "react" || fw === "solid";
-  // Vanilla writes out what the Textarea renders, which over the limit is invalid and says by how much.
-  const remaining = LIMIT - [...value.value].length;
-  const over = counted.value && remaining < 0;
   // The error message goes before the hint, so it's read right after the name.
   const described = [invalid.value && "message-error", counted.value && "message-hint"].filter(Boolean).join(" ");
 
@@ -95,7 +92,7 @@ const code = computed(() => {
     ...binding[fw]!,
     disabled.value && "disabled",
     readonly.value && (jsx ? "readOnly" : "readonly"),
-    (invalid.value || (fw === "vanilla" && over)) && 'aria-invalid="true"',
+    invalid.value && 'aria-invalid="true"',
     fw === "vanilla"
       ? (described || counted.value) && `aria-describedby="${[described, counted.value && "message-count"].filter(Boolean).join(" ")}"`
       : described && `aria-describedby="${described}"`,
@@ -111,8 +108,8 @@ const code = computed(() => {
 
   let textarea: string[];
   if (fw === "vanilla") {
-    const characters = Math.abs(remaining) === 1 ? "character" : "characters";
-    const count = remaining < 0 ? `${-remaining} ${characters} too many` : `${remaining} ${characters} left`;
+    // The markup the server renders, before anyone has written in it, so the count is the whole limit.
+    const count = `${LIMIT} characters left`;
     textarea = element(
       "div",
       [
@@ -125,9 +122,7 @@ const code = computed(() => {
       ],
       [
         ...element("textarea", control, [], true),
-        ...(counted.value
-          ? [`<span data-slot="count" id="message-count"${over ? " data-over-limit" : ""}>${count}</span>`]
-          : []),
+        ...(counted.value ? [`<span data-slot="count" id="message-count">${count}</span>`] : []),
       ],
     );
   } else if (fw === "angular") {
