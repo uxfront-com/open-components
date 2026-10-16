@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, useAttrs, useTemplateRef } from "vue";
+import { inject, onMounted, ref, useAttrs, useTemplateRef } from "vue";
 import { RadioGroupKey } from "./RadioGroup.vue";
 
 export interface RadioProps {
@@ -7,7 +7,7 @@ export interface RadioProps {
   value: string;
   /** Takes this one option away, while the others stay. Arrow keys skip it. */
   disabled?: boolean;
-  /** Starts the group on this radio, when the group has no value yet. It hands the group its value, so `v-model`, the checked radio and the form agree. */
+  /** Starts the group on this radio, when the group has no value yet. It hands the group its value, so `v-model`, the checked radio and the form agree, on the server too. Give it to one radio per group: with two, the first one wins. */
   checked?: boolean;
 }
 
@@ -27,7 +27,10 @@ const group = inject(RadioGroupKey, undefined);
 
 // A default answer becomes the group's value, rather than a checked radio the value
 // doesn't know about, which would submit an answer while the bound value stays empty.
-if (checked && group && group.value === undefined) group.select(value);
+// A bound group only gets that value on its next render, so until it's mounted the
+// radio checks itself, which is what the server renders and hydration matches.
+const starting = ref(checked && group?.value === undefined);
+if (starting.value) group?.select(value);
 
 const attrs = useAttrs();
 // Classes and styles go on the root, which lays out the row, so a class can set its
@@ -43,6 +46,7 @@ const input = useTemplateRef<HTMLInputElement>("input");
 defineExpose({ input });
 
 onMounted(() => {
+  starting.value = false;
   if (import.meta.env.DEV && !group) {
     console.warn("[Radio] is outside a RadioGroup, so it has no name, legend or value to share: put it in one.", input.value);
   }
@@ -60,7 +64,7 @@ onMounted(() => {
       type="radio"
       :name="group?.name"
       :value="value"
-      :checked="group ? group.value === value : checked"
+      :checked="group ? group.value === value || (starting && group.value === undefined) : checked"
       :disabled="disabled"
       :required="group?.required"
       v-bind="controlAttrs()"

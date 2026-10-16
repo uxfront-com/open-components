@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { createSSRApp, h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { renderToString } from "vue/server-renderer";
 import Radio from "./Radio.vue";
 import RadioGroup from "./RadioGroup.vue";
 
@@ -223,6 +224,25 @@ describe("RadioGroup", () => {
     delivery.value = undefined;
     await nextTick();
     expect(boundStandard).not.toBeChecked();
+  });
+
+  it("renders the radio given checked as checked on the server, bound or not, so it shows and submits before hydration", async () => {
+    const rows = () => [
+      h(Radio, { value: "standard", checked: true }, () => "Standard"),
+      h(Radio, { value: "express" }, () => "Express"),
+    ];
+    const checkedValues = (html: string) => [...html.matchAll(/value="(\w+)"[^>]*checked/g)].map(([, value]) => value);
+
+    const own = await renderToString(createSSRApp({ render: () => h(RadioGroup, { name: "delivery", legend: "Delivery" }, rows) }));
+    expect(checkedValues(own)).toEqual(["standard"]);
+
+    const bound = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(RadioGroup, { name: "delivery", legend: "Delivery", modelValue: undefined, "onUpdate:modelValue": () => {} }, rows),
+      }),
+    );
+    expect(checkedValues(bound)).toEqual(["standard"]);
   });
 
   it("keeps its own value without v-model", async () => {
