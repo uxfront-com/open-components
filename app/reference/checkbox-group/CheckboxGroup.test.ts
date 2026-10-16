@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/vue";
+import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
@@ -16,11 +16,14 @@ describe("CheckboxGroup", () => {
     render(CheckboxGroup, { props: { name: "toppings", options }, slots: { default: toppings } });
 
     const group = screen.getByRole("group", { name: "Toppings" });
+    expect(group).toHaveAccessibleName("Toppings");
     expect(group.tagName).toBe("FIELDSET");
     expect(group.firstElementChild?.tagName).toBe("LEGEND");
     for (const { value, label } of options) {
       const checkbox = screen.getByRole("checkbox", { name: label });
       expect(checkbox.tagName).toBe("INPUT");
+      // Only an invalid group marks its options invalid.
+      expect(checkbox).not.toHaveAttribute("aria-invalid");
       expect(checkbox).toHaveAttribute("name", "toppings");
       expect(checkbox).toHaveAttribute("value", value);
       expect(group).toContainElement(checkbox);
@@ -78,10 +81,11 @@ describe("CheckboxGroup", () => {
       ],
     });
 
-    const bound = screen.getByRole("group", { name: "Bound" });
-    const [cheese, mushrooms] = [...bound.querySelectorAll("input")];
+    const bound = within(screen.getByRole("group", { name: "Bound" }));
+    const cheese = bound.getByRole("checkbox", { name: "Cheese" });
+    const mushrooms = bound.getByRole("checkbox", { name: "Mushrooms" });
     expect(mushrooms).toBeChecked();
-    await user.click(cheese!);
+    await user.click(cheese);
     expect(picked.value).toEqual(["cheese", "mushrooms"]);
     picked.value = ["olives"];
     await nextTick();

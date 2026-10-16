@@ -132,7 +132,10 @@ const code = computed(() => {
     invalid.value && 'aria-invalid="true"',
     invalid.value && 'aria-describedby="emails-error"',
   ];
-  const group = element(fw === "angular" ? "fieldset" : "CheckboxGroup", attributes, [legend]);
+  // Angular writes out the <fieldset>, so it writes out the <legend> that names it too.
+  const group = fw === "angular"
+    ? element("fieldset", attributes, [`<legend>${legend}</legend>`])
+    : element("CheckboxGroup", attributes, [legend]);
   return [...notes, ...group, ...errorLines].join("\n");
 });
 </script>

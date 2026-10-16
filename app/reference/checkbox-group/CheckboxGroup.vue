@@ -23,7 +23,7 @@ export interface CheckboxGroupProps {
   selectAll?: string;
 }
 
-// Attributes go on the <fieldset>, but `aria-invalid` is read below, so they're declared too.
+// Attributes go on the <fieldset> through `attrs`, which also tells the options below when the group is invalid.
 defineOptions({ inheritAttrs: false });
 
 const { options, name, size = "md", orientation = "vertical", disabled = false, selectAll } = defineProps<CheckboxGroupProps>();
