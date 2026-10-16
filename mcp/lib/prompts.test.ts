@@ -106,10 +106,10 @@ describe("buildText", () => {
   // A planned component has no page to point at yet, so the prompt points at
   // the whole standard, and at the Button's page for its structure.
   it("follows the Button's structure for a planned component", () => {
-    const text = buildText(standard, component("radio-group"));
-    expect(text).toContain("Build a Radio Group component for our design system that meets the Open Components standard: https://opencomponents.dev/llms-full.txt");
-    expect(text).toContain("Work through the UI, UX, DX and AX of radio groups, following the WAI-ARIA pattern for radio groups if there is one");
-    expect(text).toContain("like radio-group/<rule>");
+    const text = buildText(standard, component("tabs"));
+    expect(text).toContain("Build a Tabs component for our design system that meets the Open Components standard: https://opencomponents.dev/llms-full.txt");
+    expect(text).toContain("Work through the UI, UX, DX and AX of tabs, following the WAI-ARIA pattern for tabs if there is one");
+    expect(text).toContain("like tabs/<rule>");
   });
 
   // As it does for a shipped one, so the agent knows what it's building in.
