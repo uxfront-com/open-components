@@ -181,7 +181,7 @@ describe("RadioGroup", () => {
     expect(screen.getByRole("radio", { name: "Next day" })).not.toBeChecked();
   });
 
-  it("checks the radio given checked to start with, until people pick another or its value is set", async () => {
+  it("hands the group the value of a radio given checked, when it has none, so its value and its form agree", async () => {
     const user = userEvent.setup();
     const delivery = ref<string>();
     const rows = () => [
@@ -211,9 +211,17 @@ describe("RadioGroup", () => {
     expect(ownStandard).not.toBeChecked();
 
     expect(boundStandard).toBeChecked();
+    expect(delivery.value).toBe("standard");
     delivery.value = "express";
     await nextTick();
     expect(boundExpress).toBeChecked();
+    expect(boundStandard).not.toBeChecked();
+    delivery.value = "standard";
+    await nextTick();
+    expect(boundStandard).toBeChecked();
+    expect(boundExpress).not.toBeChecked();
+    delivery.value = undefined;
+    await nextTick();
     expect(boundStandard).not.toBeChecked();
   });
 
@@ -286,7 +294,7 @@ describe("RadioGroup", () => {
     for (const radio of container.querySelectorAll(".radio")) expect(radio).toHaveAttribute("data-size", "lg");
   });
 
-  it("stacks its radios unless it's horizontal, mirrors that as a data attribute, and never sets aria-orientation", async () => {
+  it("mirrors its orientation as a data attribute, keeps its radios in their own part, and never sets aria-orientation", async () => {
     const { rerender } = render(RadioGroup, {
       props: { name: "contact", legend: "Can we contact you?", hint: "We only call about your order" },
       slots: {

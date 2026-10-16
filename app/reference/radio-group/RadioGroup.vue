@@ -100,9 +100,10 @@ onMounted(() => {
     <!-- A fieldset groups the radios and takes its name from its legend. ARIA only supports
          aria-invalid on the radiogroup role, not on a fieldset's own group role or on a
          radio, so the fieldset takes that role. HTML-AAM names a fieldset from its legend
-         whatever its role, but aria-labelledby says it outright, so every browser and
-         screen reader names the group the same way. There's no aria-orientation, which
-         ARIA doesn't support on a radiogroup: the arrow keys move both ways anyway. -->
+         whatever its role, but aria-labelledby says it outright, so the name doesn't
+         depend on each browser's fieldset naming. There's no aria-orientation: a
+         horizontal group stacks again on narrow screens, which a fixed attribute can't
+         follow, and the arrow keys move both ways either way. -->
     <legend :id="`${name}-legend`" data-slot="legend">{{ legend }}</legend>
     <p v-if="hint" :id="`${name}-hint`" data-slot="hint">{{ hint }}</p>
     <!-- Above the radios, so people read what's wrong before they choose again. -->

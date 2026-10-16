@@ -7,7 +7,7 @@ export interface RadioProps {
   value: string;
   /** Takes this one option away, while the others stay. Arrow keys skip it. */
   disabled?: boolean;
-  /** Checks this radio to start with, like HTML's `checked`, while the group has no value. Once people pick another, or the group's value is set, the group's value wins. */
+  /** Starts the group on this radio, when the group has no value yet. It hands the group its value, so `v-model`, the checked radio and the form agree. */
   checked?: boolean;
 }
 
@@ -24,6 +24,10 @@ defineSlots<{
 // The name, size, required state and checked value come from the group, so its radios
 // can't disagree on them.
 const group = inject(RadioGroupKey, undefined);
+
+// A default answer becomes the group's value, rather than a checked radio the value
+// doesn't know about, which would submit an answer while the bound value stays empty.
+if (checked && group && group.value === undefined) group.select(value);
 
 const attrs = useAttrs();
 // Classes and styles go on the root, which lays out the row, so a class can set its
@@ -56,7 +60,7 @@ onMounted(() => {
       type="radio"
       :name="group?.name"
       :value="value"
-      :checked="group?.value === undefined ? checked : group.value === value"
+      :checked="group ? group.value === value : checked"
       :disabled="disabled"
       :required="group?.required"
       v-bind="controlAttrs()"
