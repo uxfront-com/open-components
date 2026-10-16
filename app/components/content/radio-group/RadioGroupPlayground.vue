@@ -5,7 +5,7 @@ import type { RadioGroupProps } from "~/reference/radio-group/RadioGroup.vue";
 import "~/reference/button/tokens.css";
 
 /**
- * Pick a size and the states, and see the reference Radio Group and its code, in the
+ * Pick a size, an orientation and the states, and see the reference Radio Group and its code, in the
  * framework picked in the Framework select.
  *
  * ```md
@@ -14,6 +14,7 @@ import "~/reference/button/tokens.css";
  * ```
  */
 const size = ref<NonNullable<RadioGroupProps["size"]>>("md");
+const orientation = ref<NonNullable<RadioGroupProps["orientation"]>>("vertical");
 const hint = ref(true);
 const disabled = ref(false);
 const oneDisabled = ref(false);
@@ -22,6 +23,7 @@ const invalid = ref(false);
 const value = ref<string>();
 
 const sizes = ["xs", "sm", "md", "lg", "xl"];
+const orientations = ["vertical", "horizontal"];
 const options = [
   { value: "standard", label: "Standard" },
   { value: "express", label: "Express" },
@@ -59,6 +61,7 @@ const code = computed(() => {
   const name = 'name="delivery"';
   const states = [
     size.value !== "md" && `size="${size.value}"`,
+    orientation.value !== "vertical" && `orientation="${orientation.value}"`,
     disabled.value && "disabled",
     required.value && "required",
   ];
@@ -72,32 +75,38 @@ const code = computed(() => {
         'class="radio-group"',
         'role="radiogroup"',
         `data-size="${size.value}"`,
+        `data-orientation="${orientation.value}"`,
         disabled.value && "disabled",
+        'aria-labelledby="delivery-legend"',
         invalid.value && 'aria-invalid="true"',
         describedBy && `aria-describedby="${describedBy}"`,
       ],
       [
-        '<legend data-slot="legend">Delivery</legend>',
+        '<legend id="delivery-legend" data-slot="legend">Delivery</legend>',
         hint.value && `<p id="delivery-hint" data-slot="hint">${HINT}</p>`,
         invalid.value && `<p id="delivery-error" data-slot="error">${ERROR}</p>`,
-        ...options.flatMap((option) =>
-          element(
-            "label",
-            ['class="radio"', 'data-slot="radio"', `data-size="${size.value}"`],
-            [
-              `<input ${[
-                'data-slot="control"',
-                'type="radio"',
-                name,
-                `value="${option.value}"`,
-                value.value === option.value && "checked",
-                isDisabled(option.value) && "disabled",
-                required.value && "required",
-              ]
-                .filter(Boolean)
-                .join(" ")} />`,
-              `<span data-slot="label">${option.label}</span>`,
-            ],
+        ...element(
+          "div",
+          ['data-slot="options"'],
+          options.flatMap((option) =>
+            element(
+              "label",
+              ['class="radio"', 'data-slot="radio"', `data-size="${size.value}"`],
+              [
+                `<input ${[
+                  'data-slot="control"',
+                  'type="radio"',
+                  name,
+                  `value="${option.value}"`,
+                  value.value === option.value && "checked",
+                  isDisabled(option.value) && "disabled",
+                  required.value && "required",
+                ]
+                  .filter(Boolean)
+                  .join(" ")} />`,
+                `<span data-slot="label">${option.label}</span>`,
+              ],
+            ),
           ),
         ),
       ].filter((line): line is string => !!line),
@@ -150,6 +159,9 @@ const code = computed(() => {
       <UFormField label="Size" size="sm" class="col-span-2 sm:col-span-1">
         <USelect v-model="size" :items="sizes" class="w-full" />
       </UFormField>
+      <UFormField label="Orientation" size="sm" class="col-span-2 sm:col-span-1">
+        <USelect v-model="orientation" :items="orientations" class="w-full" />
+      </UFormField>
       <USwitch v-model="hint" label="Hint" size="sm" />
       <USwitch v-model="required" label="Required" size="sm" />
       <USwitch v-model="disabled" label="Disabled" size="sm" />
@@ -164,6 +176,7 @@ const code = computed(() => {
         legend="Delivery"
         :hint="hint ? HINT : undefined"
         :size="size"
+        :orientation="orientation"
         :disabled="disabled"
         :required="required"
         :error="invalid ? ERROR : undefined"

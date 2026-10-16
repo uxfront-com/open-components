@@ -7,12 +7,14 @@ export interface RadioProps {
   value: string;
   /** Takes this one option away, while the others stay. Arrow keys skip it. */
   disabled?: boolean;
+  /** Checks this radio to start with, like HTML's `checked`, while the group has no value. Once people pick another, or the group's value is set, the group's value wins. */
+  checked?: boolean;
 }
 
 // Attributes go on the <input> rather than on the root, so they're declared below.
 defineOptions({ inheritAttrs: false });
 
-const { value, disabled = false } = defineProps<RadioProps>();
+const { value, disabled = false, checked = false } = defineProps<RadioProps>();
 
 defineSlots<{
   /** The label, which names the radio and is part of what people can press to check it. */
@@ -54,7 +56,7 @@ onMounted(() => {
       type="radio"
       :name="group?.name"
       :value="value"
-      :checked="group?.value === value"
+      :checked="group?.value === undefined ? checked : group.value === value"
       :disabled="disabled"
       :required="group?.required"
       v-bind="controlAttrs()"

@@ -14,5 +14,6 @@ Radio groups let people pick one answer out of a few, and they're easy to get su
 
 - The Radio Group is built on native radios in a `<fieldset>`, named by its `<legend>`, so the browser handles the keyboard: one `Tab` stop per group, and arrow keys that move, check and wrap round.
 - Its radios have the Input's heights, so a radio lines up with an input beside it, and their labels are part of what people press, so every radio is at least 24 × 24px.
+- Its radios stack, one per line, apart from two short options, like "Yes" and "No", which can sit side by side with `orientation="horizontal"`.
 - Its invalid look comes from `aria-invalid` on the group, which takes the `radiogroup` role so screen readers can announce it, and its error message sits above the radios, where people read it before they choose again.
 - It comes with its own contract, live examples and a tested reference implementation.

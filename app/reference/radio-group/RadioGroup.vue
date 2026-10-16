@@ -2,7 +2,7 @@
 import type { InjectionKey } from "vue";
 
 export interface RadioGroupProps {
-  /** The name every radio submits its value under. The hint's and error's IDs start with it, so give each group on a page its own. */
+  /** The name every radio submits its value under. The legend's, hint's and error's IDs start with it, so give each group on a page its own. */
   name: string;
   /** Names the group, as its <legend>. Ask the question the radios answer, like "How would you like it delivered?" */
   legend: string;
@@ -11,6 +11,8 @@ export interface RadioGroupProps {
   /** What's wrong and how to fix it. While it's set, the group is invalid, and screen readers say so. */
   error?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
+  /** Stacks the radios, one per line, or sets them side by side. Keep `horizontal` for two short options, like "Yes" and "No". */
+  orientation?: "vertical" | "horizontal";
   /** Disables every radio, and leaves the group out of its form. */
   disabled?: boolean;
   /** Makes every radio required, so its form can't be sent until one is checked. */
@@ -32,7 +34,16 @@ export const RadioGroupKey: InjectionKey<RadioGroupContext> = Symbol("RadioGroup
 <script setup lang="ts">
 import { onMounted, provide, useTemplateRef } from "vue";
 
-const { name, legend, hint, error, size = "md", disabled = false, required = false } = defineProps<RadioGroupProps>();
+const {
+  name,
+  legend,
+  hint,
+  error,
+  size = "md",
+  orientation = "vertical",
+  disabled = false,
+  required = false,
+} = defineProps<RadioGroupProps>();
 
 /** The checked radio's value, which `v-model` binds. Without it, the group keeps its own, and its form submits it. */
 const model = defineModel<string>();
@@ -80,18 +91,27 @@ onMounted(() => {
     class="radio-group"
     role="radiogroup"
     :data-size="size"
+    :data-orientation="orientation"
     :disabled="disabled"
+    :aria-labelledby="`${name}-legend`"
     :aria-invalid="error ? 'true' : undefined"
     :aria-describedby="describedBy()"
   >
     <!-- A fieldset groups the radios and takes its name from its legend. ARIA only supports
          aria-invalid on the radiogroup role, not on a fieldset's own group role or on a
-         radio, so the fieldset takes that role, and keeps its legend as its name. -->
-    <legend data-slot="legend">{{ legend }}</legend>
+         radio, so the fieldset takes that role. HTML-AAM names a fieldset from its legend
+         whatever its role, but aria-labelledby says it outright, so every browser and
+         screen reader names the group the same way. There's no aria-orientation, which
+         ARIA doesn't support on a radiogroup: the arrow keys move both ways anyway. -->
+    <legend :id="`${name}-legend`" data-slot="legend">{{ legend }}</legend>
     <p v-if="hint" :id="`${name}-hint`" data-slot="hint">{{ hint }}</p>
     <!-- Above the radios, so people read what's wrong before they choose again. -->
     <p v-if="error" :id="`${name}-error`" data-slot="error">{{ error }}</p>
-    <slot />
+    <!-- The radios get a box of their own, so laying them out in a row leaves the hint
+         and the error above them. -->
+    <div data-slot="options">
+      <slot />
+    </div>
   </fieldset>
 </template>
 
@@ -106,11 +126,11 @@ onMounted(() => {
     --radio-group--gap: 0.25rem;
     /* Set per size. The text sizes are the Input's, so a group sits well in a form with one. */
     --radio-group--font-size: 0.875rem;
+    /* The space between radios side by side, wide enough that each label reads as its own radio's. */
+    --radio-group--options--column-gap: 1.5rem;
 
     display: flex;
     flex-direction: column;
-    /* Each radio is as wide as its label, so the space beside it doesn't select it. */
-    align-items: flex-start;
     gap: var(--radio-group--gap);
     /* A fieldset is never narrower than its content on its own, so it would overflow a narrow column. */
     min-width: 0;
@@ -148,6 +168,22 @@ onMounted(() => {
   }
   .radio-group > [data-slot="error"] {
     color: var(--color--error-text);
+  }
+  .radio-group > [data-slot="options"] {
+    display: flex;
+    flex-direction: column;
+    /* Each radio is as wide as its label, so the space beside it doesn't select it. */
+    align-items: flex-start;
+    gap: var(--radio-group--gap);
+  }
+
+  /* Orientations. Side by side from 640px up, and stacked on narrower screens, like phones,
+     as GOV.UK's inline radios are. They wrap onto the next line if the row runs out of room. */
+  @media (min-width: 40rem) {
+    .radio-group[data-orientation="horizontal"] > [data-slot="options"] {
+      flex-flow: row wrap;
+      column-gap: var(--radio-group--options--column-gap);
+    }
   }
 }
 </style>

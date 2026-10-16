@@ -18,6 +18,9 @@ describe("RadioGroup", () => {
     expect(group.tagName).toBe("FIELDSET");
     expect(group).not.toHaveAttribute("aria-describedby");
     expect(group.firstElementChild?.tagName).toBe("LEGEND");
+    // Named outright by its legend, rather than left to each browser's fieldset naming.
+    expect(group).toHaveAttribute("aria-labelledby", "delivery-legend");
+    expect(group.firstElementChild).toHaveAttribute("id", "delivery-legend");
     const standard = within(group).getByRole("radio", { name: "Standard" });
     expect(standard.tagName).toBe("INPUT");
     expect(within(group).getAllByRole("radio").map((radio) => radio.getAttribute("name"))).toEqual(["delivery", "delivery", "delivery"]);
@@ -178,6 +181,42 @@ describe("RadioGroup", () => {
     expect(screen.getByRole("radio", { name: "Next day" })).not.toBeChecked();
   });
 
+  it("checks the radio given checked to start with, until people pick another or its value is set", async () => {
+    const user = userEvent.setup();
+    const delivery = ref<string>();
+    const rows = () => [
+      h(Radio, { value: "standard", checked: true }, () => "Standard"),
+      h(Radio, { value: "express" }, () => "Express"),
+    ];
+    render({
+      render: () => [
+        h(RadioGroup, { name: "delivery", legend: "Delivery" }, rows),
+        h(
+          RadioGroup,
+          {
+            name: "shipping",
+            legend: "Shipping",
+            modelValue: delivery.value,
+            "onUpdate:modelValue": (value: string | undefined) => (delivery.value = value),
+          },
+          rows,
+        ),
+      ],
+    });
+    const [ownStandard, ownExpress, boundStandard, boundExpress] = screen.getAllByRole("radio");
+
+    expect(ownStandard).toBeChecked();
+    await user.click(ownExpress!);
+    expect(ownExpress).toBeChecked();
+    expect(ownStandard).not.toBeChecked();
+
+    expect(boundStandard).toBeChecked();
+    delivery.value = "express";
+    await nextTick();
+    expect(boundExpress).toBeChecked();
+    expect(boundStandard).not.toBeChecked();
+  });
+
   it("keeps its own value without v-model", async () => {
     const user = userEvent.setup();
     render(RadioGroup, { props: { name: "delivery", legend: "Delivery" }, slots: { default: () => radios() } });
@@ -247,6 +286,25 @@ describe("RadioGroup", () => {
     for (const radio of container.querySelectorAll(".radio")) expect(radio).toHaveAttribute("data-size", "lg");
   });
 
+  it("stacks its radios unless it's horizontal, mirrors that as a data attribute, and never sets aria-orientation", async () => {
+    const { rerender } = render(RadioGroup, {
+      props: { name: "contact", legend: "Can we contact you?", hint: "We only call about your order" },
+      slots: {
+        default: () => [h(Radio, { value: "yes" }, () => "Yes"), h(Radio, { value: "no" }, () => "No")],
+      },
+    });
+
+    const group = screen.getByRole("radiogroup", { name: "Can we contact you?" });
+    expect(group).toHaveAttribute("data-orientation", "vertical");
+    await rerender({ orientation: "horizontal" });
+    expect(group).toHaveAttribute("data-orientation", "horizontal");
+    expect(group).not.toHaveAttribute("aria-orientation");
+    // The radios sit in a box of their own, so a row of them leaves the hint above.
+    const options = group.querySelector('[data-slot="options"]')!;
+    expect(within(options as HTMLElement).getAllByRole("radio")).toHaveLength(2);
+    expect(options.contains(screen.getByText("We only call about your order"))).toBe(false);
+  });
+
   it("renders the same markup every time, with its parts in a fixed order, across states", async () => {
     const options = {
       props: { name: "delivery", legend: "Delivery", hint: "Express arrives the next working day" },
@@ -258,7 +316,9 @@ describe("RadioGroup", () => {
 
     const root = container.firstElementChild!;
     const parts = () => [...root.children].map((part) => part.getAttribute("data-slot"));
-    expect(parts()).toEqual(["legend", "hint", "radio", "radio", "radio"]);
+    expect(parts()).toEqual(["legend", "hint", "options"]);
+    const box = root.querySelector('[data-slot="options"]')!;
+    expect([...box.children].map((part) => part.getAttribute("data-slot"))).toEqual(["radio", "radio", "radio"]);
     const radio = root.querySelector(".radio")!;
     expect([...radio.children].map((part) => part.getAttribute("data-slot"))).toEqual(["control", "label"]);
 
@@ -266,7 +326,7 @@ describe("RadioGroup", () => {
     await rerender({ error: "Choose how you'd like your order delivered", disabled: true, modelValue: "express" });
     expect(container.firstElementChild).toBe(root);
     expect([...root.querySelectorAll("input")]).toEqual(inputs);
-    expect(parts()).toEqual(["legend", "hint", "error", "radio", "radio", "radio"]);
+    expect(parts()).toEqual(["legend", "hint", "error", "options"]);
   });
 
   it("warns in development when the group has no legend, or a radio has no group", () => {
