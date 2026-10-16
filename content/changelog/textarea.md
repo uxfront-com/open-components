@@ -1,7 +1,7 @@
 ---
 title: The Textarea
 description: Our component page on a textarea that people can label, write in at length and fix, that grows or resizes without cutting anything off, and that agents can check.
-date: 2026-10-16
+date: 2026-10-16T06:00:00Z
 category: Components
 link:
   label: Read the Textarea page
