@@ -7,7 +7,7 @@ export interface RadioProps {
   value: string;
   /** Takes this one option away, while the others stay. Arrow keys skip it. */
   disabled?: boolean;
-  /** Starts the group on this radio, when the group has no value yet. It hands the group its value, so `v-model`, the checked radio and the form agree, on the server too. Give it to one radio per group: with two, the first one wins. */
+  /** Starts the group on this radio, when the group has no value yet. It hands the group its value, so `v-model`, the checked radio and the form agree, on the server too. Give it to one radio per group. */
   checked?: boolean;
 }
 
