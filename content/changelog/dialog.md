@@ -1,6 +1,6 @@
 ---
 title: The Dialog
-description: Our fourth component page, on a modal dialog that takes focus and gives it back, that everyone can close, that developers control and that agents can check.
+description: A new component page, on a modal dialog that takes focus and gives it back, that everyone can close, that developers control and that agents can check.
 date: 2026-10-13
 category: Components
 link:

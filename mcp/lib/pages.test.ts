@@ -32,7 +32,7 @@ describe("findPage", () => {
     expect(findPage(standard, name)?.key).toBe(key);
   });
 
-  it.each(["tooltip", "/docs/components/tooltip", "butt", "button/keep-focus", ""])("doesn't find %j", (name) => {
+  it.each(["carousel", "/docs/components/carousel", "butt", "button/keep-focus", ""])("doesn't find %j", (name) => {
     expect(findPage(standard, name)).toBeUndefined();
   });
 });
