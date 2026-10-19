@@ -60,6 +60,7 @@ Most of the site is generated from the docs, so a change in one place often need
 The MCP server reads the same markdown as the site, and knows less MDC syntax than Docus does. Content it can't read doesn't fail the build, but `pnpm test` fails on most of it, so keep to these:
 
 - Every page has a `title` and a `description`, and a file name that's unique across `content/docs/` once its number is dropped.
+- Number the folders and the pages outside `3.components/` to order them in the sidebar, and leave component pages without one, like `3.components/button.md`, so the sidebar lists them by name. It sorts file names as text, which would put a `10.` before a `2.`, and two component branches open at once would reach for the same number.
 - Headings are plain text and inline code, with no links, emphasis, HTML, components or `{#id}`.
 - Use block components, `:roadmap-check` and `{external=""}` on links, and nothing else inline, like `:badge[New]`.
 - Link to generated files, like `/raw/…` and `/llms.txt`, with `{external=""}`, or the router shows the 404 page.
@@ -77,7 +78,7 @@ The MCP server reads the same markdown as the site, and knows less MDC syntax th
 
 ## Writing the docs
 
-The [Button](./content/docs/3.components/1.button.md) page is the model for every page, so read the sections you're about to mirror before you write. It's long, about 35,000 tokens, so read it a section at a time.
+The [Button](./content/docs/3.components/button.md) page is the model for every page, so read the sections you're about to mirror before you write. It's long, about 35,000 tokens, so read it a section at a time.
 
 ### Voice
 

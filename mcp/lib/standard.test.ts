@@ -40,6 +40,13 @@ describe("The standard", () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  // The sidebar sorts by string, so 10.x would land before 2.x, and parallel
+  // component branches would claim the same number.
+  it("names every component page after its component, with no number", () => {
+    const numbered = readdirSync("content/docs/3.components").filter((file) => /^\d/.test(file) && file.endsWith(".md"));
+    expect(numbered).toEqual([]);
+  });
+
   // Nuxt Content would otherwise make them up from the page, and the server
   // from its path, so /raw and the server would disagree.
   it.each(pages)("%s sets its title and description", (path) => {

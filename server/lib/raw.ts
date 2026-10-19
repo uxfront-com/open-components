@@ -10,8 +10,8 @@
 
 /**
  * The path a docs page is served at, from its file in content/docs/, without the
- * numbers that order the sidebar: 3.components/1.button.md is served at
- * /docs/components/button.
+ * numbers that order the sidebar: 1.getting-started/2.roadmap.md is served at
+ * /docs/getting-started/roadmap.
  */
 export function docsPath(file: string): string {
   return `/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1")}`;

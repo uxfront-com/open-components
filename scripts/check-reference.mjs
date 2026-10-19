@@ -11,7 +11,7 @@ const pages = (await readdir(PAGES, { recursive: true })).filter((path) => path.
 const problems = [];
 
 for (const component of await readdir(REFERENCE)) {
-  // The page is named after the component, with an optional order prefix: 1.button.md.
+  // The page is named after the component: button.md.
   const page = pages.find((path) => path.split("/").pop().replace(/^\d+\./, "") === `${component}.md`);
   if (!page) {
     problems.push(`${REFERENCE}/${component}: no page named ${component}.md in ${PAGES}`);
