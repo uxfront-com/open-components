@@ -1467,7 +1467,7 @@ The rest are the Textarea's own: `rows`, the native attribute, `autoGrow` and `m
 - There's no `variant` or `color`, for the same reasons as the Input: the fields in a form are all equally important, a field without a border would be invisible when it's empty, and its one coloured state, invalid, comes from `aria-invalid`.
 - There's no `label`, `hint` or `error`. Each of them is an element of its own, linked by ID, which the Field on our Roadmap will render.
 - There's no `maxlength` either. `limit` takes its place, since it counts without cutting anything off. The native attribute still lands on the `<textarea>` if you pass it, but we recommend against it (see [Don't cut people off](/docs/components/textarea#dont-cut-people-off)).
-- There's no `resize`. A textarea people resize on the block axis, or one that grows on its own, covers what people need, and turning resizing off without growing leaves them stuck with whatever height you picked.
+- There's no `resize`. A textarea people resize on the block axis, or one that grows on its own, covers what people need, and turning resizing off without growing leaves them stuck with whatever height you picked. The one exception is a disabled textarea, which has no resize handle, since nobody can write in it then.
 - There are no `leading`, `trailing` or `actions` slots. A textarea holds plain text over several lines, so an icon or a button inside it would sit in the way of what people write. Put buttons, like Send, after it in the form.
 
 ### Type-safe
