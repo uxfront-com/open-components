@@ -1953,37 +1953,37 @@ The root element is the `<button>` (or the `<a>`) itself, so everything you pass
 #react
 ```tsx
 <Button type="submit" name="intent" value="publish" color="primary">Publish</Button>
-<Button popoverTarget="filters" variant="outline">Filters</Button>
+<Button popoverTarget="filters" aria-haspopup="dialog" variant="outline">Filters</Button>
 ```
 
 #vue
 ```vue
 <Button type="submit" name="intent" value="publish" color="primary">Publish</Button>
-<Button popovertarget="filters" variant="outline">Filters</Button>
+<Button popovertarget="filters" aria-haspopup="dialog" variant="outline">Filters</Button>
 ```
 
 #svelte
 ```svelte
 <Button type="submit" name="intent" value="publish" color="primary">Publish</Button>
-<Button popovertarget="filters" variant="outline">Filters</Button>
+<Button popovertarget="filters" aria-haspopup="dialog" variant="outline">Filters</Button>
 ```
 
 #angular
 ```angular-html
 <button appButton type="submit" name="intent" value="publish" color="primary">Publish</button>
-<button appButton popovertarget="filters" variant="outline">Filters</button>
+<button appButton popovertarget="filters" aria-haspopup="dialog" variant="outline">Filters</button>
 ```
 
 #solid
 ```tsx
 <Button type="submit" name="intent" value="publish" color="primary">Publish</Button>
-<Button popovertarget="filters" variant="outline">Filters</Button>
+<Button popovertarget="filters" aria-haspopup="dialog" variant="outline">Filters</Button>
 ```
 
 #astro
 ```astro
 <Button type="submit" name="intent" value="publish" color="primary">Publish</Button>
-<Button popovertarget="filters" variant="outline">Filters</Button>
+<Button popovertarget="filters" aria-haspopup="dialog" variant="outline">Filters</Button>
 ```
 
 #vanilla
@@ -1991,7 +1991,7 @@ The root element is the `<button>` (or the `<a>`) itself, so everything you pass
 <button class="button" type="submit" name="intent" value="publish" data-variant="solid" data-color="primary" data-size="md">
   <span data-slot="label">Publish</span>
 </button>
-<button class="button" type="button" popovertarget="filters" data-variant="outline" data-color="neutral" data-size="md">
+<button class="button" type="button" popovertarget="filters" aria-haspopup="dialog" data-variant="outline" data-color="neutral" data-size="md">
   <span data-slot="label">Filters</span>
 </button>
 ```
@@ -2063,7 +2063,7 @@ Since the Button doesn't know anything about your router, it works with any of t
 #### With other components
 
 - Tooltips on icon-only buttons repeat the button's label. The hidden label is what names the button, and the tooltip simply shows that name.
-- Menus and popovers set `aria-haspopup`, `aria-expanded` and `aria-controls` on the Button, which passes them straight through.
+- A [Popover](/docs/components/popover) opens from a Button with `popovertarget` and `aria-haspopup="dialog"`, like the Filters button above, and the browser gives the Button its expanded state. Menus set `aria-haspopup`, `aria-expanded` and `aria-controls` on the Button, which passes them straight through.
 - The loading spinner is a [Spinner](/docs/components/spinner). The Spinner draws itself, while the Button places it over the content, sizes it with `--button--icon--size` and announces `loadingLabel`, since the Spinner stays hidden from screen readers.
 - A group of buttons is simply a flex container with a gap. A toolbar, where the arrow keys move between buttons, is a separate pattern.
 
