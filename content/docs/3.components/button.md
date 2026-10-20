@@ -2063,7 +2063,7 @@ Since the Button doesn't know anything about your router, it works with any of t
 #### With other components
 
 - Tooltips on icon-only buttons repeat the button's label. The hidden label is what names the button, and the tooltip simply shows that name.
-- A [Popover](/docs/components/popover) opens from a Button with `popovertarget` and `aria-haspopup="dialog"`, like the Filters button above, and sets `aria-expanded` on it while it's open. Menus set `aria-haspopup`, `aria-expanded` and `aria-controls` on the Button, which passes them straight through.
+- A [Popover](/docs/components/popover) opens from a Button with `popovertarget` and `aria-haspopup="dialog"`, like the Filters button above, and keeps its `aria-expanded` in step with whether it's open. Menus set `aria-haspopup`, `aria-expanded` and `aria-controls` on the Button, which passes them straight through.
 - The loading spinner is a [Spinner](/docs/components/spinner). The Spinner draws itself, while the Button places it over the content, sizes it with `--button--icon--size` and announces `loadingLabel`, since the Spinner stays hidden from screen readers.
 - A group of buttons is simply a flex container with a gap. A toolbar, where the arrow keys move between buttons, is a separate pattern.
 

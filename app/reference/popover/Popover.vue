@@ -67,6 +67,8 @@ let frame: number | undefined;
 // it, while `toggle` comes a task later. So your code opening it right after closing it
 // isn't mistaken for a popover that's still open.
 let showing = false;
+// The parts of a Dialog around it, which it listens on while it's open.
+let hostParts: Element[] = [];
 
 // Why it's closing. The popover closes itself on its close button and on Escape, and
 // `null` means your code closed it, which fires no `close`. Every other close is the
@@ -126,6 +128,10 @@ function onBeforetoggle(event: Event) {
   const el = popover.value!;
   if ((event as ToggleEvent).newState === "open") {
     showing = true;
+    // Opening it again from another trigger before the browser said it closed leaves the
+    // last trigger as it would be once closed.
+    listen(false);
+    expand(trigger, false);
     unanchor();
     trigger = findTrigger(event);
     opener = document.activeElement as HTMLElement | null;
@@ -170,10 +176,12 @@ function onToggle(event: Event) {
 
 // Escape closes the popover and goes no further, so a dialog around it stays open, whether
 // focus is in the popover or on its trigger. It's handled on the popover itself, rather than
-// the document, so a tooltip inside it, which stops Escape on the document, closes first and
-// alone. Cancelling it also keeps the browser from closing anything else on it.
+// the document, so a tooltip inside it, which stops Escape on the document, and a control
+// that cancels it, close first and alone. Cancelling it also keeps the browser from closing
+// anything else on it. With a popover open inside this one, Escape is that one's.
 function onKeydown(event: KeyboardEvent) {
   if (event.key !== "Escape" || event.defaultPrevented || !showing) return;
+  if (popover.value?.querySelector('[popover]:popover-open, .popover[data-state="open"]')) return;
   event.preventDefault();
   event.stopPropagation();
   dismiss("escape");
@@ -181,12 +189,17 @@ function onKeydown(event: KeyboardEvent) {
 
 // Elsewhere on the page, the browser closes it on Escape. Inside a Dialog, though, the
 // Dialog takes Escape first and cancels it, which would close the Dialog around a popover
-// that's still open. So in a Dialog, it listens on the Dialog too, in the capture phase,
-// before the Dialog's own handler, for an Escape outside the popover and its trigger.
+// that's still open. So in a Dialog, it listens on the Dialog's parts too, which hear an
+// Escape after the control that has focus and before the Dialog does.
 function onHostKeydown(event: KeyboardEvent) {
   const target = event.target as Node;
   if (popover.value?.contains(target) || trigger?.contains(target)) return;
   onKeydown(event);
+}
+
+// A Dialog that closes, like from its Done button, takes the popover with it.
+function onHostClose() {
+  if (showing) dismiss("closed");
 }
 
 function dismiss(why: PopoverCloseReason | null) {
@@ -219,7 +232,11 @@ function listen(on: boolean) {
   window[method]("keydown", onPageKeydown as EventListener);
   trigger?.[method]("keydown", onKeydown as EventListener);
   trigger?.[method]("click", onTriggerClick);
-  popover.value?.parentElement?.closest("dialog")?.[method]("keydown", onHostKeydown as EventListener, true);
+  const host = popover.value?.parentElement?.closest("dialog");
+  if (on) hostParts = [...(host?.children ?? [])];
+  for (const part of hostParts) part[method]("keydown", onHostKeydown as EventListener);
+  host?.[method]("close", onHostClose);
+  if (!on) hostParts = [];
   if (!anchored()) {
     window[method]("scroll", update, { capture: true, passive: true } as AddEventListenerOptions);
     window[method]("resize", update);
@@ -283,6 +300,9 @@ function place() {
   };
   let at: keyof typeof opposite = sides[placement];
   if (!fits[at] && fits[opposite[at]]) at = opposite[at];
+  // Beside a trigger with room on neither side, like on a phone, it goes below it or above it,
+  // rather than over it.
+  else if (!fits[at] && (at === "left" || at === "right")) at = fits.bottom || !fits.top ? "bottom" : "top";
   const across = at === "top" || at === "bottom";
   const x = across ? a.left + (a.width - width) / 2 : at === "left" ? a.left - gap - width : a.right + gap;
   const y = across ? (at === "top" ? a.top - gap - height : a.bottom + gap) : a.top + (a.height - height) / 2;
@@ -323,6 +343,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (showing) dismiss(null);
   listen(false);
+  expand(trigger, false);
   unanchor();
   clearTimeout(clearing);
 });
@@ -396,8 +417,8 @@ onBeforeUnmount(() => {
     --popover--arrow--size: 0.75rem;
 
     /* Beside the trigger, centred on it, and on the other side when there's no room. When
-       neither side has room, it shrinks on one with at least half the screen, and its body
-       scrolls. */
+       neither side has room, it shrinks on one with about half the screen or more, and its
+       body scrolls. */
     position: fixed;
     position-area: bottom;
     position-try-fallbacks: flip-block, flip-inline, --popover-fit, flip-block --popover-fit;
@@ -435,6 +456,11 @@ onBeforeUnmount(() => {
   }
   .popover[data-placement="end"] {
     position-area: self-inline-end;
+  }
+  /* Beside a trigger with room on neither side, like on a phone, it goes below it or above it,
+     rather than over it. */
+  .popover:is([data-placement="start"], [data-placement="end"]) {
+    position-try-fallbacks: flip-inline, bottom, top, --popover-fit-below, --popover-fit-above;
   }
 
   /* Parts. The title stays in view, and the body scrolls under it. */
@@ -529,11 +555,21 @@ onBeforeUnmount(() => {
     }
   }
 }
-/* Its last resort, as tall as the side it opens on allows, less the gap on each side. The
+/* Its last resorts, as tall as the side it opens on allows, less the gap on each side. The
    minimum turns down a side with less than about half the screen, so it shrinks on the
    bigger side. It only comes to this when it fits neither side, so it's taller than that
-   anyway. Outside the layer, since it's a rule of its own, rather than a style. */
+   anyway. The `below` and `above` ones are for `start` and `end`. */
 @position-try --popover-fit {
+  max-height: calc(100% - 2 * var(--popover--offset));
+  min-height: calc(50dvh - 3rem);
+}
+@position-try --popover-fit-below {
+  position-area: bottom;
+  max-height: calc(100% - 2 * var(--popover--offset));
+  min-height: calc(50dvh - 3rem);
+}
+@position-try --popover-fit-above {
+  position-area: top;
   max-height: calc(100% - 2 * var(--popover--offset));
   min-height: calc(50dvh - 3rem);
 }
