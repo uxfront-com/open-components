@@ -27,7 +27,7 @@ The Popover is the non-modal sibling of the [Dialog](/docs/components/dialog) an
 | Element   | A `<div popover="auto">`, rendered right after its trigger, and in the top layer while it's open      |
 | Role      | `dialog`, without `aria-modal`, since the page around it keeps working                                |
 | Name      | Its title, linked with `aria-labelledby`                                                              |
-| Trigger   | A Button with `popovertarget` and `aria-haspopup="dialog"`, which the browser marks as expanded        |
+| Trigger   | A Button with `popovertarget` and `aria-haspopup="dialog"`, which the Popover gives `aria-expanded`     |
 | Keyboard  | `Enter` or `Space` on the trigger opens it, focus moves in, and `Escape` closes it and gives focus back |
 | Pointer   | A press on the trigger opens and closes it, and a press outside it closes it                          |
 | States    | Open and closed, as `data-state`                                                                      |
@@ -55,7 +55,7 @@ Every popover has a panel, a title and a close button, and it always renders rig
 
 ### Placement
 
-The `placement` prop says which side of its trigger the popover opens on, and `bottom` is the default. `start` and `end` follow the reading direction, so `start` is on the left in English and on the right in Arabic. When there isn't room on that side, like for a button at the bottom of the window, the popover flips to the other side, and it always stays inside the viewport.
+The `placement` prop says which side of its trigger the popover opens on, and `bottom` is the default. `start` and `end` follow the reading direction, so `start` is on the left in English and on the right in Arabic. When there isn't room on that side, like for a button at the bottom of the window, the popover flips to the other side. When there's room on neither, like on a short screen or at 400% zoom, it shrinks to fit on a side with at least half the screen, and its body scrolls, so it always stays inside the viewport.
 
 ::popover-placement-example
 ::framework-switcher
@@ -130,7 +130,7 @@ We recommend `bottom` for most popovers, which is where [Radix](https://www.radi
 
 The popover opens in the [top layer](https://developer.mozilla.org/en-US/docs/Glossary/Top_layer), with `popover="auto"`, above every other element on the page, an open Dialog included. That way, no `overflow: hidden` or `z-index` around its trigger can clip or cover it, and it can stay right after its trigger in the page, rather than moving to the end of the `<body>`.
 
-CSS anchor positioning then places it beside its trigger (`position-area`) and flips it when there's no room (`position-try-fallbacks`), the same way as the Tooltip. Browsers that don't have anchor positioning yet get the same placement from a few lines of script, which you'll find in `place()` in the [reference implementation](/docs/components/popover#reference-implementation).
+CSS anchor positioning then places it beside its trigger (`position-area`) and flips it when there's no room (`position-try-fallbacks`), the same way as the Tooltip. Its last fallback, an `@position-try` rule, caps its height at the room on the side it opens on, as long as that's about half the screen, which a tooltip, a line or two of text, never needs. Browsers that don't have anchor positioning yet get the same placement from a few lines of script, which you'll find in `place()` in the [reference implementation](/docs/components/popover#reference-implementation).
 
 The arrow is off by default, which differs from the Tooltip too. A popover is bigger than the button that opened it and opens right against it, so it's already clear which button it belongs to. Turn it on with `arrow` where it isn't, like for a toggletip in a line of text, and set its size with `--popover--arrow--size`. It points at the trigger's centre, and moves to the other edge when the popover flips.
 
@@ -332,7 +332,7 @@ A popover is either closed or open, and it shows which with `data-state`, so you
 
 ### Tokens
 
-The panel looks like a smaller Dialog, with the same border, background and type. Only its padding, its corners and its shadow differ: there's no backdrop behind a popover to set it apart from the page, so a soft shadow does. Its background is `Canvas`, the page's own background, which follows `color-scheme`, so it covers what's behind it in your light and dark themes alike.
+The panel looks like a smaller Dialog, with the same border, background and type. Only its padding, its corners and its shadow differ: there's no backdrop behind a popover to set it apart from the page, so a soft shadow does. Its background is `Canvas`, the background browsers give a document, which follows `color-scheme`, so it covers what's behind it in your light and dark themes alike.
 
 Its text reads one [theme token](/docs/foundations/design-tokens#theme-tokens), `--color--neutral-text`, like the Dialog's. The Buttons and Checkboxes inside read their own tokens, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button into your theme. With our reference tokens, the title and the content come to 14.9:1 on white, the same as in the Dialog. If you change the tokens or the background, make sure to check the same pair.
 
@@ -523,7 +523,7 @@ A scripted popover, a `<div>` your code shows, positions and moves to the end of
 
 <!-- Don't: there's no top layer, light dismiss or Escape until you rebuild them -->
 <button type="button" (click)="open.set(!open())">Filters</button>
-<ng-template cdkConnectedOverlay [cdkConnectedOverlayOpen]="open()">…</ng-template>
+@if (open()) {<div class="popover" [style]="position()">…</div>}
 ```
 
 #solid
@@ -566,18 +566,20 @@ A `<dialog>` can take the `popover` attribute too, but then it has two ways of b
 
 A popover has no role of its own, and the browser exposes one without a role as a `group` ([HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)), which screen readers don't announce as something that just opened. So the Popover sets `role="dialog"`, which is what WAI-ARIA calls a window on top of the page that people interact with, and leaves out `aria-modal`, since the page around it still works ([WAI-ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/#dialog)). It's named by its title, which it links with `aria-labelledby`, so give every popover a title that says what it holds ([WCAG 2.4.6](https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html), [4.1.2](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html)).
 
-Its trigger says what it opens. `popovertarget` gives it its expanded state, but no popup type, so add `aria-haspopup="dialog"`, as the Button's [`button/popup-expanded`](/docs/components/button#ux-rules) rule asks. Here's what screen readers say on a Filters trigger, from [Manuel Matuzović's tests](https://matuzo.at/blog/2023/aria-haspopup):
+Its trigger says what it opens, and whether it's open, as the Button's [`button/popup-expanded`](/docs/components/button#ux-rules) rule asks. `popovertarget` gives it an expanded state, but only in the accessibility tree, and no popup type ([HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)). So add `aria-haspopup="dialog"` to the trigger, and the Popover keeps `aria-expanded` on it in step with whether it's open, which is also what the Button's [Expanded](/docs/components/button#states) state and agents read.
 
-| Screen reader             | The trigger                                 |
-| ------------------------- | ------------------------------------------- |
-| NVDA, in Chrome and Firefox | "Filters, button, opens dialog"           |
-| JAWS                      | "Filters, button has pop-up dialog"         |
-| VoiceOver on macOS        | "Filters, dialog pop-up, button"            |
-| VoiceOver on iOS          | "Filters, pop-up button, dialog pop-up"     |
-| TalkBack                  | "Filters, dialog pop-up button"             |
-| Narrator, in Edge         | "Filters, button, has pop-up"               |
+Here's what each screen reader said on a button with `aria-haspopup="dialog"`, adapted from [Manuel Matuzović's tests](https://matuzo.at/blog/2023/aria-haspopup) of a Settings button:
 
-Most of them add "collapsed" or "expanded" too, from the state `popovertarget` gives the button, although VoiceOver leaves it out once `aria-haspopup` is set. When the popover opens and focus moves in, they announce its name and role, then the control that has focus, like "Filters, dialog, Open issues only, checkbox, checked".
+| Screen reader               | The trigger                                 |
+| --------------------------- | ------------------------------------------- |
+| NVDA, in Chrome and Firefox | "Settings, button, opens dialog"            |
+| JAWS                        | "Settings, button has pop-up dialogue"      |
+| VoiceOver on macOS          | "Settings, dialogue pop-up, button"         |
+| VoiceOver on iOS            | "Settings, pop-up button, dialogue pop-up"  |
+| TalkBack                    | "Settings, dialogue pop-up button"          |
+| Narrator, in Edge           | "Settings, button, has pop-up"              |
+
+He also found that VoiceOver in Safari doesn't announce `aria-expanded` on a button with `aria-haspopup`. When the popover opens, focus moves into a dialog named by its title, which in Chrome's accessibility tree reads as `dialog "Filters"`, so that's what screen readers have to announce it by.
 
 Don't use `role="menu"` for a popover. A menu holds only menu items, which people move between with the arrow keys, and screen readers switch into a mode for it, so a form or a link inside one stops working the way people expect. That's the Dropdown Menu's job.
 
@@ -783,7 +785,7 @@ A tap opens a popover the same way a click does, and a tap outside it closes it.
 
 #### Small screens
 
-On a narrow screen, the popover is never wider than the screen, less 16px on each side, so on a phone 320px wide it's at most 288px, and still beside its trigger ([WCAG 1.4.10](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html)). It's never taller than the screen less 32px either, and when its content is taller than that, the body scrolls while the title stays in view. On phones, the on-screen keyboard covers the bottom of the screen too, so check that a focused input in a popover stays in view above it, or place that popover at the `top`.
+On a narrow screen, the popover is never wider than the screen, less 16px on each side, so on a phone 320px wide it's at most 288px, and still beside its trigger ([WCAG 1.4.10](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html)). It's never taller than the screen less 32px either, nor than the room on the side it opens on, and when its content is taller than that, the body scrolls while the title stays in view. On phones, the on-screen keyboard covers the bottom of the screen too, so check that a focused input in a popover stays in view above it, or place that popover at the `top`.
 
 It doesn't turn into a bottom sheet on small screens. A sheet across the bottom of the screen moves the content away from what opened it, and usually covers the page with a backdrop, which makes it a Dialog in all but name. If your content needs that much room on a phone, use a Dialog.
 
@@ -958,31 +960,70 @@ import Popover from "../components/Popover.astro";
 ```
 ```js [popover.js]
 // Adds what the browser leaves out to every .popover, the way the reference implementation
-// does: anchoring it to its trigger, moving focus in, giving it back, the close button and
-// an Escape that stops at the popover. popovertarget opens and closes it without this.
-// Browsers without CSS anchor positioning need place() from the reference implementation too.
+// does: the trigger's aria-expanded, anchoring it to the trigger that opened it, moving
+// focus in, giving it back, the close button, an Escape that stops at the popover, and the
+// arrow. popovertarget opens and closes it without this. Browsers without CSS anchor
+// positioning need place() from the reference implementation too.
 const FOCUSABLE =
   'a[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 let count = 0;
 
 for (const popover of document.querySelectorAll(".popover")) {
+  const triggers = document.querySelectorAll(`[popovertarget="${popover.id}"]`);
+  for (const trigger of triggers) trigger.setAttribute("aria-expanded", "false");
   // Generated, since an id can hold characters a CSS name can't, like "1:2".
   const anchorName = `--popover-${++count}`;
   popover.style.setProperty("position-anchor", anchorName);
+  const arrow = popover.querySelector('[data-slot="arrow"]');
+  // In a dialog, which takes Escape before the browser can close the popover.
+  const host = popover.parentElement?.closest("dialog");
   let trigger;
+  let showing = false;
   let returnFocus = false;
+  let frame;
 
   // Escape closes the popover and goes no further, so a dialog around it stays open.
   function onKeydown(event) {
-    if (event.key !== "Escape" || event.defaultPrevented || popover.dataset.state !== "open") return;
+    if (event.key !== "Escape" || event.defaultPrevented || !showing) return;
     event.preventDefault();
     event.stopPropagation();
     popover.hidePopover();
   }
+  // Elsewhere in the dialog, before the dialog's own handler.
+  function onHostKeydown(event) {
+    if (!popover.contains(event.target) && !trigger?.contains(event.target)) onKeydown(event);
+  }
+
+  // The arrow sits on the side that faces the trigger, across from its centre, or as close
+  // as the rounded corners allow.
+  function aim() {
+    const a = trigger.getBoundingClientRect();
+    const p = popover.getBoundingClientRect();
+    const x = p.left + p.width / 2;
+    const y = p.top + p.height / 2;
+    const side = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
+    popover.dataset.side = side;
+    const across = side === "top" || side === "bottom";
+    const box = getComputedStyle(popover);
+    const length = parseFloat(across ? box.width : box.height);
+    const centre = across ? a.left + a.width / 2 - (x - length / 2) : a.top + a.height / 2 - (y - length / 2);
+    const clear = parseFloat(box.borderTopLeftRadius) + parseFloat(getComputedStyle(arrow).width) / Math.SQRT2;
+    const offset = clear * 2 < length ? Math.max(clear, Math.min(centre, length - clear)) : length / 2;
+    arrow.style.left = across ? `${offset - popover.clientLeft}px` : "";
+    arrow.style.top = across ? "" : `${offset - popover.clientTop}px`;
+  }
+  // On every frame while it's open, since the browser moves it after a scroll or a flip.
+  function follow() {
+    if (!showing) return;
+    aim();
+    frame = requestAnimationFrame(follow);
+  }
 
   popover.addEventListener("beforetoggle", (event) => {
-    if (event.newState === "open") {
-      trigger = event.source ?? document.querySelector(`[popovertarget="${popover.id}"]`);
+    showing = event.newState === "open";
+    if (showing) {
+      trigger?.style.removeProperty("anchor-name");
+      trigger = event.source ?? triggers[0];
       trigger?.style.setProperty("anchor-name", anchorName);
     } else {
       returnFocus = popover.contains(document.activeElement);
@@ -990,16 +1031,21 @@ for (const popover of document.querySelectorAll(".popover")) {
   });
 
   popover.addEventListener("toggle", (event) => {
+    const open = event.newState === "open";
     popover.dataset.state = event.newState;
-    if (event.newState === "open") {
-      trigger?.addEventListener("keydown", onKeydown);
+    trigger?.setAttribute("aria-expanded", String(open));
+    trigger?.[open ? "addEventListener" : "removeEventListener"]("keydown", onKeydown);
+    host?.[open ? "addEventListener" : "removeEventListener"]("keydown", onHostKeydown, true);
+    if (open) {
       const first =
         popover.querySelector("[data-autofocus], [autofocus]") ??
         popover.querySelector('[data-slot="body"]')?.querySelector(FOCUSABLE) ??
         popover.querySelector('[data-slot="close"]');
       if (!popover.contains(document.activeElement)) first?.focus();
+      if (arrow && trigger) follow();
     } else {
-      trigger?.removeEventListener("keydown", onKeydown);
+      cancelAnimationFrame(frame);
+      trigger?.style.removeProperty("anchor-name");
       // Back to the trigger, unless focus has moved on, like after a press outside.
       const active = document.activeElement;
       if (returnFocus && (!active || active === document.body || popover.contains(active))) trigger?.focus();
@@ -1076,10 +1122,11 @@ export function FilterPopover(props: PopoverProps) {
 import Popover, { type PopoverProps } from "@/components/Popover.vue";
 
 const props = defineProps<PopoverProps>();
+const open = defineModel<boolean>("open");
 </script>
 
 <template>
-  <Popover v-bind="props"><slot /></Popover>
+  <Popover v-bind="props" v-model:open="open"><slot /></Popover>
 </template>
 ```
 
@@ -1136,7 +1183,7 @@ The Popover renders the popover element as its root, so everything you pass land
 
 #### Finding its trigger
 
-The Popover needs its trigger, to place itself beside it and to give it focus back. When it opens, it takes the button the browser says opened it, `ToggleEvent.source`, which every browser has had since 2026, or else the first button that points at it with `popovertarget`. That's why every trigger points at its popover, even one your code opens, rather than relying on where it sits in the page.
+The Popover needs its trigger, to place itself beside it and to give it focus back. When it opens, it takes the button the browser says opened it, `ToggleEvent.source`, which every browser has had since 2026, or else the first button that points at it with `popovertarget`. That's why every trigger points at its popover, even one your code opens, rather than relying on where it sits in the page. Only the trigger that opened it carries the anchor's name, and only while it's open, so a popover with two triggers, like a toolbar's and a menu's, opens beside the one people pressed.
 
 #### With other components
 
@@ -1264,7 +1311,7 @@ const [open, setOpen] = createSignal(false);
 
 #vanilla
 ```html
-<!-- The button and the popover, as above, with the form in its body. -->
+<!-- The button and the popover, as above, with <form id="new-label-form"> in its body. -->
 <script type="module">
   document.getElementById("new-label-form").addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1287,7 +1334,7 @@ Finally, let's look at how agents read, open and check a popover. They rely on t
 Agents that drive a browser, through Playwright or a browser MCP server, read the page through its accessibility tree, which is made of roles, names and states. This is how Playwright sees the Filters popover once it's open, leaving out the checkboxes' text:
 
 ```yaml
-- button "Filters"
+- button "Filters" [expanded]
 - dialog "Filters":
   - paragraph: Filters
   - button "Close"
@@ -1296,7 +1343,7 @@ Agents that drive a browser, through Playwright or a browser MCP server, read th
   - checkbox "Has a pull request"
 ```
 
-The browser's own tree, which screen readers read and Chrome DevTools shows under Accessibility, also has the trigger as expanded, with a dialog popup. Playwright works roles and states out for itself, and leaves out the expanded state `popovertarget` gives, so an agent checks the popover rather than its trigger. While it's closed, the popover isn't in the tree at all. With a role and a name on both, an agent can open the popover and act inside it:
+Playwright works roles and states out for itself, from attributes, so it reads the trigger's `aria-expanded`, which the Popover sets, but not its `aria-haspopup`. The browser's own tree, which screen readers read and Chrome DevTools shows under Accessibility, has both. While it's closed, the trigger reads as collapsed, and the popover isn't in the tree at all. With a role and a name on both, an agent can open the popover and act inside it:
 
 ```ts
 await page.getByRole("button", { name: "Filters" }).click();
@@ -1331,7 +1378,7 @@ states:
   open: "[data-state=open], and :popover-open"
   closed: "[data-state=closed], hidden by the browser's own styles"
 keyboard:
-  Enter: On its trigger, opens it, or closes it when it's open. Focus moves to data-autofocus, or else the first control in its body, then its close button.
+  Enter: On its trigger, like Space, opens it, or closes it when it's open. Focus moves to data-autofocus, or else the first control in its body, then its close button.
   Tab: Moves between its controls, then on to what comes after its trigger, leaving it open.
   Escape: Closes it, wherever focus is, and stops there, giving focus back to its trigger when it was inside.
 parts: [header, title, close, body, arrow] # data-slot, in this order. The arrow is only there with arrow
@@ -1376,7 +1423,7 @@ And here's what it renders, before it opens:
 - `data-state` and `data-placement` are always there. With `arrow`, the popover ends with a `<span data-slot="arrow" aria-hidden="true">`, and once it's open, `data-side` says which side of the trigger it's on, so the arrow can point back. It's a physical side, `top`, `bottom`, `left` or `right`, so `start` comes out as `left` or `right` by direction.
 - Parts are marked with `data-slot` and always come in the same order: `header`, holding `title` and `close`, then `body` and `arrow`. Only the body and the arrow can be left out.
 - The title's ID is the popover's own, with `-title` on the end. There's nothing random in the server's markup, so it's the same on the server, on the client and in every snapshot.
-- Once it mounts, the popover gets `position-anchor` in its `style`, and its trigger gets the matching `anchor-name` when it opens. The name comes from your framework's ID helper, since an `id` can hold characters a CSS name can't, like `1:2`. In browsers without CSS anchor positioning, an open popover also gets `top` and `left`, from the script that places it.
+- Once it mounts, every trigger that points at it gets `aria-expanded="false"`, and the one that opens it `"true"` while it's open. The popover gets `position-anchor` in its `style`, and the trigger that opens it gets the matching `anchor-name` until it closes. The name comes from your framework's ID helper, since an `id` can hold characters a CSS name can't, like `1:2`. In browsers without CSS anchor positioning, an open popover also gets `top` and `left`, from the script that places it.
 - Opening and closing change attributes, never elements. The popover stays in the page while it's closed, so a form inside it keeps what people typed.
 
 ### Verifiable
@@ -1560,6 +1607,7 @@ The basis says where a rule comes from. Many of the rules rest on **WCAG** 2.2, 
 | `popover/named`             | Must   | Component | It's `role="dialog"`, named by its title with `aria-labelledby` | WCAG 4.1.2 (A) | Unit test |
 | `popover/visible-title`     | Must   | Usage     | Every popover has a title that says what it holds, like "Filters" | WCAG 1.3.1 (A), 2.4.6 (AA) | Review |
 | `popover/trigger`           | Must   | Usage     | Its trigger is a button that points at it with `popovertarget`, and sets `aria-haspopup="dialog"` | WCAG 4.1.2 (A), HTML | ARIA snapshot |
+| `popover/trigger-expanded`  | Must   | Component | It keeps `aria-expanded` on its trigger in step with whether it's open, `true` only on the trigger that opened it | WCAG 4.1.2 (A) | Unit test, ARIA snapshot |
 | `popover/after-trigger`     | Should | Usage     | It's rendered right after its trigger, so `Tab` and screen readers reach it next | WCAG 1.3.2, 2.4.3 (A) | Keyboard |
 | `popover/opens-on-press`    | Must   | Usage     | It opens from a press on its trigger, or from your code, and never on hover or focus alone | Open Components | Review |
 | `popover/initial-focus`     | Must   | Both      | Opening it moves focus inside, to the control marked with `data-autofocus`, or else the first in its body, then its close button | WCAG 2.4.3 (A) | Unit test |
@@ -1665,6 +1713,10 @@ onMounted(() => (anchorName.value = `--popover-${uid}`));
 let trigger: HTMLElement | null = null;
 let opener: HTMLElement | null = null;
 let frame: number | undefined;
+// Whether it's showing, from `beforetoggle`, which the browser fires as it shows or hides
+// it, while `toggle` comes a task later. So your code opening it right after closing it
+// isn't mistaken for a popover that's still open.
+let showing = false;
 
 // Why it's closing. The popover closes itself on its close button and on Escape, and
 // `null` means your code closed it, which fires no `close`. Every other close is the
@@ -1697,22 +1749,40 @@ function initialFocus(el: HTMLElement) {
   );
 }
 
+// The buttons that point at it with `popovertarget`.
+const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, "\\$&")}"]`);
+
 // The trigger is the button the browser says opened it, where it says so, or else the
-// first one that points at it with `popovertarget`. TypeScript doesn't know `source` yet.
+// first one that points at it. TypeScript doesn't know `source` yet.
 function findTrigger(event: Event) {
   const { source } = event as ToggleEvent & { source?: Element | null };
-  if (source instanceof HTMLElement) return source;
-  return document.querySelector<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, "\\$&")}"]`);
+  return source instanceof HTMLElement ? source : (triggers()[0] ?? null);
+}
+
+// The browser gives a `popovertarget` button its expanded state, but only in the
+// accessibility tree, so the Popover writes it out as `aria-expanded` too, which the
+// Button's Expanded style and agents read.
+function expand(el: HTMLElement | null, value: boolean) {
+  el?.setAttribute("aria-expanded", String(value));
+}
+
+// Only the trigger that opened it carries the anchor's name, since with two buttons named
+// the same, the browser would place it beside the last one on the page.
+function unanchor() {
+  trigger?.style.removeProperty("anchor-name");
 }
 
 function onBeforetoggle(event: Event) {
   const el = popover.value!;
   if ((event as ToggleEvent).newState === "open") {
+    showing = true;
+    unanchor();
     trigger = findTrigger(event);
     opener = document.activeElement as HTMLElement | null;
     if (trigger && anchorName.value) trigger.style.setProperty("anchor-name", anchorName.value);
     return;
   }
+  showing = false;
   // Focus goes back to the trigger only when it was inside, like when people pressed
   // Escape or the close button. After a press outside, it stays where people pressed.
   returnFocus = el.contains(document.activeElement);
@@ -1725,6 +1795,7 @@ function onToggle(event: Event) {
   if ((event as ToggleEvent).newState === "open") {
     state.value = "open";
     open.value = true;
+    expand(trigger, true);
     listen(true);
     // Focus moves in, so keyboard and screen reader users start in the popover, unless
     // the browser already focused an `autofocus` control in it.
@@ -1735,6 +1806,8 @@ function onToggle(event: Event) {
   }
   state.value = "closed";
   open.value = false;
+  expand(trigger, false);
+  unanchor();
   listen(false);
   // The browser gives focus back to whatever had it before the popover opened, which in
   // Safari, where a click doesn't focus a button, isn't the trigger. So the trigger gets it,
@@ -1750,10 +1823,20 @@ function onToggle(event: Event) {
 // the document, so a tooltip inside it, which stops Escape on the document, closes first and
 // alone. Cancelling it also keeps the browser from closing anything else on it.
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape" || event.defaultPrevented || state.value !== "open") return;
+  if (event.key !== "Escape" || event.defaultPrevented || !showing) return;
   event.preventDefault();
   event.stopPropagation();
   dismiss("escape");
+}
+
+// Elsewhere on the page, the browser closes it on Escape. Inside a Dialog, though, the
+// Dialog takes Escape first and cancels it, which would close the Dialog around a popover
+// that's still open. So in a Dialog, it listens on the Dialog too, in the capture phase,
+// before the Dialog's own handler, for an Escape outside the popover and its trigger.
+function onHostKeydown(event: KeyboardEvent) {
+  const target = event.target as Node;
+  if (popover.value?.contains(target) || trigger?.contains(target)) return;
+  onKeydown(event);
 }
 
 function dismiss(why: PopoverCloseReason | null) {
@@ -1786,6 +1869,7 @@ function listen(on: boolean) {
   window[method]("keydown", onPageKeydown as EventListener);
   trigger?.[method]("keydown", onKeydown as EventListener);
   trigger?.[method]("click", onTriggerClick);
+  popover.value?.parentElement?.closest("dialog")?.[method]("keydown", onHostKeydown as EventListener, true);
   if (!anchored()) {
     window[method]("scroll", update, { capture: true, passive: true } as AddEventListenerOptions);
     window[method]("resize", update);
@@ -1803,8 +1887,8 @@ watch(
   (value) => {
     const el = popover.value;
     if (!el?.showPopover) return;
-    if (value && state.value === "closed") el.showPopover();
-    else if (!value && state.value === "open") dismiss(null);
+    if (value && !showing) el.showPopover();
+    else if (!value && showing) dismiss(null);
   },
   { flush: "post" },
 );
@@ -1878,6 +1962,7 @@ function aim() {
 }
 
 onMounted(() => {
+  for (const el of triggers()) expand(el, false);
   if (open.value) popover.value?.showPopover?.();
 
   if (import.meta.env.DEV && !title.trim()) {
@@ -1886,8 +1971,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (state.value === "open") dismiss(null);
+  if (showing) dismiss(null);
   listen(false);
+  unanchor();
   clearTimeout(clearing);
 });
 </script>
@@ -1959,10 +2045,12 @@ onBeforeUnmount(() => {
     /* The arrow's width and height, before it's turned, when it has one. */
     --popover--arrow--size: 0.75rem;
 
-    /* Beside the trigger, centred on it, and on the other side when there's no room. */
+    /* Beside the trigger, centred on it, and on the other side when there's no room. When
+       neither side has room, it shrinks on one with at least half the screen, and its body
+       scrolls. */
     position: fixed;
     position-area: bottom;
-    position-try-fallbacks: flip-block, flip-inline;
+    position-try-fallbacks: flip-block, flip-inline, --popover-fit, flip-block --popover-fit;
     inset: auto;
     margin: var(--popover--offset);
     box-sizing: border-box;
@@ -1971,7 +2059,7 @@ onBeforeUnmount(() => {
     /* Never wider or taller than the screen, less 16px on each side, so it fits at 320px wide. */
     width: max-content;
     max-width: min(var(--popover--max-width), 100vw - 2rem);
-    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
     padding: var(--popover--padding);
     border: 1px solid var(--popover--border-color);
     border-radius: var(--popover--radius);
@@ -2091,6 +2179,14 @@ onBeforeUnmount(() => {
     }
   }
 }
+/* Its last resort, as tall as the side it opens on allows, less the gap on each side. The
+   minimum turns down a side with less than about half the screen, so it shrinks on the
+   bigger side. It only comes to this when it fits neither side, so it's taller than that
+   anyway. Outside the layer, since it's a rule of its own, rather than a style. */
+@position-try --popover-fit {
+  max-height: calc(100% - 2 * var(--popover--offset));
+  min-height: calc(50dvh - 3rem);
+}
 </style>
 ```
 
@@ -2104,25 +2200,53 @@ import Tooltip from "../tooltip/Tooltip.vue";
 import Popover, { type PopoverProps } from "./Popover.vue";
 
 // jsdom has no Popover API, so these stand in for the parts the Popover relies on: showing
-// and hiding with `beforetoggle` and `toggle`, a `popovertarget` button toggling its popover,
-// and the closes the browser makes itself, after the event that caused them, for an Escape
-// nobody cancelled and for a press that starts and ends outside. They can't put it in the top
-// layer or place it, which the checklist checks in a browser instead.
+// and hiding with `beforetoggle` and `toggle`, giving focus back to whatever had it before,
+// a `popovertarget` button toggling its popover, and the closes the browser makes itself,
+// after the event that caused them, for an Escape nobody cancelled and for a press that
+// starts and ends outside. They can't put it in the top layer or place it, which the
+// checklist checks in a browser instead.
 const shown = new Set<HTMLElement>();
+const previous = new Map<HTMLElement, Element | null>();
+// Chrome fires `toggle` a task after it shows or hides a popover, and folds two in a row
+// into one. Most tests fire it at once, which is easier to follow.
+let deferToggle = false;
+const pendingToggle = new Map<HTMLElement, { oldState: string; timer: ReturnType<typeof setTimeout> }>();
 
-function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | null = null) {
-  const event = (type: string) => Object.assign(new Event(type), { newState, oldState: newState === "open" ? "closed" : "open", source });
-  el.dispatchEvent(event("beforetoggle"));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | null = null, { focusPrevious = true } = {}) {
+  const oldState = newState === "open" ? "closed" : "open";
+  el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState, source }));
+  if (newState === "open") {
+    shown.add(el);
+    previous.set(el, document.activeElement);
+  } else {
+    shown.delete(el);
+    // Hiding it gives focus back to whatever had it before it opened, when focus is inside,
+    // except after a press outside. That's the <body> when nothing had it, like in Safari,
+    // where a click doesn't focus the button.
+    const before = previous.get(el);
+    if (focusPrevious && el.contains(document.activeElement)) {
+      if (before instanceof HTMLElement && before !== document.body) before.focus();
+      else (document.activeElement as HTMLElement).blur();
+    }
+  }
   // jsdom hides every popover, as browsers hide a closed one, but can't match :popover-open,
   // which shows an open one, so this stands in for it.
   el.style.display = newState === "open" ? "flex" : "";
-  el.dispatchEvent(event("toggle"));
+  const fire = (old: string) => el.dispatchEvent(Object.assign(new Event("toggle"), { newState, oldState: old, source }));
+  if (!deferToggle) return fire(oldState);
+  const pending = pendingToggle.get(el);
+  clearTimeout(pending?.timer);
+  const old = pending?.oldState ?? oldState;
+  pendingToggle.set(el, {
+    oldState: old,
+    timer: setTimeout(() => {
+      pendingToggle.delete(el);
+      fire(old);
+    }),
+  });
 }
 
 beforeAll(() => {
-
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
     if (!shown.has(this)) toggle(this, "open");
   };
@@ -2152,7 +2276,11 @@ beforeAll(() => {
     const outside = (target: EventTarget | null) =>
       [...shown].filter((el) => !el.contains(target as Node) && !(target as Element).closest(`[popovertarget="${el.id}"]`));
     const pressed = outside(down);
-    queueMicrotask(() => outside(event.target).filter((el) => pressed.includes(el)).forEach((el) => el.hidePopover()));
+    queueMicrotask(() =>
+      outside(event.target)
+        .filter((el) => pressed.includes(el))
+        .forEach((el) => toggle(el, "closed", null, { focusPrevious: false })),
+    );
   });
 });
 
@@ -2264,6 +2392,30 @@ describe("Popover", () => {
     expect(onClose.mock.calls).toEqual([["escape"], ["close-button"]]);
   });
 
+  it("gives focus back to its trigger even when the trigger never had it, as after a click in Safari", async () => {
+    page();
+    const trigger = screen.getByRole("button", { name: "Filters" });
+
+    // A click that doesn't focus the button, so the browser has nothing to give focus back to.
+    trigger.click();
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-state", "open"));
+    expect(screen.getByRole("textbox")).toHaveFocus();
+    await userEvent.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
+  });
+
+  it("leaves focus off its trigger after a press outside on something that can't take focus", async () => {
+    const user = userEvent.setup();
+    const { onClose } = page({}, () => field("open-only", "Open issues only"));
+    render(() => h("p", "Showing 12 issues"));
+
+    await openFrom(user);
+    expect(screen.getByRole("textbox")).toHaveFocus();
+    await user.click(screen.getByText("Showing 12 issues"));
+    expect(onClose.mock.calls).toEqual([["outside"]]);
+    expect(screen.getByRole("button", { name: "Filters" })).not.toHaveFocus();
+  });
+
   it("closes on a press outside, with the reason outside, and leaves focus where people pressed", async () => {
     const user = userEvent.setup();
     const { onClose } = page();
@@ -2352,6 +2504,7 @@ describe("Popover", () => {
         h(Dialog, { id: "settings", title: "Settings", open: true, onClose: onDialogClose }, () => [
           button("Filters", { popovertarget: "filters", "aria-haspopup": "dialog" }),
           h(Popover, { id: "filters", title: "Filters", onClose }, () => field("open-only", "Open issues only")),
+          button("Done"),
         ]),
     });
     return { onDialogClose, onClose };
@@ -2385,6 +2538,90 @@ describe("Popover", () => {
     expect(popover()).toHaveAttribute("data-state", "closed");
     expect(onClose.mock.calls).toEqual([["escape"]]);
     expect(onDialogClose).not.toHaveBeenCalled();
+  });
+
+  it("closes alone on Escape inside a Dialog with focus on another control in the Dialog", async () => {
+    const user = userEvent.setup();
+    const { onDialogClose, onClose } = inDialog();
+    await openFrom(user);
+
+    // Tab moves on out of it, and leaves it open.
+    screen.getByRole("button", { name: "Done" }).focus();
+    await user.keyboard("{Escape}");
+    expect(popover()).toHaveAttribute("data-state", "closed");
+    expect(onClose.mock.calls).toEqual([["escape"]]);
+    expect(onDialogClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Done" })).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    expect(onDialogClose).toHaveBeenCalledWith("escape", "");
+  });
+
+  // Two buttons that open the same popover, like a toolbar's and a menu's.
+  function twoTriggers() {
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters", "aria-haspopup": "dialog" }),
+        button("More filters", { popovertarget: "filters", "aria-haspopup": "dialog" }),
+        h(Popover, { id: "filters", title: "Filters" }, () => field("open-only", "Open issues only")),
+      ],
+    });
+    return [screen.getByRole("button", { name: "Filters" }), screen.getByRole("button", { name: "More filters" })] as const;
+  }
+
+  it("marks the trigger that opened it as expanded, and every trigger as collapsed while it's closed", async () => {
+    const user = userEvent.setup();
+    const [first, second] = twoTriggers();
+    await nextTick();
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    expect(second).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(second);
+    expect(second).toHaveAttribute("aria-expanded", "true");
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    await user.keyboard("{Escape}");
+    expect(second).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("anchors to the trigger that opened it, and only that one", async () => {
+    const user = userEvent.setup();
+    const [first, second] = twoTriggers();
+
+    await user.click(first);
+    const anchor = first.style.getPropertyValue("anchor-name");
+    expect(anchor).toMatch(/^--popover-/);
+    await user.keyboard("{Escape}");
+    expect(first.style.getPropertyValue("anchor-name")).toBe("");
+
+    await user.click(second);
+    expect(second.style.getPropertyValue("anchor-name")).toBe(anchor);
+    expect(first.style.getPropertyValue("anchor-name")).toBe("");
+  });
+
+  it("opens again when your code closes it and opens it again before the browser says it closed", async () => {
+    deferToggle = true;
+    const open = ref(false);
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters" }),
+        h(Popover, { id: "filters", title: "Filters", open: open.value, "onUpdate:open": (value: boolean) => (open.value = value) }, () =>
+          field("open-only", "Open issues only"),
+        ),
+      ],
+    });
+
+    open.value = true;
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-state", "open"));
+    // Closed, then opened again, before the `toggle` for the close arrives.
+    open.value = false;
+    await nextTick();
+    open.value = true;
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(shown.has(popover())).toBe(true);
+    expect(popover()).toHaveAttribute("data-state", "open");
+    expect(open.value).toBe(true);
+    deferToggle = false;
   });
 
   it("opens and closes with v-model:open, without firing close, and keeps it in step with its trigger and the browser", async () => {
@@ -2491,8 +2728,23 @@ describe("Popover", () => {
     screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 100, 100, 30);
     popover().getBoundingClientRect = () => new DOMRect(0, 140, 200, 120);
 
+    // Its size, corners and arrow, which jsdom computes from these.
+    popover().style.width = "200px";
+    popover().style.height = "120px";
+    popover().style.borderTopLeftRadius = "8px";
+    (arrow as HTMLElement).style.width = "12px";
+
     await openFrom(user);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "bottom"));
+    // Across from the trigger's centre, 50px in from the popover's left edge.
+    expect((arrow as HTMLElement).style.left).toBe("50px");
+
+    // Flipped above a trigger near the left edge, as close to its centre as the corner allows:
+    // the radius and half the arrow's diagonal, 8 + 12 / √2.
+    screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 300, 10, 30);
+    popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
+    expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
   });
 
   it("anchors to its trigger, and places start on the right in right-to-left text without anchor positioning", async () => {
@@ -2515,6 +2767,38 @@ describe("Popover", () => {
     expect(popover().style.getPropertyValue("position-anchor")).toBe(anchor);
     // Its start is the trigger's right in right-to-left text: past its right edge, at 500.
     expect(parseFloat(popover().style.left)).toBe(500);
+    Reflect.deleteProperty(document.documentElement, "clientWidth");
+    Reflect.deleteProperty(document.documentElement, "clientHeight");
+    supports.mockRestore();
+  });
+
+  it("places end on the left in right-to-left text, and flips bottom above a trigger near the bottom, without anchor positioning", async () => {
+    const user = userEvent.setup();
+    const supports = vi.spyOn(CSS, "supports").mockReturnValue(false);
+    Object.defineProperties(document.documentElement, { clientWidth: { value: 1000, configurable: true }, clientHeight: { value: 800, configurable: true } });
+    const { unmount } = page({ placement: "end" });
+    const trigger = () => screen.getByRole("button", { name: "Filters" });
+    const size = () => {
+      popover().style.width = "200px";
+      popover().style.height = "100px";
+    };
+    trigger().getBoundingClientRect = () => new DOMRect(400, 300, 100, 30);
+    trigger().style.direction = "rtl";
+    size();
+
+    await openFrom(user);
+    await nextTick();
+    // Its end is the trigger's left: 200px wide, before its left edge at 400.
+    expect(parseFloat(popover().style.left)).toBe(200);
+    unmount();
+
+    page();
+    // 30px from the bottom of an 800px viewport, so 100px doesn't fit below.
+    trigger().getBoundingClientRect = () => new DOMRect(400, 740, 100, 30);
+    size();
+    await openFrom(user);
+    await nextTick();
+    expect(parseFloat(popover().style.top)).toBe(640);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -2562,7 +2846,7 @@ Yes. A popover opened from a button inside another one keeps the first one open,
 :::
 
 :::accordion-item{label="Does the Popover work before JavaScript loads?"}
-Mostly. A button with `popovertarget` opens and closes it, marks itself as expanded, and the browser closes it on `Escape` and on a press outside, all in plain HTML. What waits for the script is moving focus in, unless a control in it has `autofocus`, the close button, placing it without CSS anchor positioning, and `Escape` stopping at a popover inside a Dialog.
+Mostly. A button with `popovertarget` opens and closes it, marks itself as expanded, and the browser closes it on `Escape` and on a press outside, all in plain HTML. What waits for the script is moving focus in, unless a control in it has `autofocus`, the close button, placing it without CSS anchor positioning and `Escape` stopping at a popover inside a Dialog.
 :::
 
 :::accordion-item{label="Why isn't the title a heading?"}

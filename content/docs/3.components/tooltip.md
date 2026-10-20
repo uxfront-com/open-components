@@ -798,7 +798,7 @@ Opening a tooltip closes any other one that's open. Two tooltips at once would c
 
 When a tooltip is open inside something else that closes with `Escape`, like a Dialog, `Escape` closes the tooltip and goes no further. Otherwise one key press would close both, and people would lose the dialog along with their work in it.
 
-Our Tooltip listens for `Escape` only while it's open, in the capture phase on the `document`, so it comes before a dialog's own handler, and stops it there. It cancels its default action too, so a native `<dialog>` doesn't close either. With no tooltip open, `Escape` reaches the dialog as usual. The [Popover](/docs/components/popover) and the [Dialog](/docs/components/dialog) follow the same rule, and so will the Dropdown Menu on our [Roadmap](/docs/getting-started/roadmap), so `Escape` always closes the layer on top first.
+Our Tooltip listens for `Escape` only while it's open, in the capture phase on the `document`, so it comes before a dialog's own handler, and stops it there. It cancels its default action too, so a native `<dialog>` doesn't close either. With no tooltip open, `Escape` reaches the dialog as usual. The [Popover](/docs/components/popover) and the [Dialog](/docs/components/dialog) each take `Escape` after the layers above them, and so will the Dropdown Menu on our [Roadmap](/docs/getting-started/roadmap), so `Escape` always closes the layer on top first.
 
 #### Keep it short and plain
 

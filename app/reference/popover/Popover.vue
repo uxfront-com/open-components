@@ -63,6 +63,10 @@ onMounted(() => (anchorName.value = `--popover-${uid}`));
 let trigger: HTMLElement | null = null;
 let opener: HTMLElement | null = null;
 let frame: number | undefined;
+// Whether it's showing, from `beforetoggle`, which the browser fires as it shows or hides
+// it, while `toggle` comes a task later. So your code opening it right after closing it
+// isn't mistaken for a popover that's still open.
+let showing = false;
 
 // Why it's closing. The popover closes itself on its close button and on Escape, and
 // `null` means your code closed it, which fires no `close`. Every other close is the
@@ -95,22 +99,40 @@ function initialFocus(el: HTMLElement) {
   );
 }
 
+// The buttons that point at it with `popovertarget`.
+const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, "\\$&")}"]`);
+
 // The trigger is the button the browser says opened it, where it says so, or else the
-// first one that points at it with `popovertarget`. TypeScript doesn't know `source` yet.
+// first one that points at it. TypeScript doesn't know `source` yet.
 function findTrigger(event: Event) {
   const { source } = event as ToggleEvent & { source?: Element | null };
-  if (source instanceof HTMLElement) return source;
-  return document.querySelector<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, "\\$&")}"]`);
+  return source instanceof HTMLElement ? source : (triggers()[0] ?? null);
+}
+
+// The browser gives a `popovertarget` button its expanded state, but only in the
+// accessibility tree, so the Popover writes it out as `aria-expanded` too, which the
+// Button's Expanded style and agents read.
+function expand(el: HTMLElement | null, value: boolean) {
+  el?.setAttribute("aria-expanded", String(value));
+}
+
+// Only the trigger that opened it carries the anchor's name, since with two buttons named
+// the same, the browser would place it beside the last one on the page.
+function unanchor() {
+  trigger?.style.removeProperty("anchor-name");
 }
 
 function onBeforetoggle(event: Event) {
   const el = popover.value!;
   if ((event as ToggleEvent).newState === "open") {
+    showing = true;
+    unanchor();
     trigger = findTrigger(event);
     opener = document.activeElement as HTMLElement | null;
     if (trigger && anchorName.value) trigger.style.setProperty("anchor-name", anchorName.value);
     return;
   }
+  showing = false;
   // Focus goes back to the trigger only when it was inside, like when people pressed
   // Escape or the close button. After a press outside, it stays where people pressed.
   returnFocus = el.contains(document.activeElement);
@@ -123,6 +145,7 @@ function onToggle(event: Event) {
   if ((event as ToggleEvent).newState === "open") {
     state.value = "open";
     open.value = true;
+    expand(trigger, true);
     listen(true);
     // Focus moves in, so keyboard and screen reader users start in the popover, unless
     // the browser already focused an `autofocus` control in it.
@@ -133,6 +156,8 @@ function onToggle(event: Event) {
   }
   state.value = "closed";
   open.value = false;
+  expand(trigger, false);
+  unanchor();
   listen(false);
   // The browser gives focus back to whatever had it before the popover opened, which in
   // Safari, where a click doesn't focus a button, isn't the trigger. So the trigger gets it,
@@ -148,10 +173,20 @@ function onToggle(event: Event) {
 // the document, so a tooltip inside it, which stops Escape on the document, closes first and
 // alone. Cancelling it also keeps the browser from closing anything else on it.
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape" || event.defaultPrevented || state.value !== "open") return;
+  if (event.key !== "Escape" || event.defaultPrevented || !showing) return;
   event.preventDefault();
   event.stopPropagation();
   dismiss("escape");
+}
+
+// Elsewhere on the page, the browser closes it on Escape. Inside a Dialog, though, the
+// Dialog takes Escape first and cancels it, which would close the Dialog around a popover
+// that's still open. So in a Dialog, it listens on the Dialog too, in the capture phase,
+// before the Dialog's own handler, for an Escape outside the popover and its trigger.
+function onHostKeydown(event: KeyboardEvent) {
+  const target = event.target as Node;
+  if (popover.value?.contains(target) || trigger?.contains(target)) return;
+  onKeydown(event);
 }
 
 function dismiss(why: PopoverCloseReason | null) {
@@ -184,6 +219,7 @@ function listen(on: boolean) {
   window[method]("keydown", onPageKeydown as EventListener);
   trigger?.[method]("keydown", onKeydown as EventListener);
   trigger?.[method]("click", onTriggerClick);
+  popover.value?.parentElement?.closest("dialog")?.[method]("keydown", onHostKeydown as EventListener, true);
   if (!anchored()) {
     window[method]("scroll", update, { capture: true, passive: true } as AddEventListenerOptions);
     window[method]("resize", update);
@@ -201,8 +237,8 @@ watch(
   (value) => {
     const el = popover.value;
     if (!el?.showPopover) return;
-    if (value && state.value === "closed") el.showPopover();
-    else if (!value && state.value === "open") dismiss(null);
+    if (value && !showing) el.showPopover();
+    else if (!value && showing) dismiss(null);
   },
   { flush: "post" },
 );
@@ -276,6 +312,7 @@ function aim() {
 }
 
 onMounted(() => {
+  for (const el of triggers()) expand(el, false);
   if (open.value) popover.value?.showPopover?.();
 
   if (import.meta.env.DEV && !title.trim()) {
@@ -284,8 +321,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (state.value === "open") dismiss(null);
+  if (showing) dismiss(null);
   listen(false);
+  unanchor();
   clearTimeout(clearing);
 });
 </script>
@@ -357,10 +395,12 @@ onBeforeUnmount(() => {
     /* The arrow's width and height, before it's turned, when it has one. */
     --popover--arrow--size: 0.75rem;
 
-    /* Beside the trigger, centred on it, and on the other side when there's no room. */
+    /* Beside the trigger, centred on it, and on the other side when there's no room. When
+       neither side has room, it shrinks on one with at least half the screen, and its body
+       scrolls. */
     position: fixed;
     position-area: bottom;
-    position-try-fallbacks: flip-block, flip-inline;
+    position-try-fallbacks: flip-block, flip-inline, --popover-fit, flip-block --popover-fit;
     inset: auto;
     margin: var(--popover--offset);
     box-sizing: border-box;
@@ -369,7 +409,7 @@ onBeforeUnmount(() => {
     /* Never wider or taller than the screen, less 16px on each side, so it fits at 320px wide. */
     width: max-content;
     max-width: min(var(--popover--max-width), 100vw - 2rem);
-    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
     padding: var(--popover--padding);
     border: 1px solid var(--popover--border-color);
     border-radius: var(--popover--radius);
@@ -488,5 +528,13 @@ onBeforeUnmount(() => {
       border-color: CanvasText;
     }
   }
+}
+/* Its last resort, as tall as the side it opens on allows, less the gap on each side. The
+   minimum turns down a side with less than about half the screen, so it shrinks on the
+   bigger side. It only comes to this when it fits neither side, so it's taller than that
+   anyway. Outside the layer, since it's a rule of its own, rather than a style. */
+@position-try --popover-fit {
+  max-height: calc(100% - 2 * var(--popover--offset));
+  min-height: calc(50dvh - 3rem);
 }
 </style>

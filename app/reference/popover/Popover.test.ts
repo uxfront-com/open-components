@@ -7,25 +7,53 @@ import Tooltip from "../tooltip/Tooltip.vue";
 import Popover, { type PopoverProps } from "./Popover.vue";
 
 // jsdom has no Popover API, so these stand in for the parts the Popover relies on: showing
-// and hiding with `beforetoggle` and `toggle`, a `popovertarget` button toggling its popover,
-// and the closes the browser makes itself, after the event that caused them, for an Escape
-// nobody cancelled and for a press that starts and ends outside. They can't put it in the top
-// layer or place it, which the checklist checks in a browser instead.
+// and hiding with `beforetoggle` and `toggle`, giving focus back to whatever had it before,
+// a `popovertarget` button toggling its popover, and the closes the browser makes itself,
+// after the event that caused them, for an Escape nobody cancelled and for a press that
+// starts and ends outside. They can't put it in the top layer or place it, which the
+// checklist checks in a browser instead.
 const shown = new Set<HTMLElement>();
+const previous = new Map<HTMLElement, Element | null>();
+// Chrome fires `toggle` a task after it shows or hides a popover, and folds two in a row
+// into one. Most tests fire it at once, which is easier to follow.
+let deferToggle = false;
+const pendingToggle = new Map<HTMLElement, { oldState: string; timer: ReturnType<typeof setTimeout> }>();
 
-function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | null = null) {
-  const event = (type: string) => Object.assign(new Event(type), { newState, oldState: newState === "open" ? "closed" : "open", source });
-  el.dispatchEvent(event("beforetoggle"));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | null = null, { focusPrevious = true } = {}) {
+  const oldState = newState === "open" ? "closed" : "open";
+  el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState, source }));
+  if (newState === "open") {
+    shown.add(el);
+    previous.set(el, document.activeElement);
+  } else {
+    shown.delete(el);
+    // Hiding it gives focus back to whatever had it before it opened, when focus is inside,
+    // except after a press outside. That's the <body> when nothing had it, like in Safari,
+    // where a click doesn't focus the button.
+    const before = previous.get(el);
+    if (focusPrevious && el.contains(document.activeElement)) {
+      if (before instanceof HTMLElement && before !== document.body) before.focus();
+      else (document.activeElement as HTMLElement).blur();
+    }
+  }
   // jsdom hides every popover, as browsers hide a closed one, but can't match :popover-open,
   // which shows an open one, so this stands in for it.
   el.style.display = newState === "open" ? "flex" : "";
-  el.dispatchEvent(event("toggle"));
+  const fire = (old: string) => el.dispatchEvent(Object.assign(new Event("toggle"), { newState, oldState: old, source }));
+  if (!deferToggle) return fire(oldState);
+  const pending = pendingToggle.get(el);
+  clearTimeout(pending?.timer);
+  const old = pending?.oldState ?? oldState;
+  pendingToggle.set(el, {
+    oldState: old,
+    timer: setTimeout(() => {
+      pendingToggle.delete(el);
+      fire(old);
+    }),
+  });
 }
 
 beforeAll(() => {
-
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
     if (!shown.has(this)) toggle(this, "open");
   };
@@ -55,7 +83,11 @@ beforeAll(() => {
     const outside = (target: EventTarget | null) =>
       [...shown].filter((el) => !el.contains(target as Node) && !(target as Element).closest(`[popovertarget="${el.id}"]`));
     const pressed = outside(down);
-    queueMicrotask(() => outside(event.target).filter((el) => pressed.includes(el)).forEach((el) => el.hidePopover()));
+    queueMicrotask(() =>
+      outside(event.target)
+        .filter((el) => pressed.includes(el))
+        .forEach((el) => toggle(el, "closed", null, { focusPrevious: false })),
+    );
   });
 });
 
@@ -167,6 +199,30 @@ describe("Popover", () => {
     expect(onClose.mock.calls).toEqual([["escape"], ["close-button"]]);
   });
 
+  it("gives focus back to its trigger even when the trigger never had it, as after a click in Safari", async () => {
+    page();
+    const trigger = screen.getByRole("button", { name: "Filters" });
+
+    // A click that doesn't focus the button, so the browser has nothing to give focus back to.
+    trigger.click();
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-state", "open"));
+    expect(screen.getByRole("textbox")).toHaveFocus();
+    await userEvent.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
+  });
+
+  it("leaves focus off its trigger after a press outside on something that can't take focus", async () => {
+    const user = userEvent.setup();
+    const { onClose } = page({}, () => field("open-only", "Open issues only"));
+    render(() => h("p", "Showing 12 issues"));
+
+    await openFrom(user);
+    expect(screen.getByRole("textbox")).toHaveFocus();
+    await user.click(screen.getByText("Showing 12 issues"));
+    expect(onClose.mock.calls).toEqual([["outside"]]);
+    expect(screen.getByRole("button", { name: "Filters" })).not.toHaveFocus();
+  });
+
   it("closes on a press outside, with the reason outside, and leaves focus where people pressed", async () => {
     const user = userEvent.setup();
     const { onClose } = page();
@@ -255,6 +311,7 @@ describe("Popover", () => {
         h(Dialog, { id: "settings", title: "Settings", open: true, onClose: onDialogClose }, () => [
           button("Filters", { popovertarget: "filters", "aria-haspopup": "dialog" }),
           h(Popover, { id: "filters", title: "Filters", onClose }, () => field("open-only", "Open issues only")),
+          button("Done"),
         ]),
     });
     return { onDialogClose, onClose };
@@ -288,6 +345,90 @@ describe("Popover", () => {
     expect(popover()).toHaveAttribute("data-state", "closed");
     expect(onClose.mock.calls).toEqual([["escape"]]);
     expect(onDialogClose).not.toHaveBeenCalled();
+  });
+
+  it("closes alone on Escape inside a Dialog with focus on another control in the Dialog", async () => {
+    const user = userEvent.setup();
+    const { onDialogClose, onClose } = inDialog();
+    await openFrom(user);
+
+    // Tab moves on out of it, and leaves it open.
+    screen.getByRole("button", { name: "Done" }).focus();
+    await user.keyboard("{Escape}");
+    expect(popover()).toHaveAttribute("data-state", "closed");
+    expect(onClose.mock.calls).toEqual([["escape"]]);
+    expect(onDialogClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Done" })).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    expect(onDialogClose).toHaveBeenCalledWith("escape", "");
+  });
+
+  // Two buttons that open the same popover, like a toolbar's and a menu's.
+  function twoTriggers() {
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters", "aria-haspopup": "dialog" }),
+        button("More filters", { popovertarget: "filters", "aria-haspopup": "dialog" }),
+        h(Popover, { id: "filters", title: "Filters" }, () => field("open-only", "Open issues only")),
+      ],
+    });
+    return [screen.getByRole("button", { name: "Filters" }), screen.getByRole("button", { name: "More filters" })] as const;
+  }
+
+  it("marks the trigger that opened it as expanded, and every trigger as collapsed while it's closed", async () => {
+    const user = userEvent.setup();
+    const [first, second] = twoTriggers();
+    await nextTick();
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    expect(second).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(second);
+    expect(second).toHaveAttribute("aria-expanded", "true");
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    await user.keyboard("{Escape}");
+    expect(second).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("anchors to the trigger that opened it, and only that one", async () => {
+    const user = userEvent.setup();
+    const [first, second] = twoTriggers();
+
+    await user.click(first);
+    const anchor = first.style.getPropertyValue("anchor-name");
+    expect(anchor).toMatch(/^--popover-/);
+    await user.keyboard("{Escape}");
+    expect(first.style.getPropertyValue("anchor-name")).toBe("");
+
+    await user.click(second);
+    expect(second.style.getPropertyValue("anchor-name")).toBe(anchor);
+    expect(first.style.getPropertyValue("anchor-name")).toBe("");
+  });
+
+  it("opens again when your code closes it and opens it again before the browser says it closed", async () => {
+    deferToggle = true;
+    const open = ref(false);
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters" }),
+        h(Popover, { id: "filters", title: "Filters", open: open.value, "onUpdate:open": (value: boolean) => (open.value = value) }, () =>
+          field("open-only", "Open issues only"),
+        ),
+      ],
+    });
+
+    open.value = true;
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-state", "open"));
+    // Closed, then opened again, before the `toggle` for the close arrives.
+    open.value = false;
+    await nextTick();
+    open.value = true;
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(shown.has(popover())).toBe(true);
+    expect(popover()).toHaveAttribute("data-state", "open");
+    expect(open.value).toBe(true);
+    deferToggle = false;
   });
 
   it("opens and closes with v-model:open, without firing close, and keeps it in step with its trigger and the browser", async () => {
@@ -394,8 +535,23 @@ describe("Popover", () => {
     screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 100, 100, 30);
     popover().getBoundingClientRect = () => new DOMRect(0, 140, 200, 120);
 
+    // Its size, corners and arrow, which jsdom computes from these.
+    popover().style.width = "200px";
+    popover().style.height = "120px";
+    popover().style.borderTopLeftRadius = "8px";
+    (arrow as HTMLElement).style.width = "12px";
+
     await openFrom(user);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "bottom"));
+    // Across from the trigger's centre, 50px in from the popover's left edge.
+    expect((arrow as HTMLElement).style.left).toBe("50px");
+
+    // Flipped above a trigger near the left edge, as close to its centre as the corner allows:
+    // the radius and half the arrow's diagonal, 8 + 12 / √2.
+    screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 300, 10, 30);
+    popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
+    expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
   });
 
   it("anchors to its trigger, and places start on the right in right-to-left text without anchor positioning", async () => {
@@ -418,6 +574,38 @@ describe("Popover", () => {
     expect(popover().style.getPropertyValue("position-anchor")).toBe(anchor);
     // Its start is the trigger's right in right-to-left text: past its right edge, at 500.
     expect(parseFloat(popover().style.left)).toBe(500);
+    Reflect.deleteProperty(document.documentElement, "clientWidth");
+    Reflect.deleteProperty(document.documentElement, "clientHeight");
+    supports.mockRestore();
+  });
+
+  it("places end on the left in right-to-left text, and flips bottom above a trigger near the bottom, without anchor positioning", async () => {
+    const user = userEvent.setup();
+    const supports = vi.spyOn(CSS, "supports").mockReturnValue(false);
+    Object.defineProperties(document.documentElement, { clientWidth: { value: 1000, configurable: true }, clientHeight: { value: 800, configurable: true } });
+    const { unmount } = page({ placement: "end" });
+    const trigger = () => screen.getByRole("button", { name: "Filters" });
+    const size = () => {
+      popover().style.width = "200px";
+      popover().style.height = "100px";
+    };
+    trigger().getBoundingClientRect = () => new DOMRect(400, 300, 100, 30);
+    trigger().style.direction = "rtl";
+    size();
+
+    await openFrom(user);
+    await nextTick();
+    // Its end is the trigger's left: 200px wide, before its left edge at 400.
+    expect(parseFloat(popover().style.left)).toBe(200);
+    unmount();
+
+    page();
+    // 30px from the bottom of an 800px viewport, so 100px doesn't fit below.
+    trigger().getBoundingClientRect = () => new DOMRect(400, 740, 100, 30);
+    size();
+    await openFrom(user);
+    await nextTick();
+    expect(parseFloat(popover().style.top)).toBe(640);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
