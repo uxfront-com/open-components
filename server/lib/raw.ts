@@ -10,7 +10,7 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { parse } from "yaml";
+import { parseDocument } from "yaml";
 import { anchors, heading, scan } from "../../mcp/lib/markdown";
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
@@ -105,7 +105,8 @@ export function splitAnchors(parts: { path: string; source: string }[]): Record<
 
 // A part's title, the section it goes before and its body, from its source.
 function readPart(source: string): { title: string; before: string; body: string } {
-  const { title, before } = (parse(source.match(FRONTMATTER)?.[1] ?? "") ?? {}) as { title?: unknown; before?: unknown };
+  // Read the way Nuxt Content reads it, which builds past a YAML slip.
+  const { title, before } = (parseDocument(source.match(FRONTMATTER)?.[1] ?? "").toJSON() ?? {}) as { title?: unknown; before?: unknown };
   if (typeof title !== "string" || typeof before !== "string") {
     throw new Error(`A part of a split page needs a title and the section it goes before: ${source.slice(0, 200)}`);
   }

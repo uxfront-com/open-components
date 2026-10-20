@@ -55,7 +55,22 @@ describe("joinPage", () => {
     const joined = joinPage(index, [
       part("Agentic Experience (AX)", "Checklist", "::framework-switcher", "#react", "```md", "## Not a heading", "```", "~~~", "# Nor this", "~~~", "::"),
     ]);
-    expect(joined).toContain(["#react", "```md", "## Not a heading", "```", "~~~", "# Nor this", "~~~"].join("\n"));
+    const lines = joined.split("\n");
+    const start = lines.indexOf("## Agentic Experience (AX)");
+    expect(lines.slice(start, start + 12)).toEqual([
+      "## Agentic Experience (AX)",
+      "",
+      "::framework-switcher",
+      "#react",
+      "```md",
+      "## Not a heading",
+      "```",
+      "~~~",
+      "# Nor this",
+      "~~~",
+      "::",
+      "",
+    ]);
     expect(outline(joined)).toEqual(["## At a glance", "## Agentic Experience (AX)", "## Checklist", "## FAQ"]);
   });
 

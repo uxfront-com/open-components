@@ -9,6 +9,7 @@
 export default defineNuxtRouteMiddleware((to) => {
   if (import.meta.server || !to.hash) return;
   const pages: Record<string, Record<string, string> | undefined> = useAppConfig().splitAnchors ?? {};
-  const target = pages[to.path]?.[decodeURIComponent(to.hash.slice(1))];
+  // The router has already decoded the hash.
+  const target = pages[to.path]?.[to.hash.slice(1)];
   if (target) return navigateTo(target, { replace: true });
 });
