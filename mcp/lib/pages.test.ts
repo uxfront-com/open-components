@@ -24,6 +24,11 @@ describe("findPage", () => {
     ["https://opencomponents.dev/docs/components/button#loading", "button"],
     ["https://opencomponents.dev/raw/docs/components/button.yaml", "button"],
     ["https://opencomponents.dev/docs/getting-started/roadmap?ref=mcp", "roadmap"],
+    // The parts of a split page, which agents read as the whole page.
+    ["/docs/components/button/ux", "button"],
+    ["components/button/code", "button"],
+    ["https://opencomponents.dev/docs/components/button/ux#loading", "button"],
+    ["/raw/docs/components/button/ux.md", "button"],
     ["Introduction", "introduction"],
     // The contracts' names, and the prefix of the Design Tokens' rule IDs.
     ["token-paths", "design-tokens"],
@@ -32,7 +37,7 @@ describe("findPage", () => {
     expect(findPage(standard, name)?.key).toBe(key);
   });
 
-  it.each(["carousel", "/docs/components/carousel", "butt", "button/keep-focus", ""])("doesn't find %j", (name) => {
+  it.each(["carousel", "/docs/components/carousel", "/docs/components/button/nope", "butt", "button/keep-focus", ""])("doesn't find %j", (name) => {
     expect(findPage(standard, name)).toBeUndefined();
   });
 });

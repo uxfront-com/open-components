@@ -20,7 +20,8 @@ export const REPLY_LIMIT = 36000;
 /**
  * Finds a page from what an agent might call it: its path (`/docs/components/button`),
  * its URL or `/raw` file, its name (`button`), its title (`Design Tokens`), or its
- * contract's name (`Button`, `token-paths`) or rule prefix (`tokens`).
+ * contract's name (`Button`, `token-paths`) or rule prefix (`tokens`). A part of a
+ * split page, like `/docs/components/button/ux`, finds the whole page.
  */
 export function findPage(standard: Standard, name: string): Page | undefined {
   const path = name
@@ -35,6 +36,7 @@ export function findPage(standard: Standard, name: string): Page | undefined {
     (page) =>
       page.path === path ||
       page.path === `/docs/${path}` ||
+      page.parts?.some((part) => part === path || part === `/docs/${path}`) ||
       page.key === path ||
       page.title.toLowerCase() === path ||
       page.contract?.name.toLowerCase() === path ||

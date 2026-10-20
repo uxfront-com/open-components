@@ -59,8 +59,9 @@ Most of the site is generated from the docs, so a change in one place often need
 
 The MCP server reads the same markdown as the site, and knows less MDC syntax than Docus does. Content it can't read doesn't fail the build, but `pnpm test` fails on most of it, so keep to these:
 
-- Every page has a `title` and a `description`, and a file name that's unique across `content/docs/` once its number is dropped.
-- Number the folders and the pages outside `3.components/` to order them in the sidebar, and leave component pages without one, like `3.components/button.md`, so the sidebar lists them by name. It sorts file names as text, which would put a `10.` before a `2.`, and two component branches open at once would reach for the same number.
+- Every page has a `title` and a `description`, and a file name that's unique across `content/docs/` once its number is dropped. The parts of a split page, below, count as one page.
+- Number the folders and the pages outside `3.components/` to order them in the sidebar, and leave component pages without one, like `3.components/card.md`, so the sidebar lists them by name. It sorts file names as text, which would put a `10.` before a `2.`, and two component branches open at once would reach for the same number.
+- A long component page can be split into parts, like the Button's in `3.components/button/`: its Overview in `index.md`, and a page per part, numbered to set their order inside the folder. A part's `title` is the heading it has on the whole page, its `before` names the Overview's section it goes before, and its headings sit a level higher. Agents still read one page, which `server/lib/raw.ts` joins back together, and links from before the split go on to the right part (`app/middleware/split-pages.global.ts`). [The docs](./.github/CONTRIBUTING.md#the-docs) has the details.
 - Headings are plain text and inline code, with no links, emphasis, HTML, components or `{#id}`.
 - Use block components, `:roadmap-check` and `{external=""}` on links, and nothing else inline, like `:badge[New]`.
 - Link to generated files, like `/raw/…` and `/llms.txt`, with `{external=""}`, or the router shows the 404 page.
@@ -78,7 +79,7 @@ The MCP server reads the same markdown as the site, and knows less MDC syntax th
 
 ## Writing the docs
 
-The [Button](./content/docs/3.components/button.md) page is the model for every page, so read the sections you're about to mirror before you write. It's long, about 35,000 tokens, so read it a section at a time.
+The [Button](./content/docs/3.components/button/index.md) page, split into an Overview and a page per part in `3.components/button/`, is the model for every page, so read the sections you're about to mirror before you write. It's long, about 35,000 tokens, so read it a section at a time.
 
 ### Voice
 

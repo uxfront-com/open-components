@@ -441,7 +441,7 @@ The textarea reads three [theme tokens](/docs/foundations/design-tokens#theme-to
 | `--color--error-text`   | The border of an invalid textarea, and the count over its limit             |
 | `--color--focus`        | The focus ring, which is the same for every component                       |
 
-There's no `color` prop, so the textarea doesn't read any of the other colours. Everything else is mixed from the text colour, as on the Input: 55% for the border, which needs 3:1 against the page, 80% for the border on hover, and 70% for the placeholder and the count, which need 4.5:1. With our reference tokens, from the Tailwind CSS palette, the border comes to 3.5:1 and the placeholder to 5.6:1 on white, and 5.0:1 and 7.4:1 on zinc-900. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
+There's no `color` prop, so the textarea doesn't read any of the other colours. Everything else is mixed from the text colour, as on the Input: 55% for the border, which needs 3:1 against the page, 80% for the border on hover, and 70% for the placeholder and the count, which need 4.5:1. With our reference tokens, from the Tailwind CSS palette, the border comes to 3.5:1 and the placeholder to 5.6:1 on white, and 5.0:1 and 7.4:1 on zinc-900. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
 
 The Textarea's own variables are set on its root:
 
@@ -760,7 +760,7 @@ The Textarea leaves text editing to the browser, so moving the caret, selecting,
 
 `maxlength` stops people typing past a limit, but it also silently cuts off what they paste, and they may never notice that the end is missing. The Textarea's `limit` counts instead. People can type and paste past it, the count says by how much, and the textarea is marked invalid until they've cut it back, so they decide what to keep. Check the limit on the server too, since the count only helps people stay within it.
 
-The count is a status message, so screen reader users hear it without leaving the textarea ([WCAG 4.1.3](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)). It would talk over them if it were announced on every keystroke, though, so the Textarea waits until people pause for a second, and only announces it once they've used 80% of the limit, or gone over. It goes through the same polite live region as the Button's loading announcement, one for the whole page, which you can read about under the Button's [Loading](/docs/components/button#loading).
+The count is a status message, so screen reader users hear it without leaving the textarea ([WCAG 4.1.3](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)). It would talk over them if it were announced on every keystroke, though, so the Textarea waits until people pause for a second, and only announces it once they've used 80% of the limit, or gone over. It goes through the same polite live region as the Button's loading announcement, one for the whole page, which you can read about under the Button's [Loading](/docs/components/button/ux#loading).
 
 #### Help people fill it in
 
@@ -2039,7 +2039,7 @@ Unit tests run without a layout, so the rules about height, resizing and growing
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It announces its count with the Button's [`announce.ts`](/docs/components/button#reference-implementation), which every component that announces something shares, so you only need one copy of it, and it reads the same theme tokens, so copy the Button's `tokens.css` into your theme too.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It announces its count with the Button's [`announce.ts`](/docs/components/button/code), which every component that announces something shares, so you only need one copy of it, and it reads the same theme tokens, so copy the Button's `tokens.css` into your theme too.
 
 The tests are in `Textarea.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 

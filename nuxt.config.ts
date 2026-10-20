@@ -1,11 +1,11 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Features } from "lightningcss";
 import { MCP_DEV_PORT } from "./mcp/port.mjs";
 import { buildContract } from "./server/lib/contract";
 import { SECURITY_HEADERS } from "./server/lib/headers";
-import { docsPath } from "./server/lib/raw";
+import { docsPath, readPages, readSplitAnchors } from "./server/lib/raw";
 
 const SITE_URL = "https://opencomponents.dev";
 
@@ -17,9 +17,9 @@ const MCP_URL = "https://mcp.opencomponents.dev/mcp";
 process.env.NUXT_SITE_URL ||= SITE_URL;
 
 // The docs pages with a contract, which server/middleware/raw-contract.ts serves at
-// /raw/<path>.yaml: 3.components/button.md has /raw/docs/components/button.yaml.
-const contracts = readdirSync("content/docs", { recursive: true, encoding: "utf8" }).flatMap((file) => {
-  const source = file.endsWith(".md") ? readFileSync(join("content/docs", file), "utf8") : "";
+// /raw/<path>.yaml: 3.components/card.md has /raw/docs/components/card.yaml, and
+// the Button, split into a folder, has /raw/docs/components/button.yaml.
+const contracts = readPages("content/docs").flatMap(({ file, source }) => {
   if (!buildContract(source)) return [];
   return {
     title: source.match(/^title: (.+)$/m)?.[1] ?? file,
@@ -40,6 +40,12 @@ export default defineNuxtConfig({
     // plus the framework switcher (`docsTheme.frameworks` in app/app.config.ts).
     "@uxfront/layer-docs",
   ],
+
+  appConfig: {
+    // Where links to a split page's sections go, like /docs/components/button#loading
+    // to /docs/components/button/ux#loading (app/middleware/split-pages.global.ts).
+    splitAnchors: readSplitAnchors("content/docs"),
+  },
 
   runtimeConfig: {
     public: {

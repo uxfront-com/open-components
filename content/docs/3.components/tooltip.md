@@ -389,7 +389,7 @@ for (const tooltip of document.querySelectorAll(".tooltip")) {
 ::
 ::
 
-The Button's own [label](/docs/components/button#icons) is what names each button, and the tooltip only shows it, so screen readers, voice control and agents all find "Bold" whether the tooltip is open or not. That's also why `label` is the right type here: with `description`, screen readers would read "Bold, button, Bold".
+The Button's own [label](/docs/components/button/ui#icons) is what names each button, and the tooltip only shows it, so screen readers, voice control and agents all find "Bold" whether the tooltip is open or not. That's also why `label` is the right type here: with `description`, screen readers would read "Bold, button, Bold".
 
 A description adds something the name doesn't say, like what an action does to your data:
 
@@ -614,7 +614,7 @@ The tooltip reads two [theme tokens](/docs/foundations/design-tokens#theme-token
 | `--color--neutral`          | The fill                    |
 | `--color--neutral-contrast` | The text on it              |
 
-It's the same pair as a solid neutral Button, so the two always look like they belong together. With our reference tokens, from the Tailwind CSS palette, the text comes to 17.7:1 on the light theme's fill and 18.1:1 on the dark theme's. If you change the tokens, make sure to check the same pair. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
+It's the same pair as a solid neutral Button, so the two always look like they belong together. With our reference tokens, from the Tailwind CSS palette, the text comes to 17.7:1 on the light theme's fill and 18.1:1 on the dark theme's. If you change the tokens, make sure to check the same pair. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
 
 If you need to tune a tooltip, you can set its [own variables](/docs/foundations/design-tokens#component-variables) from a class:
 
@@ -820,7 +820,7 @@ The tooltip is beside its trigger, in the top layer. It stays there while the po
 
 #### Disabled triggers
 
-A native `disabled` button leaves the tab order, so keyboard users can never open its tooltip. When a tooltip says why a button is disabled, give the Button `focusableWhenDisabled`, which sets `aria-disabled` instead, as the Button's [Disabled](/docs/components/button#disabled) state recommends. The button stays in the tab order, its tooltip opens on focus and hover, and the Button still blocks the click.
+A native `disabled` button leaves the tab order, so keyboard users can never open its tooltip. When a tooltip says why a button is disabled, give the Button `focusableWhenDisabled`, which sets `aria-disabled` instead, as the Button's [Disabled](/docs/components/button/ux#disabled) state recommends. The button stays in the tab order, its tooltip opens on focus and hover, and the Button still blocks the click.
 
 ::tooltip-disabled-example
 ::framework-switcher
@@ -1184,7 +1184,7 @@ Bind the props on the element that takes focus, which is usually the trigger's r
 
 #### With other components
 
-- An icon-only [Button](/docs/components/button#icons) keeps its visually hidden label, and its tooltip shows that same label, with `type="label"`.
+- An icon-only [Button](/docs/components/button/ui#icons) keeps its visually hidden label, and its tooltip shows that same label, with `type="label"`.
 - A Button with `focusableWhenDisabled` stays focusable while it's disabled, so its tooltip can still say why (see [Disabled triggers](/docs/components/tooltip#disabled-triggers)).
 - An [Input](/docs/components/input) is described by its hint, which stays on the page rather than in a tooltip, since people need it while they type.
 - A Dialog or Popover around a Tooltip keeps its own `Escape` handling. The Tooltip only takes `Escape` while it's open, and stops it there.

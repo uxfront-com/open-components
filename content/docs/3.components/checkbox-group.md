@@ -365,7 +365,7 @@ The group itself reads one [theme token](/docs/foundations/design-tokens#theme-t
 | ----------------------- | ----------------------------------------------------- |
 | `--color--neutral-text` | The legend, which needs 4.5:1 against the page, like any text |
 
-The legend is drawn in the same colour as the checkboxes' labels, so it has the same contrast as they do: 4.5:1 or more against the page with our reference tokens ([WCAG 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)). You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
+The legend is drawn in the same colour as the checkboxes' labels, so it has the same contrast as they do: 4.5:1 or more against the page with our reference tokens ([WCAG 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)). You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
 
 If you need to tune a group, you can set its [own variables](/docs/foundations/design-tokens#component-variables), such as `--checkbox-group--row-gap` or `--checkbox-group--legend--font-size`, from a class. Each box sets the [Checkbox's variables](/docs/components/checkbox#tokens) on itself, so a value on the group doesn't reach them. Set those from the same class with a descendant selector, like `.brand .checkbox`, written so that your framework's style scoping lets it through to the boxes, which the group renders: `:global()` in CSS Modules, Svelte and Astro, `:deep()` in Vue and `::ng-deep` in Angular, as below. The Checkbox Group's styles sit in the `components` cascade layer, so your class wins without any specificity tricks:
 
@@ -2180,7 +2180,7 @@ The basis says where a rule comes from. Many rules rest on **WCAG** 2.2, which w
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It's built out of the [Checkbox](/docs/components/checkbox#reference-implementation), which it imports from `../checkbox/Checkbox.vue`, so copy `Checkbox.vue` too. Both read the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button's reference implementation into your theme as well.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It's built out of the [Checkbox](/docs/components/checkbox#reference-implementation), which it imports from `../checkbox/Checkbox.vue`, so copy `Checkbox.vue` too. Both read the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button/code) from the Button's reference implementation into your theme as well.
 
 The tests are in `CheckboxGroup.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 

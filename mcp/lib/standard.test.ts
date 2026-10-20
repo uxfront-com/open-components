@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { FRAMEWORKS } from "../../app/data/frameworks";
 import { buildContract } from "../../server/lib/contract";
-import { docsPath, rawContract, rawPage } from "../../server/lib/raw";
+import { docsPath, rawContract, rawPage, readPages } from "../../server/lib/raw";
 import { SWITCHER, SWITCHER_END } from "./frameworks";
 import { heading, scan } from "./markdown";
 import { buildStandard } from "./standard";
@@ -14,12 +14,9 @@ import { buildStandard } from "./standard";
 const SITE = "https://opencomponents.dev";
 const { standard, problems } = buildStandard({ root: process.cwd(), site: SITE, frameworks: FRAMEWORKS });
 
-// Every docs page's source, by its path on the site.
-const sources = new Map(
-  readdirSync("content/docs", { recursive: true, encoding: "utf8" })
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => [docsPath(file), readFileSync(join("content/docs", file), "utf8")]),
-);
+// Every docs page's source, by its path on the site, with a split page's parts
+// joined back in (see readPages).
+const sources = new Map(readPages("content/docs").map(({ file, source }) => [docsPath(file), source]));
 const frontmatter = (source: string) => parse(source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)?.[1] ?? "") ?? {};
 const pages = standard.pages.map((page) => [page.path, page] as const);
 

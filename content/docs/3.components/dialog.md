@@ -316,7 +316,7 @@ Hover, focus and disabled belong to the controls inside a dialog, like its Butto
 
 The panel looks just like a Card, with the same padding, spacing, corners, border and type, so the two read as one family. Only its background differs, since it has to cover the page: it's `Canvas`, the background browsers give a native dialog, which follows `color-scheme`, so it fits your light and dark themes as long as they set it.
 
-Its text reads one [theme token](/docs/foundations/design-tokens#theme-tokens), `--color--neutral-text`, like the Card's, and the backdrop is black at 50%, which dims a light page and a dark one alike. The Buttons inside read their own tokens, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button into your theme.
+Its text reads one [theme token](/docs/foundations/design-tokens#theme-tokens), `--color--neutral-text`, like the Card's, and the backdrop is black at 50%, which dims a light page and a dark one alike. The Buttons inside read their own tokens, so copy [`tokens.css`](/docs/components/button/code) from the Button into your theme.
 
 With our reference tokens, the title and the content come to 14.9:1 on white, and the description, at 70% of the text colour, to 5.6:1. The panel has a 1px border at 20% of the text colour, which also sets it apart on a dark page, where the backdrop barely shows. If you change the tokens or the background, make sure to check the same pairs.
 
@@ -635,7 +635,7 @@ The close button comes last, even though it comes first on the page, since start
 
 We use `data-autofocus` rather than `autofocus`, since it works the same in every framework, while React focuses an `autoFocus` element as it renders, before the dialog is open. Browsers honour `autofocus` in a dialog too, so the Dialog counts it as well.
 
-When the dialog closes, focus goes back to the control that opened it, so people carry on where they left off. Sometimes that control is gone, like a Delete button on a row the dialog just deleted. Focus then has nowhere to go, and falls back to the top of the page, so move it yourself, to the next row or the list, as the Button's [Move focus where people expect it](/docs/components/button#move-focus-where-people-expect-it) explains.
+When the dialog closes, focus goes back to the control that opened it, so people carry on where they left off. Sometimes that control is gone, like a Delete button on a row the dialog just deleted. Focus then has nowhere to go, and falls back to the top of the page, so move it yourself, to the next row or the list, as the Button's [Move focus where people expect it](/docs/components/button/ux#move-focus-where-people-expect-it) explains.
 
 #### Keyboard
 
@@ -841,7 +841,7 @@ An alert dialog works a little differently, since a stray click shouldn't count 
 - Focus starts on that action, the least destructive one, so a quick `Enter` never deletes anything. Mark it with `data-autofocus`, or, when the body has no controls, put it first, since the Dialog then starts on the first action.
 - Name both actions by what they do, like "Keep project" and "Delete project", rather than "Cancel" and "OK", so people know what they're agreeing to without reading the question again.
 
-Keep alert dialogs for what can't be undone. For everyday actions, like archiving a message, it's kinder to act straight away and offer undo, as the Button's [Make destructive actions recoverable](/docs/components/button#make-destructive-actions-recoverable) explains, since people soon learn to press through a confirmation without reading it.
+Keep alert dialogs for what can't be undone. For everyday actions, like archiving a message, it's kinder to act straight away and offer undo, as the Button's [Make destructive actions recoverable](/docs/components/button/ux#make-destructive-actions-recoverable) explains, since people soon learn to press through a confirmation without reading it.
 
 ### Adaptive
 
@@ -1146,7 +1146,7 @@ Vanilla and Astro have no state to bind `open` to, so their script opens the dia
 
 ### Consistent
 
-Once you've learned the [Button](/docs/components/button#consistent)'s API, you already know most of the Dialog's. These names mean the same thing everywhere in Open Components:
+Once you've learned the [Button](/docs/components/button/dx#consistent)'s API, you already know most of the Dialog's. These names mean the same thing everywhere in Open Components:
 
 | Name      | Kind  | What it means                                                         |
 | --------- | ----- | --------------------------------------------------------------------- |
@@ -1775,7 +1775,7 @@ The basis says where a rule comes from. Many of the rules rest on **WCAG** 2.2, 
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It uses the Button for its close button, so copy the [Button](/docs/components/button#reference-implementation) and its `tokens.css` into your theme too.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It uses the Button for its close button, so copy the [Button](/docs/components/button/code) and its `tokens.css` into your theme too.
 
 The tests are in `Dialog.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`. jsdom doesn't have `showModal()` or `close()` yet, so the tests stand in for them, at the top of the file.
 

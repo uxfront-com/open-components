@@ -43,6 +43,11 @@ export interface Page {
   headings: Heading[];
   /** The frameworks its examples come in. */
   frameworks: string[];
+  /**
+   * The paths of its parts, for a page split into an Overview and a page per
+   * part, like the Button's /docs/components/button/ux. They're read as this page.
+   */
+  parts?: string[];
   contract?: Contract;
 }
 
