@@ -26,7 +26,7 @@ describe("findPage", () => {
     ["https://opencomponents.dev/docs/getting-started/roadmap?ref=mcp", "roadmap"],
     // The parts of a split page, which agents read as the whole page.
     ["/docs/components/button/ux", "button"],
-    ["components/button/code", "button"],
+    ["components/button/dx", "button"],
     ["https://opencomponents.dev/docs/components/button/ux#loading", "button"],
     ["/raw/docs/components/button/ux.md", "button"],
     ["Introduction", "introduction"],
@@ -39,6 +39,24 @@ describe("findPage", () => {
 
   it.each(["carousel", "/docs/components/carousel", "/docs/components/button/nope", "butt", "button/keep-focus", ""])("doesn't find %j", (name) => {
     expect(findPage(standard, name)).toBeUndefined();
+  });
+});
+
+// The Overview's cards come back as links to the layer pages, at the end of At a glance.
+describe("The Button's At a glance", () => {
+  it("ends with a link to each layer page, named by its layer, then its description", () => {
+    const glance = button.headings.find((heading) => heading.text === "At a glance")!;
+    const text = sectionText(standard, button, glance).trim();
+    for (const [title, path] of [
+      ["User Interface (UI)", "ui"],
+      ["User Experience (UX)", "ux"],
+      ["Developer Experience (DX)", "dx"],
+    ]) {
+      expect(text).toContain(`[**${title}**](https://opencomponents.dev/docs/components/button/${path})\n\nHow `);
+    }
+    expect(text).toMatch(
+      /\[\*\*Agentic Experience \(AX\)\*\*\]\(https:\/\/opencomponents\.dev\/docs\/components\/button\/ax\)\n\nHow agents read, build and check a button[^\n]*$/,
+    );
   });
 });
 

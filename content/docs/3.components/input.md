@@ -592,7 +592,7 @@ The input reads three [theme tokens](/docs/foundations/design-tokens#theme-token
 | `--color--error-text`   | The border of an invalid input                                                      |
 | `--color--focus`        | The focus ring, which is the same for every component                               |
 
-There's no `color` prop, so the input doesn't read any of the other colours. Everything else is mixed from the text colour: 55% for the border, which needs 3:1 against the page, 80% for the border on hover, and 70% for the placeholder, prefixes and suffixes, which need 4.5:1. With our reference tokens, from the Tailwind CSS palette, the border comes to 3.5:1 and the placeholder to 5.6:1 on white, and 5.0:1 and 7.4:1 on zinc-900. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
+There's no `color` prop, so the input doesn't read any of the other colours. Everything else is mixed from the text colour: 55% for the border, which needs 3:1 against the page, 80% for the border on hover, and 70% for the placeholder, prefixes and suffixes, which need 4.5:1. With our reference tokens, from the Tailwind CSS palette, the border comes to 3.5:1 and the placeholder to 5.6:1 on white, and 5.0:1 and 7.4:1 on zinc-900. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
 
 If you need to tune an input, you can set its [own variables](/docs/foundations/design-tokens#component-variables), such as `--input--height`, `--input--radius` or `--input--border-color`, from a class. The Input's styles sit in the `components` cascade layer, so your class wins without any specificity tricks:
 
@@ -2600,7 +2600,7 @@ The basis says where a rule comes from. About half the rules rest on **WCAG** 2.
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button/code) from the Button's reference implementation into your theme too.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button's reference implementation into your theme too.
 
 The tests are in `Input.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 

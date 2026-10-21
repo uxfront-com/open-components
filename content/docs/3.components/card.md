@@ -430,7 +430,7 @@ The card reads two [theme tokens](/docs/foundations/design-tokens#theme-tokens),
 | `--color--neutral-text` | The text, and mixed into the border, the eyebrow, the footer and the media's placeholder |
 | `--color--focus`        | The focus ring, which is the same for every component                            |
 
-Everything else is mixed from the text colour: 70% for the eyebrow and the footer, which need 4.5:1, and 20% for the border at rest and 45% on hover. With our reference tokens, from the Tailwind CSS palette, the eyebrow and the footer come to 5.6:1 on white and 7.4:1 on zinc-900, the same as the Input's placeholder. The border is lighter than the Input's, since a card's heading says what it is, and WCAG only asks for 3:1 on a boundary people need to see to find the component ([WCAG 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)). You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
+Everything else is mixed from the text colour: 70% for the eyebrow and the footer, which need 4.5:1, and 20% for the border at rest and 45% on hover. With our reference tokens, from the Tailwind CSS palette, the eyebrow and the footer come to 5.6:1 on white and 7.4:1 on zinc-900, the same as the Input's placeholder. The border is lighter than the Input's, since a card's heading says what it is, and WCAG only asks for 3:1 on a boundary people need to see to find the component ([WCAG 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)). You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
 
 If you need to tune a card, you can set its [own variables](/docs/foundations/design-tokens#component-variables), such as `--card--padding`, `--card--background` or `--card--media--aspect-ratio`, from a class. The Card's styles sit in the `components` cascade layer, so your class wins without any specificity tricks:
 
@@ -1544,7 +1544,7 @@ The basis says where a rule comes from. About half the rules rest on **WCAG** 2.
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button/code) from the Button's reference implementation into your theme too, and its examples put [Buttons](/docs/components/button/code) in `actions`.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button's reference implementation into your theme too, and its examples put [Buttons](/docs/components/button#reference-implementation) in `actions`.
 
 The tests are in `Card.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 

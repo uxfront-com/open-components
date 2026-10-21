@@ -34,6 +34,18 @@ export default defineAppConfig({
           indicator: "bottom-0",
         },
       },
+      // Link cards, like the ones the Button's Overview has for its layers' pages,
+      // lead with a large icon that lifts and tilts while you hover the card or
+      // focus its link, and stays still for people who ask for less motion.
+      card: {
+        slots: {
+          icon: [
+            "size-12 mb-4 transition-transform duration-300 ease-out",
+            "motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:-rotate-6",
+            "motion-safe:group-has-[>a:focus-visible]:-translate-y-1 motion-safe:group-has-[>a:focus-visible]:-rotate-6",
+          ],
+        },
+      },
     },
   },
 });

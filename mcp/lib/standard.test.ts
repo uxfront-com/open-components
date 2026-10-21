@@ -65,6 +65,15 @@ describe("The standard", () => {
     expect(before).toEqual(expect.any(String));
   });
 
+  // list-rules reads a split page's rules from its layer pages' tables, in their order.
+  it("has the Button's rules from its layer pages' tables, in layer order", () => {
+    const dir = "content/docs/3.components/button";
+    const rows = ["1.ui.md", "2.ux.md", "3.dx.md", "4.ax.md"].flatMap((file) =>
+      [...readFileSync(join(dir, file), "utf8").matchAll(/^\| `(button\/[a-z-]+)`/gm)].map((row) => row[1]),
+    );
+    expect(standard.rules.filter((rule) => rule.component === "button").map((rule) => rule.id)).toEqual(rows);
+  });
+
   // Agents read the same page and contract whichever way they reach them.
   it.each(pages)("%s is the page /raw serves", (path, page) => {
     const source = sources.get(path)!;

@@ -320,7 +320,7 @@ The checkbox reads five [theme tokens](/docs/foundations/design-tokens#theme-tok
 | `--color--error-text`       | The border of an invalid box                                                |
 | `--color--focus`            | The focus ring, which is the same for every component                       |
 
-The border is the text colour at 55%, and 80% on hover. An unchecked box is nothing but its border, so the border needs 3:1 against the page, and so does the fill of a checked box, while the check needs 3:1 against the fill ([WCAG 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)). With our reference tokens, from the Tailwind CSS palette, the border comes to 3.5:1, the fill to 6.4:1 and the check to 6.4:1 on white, and 5.0:1, 5.7:1 and 6.4:1 on zinc-900. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
+The border is the text colour at 55%, and 80% on hover. An unchecked box is nothing but its border, so the border needs 3:1 against the page, and so does the fill of a checked box, while the check needs 3:1 against the fill ([WCAG 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)). With our reference tokens, from the Tailwind CSS palette, the border comes to 3.5:1, the fill to 6.4:1 and the check to 6.4:1 on white, and 5.0:1, 5.7:1 and 6.4:1 on zinc-900. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
 
 If you need to tune a checkbox, you can set its [own variables](/docs/foundations/design-tokens#component-variables), such as `--checkbox--box--radius`, `--checkbox--box--fill` or `--checkbox--indicator--color`, from a class. The Checkbox's styles sit in the `components` cascade layer, so your class wins without any specificity tricks:
 
@@ -2022,7 +2022,7 @@ The basis says where a rule comes from. About half the rules rest on **WCAG** 2.
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button/code) from the Button's reference implementation into your theme too.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button's reference implementation into your theme too.
 
 The tests are in `Checkbox.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 

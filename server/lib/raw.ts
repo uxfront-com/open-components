@@ -60,25 +60,53 @@ export function rawContract(page: { title: string; path: string }, contract: str
  * headings sit one level higher than they did, since its title is the part's page
  * heading, so joining moves them down again. Parts with the same `before` go in
  * file order.
+ *
+ * A component page's part also carries its share of two sections every component
+ * page has (AGENTS.md, "Component pages"), which the join gathers back, in file
+ * order: its rules table, like `## UI rules`, goes under the Overview's
+ * `## Checklist` as `### UI rules`, and its questions, under `## FAQ`, go into one
+ * `## FAQ` before the Overview's `## Sources`.
  */
 export function joinPage(index: string, parts: string[]): string {
   const blocks = new Map<string, string[]>();
+  const gathered = { rules: [] as string[], faq: [] as string[] };
   for (const source of parts) {
     const { title, before, body } = readPart(source);
-    const lowered = scan(body)
-      .map(({ text, code }) => (!code && heading(text) ? `#${text}` : text))
-      .join("\n");
-    blocks.set(before, [...(blocks.get(before) ?? []), `## ${title}\n\n${lowered}\n\n`]);
+    const sections = { own: [] as string[], rules: [] as string[], faq: [] as string[] };
+    let section: keyof typeof sections = "own";
+    for (const { text, code } of scan(body)) {
+      const match = !code && heading(text);
+      if (match && match.level === 2) {
+        section = match.text.endsWith(" rules") ? "rules" : match.text === "FAQ" ? "faq" : "own";
+        // One `## FAQ` heads every part's questions.
+        if (section === "faq") continue;
+      }
+      sections[section].push(match ? `#${text}` : text);
+    }
+    blocks.set(before, [...(blocks.get(before) ?? []), `## ${title}\n\n${sections.own.join("\n").trim()}\n\n`]);
+    for (const key of ["rules", "faq"] as const) {
+      if (sections[key].length) gathered[key].push(sections[key].join("\n").trim());
+    }
   }
 
+  // The rules go at the end of the Checklist, before the section after it, and
+  // the questions before the Sources.
+  let rules = gathered.rules.length ? `${gathered.rules.join("\n\n")}\n\n` : "";
+  let faq = gathered.faq.length ? `## FAQ\n\n${gathered.faq.join("\n\n")}\n\n` : "";
+  let section = "";
   const joined = scan(index).map(({ text, code }) => {
     const match = !code && heading(text);
-    const before = match && match.level === 2 && blocks.get(match.text);
-    if (!before) return text;
+    if (!match || match.level !== 2) return text;
+    let before = "";
+    if (section === "Checklist") [before, rules] = [rules, ""];
+    if (match.text === "Sources") [before, faq] = [before + faq, ""];
+    before += blocks.get(match.text)?.join("") ?? "";
     blocks.delete(match.text);
-    return `${before.join("")}${text}`;
+    section = match.text;
+    return `${before}${text}`;
   });
-  if (blocks.size) throw new Error(`A split page has no section named ${[...blocks.keys()].join(", ")} for its parts to go before`);
+  const missing = [...blocks.keys(), ...(rules ? ["Checklist"] : []), ...(faq ? ["Sources"] : [])];
+  if (missing.length) throw new Error(`A split page has no section named ${missing.join(", ")} for its parts to go before or into`);
   return joined.join("\n");
 }
 
@@ -88,19 +116,34 @@ export function joinPage(index: string, parts: string[]): string {
  * `user-experience-ux`, to the top of the part's page. Links to the whole page, like
  * /docs/components/button#loading, still land on the Overview, so
  * app/middleware/split-pages.global.ts sends them on from this map.
+ *
+ * Each part's headings get their anchors on their own, as the site gives them on
+ * the part's page. A heading on more than one part, like the FAQ, goes to the part
+ * whose section under it is longest, where most of the whole page's section went.
  */
 export function splitAnchors(parts: { path: string; source: string }[]): Record<string, string> {
-  return Object.fromEntries(
-    parts.flatMap(({ path, source }) => {
-      const { title, body } = readPart(source);
-      const slug = anchors();
-      const headings = scan(body).flatMap(({ text, code }) => {
-        const match = !code && heading(text);
-        return match ? [slug(match.text)] : [];
-      });
-      return [[anchors()(title), path], ...headings.map((anchor) => [anchor, `${path}#${anchor}`])];
-    }),
-  );
+  const found = parts.flatMap(({ path, source }) => {
+    const { title, body } = readPart(source);
+    const lines = scan(body);
+    const slug = anchors();
+    const headings = lines.flatMap(({ text, code }, start) => {
+      const match = !code && heading(text);
+      return match ? [{ ...match, start }] : [];
+    });
+    return [
+      { anchor: anchors()(title), target: path, length: lines.length },
+      ...headings.map(({ level, text, start }) => {
+        const end = headings.find((other) => other.start > start && other.level <= level)?.start ?? lines.length;
+        const anchor = slug(text);
+        return { anchor, target: `${path}#${anchor}`, length: end - start };
+      }),
+    ];
+  });
+  const map: Record<string, { target: string; length: number }> = {};
+  for (const { anchor, target, length } of found) {
+    if (!map[anchor] || length > map[anchor].length) map[anchor] = { target, length };
+  }
+  return Object.fromEntries(Object.entries(map).map(([anchor, { target }]) => [anchor, target]));
 }
 
 // A part's title, the section it goes before and its body, from its source.

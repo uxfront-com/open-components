@@ -614,7 +614,7 @@ The tooltip reads two [theme tokens](/docs/foundations/design-tokens#theme-token
 | `--color--neutral`          | The fill                    |
 | `--color--neutral-contrast` | The text on it              |
 
-It's the same pair as a solid neutral Button, so the two always look like they belong together. With our reference tokens, from the Tailwind CSS palette, the text comes to 17.7:1 on the light theme's fill and 18.1:1 on the dark theme's. If you change the tokens, make sure to check the same pair. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
+It's the same pair as a solid neutral Button, so the two always look like they belong together. With our reference tokens, from the Tailwind CSS palette, the text comes to 17.7:1 on the light theme's fill and 18.1:1 on the dark theme's. If you change the tokens, make sure to check the same pair. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
 
 If you need to tune a tooltip, you can set its [own variables](/docs/foundations/design-tokens#component-variables) from a class:
 
@@ -760,7 +760,7 @@ Screen readers never see a tooltip open. They read the trigger, so what matters 
 | `label`       | `aria-hidden="true"`, with no role      | Keeps its own name, like a visually hidden label | "Bold, button"                   |
 | `description` | `role="tooltip"`, with an `id`          | Points to it with `aria-describedby`             | "Archive, button, Archived projects stay in search" |
 
-Never point to a tooltip with `aria-labelledby`. It would replace the trigger's own name with the tooltip's text, and an icon-only Button's name comes from its hidden label, as the Button's [`button/accessible-name`](/docs/components/button#ux-rules) rule asks. Hidden text gets translated along with the page, and stays the name when the tooltip's text changes, like a shortcut added to it. With `type="label"`, the Tooltip links nothing at all, and the name stays where it was.
+Never point to a tooltip with `aria-labelledby`. It would replace the trigger's own name with the tooltip's text, and an icon-only Button's name comes from its hidden label, as the Button's [`button/accessible-name`](/docs/components/button/ux#ux-rules) rule asks. Hidden text gets translated along with the page, and stays the name when the tooltip's text changes, like a shortcut added to it. With `type="label"`, the Tooltip links nothing at all, and the name stays where it was.
 
 #### Open it on focus
 

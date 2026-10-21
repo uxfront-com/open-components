@@ -1,8 +1,6 @@
 ---
 title: Button
 description: How to build a button that looks right, works for everyone, feels familiar to every developer and can be checked by your agents.
-navigation:
-  title: Overview
 ---
 
 Buttons let people act on what's in front of them, whether that's saving a form, sending a message, opening a dialog or deleting a file. They're the most common interactive component in any interface, and also the one we most often get wrong. Think of a `<div>` that you can't reach with the keyboard, a form that gets sent twice, or a spinner that throws your focus back to the top of the page.
@@ -13,7 +11,7 @@ This page walks you through building one the right way. We'll look at:
 - [**Developer Experience**](/docs/components/button/dx) (DX) - how developers work with it
 - [**Agentic Experience**](/docs/components/button/ax) (AX) - how agents can read and verify it
 
-Every example on this page runs on our [reference implementation](/docs/components/button/code), which does its part of every rule in the [checklist](/docs/components/button#checklist), so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
+Every example on this page runs on our [reference implementation](/docs/components/button#reference-implementation), which does its part of every rule in the [checklist](/docs/components/button#checklist), so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
 
 ::button-playground
 ::
@@ -33,6 +31,24 @@ Every example on this page runs on our [reference implementation](/docs/componen
 | Pattern  | [WAI-ARIA APG Button](https://www.w3.org/WAI/ARIA/apg/patterns/button/)                      |
 | WCAG 2.2 | 1.4.3, 1.4.11, 2.1.1, 2.4.7, 2.5.2, 2.5.3, 2.5.8, 4.1.2 and 4.1.3, among others              |
 
+::card-group
+:::card{to="/docs/components/button/ui" icon="i-lucide-palette" title="User Interface (UI)"}
+How a button looks, from its parts, variants and colours to its sizes, icons, states and tokens.
+:::
+
+:::card{to="/docs/components/button/ux" icon="i-lucide-accessibility" title="User Experience (UX)"}
+How a button behaves for every person, input and setting, so it's accessible, predictable, clear in every state and adaptive.
+:::
+
+:::card{to="/docs/components/button/dx" icon="i-lucide-code-xml" title="Developer Experience (DX)"}
+How developers use the Button, with one consistent, typed API that composes with links, routers and other components.
+:::
+
+:::card{to="/docs/components/button/ax" icon="i-lucide-bot" title="Agentic Experience (AX)"}
+How agents read, build and check a button, from its accessibility tree to its contract, its DOM and its tests.
+:::
+::
+
 ## Checklist
 
 Here's every rule in one place, along with where it comes from and how to check it. A button meets the standard when it meets every **must**, and each **should** is expected unless you have a good reason not to follow it.
@@ -41,243 +57,688 @@ The scope says who meets a rule. **Component** rules are met by the Button itsel
 
 The basis says where a rule comes from. About half the rules rest on **WCAG** 2.2, which we follow at level AA, and name the success criteria behind them, and a few come from **HTML**, **WAI-ARIA** or the **APG**. The rest are **Open Components** rules, which are our own, like never changing a button's size between states. Where a rule goes further than WCAG asks at level AA, its basis says so: some come from level **AAA**, like the 44 × 44px hit area on touch screens, and a rule that asks for more than its criterion says **beyond**, like the underline on `link` buttons, which WCAG would let you swap for a 3:1 contrast with the text around it.
 
-### UI rules
+You'll find the rules for each layer on its page: [UI rules](/docs/components/button/ui#ui-rules), [UX rules](/docs/components/button/ux#ux-rules), [DX rules](/docs/components/button/dx#dx-rules) and [AX rules](/docs/components/button/ax#ax-rules).
 
-| Rule                     | Level  | Scope     | Requirement | Basis | Check |
-| ------------------------ | ------ | --------- | ----------- | ----- | ---------------------- |
-| `button/intent-colors`   | Must   | Both      | Colours describe the action's intent rather than a hue, and never carry that meaning on their own | WCAG 1.4.1 (A), Open Components | Review |
-| `button/one-primary`     | Should | Usage     | There's one solid primary button per view or group, and the rest are ranked with `variant` | Open Components | Review |
-| `button/contrast`        | Must   | Component | The label has a contrast of 4.5:1 at rest, on hover and when pressed, in every variant, and the focus ring has 3:1 against the page | WCAG 1.4.3, 1.4.11 (AA) | axe `color-contrast` |
-| `button/link-underlined` | Must   | Component | The `link` variant is underlined at rest, so it doesn't rely on colour alone to stand out from the text around it | Open Components, beyond WCAG 1.4.1 (A) | Review |
-| `button/focus-visible`   | Must   | Component | Keyboard focus shows an `outline` at least 2px thick, offset from the button, on `:focus-visible` | WCAG 2.4.7 (AA), 2.4.13 (AAA) | Keyboard |
-| `button/target-size`     | Must   | Component | The button is at least 24 × 24px, unless it's a `link` inside a sentence, with a 44 × 44px hit area on touch screens | WCAG 2.5.8 (AA), 2.5.5 (AAA) | axe `target-size` |
-| `button/resizable`       | Must   | Component | The button is sized with `min-height` and padding in `rem`, and its label wraps instead of being clipped or truncated | Open Components, beyond WCAG 1.4.4, 1.4.10, 1.4.12 (AA) | 200% zoom |
-| `button/stable-size`     | Must   | Component | No state changes the button's size or position | Open Components | Visual regression test |
-| `button/state-selectors` | Should | Component | States are styled from the attributes that expose them | Open Components | Review |
-| `button/hover-capable`   | Should | Component | Hover styles only apply inside `@media (hover: hover)` | Open Components | Review |
-| `button/forced-colors`   | Must   | Component | The button's boundary, focus, disabled and pressed states stay visible in forced colours mode | Open Components | Emulation |
-| `button/more-contrast`   | Should | Component | Borders are drawn at full strength when `prefers-contrast: more` is set | Open Components | Emulation |
-| `button/reduced-motion`  | Must   | Component | Nothing turns or slides when `prefers-reduced-motion: reduce` is set | WCAG 2.3.3 (AAA) | Emulation |
+## Reference implementation
 
-### UX rules
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It shows the [Spinner](/docs/components/spinner#reference-implementation) while it's loading, so copy that too. Every component that announces something to screen readers shares `announce.ts`, so you only need one copy of it, and `tokens.css` goes in your theme.
 
-| Rule                        | Level  | Scope     | Requirement | Basis | Check |
-| --------------------------- | ------ | --------- | ----------- | ----- | --------------------------------- |
-| `button/native-element`     | Must   | Component | It's a native `<button>`, or an `<a href>` for navigation, but never a `<div>` or a `<span>` | Open Components, beyond WCAG 2.1.1, 4.1.2 (A) | Unit test |
-| `button/links-navigate`     | Must   | Usage     | Navigation always uses a link, so a button never changes the URL | Open Components | Review |
-| `button/accessible-name`    | Must   | Both      | Every button has a name, and an icon-only button has a visually hidden label | WCAG 4.1.2 (A), Open Components | axe `button-name`, unit test |
-| `button/label-in-name`      | Must   | Usage     | An `aria-label` or `aria-labelledby` includes the visible label, ideally at the start | WCAG 2.5.3 (A) | axe `label-content-name-mismatch` |
-| `button/decorative-icons`   | Must   | Component | Icons are hidden from assistive technologies with `aria-hidden`, so they don't add to the button's name | WCAG 1.1.1 (A) | Unit test |
-| `button/verb-labels`        | Should | Usage     | Labels start with a verb and name the outcome, and end with `…` when more input follows | Open Components | Review |
-| `button/keyboard`           | Must   | Component | `Enter` and `Space` activate a button, while `Enter` follows a link | WCAG 2.1.1 (A), APG | Unit test |
-| `button/activate-on-click`  | Must   | Usage     | Actions run on `click`, never on `mousedown`, `pointerdown` or `touchstart` | Open Components, beyond WCAG 2.5.2 (A) | Review |
-| `button/no-nesting`         | Must   | Usage     | There's nothing interactive inside a button, and no button inside a link | HTML | axe `nested-interactive` |
-| `button/dom-order`          | Must   | Usage     | Buttons come in the same order in the DOM as on screen, without `order` or `row-reverse` | Open Components, beyond WCAG 1.3.2, 2.4.3 (A) | Keyboard |
-| `button/disabled-inert`     | Must   | Component | A disabled or loading button does nothing, so there's no event, no submission and no navigation | HTML, WAI-ARIA | Unit test |
-| `button/explain-disabled`   | Should | Usage     | An enabled button with validation is preferred over a disabled one, and a disabled one explains why | Open Components | Review |
-| `button/keep-focus`         | Must   | Both      | Disabling a button never takes its focus away: loading uses `aria-disabled`, and a button that can be disabled while it has focus, like Next on the last page, stays focusable | Open Components | Unit test, keyboard |
-| `button/loading`            | Must   | Component | Loading keeps the button's size and name, blocks repeated activation and is announced | WCAG 4.1.3 (AA), Open Components | Unit test |
-| `button/announce-outcome`   | Should | Usage     | The page announces the action's outcome with a status message | Open Components, beyond WCAG 4.1.3 (AA) | Screen reader |
-| `button/toggle-pressed`     | Must   | Both      | A toggle button sets `aria-pressed` and keeps its label | WCAG 4.1.2 (A), APG | Unit test |
-| `button/popup-expanded`     | Must   | Both      | A button that opens a popup sets `aria-haspopup` and `aria-expanded` | WCAG 4.1.2 (A), APG | Unit test |
-| `button/focus-after`        | Should | Usage     | After activation, focus moves as the APG describes, and never falls back to the top of the page | APG | Keyboard |
-| `button/focus-not-obscured` | Must   | Usage     | Sticky headers and footers never cover a focused button, for example thanks to `scroll-padding` | WCAG 2.4.11 (AA), 2.4.12 (AAA) | Keyboard |
-| `button/destructive`        | Should | Usage     | A destructive action uses `error`, names what it destroys, and can either be undone or asks for confirmation | Open Components, beyond WCAG 3.3.4 (AA) | Review |
-| `button/mirrors-in-rtl`     | Should | Both      | It uses logical properties, and icons that point along the reading direction flip in right-to-left layouts | Open Components | Review |
+The tests are in `Button.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 
-### DX rules
+::code-collapse
+:::code-group
+```vue [Button.vue]
+<script setup lang="ts">
+import { computed, onMounted, useTemplateRef, watch } from "vue";
+import Spinner from "../spinner/Spinner.vue";
+import { announce, prepareAnnouncer } from "./announce";
 
-| Rule                       | Level  | Scope     | Requirement | Basis | Check |
-| -------------------------- | ------ | --------- | ----------- | ----- | --------- |
-| `button/shared-vocabulary` | Must   | Component | It uses the shared names: `variant`, `color`, `size`, `label`, `disabled`, `loading`, `leading`, `trailing` and `click` | Open Components | Review |
-| `button/typed`             | Must   | Component | Props, events and slots are typed, with unions rather than `string` | Open Components | Type check |
-| `button/explicit-type`     | Must   | Both      | `type` defaults to `"button"`, and submit buttons say `type="submit"` explicitly | Open Components | Unit test |
-| `button/root-element`      | Must   | Component | The root element is the button itself, so attributes, listeners and refs land on it | Open Components | Unit test |
-| `button/stateless`         | Should | Component | Every state is a prop or an attribute that the parent controls | Open Components | Review |
+export interface ButtonProps {
+  /** How much attention the button asks for. */
+  variant?: "solid" | "outline" | "soft" | "subtle" | "ghost" | "link";
+  /** What the action means. */
+  color?: "primary" | "secondary" | "neutral" | "success" | "info" | "warning" | "error";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  /** The label, when it's plain text. The default slot takes precedence. */
+  label?: string;
+  /** Shows only the leading icon. The label is hidden, but it still names the button. */
+  iconOnly?: boolean;
+  /** "button" by default, so the button never submits a form by accident. */
+  type?: "button" | "submit" | "reset";
+  /** Renders a link (`<a href>`) that looks like a button, for navigation. */
+  href?: string;
+  disabled?: boolean;
+  /** Keeps the disabled button in the tab order, so people can find it and learn why. */
+  focusableWhenDisabled?: boolean;
+  /** Blocks activation and shows a spinner, keeping the button's focus and size. */
+  loading?: boolean;
+  /** Announced to screen readers when loading starts. */
+  loadingLabel?: string;
+}
 
-### AX rules
+const {
+  variant = "solid",
+  color = "neutral",
+  size = "md",
+  label,
+  iconOnly = false,
+  type = "button",
+  href,
+  disabled = false,
+  focusableWhenDisabled = false,
+  loading = false,
+  loadingLabel = "Loading",
+} = defineProps<ButtonProps>();
 
-| Rule                       | Level  | Scope     | Requirement | Basis | Check |
-| -------------------------- | ------ | --------- | ----------- | ----- | --------- |
-| `button/role-and-name`     | Must   | Component | It can be found by its role and name alone, with `getByRole("button", { name })` | WCAG 4.1.2 (A) | Unit test |
-| `button/deterministic-dom` | Must   | Component | The same props render the same markup, and states change attributes, never elements | Open Components | Unit test |
-| `button/data-attributes`   | Should | Component | Props are mirrored as `data-*` attributes, and parts are marked with `data-slot` | Open Components | Unit test |
-| `button/dev-warnings`      | Should | Component | It warns during development when a button has no accessible name | Open Components | Unit test |
+const emit = defineEmits<{
+  /** Not emitted while the button is disabled or loading. */
+  click: [event: MouseEvent];
+}>();
 
-## FAQ
+defineSlots<{
+  /** The label. */
+  default?: () => unknown;
+  /** An icon before the label, which is also the icon of an icon-only button. */
+  leading?: () => unknown;
+  /** An icon after the label. */
+  trailing?: () => unknown;
+}>();
 
+// The button can't be activated while it's disabled or loading.
+const inactive = computed(() => disabled || loading);
+// A loading button was just pressed, so it keeps its focus, which native
+// `disabled` would drop. Links can't be natively disabled at all.
+const focusable = computed(() => loading || focusableWhenDisabled);
+const nativeDisabled = computed(() => disabled && !focusable.value && !href);
 
-#### Button or link?
+function onClick(event: MouseEvent) {
+  if (inactive.value) {
+    // aria-disabled doesn't stop activation on its own, so cancel the form
+    // submission or navigation, and keep the click from reaching other listeners.
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+  emit("click", event);
+}
 
-Buttons do things, while links go places. If people might want to open it in a new tab, bookmark it or share it, it's a link.
+watch(
+  () => loading,
+  (isLoading) => {
+    if (isLoading) announce(loadingLabel);
+  },
+);
 
-| When you activate it, it…                                   | Use                                  | Renders                                           |
-| ----------------------------------------------------------- | ------------------------------------ | ------------------------------------------------- |
-| Runs an action on the page, like saving, sending or deleting | Button                              | `<button type="button">`                          |
-| Submits a form                                              | Button, with `type="submit"`         | `<button type="submit">`                          |
-| Takes you to another page, a section or a file              | Button, with `href`                  | `<a href>`                                        |
-| Switches something on or off                                | [Toggle button](/docs/components/button/ux#toggle-buttons) | `<button aria-pressed>`             |
-| Opens a menu                                                | [Menu button](/docs/components/button/ux#menu-buttons)     | `<button aria-haspopup="menu" aria-expanded>` |
+const root = useTemplateRef<HTMLElement>("root");
 
-Links come with plenty of browser features for free, such as opening in a new tab, copying the address or showing up in the history. Screen readers also list them together with the other links on the page, and pressing `Space` scrolls the page instead of following the link. A button that navigates loses all of that, which is why our Button renders a link as soon as you give it an `href`:
+onMounted(() => {
+  prepareAnnouncer();
 
-::button-link-example
-::framework-switcher
-#react
-```tsx
-<Button href="/docs" color="primary" trailing={<ArrowRightIcon />}>
-  Read the introduction
-</Button>
-```
-
-#vue
-```vue
-<Button href="/docs" color="primary">
-  Read the introduction
-  <template #trailing><ArrowRightIcon /></template>
-</Button>
-```
-
-#svelte
-```svelte
-<Button href="/docs" color="primary">
-  Read the introduction
-  {#snippet trailing()}<ArrowRightIcon />{/snippet}
-</Button>
-```
-
-#angular
-```angular-html
-<a appButton href="/docs" color="primary">
-  Read the introduction
-  <lucide-icon trailing [img]="ArrowRightIcon" />
-</a>
-```
-
-#solid
-```tsx
-<Button href="/docs" color="primary" trailing={<ArrowRightIcon />}>
-  Read the introduction
-</Button>
-```
-
-#astro
-```astro
-<Button href="/docs" color="primary">
-  Read the introduction
-  <ArrowRightIcon slot="trailing" />
-</Button>
-```
-
-#vanilla
-```html
-<a class="button" href="/docs" data-variant="solid" data-color="primary" data-size="md">
-  <span data-slot="label">Read the introduction</span>
-  <span data-slot="trailing" aria-hidden="true"><svg class="lucide-arrow-right">…</svg></span>
-</a>
-```
-::
-::
-
-::framework-switcher
-#react
-```tsx
-{/* Do: use a link for navigation, even when it looks like a button */}
-<Button href="/pricing" color="primary">See pricing</Button>
-
-{/* Don't: this can't be opened in a new tab, and screen readers won't list it as a link */}
-<Button color="primary" onClick={() => navigate("/pricing")}>See pricing</Button>
-```
-
-#vue
-```vue
-<!-- Do: use a link for navigation, even when it looks like a button -->
-<Button href="/pricing" color="primary">See pricing</Button>
-
-<!-- Don't: this can't be opened in a new tab, and screen readers won't list it as a link -->
-<Button color="primary" @click="router.push('/pricing')">See pricing</Button>
-```
-
-#svelte
-```svelte
-<!-- Do: use a link for navigation, even when it looks like a button -->
-<Button href="/pricing" color="primary">See pricing</Button>
-
-<!-- Don't: this can't be opened in a new tab, and screen readers won't list it as a link -->
-<Button color="primary" onclick={() => goto("/pricing")}>See pricing</Button>
-```
-
-#angular
-```angular-html
-<!-- Do: use a link for navigation, even when it looks like a button -->
-<a appButton routerLink="/pricing" color="primary">See pricing</a>
-
-<!-- Don't: this can't be opened in a new tab, and screen readers won't list it as a link -->
-<button appButton color="primary" (click)="router.navigate(['/pricing'])">See pricing</button>
-```
-
-#solid
-```tsx
-{/* Do: use a link for navigation, even when it looks like a button */}
-<Button href="/pricing" color="primary">See pricing</Button>
-
-{/* Don't: this can't be opened in a new tab, and screen readers won't list it as a link */}
-<Button color="primary" onClick={() => navigate("/pricing")}>See pricing</Button>
-```
-
-#astro
-```astro
-<!-- Do: use a link for navigation, even when it looks like a button -->
-<Button href="/pricing" color="primary">See pricing</Button>
-
-<!-- Don't: this can't be opened in a new tab, and screen readers won't list it as a link -->
-<Button id="pricing" color="primary">See pricing</Button>
-
-<script>
-  import { navigate } from "astro:transitions/client";
-
-  document.querySelector("#pricing")?.addEventListener("click", () => navigate("/pricing"));
+  if (import.meta.env.DEV) {
+    const el = root.value;
+    const named = el?.textContent?.trim() || el?.hasAttribute("aria-label") || el?.hasAttribute("aria-labelledby");
+    if (el && !named) {
+      console.warn("[Button] has no accessible name: give it a label, even when icon-only.", el);
+    }
+  }
+});
 </script>
+
+<template>
+  <component
+    :is="href ? 'a' : 'button'"
+    ref="root"
+    class="button"
+    :type="href ? undefined : type"
+    :href="href && !inactive ? href : undefined"
+    :role="href && inactive ? 'link' : undefined"
+    :tabindex="href && inactive && focusable ? 0 : undefined"
+    :disabled="nativeDisabled"
+    :aria-disabled="(inactive && !nativeDisabled) || undefined"
+    :data-variant="variant"
+    :data-color="color"
+    :data-size="size"
+    :data-icon-only="iconOnly ? '' : undefined"
+    :data-loading="loading ? '' : undefined"
+    @click="onClick"
+  >
+    <span v-if="$slots.leading" data-slot="leading" aria-hidden="true">
+      <slot name="leading" />
+    </span>
+    <span v-if="$slots.default || label" data-slot="label">
+      <slot>{{ label }}</slot>
+    </span>
+    <span v-if="$slots.trailing && !iconOnly" data-slot="trailing" aria-hidden="true">
+      <slot name="trailing" />
+    </span>
+    <Spinner v-if="loading" data-slot="spinner" />
+  </component>
+</template>
+
+<style scoped>
+/* The same layer order as Tailwind CSS. The button's styles go in `components`,
+   so they win over the resets in `base`, and give way to utilities and to any
+   style outside a layer, like a class of yours that sets its variables. */
+@layer theme, base, components, utilities;
+
+@layer components {
+  .button {
+    /* Set per size. */
+    --button--height: 2.25rem;
+    --button--padding: 1rem;
+    --button--gap: 0.5rem;
+    --button--font-size: 0.875rem;
+    --button--icon--size: 1rem;
+    --button--radius: 0.5rem;
+    /* Set per colour, from the theme tokens. */
+    --button--fill: var(--color--neutral);
+    --button--fill-contrast: var(--color--neutral-contrast);
+    --button--text: var(--color--neutral-text);
+    /* The state layer lays the label's colour over the background (8% on hover, 12% when pressed). */
+    --button--state: 0%;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--button--gap);
+    box-sizing: border-box;
+    /* A min-height rather than a height, so the button grows with larger text and wrapped labels. */
+    min-height: var(--button--height);
+    min-width: var(--button--height);
+    padding: 0.125rem var(--button--padding);
+    margin: 0;
+    /* Transparent, until forced colors mode draws it as the button's outline. */
+    border: 1px solid transparent;
+    border-radius: var(--button--radius);
+    background-color: transparent;
+    background-image: linear-gradient(
+      color-mix(in srgb, currentColor var(--button--state), transparent) 0 0
+    );
+    font-family: inherit;
+    font-size: var(--button--font-size);
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Sizes */
+  .button[data-size="xs"] {
+    --button--height: 1.5rem;
+    --button--padding: 0.5rem;
+    --button--gap: 0.25rem;
+    --button--font-size: 0.75rem;
+    --button--icon--size: 0.875rem;
+    --button--radius: 0.375rem;
+  }
+  .button[data-size="sm"] {
+    --button--height: 2rem;
+    --button--padding: 0.75rem;
+    --button--radius: 0.375rem;
+  }
+  .button[data-size="lg"] {
+    --button--height: 2.5rem;
+    --button--padding: 1.25rem;
+    --button--font-size: 1rem;
+    --button--icon--size: 1.25rem;
+  }
+  .button[data-size="xl"] {
+    --button--height: 3rem;
+    --button--padding: 1.5rem;
+    --button--font-size: 1rem;
+    --button--icon--size: 1.25rem;
+    --button--radius: 0.75rem;
+  }
+
+  /* Colours */
+  .button[data-color="primary"] {
+    --button--fill: var(--color--primary);
+    --button--fill-contrast: var(--color--primary-contrast);
+    --button--text: var(--color--primary-text);
+  }
+  .button[data-color="secondary"] {
+    --button--fill: var(--color--secondary);
+    --button--fill-contrast: var(--color--secondary-contrast);
+    --button--text: var(--color--secondary-text);
+  }
+  .button[data-color="success"] {
+    --button--fill: var(--color--success);
+    --button--fill-contrast: var(--color--success-contrast);
+    --button--text: var(--color--success-text);
+  }
+  .button[data-color="info"] {
+    --button--fill: var(--color--info);
+    --button--fill-contrast: var(--color--info-contrast);
+    --button--text: var(--color--info-text);
+  }
+  .button[data-color="warning"] {
+    --button--fill: var(--color--warning);
+    --button--fill-contrast: var(--color--warning-contrast);
+    --button--text: var(--color--warning-text);
+  }
+  .button[data-color="error"] {
+    --button--fill: var(--color--error);
+    --button--fill-contrast: var(--color--error-contrast);
+    --button--text: var(--color--error-text);
+  }
+
+  /* Variants, from the most emphasis to the least */
+  .button[data-variant="solid"] {
+    background-color: var(--button--fill);
+    color: var(--button--fill-contrast);
+  }
+  .button[data-variant="outline"] {
+    border-color: color-mix(in srgb, currentColor 40%, transparent);
+    color: var(--button--text);
+  }
+  .button[data-variant="soft"],
+  .button[data-variant="subtle"] {
+    background-color: color-mix(in srgb, var(--button--fill) 12%, transparent);
+    color: var(--button--text);
+  }
+  .button[data-variant="subtle"] {
+    border-color: color-mix(in srgb, currentColor 25%, transparent);
+  }
+  .button[data-variant="ghost"] {
+    color: var(--button--text);
+  }
+  .button[data-variant="link"] {
+    min-width: 0;
+    padding-inline: 0;
+    background-image: none;
+    color: var(--button--text);
+    /* Underlined at rest, so it doesn't rely on colour alone to stand out from the text around it. */
+    text-decoration-line: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  /* States. Each one reads the attribute that exposes it, so what people see and
+     what assistive technologies report can't drift apart. */
+  @media (hover: hover) {
+    .button:hover {
+      --button--state: 8%;
+    }
+    .button[data-variant="link"]:hover:not(:disabled, [aria-disabled="true"]) {
+      text-decoration-thickness: 2px;
+    }
+  }
+  .button:active,
+  .button[aria-pressed="true"],
+  .button[aria-expanded="true"] {
+    --button--state: 12%;
+  }
+  .button:focus-visible {
+    outline: 2px solid var(--color--focus);
+    outline-offset: 2px;
+  }
+  .button:disabled,
+  .button[aria-disabled="true"] {
+    --button--state: 0%;
+    cursor: not-allowed;
+  }
+  .button:disabled:not([data-loading]),
+  .button[aria-disabled="true"]:not([data-loading]) {
+    opacity: 0.5;
+  }
+  .button[data-loading] {
+    cursor: progress;
+  }
+
+  /* Parts */
+  [data-slot="leading"],
+  [data-slot="trailing"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: var(--button--icon--size);
+    height: var(--button--icon--size);
+  }
+  [data-slot="leading"] > :slotted(*),
+  [data-slot="trailing"] > :slotted(*) {
+    width: 100%;
+    height: 100%;
+  }
+  .button[data-icon-only] {
+    padding-inline: 0;
+  }
+
+  /* While loading, the spinner covers the content, which stays in place so the
+     size doesn't change, and in the accessibility tree so the name doesn't either. */
+  .button[data-loading] > :not([data-slot="spinner"]) {
+    opacity: 0;
+  }
+  /* The Spinner turns, and pulses with reduced motion, while the Button places and
+     sizes it. `.button >` outranks the Spinner's own `.spinner`, whichever loads first. */
+  .button > [data-slot="spinner"] {
+    --spinner--size: var(--button--icon--size);
+
+    position: absolute;
+    inset: 0;
+    margin: auto;
+  }
+
+  /* When the button is icon-only, the label is visually hidden, but it still names the button. */
+  .button[data-icon-only] > [data-slot="label"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* On touch screens, every size gets a hit area of at least 44 × 44px. */
+  @media (any-pointer: coarse) {
+    .button::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      translate: -50% -50%;
+    }
+  }
+
+  /* With more contrast, borders are drawn in the label's colour at full strength. */
+  @media (prefers-contrast: more) {
+    .button[data-variant="outline"],
+    .button[data-variant="subtle"] {
+      border-color: currentColor;
+    }
+  }
+
+  /* Forced colors mode drops backgrounds and gradients, so mark states with system colours. */
+  @media (forced-colors: active) {
+    .button:focus-visible {
+      outline-color: Highlight;
+    }
+    .button[aria-pressed="true"],
+    .button[aria-expanded="true"] {
+      /* We set a system colour pair ourselves, so opt out, or the browser puts a
+         Canvas backplate behind the label. */
+      forced-color-adjust: none;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+    .button:disabled,
+    .button[aria-disabled="true"] {
+      border-color: GrayText;
+      color: GrayText;
+      opacity: 1;
+    }
+    .button[data-variant="link"] {
+      padding-inline: 0.25rem;
+    }
+  }
+}
+</style>
 ```
+```ts [announce.ts]
+/**
+ * Announces a message to screen reader users through one polite live region,
+ * shared by every component on the page.
+ *
+ * Screen readers only announce changes to a live region that's already in the
+ * page, so components prepare it when they mount, long before anything is
+ * announced. Each message is a new node, so repeating a message announces it again.
+ */
+let region: HTMLElement | undefined;
 
-#vanilla
-```html
-<!-- Do: use a link for navigation, even when it looks like a button -->
-<a class="button" href="/pricing" data-variant="solid" data-color="primary" data-size="md">
-  <span data-slot="label">See pricing</span>
-</a>
+export function prepareAnnouncer(): HTMLElement {
+  if (region?.isConnected) return region;
+  region = document.createElement("div");
+  region.setAttribute("role", "status");
+  // Visually hidden, but not with display: none, which would take it out of the accessibility tree.
+  region.style.cssText =
+    "position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap";
+  document.body.append(region);
+  return region;
+}
 
-<!-- Don't: this can't be opened in a new tab, and screen readers won't list it as a link -->
-<button class="button" type="button" id="pricing" data-variant="solid" data-color="primary" data-size="md">
-  <span data-slot="label">See pricing</span>
-</button>
-
-<script type="module">
-  document.querySelector("#pricing").addEventListener("click", () => location.assign("/pricing"));
-</script>
+export function announce(message: string) {
+  const node = document.createElement("div");
+  node.textContent = message;
+  prepareAnnouncer().append(node);
+  setTimeout(() => node.remove(), 5000);
+}
 ```
-::
+```css [tokens.css]
+/*
+ * The theme tokens the button reads, which are three per colour plus the focus
+ * ring. The values come from the Tailwind CSS palette, and every pairing passes
+ * WCAG AA (4.5:1) in every variant, at rest, on hover and when pressed, on both
+ * white and zinc-900.
+ *
+ * light-dark() follows `color-scheme`, so set `color-scheme: light dark` to follow
+ * the system, or `light` and `dark` on your theme classes.
+ */
+:root {
+  /* The solid fill, the label on top of it, and the label on the page. */
+  --color--primary: light-dark(oklch(51.1% 0.262 276.966), oklch(67.3% 0.182 276.935));
+  --color--primary-contrast: light-dark(oklch(100% 0 0), oklch(14.1% 0.005 285.823));
+  --color--primary-text: light-dark(oklch(45.7% 0.24 277.023), oklch(78.5% 0.115 274.713));
 
+  --color--secondary: light-dark(oklch(52.5% 0.223 3.958), oklch(71.8% 0.202 349.761));
+  --color--secondary-contrast: light-dark(oklch(100% 0 0), oklch(14.1% 0.005 285.823));
+  --color--secondary-text: light-dark(oklch(45.9% 0.187 3.815), oklch(82.3% 0.12 346.018));
 
-::accordion
-:::accordion-item{label="Should a button have a pointer cursor?"}
-Our reference implementation uses `cursor: pointer`, since that's the convention on the web and people read the hand as "this does something". Operating systems use the arrow for their own buttons, though, and some design systems follow them. Either choice is fine, as long as all your buttons agree. What matters more is the cursor over disabled (`not-allowed`) and loading (`progress`) buttons.
-:::
+  --color--neutral: light-dark(oklch(21% 0.006 285.885), oklch(96.7% 0.001 286.375));
+  --color--neutral-contrast: light-dark(oklch(100% 0 0), oklch(14.1% 0.005 285.823));
+  --color--neutral-text: light-dark(oklch(27.4% 0.006 286.033), oklch(92% 0.004 286.32));
 
-:::accordion-item{label="Why not disable the submit button until the form is valid?"}
-Because a disabled button can't explain itself. People don't know which field is wrong, keyboard users can't focus it to find out, and screen reader users might not find it at all. It's better to keep it enabled, validate on submit and move focus to the first error, with a message next to each field.
-:::
+  --color--success: light-dark(oklch(44.8% 0.119 151.328), oklch(79.2% 0.209 151.711));
+  --color--success-contrast: light-dark(oklch(100% 0 0), oklch(14.1% 0.005 285.823));
+  --color--success-text: light-dark(oklch(44.8% 0.119 151.328), oklch(87.1% 0.15 154.449));
 
-:::accordion-item{label='Can I use <input type="submit">?'}
-You can, but its label lives in an attribute, so it can't hold icons or a spinner. A `<button type="submit">` does everything it does, and more.
-:::
+  --color--info: light-dark(oklch(50% 0.134 242.749), oklch(74.6% 0.16 232.661));
+  --color--info-contrast: light-dark(oklch(100% 0 0), oklch(14.1% 0.005 285.823));
+  --color--info-text: light-dark(oklch(44.3% 0.11 240.79), oklch(82.8% 0.111 230.318));
 
-:::accordion-item{label="Does the Button work before JavaScript loads?"}
-Yes, as far as HTML can take it. The server renders a real `<button>` or `<a href>`, so even before the page hydrates, links navigate, submit buttons submit and `disabled` buttons stay disabled. Only the parts that need JavaScript have to wait for it, which are your `click` handlers and the blocking of focusable disabled and loading buttons.
-:::
+  --color--warning: oklch(82.8% 0.189 84.429);
+  --color--warning-contrast: light-dark(oklch(27.9% 0.077 45.635), oklch(14.1% 0.005 285.823));
+  --color--warning-text: light-dark(oklch(47.3% 0.137 46.201), oklch(87.9% 0.169 91.605));
 
-:::accordion-item{label="Why a visually hidden label rather than aria-label?"}
-Both give the button a name, but hidden text is ordinary text, so it gets translated along with the rest of the page. It's also a single mechanism for every button, whether it's icon-only or not. We'd only reach for `aria-label` when there's no other choice, and then make sure it includes the visible text.
+  --color--error: light-dark(oklch(50.5% 0.213 27.518), oklch(70.4% 0.191 22.216));
+  --color--error-contrast: light-dark(oklch(100% 0 0), oklch(14.1% 0.005 285.823));
+  --color--error-text: light-dark(oklch(44.4% 0.177 26.899), oklch(80.8% 0.114 19.571));
+
+  /* One focus colour for every component, with 3:1 or more against the page. */
+  --color--focus: light-dark(oklch(51.1% 0.262 276.966), oklch(67.3% 0.182 276.935));
+}
+```
+```ts [Button.test.ts]
+import { render, screen } from "@testing-library/vue";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { h, ref, type ComponentPublicInstance } from "vue";
+import Button from "./Button.vue";
+
+const icon = () => h("svg");
+
+describe("Button", () => {
+  it("is a button, named by its label, that never submits by accident", () => {
+    render(Button, { slots: { default: "Save changes" } });
+
+    const button = screen.getByRole("button", { name: "Save changes" });
+    expect(button).toHaveAttribute("type", "button");
+  });
+
+  it("activates with a click, Enter and Space", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(Button, { props: { onClick }, slots: { default: "Save" } });
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+    expect(onClick).toHaveBeenCalledTimes(3);
+  });
+
+  it("activates a link with Enter, but not with Space, like any other link", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(Button, { props: { href: "#settings", onClick }, slots: { default: "Settings" } });
+
+    await user.tab();
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("does nothing while disabled, and leaves the tab order", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(Button, { props: { onClick, disabled: true }, slots: { default: "Save" } });
+
+    const button = screen.getByRole("button", { name: "Save" });
+    await user.click(button);
+    await user.tab();
+    expect(button).toBeDisabled();
+    expect(button).not.toHaveFocus();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("stays in the tab order when disabled, if asked to", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(Button, {
+      props: { onClick, disabled: true, focusableWhenDisabled: true },
+      slots: { default: "Save" },
+    });
+
+    const button = screen.getByRole("button", { name: "Save" });
+    await user.tab();
+    await user.keyboard("{Enter}");
+    expect(button).toHaveFocus();
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("keeps its focus and name while loading, and can't be activated again", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    const { rerender } = render(Button, { props: { onClick }, slots: { default: "Save" } });
+
+    const button = screen.getByRole("button", { name: "Save" });
+    await user.click(button);
+    await rerender({ onClick, loading: true });
+    await user.keyboard("{Enter}");
+    await user.click(button);
+
+    expect(button).toHaveFocus();
+    expect(button).toHaveAccessibleName("Save");
+    // Browsers move focus off a natively disabled button (jsdom doesn't).
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces that it's loading", async () => {
+    const { rerender } = render(Button, {
+      props: { loadingLabel: "Saving" },
+      slots: { default: "Save" },
+    });
+
+    await rerender({ loadingLabel: "Saving", loading: true });
+    expect(await screen.findByRole("status")).toHaveTextContent("Saving");
+  });
+
+  it("doesn't submit its form while loading, even on Enter in a field", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn((event: Event) => event.preventDefault());
+    render({
+      render: () =>
+        h("form", { onSubmit }, [
+          h("input", { "aria-label": "Name" }),
+          h(Button, { type: "submit", loading: true }, () => "Save"),
+        ]),
+    });
+
+    await user.type(screen.getByRole("textbox", { name: "Name" }), "Ada{Enter}");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("renders a link for navigation, with no href while disabled", async () => {
+    const { rerender } = render(Button, {
+      props: { href: "/settings" },
+      slots: { default: "Settings" },
+    });
+
+    const link = screen.getByRole("link", { name: "Settings" });
+    expect(link).toHaveAttribute("href", "/settings");
+    expect(link).not.toHaveAttribute("type");
+
+    await rerender({ href: "/settings", disabled: true });
+    expect(link).not.toHaveAttribute("href");
+    expect(link).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("renders the button itself, so attributes, listeners and refs land on it", async () => {
+    const user = userEvent.setup();
+    const onFocus = vi.fn();
+    const instance = ref<ComponentPublicInstance>();
+    render({
+      render: () => h(Button, { ref: instance, class: "pill", name: "intent", onFocus }, () => "Save"),
+    });
+
+    const button = screen.getByRole("button", { name: "Save" });
+    await user.tab();
+    expect(button).toHaveClass("button", "pill");
+    expect(button).toHaveAttribute("name", "intent");
+    expect(onFocus).toHaveBeenCalled();
+    expect(instance.value?.$el).toBe(button);
+  });
+
+  it("names an icon-only button by its hidden label", () => {
+    render(Button, { props: { label: "Settings", iconOnly: true }, slots: { leading: icon } });
+
+    expect(screen.getByRole("button", { name: "Settings" })).toBeVisible();
+  });
+
+  it("hides its icons from assistive technologies, so they don't add to its name", () => {
+    const titled = () => h("svg", [h("title", "Plus")]);
+    render(Button, { slots: { default: "New project", leading: titled, trailing: titled } });
+
+    expect(screen.getByRole("button", { name: "New project" })).toBeInTheDocument();
+  });
+
+  it("passes ARIA states through, for toggle and menu buttons", () => {
+    render(Button, { attrs: { "aria-pressed": "true" }, slots: { default: "Mute" } });
+    render(Button, {
+      attrs: { "aria-haspopup": "menu", "aria-expanded": "true" },
+      slots: { default: "Options" },
+    });
+
+    expect(screen.getByRole("button", { name: "Mute", pressed: true })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Options", expanded: true })).toHaveAttribute(
+      "aria-haspopup",
+      "menu",
+    );
+  });
+
+  it("mirrors its props as data attributes", () => {
+    render(Button, {
+      props: { variant: "soft", color: "primary", size: "lg" },
+      slots: { default: "Save" },
+    });
+
+    const button = screen.getByRole("button", { name: "Save" });
+    expect(button).toHaveAttribute("data-variant", "soft");
+    expect(button).toHaveAttribute("data-color", "primary");
+    expect(button).toHaveAttribute("data-size", "lg");
+  });
+
+  it("renders its parts in a fixed order, and keeps its element across states", async () => {
+    const { rerender } = render(Button, {
+      slots: { default: "Save", leading: icon, trailing: icon },
+    });
+
+    const button = screen.getByRole("button", { name: "Save" });
+    const parts = () => [...button.children].map((part) => part.getAttribute("data-slot"));
+    expect(parts()).toEqual(["leading", "label", "trailing"]);
+
+    await rerender({ loading: true });
+    expect(screen.getByRole("button", { name: "Save" })).toBe(button);
+    expect(parts()).toEqual(["leading", "label", "trailing", "spinner"]);
+  });
+
+  it("warns in development when it has no accessible name", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(Button, { slots: { leading: icon } });
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("no accessible name"), expect.anything());
+    warn.mockRestore();
+  });
+});
+```
 :::
 ::
 

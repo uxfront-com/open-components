@@ -316,7 +316,7 @@ Hover, focus and disabled belong to the controls inside a dialog, like its Butto
 
 The panel looks just like a Card, with the same padding, spacing, corners, border and type, so the two read as one family. Only its background differs, since it has to cover the page: it's `Canvas`, the background browsers give a native dialog, which follows `color-scheme`, so it fits your light and dark themes as long as they set it.
 
-Its text reads one [theme token](/docs/foundations/design-tokens#theme-tokens), `--color--neutral-text`, like the Card's, and the backdrop is black at 50%, which dims a light page and a dark one alike. The Buttons inside read their own tokens, so copy [`tokens.css`](/docs/components/button/code) from the Button into your theme.
+Its text reads one [theme token](/docs/foundations/design-tokens#theme-tokens), `--color--neutral-text`, like the Card's, and the backdrop is black at 50%, which dims a light page and a dark one alike. The Buttons inside read their own tokens, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button into your theme.
 
 With our reference tokens, the title and the content come to 14.9:1 on white, and the description, at 70% of the text colour, to 5.6:1. The panel has a 1px border at 20% of the text colour, which also sets it apart on a dark page, where the backdrop barely shows. If you change the tokens or the background, make sure to check the same pairs.
 
@@ -1775,7 +1775,7 @@ The basis says where a rule comes from. Many of the rules rest on **WCAG** 2.2, 
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It uses the Button for its close button, so copy the [Button](/docs/components/button/code) and its `tokens.css` into your theme too.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It uses the Button for its close button, so copy the [Button](/docs/components/button#reference-implementation) and its `tokens.css` into your theme too.
 
 The tests are in `Dialog.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`. jsdom doesn't have `showModal()` or `close()` yet, so the tests stand in for them, at the top of the file.
 

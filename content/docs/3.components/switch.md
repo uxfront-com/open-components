@@ -313,7 +313,7 @@ The switch reads five [theme tokens](/docs/foundations/design-tokens#theme-token
 
 There's no `color` prop, so on is always the primary colour. While it's off, the track and the thumb are the text colour at 55%, like the Input's border, since they need 3:1 against the page, and 80% on hover. While it's on, the track needs 3:1 against the page, and the thumb 3:1 against the track.
 
-With our reference tokens, from the Tailwind CSS palette, the switch that's off comes to 3.5:1 on white and 5.0:1 on zinc-900, the track that's on to 6.4:1 and 5.7:1, and the thumb on it to 6.4:1 on both. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button/code), which you can copy into your theme.
+With our reference tokens, from the Tailwind CSS palette, the switch that's off comes to 3.5:1 on white and 5.0:1 on zinc-900, the track that's on to 6.4:1 and 5.7:1, and the thumb on it to 6.4:1 on both. If you change the tokens, make sure to check the same pairs. You'll find the tokens themselves in the Button's [`tokens.css`](/docs/components/button#reference-implementation), which you can copy into your theme.
 
 If you need to tune a switch, you can set its [own variables](/docs/foundations/design-tokens#component-variables), such as `--switch--track--width`, `--switch--track--height` or `--switch--thumb--offset`, from a class. The Switch's styles sit in the `components` cascade layer, so your class wins without any specificity tricks:
 
@@ -1675,7 +1675,7 @@ The basis says where a rule comes from. About half the rules rest on **WCAG** 2.
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button/code) from the Button's reference implementation into your theme too.
+Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It reads the same theme tokens as the Button, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button's reference implementation into your theme too.
 
 The tests are in `Switch.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 

@@ -669,7 +669,7 @@ The root element is the `<svg>` itself, so classes, styles and attributes you pa
 - It places it, and sizes it with `--spinner--size`, from a selector that's more specific than `.spinner`. Both sit in the `components` layer, so the more specific one wins, whichever stylesheet loads first.
 - It announces the wait itself, since the Spinner stays silent.
 
-That's all the Button does in its [reference implementation](/docs/components/button/code), along with hiding its content while the spinner covers it. While it's loading, it renders the Spinner as its last part, with `data-slot="spinner"`, and styles it from there:
+That's all the Button does in its [reference implementation](/docs/components/button#reference-implementation), along with hiding its content while the spinner covers it. While it's loading, it renders the Spinner as its last part, with `data-slot="spinner"`, and styles it from there:
 
 ```css
 @layer components {
@@ -948,7 +948,7 @@ The basis says where a rule comes from. A few rules rest on **WCAG** 2.2, which 
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, powers every example on it and is what the [Button](/docs/components/button/code) shows while it's loading. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves: hidden from assistive technologies, drawn in `currentColor`, `1em` by default and pulsing with reduced motion.
+Our Vue 3 reference implementation does its part of every rule on this page, powers every example on it and is what the [Button](/docs/components/button#reference-implementation) shows while it's loading. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves: hidden from assistive technologies, drawn in `currentColor`, `1em` by default and pulsing with reduced motion.
 
 The tests are in `Spinner.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue` and `@testing-library/jest-dom`.
 
