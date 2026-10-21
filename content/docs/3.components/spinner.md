@@ -13,7 +13,7 @@ This page walks you through building one the right way. We'll look at:
 - **Developer Experience** (DX) - how developers work with it
 - **Agentic Experience** (AX) - how agents can read and verify it
 
-Every example on this page runs on our [reference implementation](/docs/components/spinner#reference-implementation), which does its part of every rule in the [checklist](/docs/components/spinner#checklist), and is the same one the [Button](/docs/components/button#loading) shows while it's loading. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Spinner with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/spinner#deterministic).
+Every example on this page runs on our [reference implementation](/docs/components/spinner#reference-implementation), which does its part of every rule in the [checklist](/docs/components/spinner#checklist), and is the same one the [Button](/docs/components/button/ux#loading) shows while it's loading. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Spinner with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/spinner#deterministic).
 
 ## At a glance
 
@@ -26,7 +26,7 @@ Every example on this page runs on our [reference implementation](/docs/componen
 | States   | None of its own. It turns while it's in the page, and pulses when someone prefers reduced motion |
 | Size     | `1em`, the size of the text around it, unless `--spinner--size` sets another                  |
 | Colour   | `currentColor`, the colour of the text around it                                              |
-| Used by  | [Button](/docs/components/button#loading)                                                     |
+| Used by  | [Button](/docs/components/button/ux#loading)                                                     |
 | WCAG 2.2 | 1.1.1, 1.4.4, 1.4.11, 2.2.2, 2.3.3 and 4.1.3                                                  |
 
 ## User Interface (UI)
@@ -440,7 +440,7 @@ export function CheckForUpdates() {
 
 - The status message is in the page from the start, empty, so screen readers announce "Checking for updates" as soon as it appears, and then the outcome ([WCAG 4.1.3](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)).
 - The text is what people read, and what screen readers and agents find, so the Spinner can stay silent.
-- The spinner goes with the message here, since the message says more than the button's label would. The Button is disabled while it checks, and keeps its focus thanks to `focusableWhenDisabled`. When the button's own label says enough, its [`loading`](/docs/components/button#loading) state does all of this for you, spinner and announcement included.
+- The spinner goes with the message here, since the message says more than the button's label would. The Button is disabled while it checks, and keeps its focus thanks to `focusableWhenDisabled`. When the button's own label says enough, its [`loading`](/docs/components/button/ux#loading) state does all of this for you, spinner and announcement included.
 
 #### Keep focus where it is
 
@@ -1054,7 +1054,7 @@ All three show that something is on its way, and each one suits a different wait
 
 | When you're waiting for…                                    | Use                                                   | Because                                                       |
 | ----------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
-| An action people just started, like saving or sending       | A loading [Button](/docs/components/button#loading)   | It shows the wait where people acted, and keeps their focus   |
+| An action people just started, like saving or sending       | A loading [Button](/docs/components/button/ux#loading)   | It shows the wait where people acted, and keeps their focus   |
 | Something of unknown length, in one part of the page        | A Spinner, next to a status message                   | It shows that something's happening, right where it's happening |
 | Content whose layout you know, like a list or a card        | A skeleton                                            | It holds the content's place, so nothing moves when it arrives |
 | Something you can measure, or that takes over 10 seconds    | A progress bar                                        | It shows how much is done, and how much is left               |

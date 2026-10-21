@@ -389,7 +389,7 @@ for (const tooltip of document.querySelectorAll(".tooltip")) {
 ::
 ::
 
-The Button's own [label](/docs/components/button#icons) is what names each button, and the tooltip only shows it, so screen readers, voice control and agents all find "Bold" whether the tooltip is open or not. That's also why `label` is the right type here: with `description`, screen readers would read "Bold, button, Bold".
+The Button's own [label](/docs/components/button/ui#icons) is what names each button, and the tooltip only shows it, so screen readers, voice control and agents all find "Bold" whether the tooltip is open or not. That's also why `label` is the right type here: with `description`, screen readers would read "Bold, button, Bold".
 
 A description adds something the name doesn't say, like what an action does to your data:
 
@@ -760,7 +760,7 @@ Screen readers never see a tooltip open. They read the trigger, so what matters 
 | `label`       | `aria-hidden="true"`, with no role      | Keeps its own name, like a visually hidden label | "Bold, button"                   |
 | `description` | `role="tooltip"`, with an `id`          | Points to it with `aria-describedby`             | "Archive, button, Archived projects stay in search" |
 
-Never point to a tooltip with `aria-labelledby`. It would replace the trigger's own name with the tooltip's text, and an icon-only Button's name comes from its hidden label, as the Button's [`button/accessible-name`](/docs/components/button#ux-rules) rule asks. Hidden text gets translated along with the page, and stays the name when the tooltip's text changes, like a shortcut added to it. With `type="label"`, the Tooltip links nothing at all, and the name stays where it was.
+Never point to a tooltip with `aria-labelledby`. It would replace the trigger's own name with the tooltip's text, and an icon-only Button's name comes from its hidden label, as the Button's [`button/accessible-name`](/docs/components/button/ux#ux-checklist) rule asks. Hidden text gets translated along with the page, and stays the name when the tooltip's text changes, like a shortcut added to it. With `type="label"`, the Tooltip links nothing at all, and the name stays where it was.
 
 #### Open it on focus
 
@@ -820,7 +820,7 @@ The tooltip is beside its trigger, in the top layer. It stays there while the po
 
 #### Disabled triggers
 
-A native `disabled` button leaves the tab order, so keyboard users can never open its tooltip. When a tooltip says why a button is disabled, give the Button `focusableWhenDisabled`, which sets `aria-disabled` instead, as the Button's [Disabled](/docs/components/button#disabled) state recommends. The button stays in the tab order, its tooltip opens on focus and hover, and the Button still blocks the click.
+A native `disabled` button leaves the tab order, so keyboard users can never open its tooltip. When a tooltip says why a button is disabled, give the Button `focusableWhenDisabled`, which sets `aria-disabled` instead, as the Button's [Disabled](/docs/components/button/ux#disabled) state recommends. The button stays in the tab order, its tooltip opens on focus and hover, and the Button still blocks the click.
 
 ::tooltip-disabled-example
 ::framework-switcher
@@ -1184,7 +1184,7 @@ Bind the props on the element that takes focus, which is usually the trigger's r
 
 #### With other components
 
-- An icon-only [Button](/docs/components/button#icons) keeps its visually hidden label, and its tooltip shows that same label, with `type="label"`.
+- An icon-only [Button](/docs/components/button/ui#icons) keeps its visually hidden label, and its tooltip shows that same label, with `type="label"`.
 - A Button with `focusableWhenDisabled` stays focusable while it's disabled, so its tooltip can still say why (see [Disabled triggers](/docs/components/tooltip#disabled-triggers)).
 - An [Input](/docs/components/input) is described by its hint, which stays on the page rather than in a tooltip, since people need it while they type.
 - A Dialog or Popover around a Tooltip keeps its own `Escape` handling. The Tooltip only takes `Escape` while it's open, and stops it there.

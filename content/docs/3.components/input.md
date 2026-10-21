@@ -53,7 +53,7 @@ Every input has a container and a control. The label, any hint and any error mes
 
 ### Sizes
 
-The `size` prop scales the height, text, icons, padding and corner radius together, and `md` is the default. The heights are the same as the [Button](/docs/components/button#sizes)'s, so an input and a button of the same size line up in a row.
+The `size` prop scales the height, text, icons, padding and corner radius together, and `md` is the default. The heights are the same as the [Button](/docs/components/button/ui#sizes)'s, so an input and a button of the same size line up in a row.
 
 ::input-sizes-example
 ::framework-switcher
@@ -1525,7 +1525,7 @@ export function Subscribe() {
 
 #### Passwords
 
-A password input hides what people type, which makes typos hard to spot. Let them check what they've typed with a Show password button in `actions`. It's a [toggle button](/docs/components/button#toggle-buttons) that switches the input's `type` to `text` and back, so it keeps its label and says whether it's on with `aria-pressed`.
+A password input hides what people type, which makes typos hard to spot. Let them check what they've typed with a Show password button in `actions`. It's a [toggle button](/docs/components/button/ux#toggle-buttons) that switches the input's `type` to `text` and back, so it keeps its label and says whether it's on with `aria-pressed`.
 
 ::input-password-example
 ::framework-switcher
@@ -1696,7 +1696,7 @@ const [shown, setShown] = createSignal(false);
 ::
 
 - Use `autocomplete="current-password"` to sign in and `"new-password"` to sign up, so password managers fill in the right one, or offer to make up a strong one.
-- The toggle is a Button, so its `type` is `"button"`, and it never sends the form by accident (see the Button's [Don't submit forms by accident](/docs/components/button#dont-submit-forms-by-accident)).
+- The toggle is a Button, so its `type` is `"button"`, and it never sends the form by accident (see the Button's [Don't submit forms by accident](/docs/components/button/ux#dont-submit-forms-by-accident)).
 - Edge draws a Show password button of its own once people start typing, so the Input hides it when it has actions, to make sure there's only ever one.
 
 ### Adaptive
@@ -1963,7 +1963,7 @@ import Input from "../components/Input.astro";
 
 ### Consistent
 
-Once you've learned the [Button](/docs/components/button#consistent)'s API, you already know most of the Input's. These names mean the same thing everywhere in Open Components:
+Once you've learned the [Button](/docs/components/button/dx#consistent)'s API, you already know most of the Input's. These names mean the same thing everywhere in Open Components:
 
 | Name                   | Kind  | What it means                                                       |
 | ---------------------- | ----- | ------------------------------------------------------------------- |

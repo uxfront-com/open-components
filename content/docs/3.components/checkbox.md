@@ -52,7 +52,7 @@ Every checkbox has a container, a box, an indicator and a hit area. The label is
 
 ### Sizes
 
-The `size` prop scales the box, the text and the gap between them together, and `md` is the default. The names are the same as the [Button](/docs/components/button#sizes)'s and the [Input](/docs/components/input#sizes)'s, and so is the text, so a checkbox reads at the same size as the inputs and buttons next to it.
+The `size` prop scales the box, the text and the gap between them together, and `md` is the default. The names are the same as the [Button](/docs/components/button/ui#sizes)'s and the [Input](/docs/components/input#sizes)'s, and so is the text, so a checkbox reads at the same size as the inputs and buttons next to it.
 
 ::checkbox-sizes-example
 ::framework-switcher
@@ -1349,7 +1349,7 @@ import Checkbox from "../components/Checkbox.astro";
 
 ### Consistent
 
-Once you've learned the [Button](/docs/components/button#consistent)'s and the [Input](/docs/components/input#consistent)'s APIs, you already know most of the Checkbox's. These names mean the same thing everywhere in Open Components:
+Once you've learned the [Button](/docs/components/button/dx#consistent)'s and the [Input](/docs/components/input#consistent)'s APIs, you already know most of the Checkbox's. These names mean the same thing everywhere in Open Components:
 
 | Name                   | Kind  | What it means                                                       |
 | ---------------------- | ----- | ------------------------------------------------------------------- |

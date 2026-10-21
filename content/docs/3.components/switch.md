@@ -50,7 +50,7 @@ The root `<span>` around them carries the size and takes your classes. The label
 
 ### Sizes
 
-The `size` prop scales the track and the thumb together, and `md` is the default. It takes the same five values as the [Input](/docs/components/input#sizes) and the [Button](/docs/components/button#sizes), and every switch is shorter than the input of the same size, so it fits in a row of form controls of its size.
+The `size` prop scales the track and the thumb together, and `md` is the default. It takes the same five values as the [Input](/docs/components/input#sizes) and the [Button](/docs/components/button/ui#sizes), and every switch is shorter than the input of the same size, so it fits in a row of form controls of its size.
 
 ::switch-sizes-example
 ::framework-switcher
@@ -1368,7 +1368,7 @@ Keep in mind that a switch still applies right away inside a form. If the form o
 
 - The Field, on our [Roadmap](/docs/getting-started/roadmap), will render the label, hint and error message around a Switch, give it an `id`, and set its `aria-describedby` and `aria-invalid` for you.
 - The [Checkbox](/docs/components/checkbox) is for choices that are sent with a form. It takes the same `size` names and states as the Switch, and adds an indeterminate state.
-- A [toggle button](/docs/components/button#toggle-buttons) is for an action that stays pressed, like Bold or Mute in a toolbar, rather than a setting.
+- A [toggle button](/docs/components/button/ux#toggle-buttons) is for an action that stays pressed, like Bold or Mute in a toolbar, rather than a setting.
 - The [Input](/docs/components/input) and the [Button](/docs/components/button) take the same `size` names, so a row of form controls can share one.
 
 ### Controllable
@@ -2180,7 +2180,7 @@ A switch turns a setting on or off, right away. For anything else, another compo
 | ----------------------------------------------------------------- | -------------------------------------------------------- |
 | Turn a setting on or off, with an effect they see right away      | Switch                                                   |
 | Pick options that are sent with a form, like agreeing to terms    | [Checkbox](/docs/components/checkbox)                    |
-| Turn an action on and off in a toolbar, like Bold or Mute         | [Toggle button](/docs/components/button#toggle-buttons)  |
+| Turn an action on and off in a toolbar, like Bold or Mute         | [Toggle button](/docs/components/button/ux#toggle-buttons)  |
 | Pick one of a few settings, like Light, Dark or System            | Radio Group                                              |
 
 The [Checkbox](/docs/components/checkbox) takes the same `size` names and states as the Switch, and adds an indeterminate state, but its `<label>` wraps the box, where the Switch's is linked with `for`. The Radio Group is on our [Roadmap](/docs/getting-started/roadmap), and it'll share the Switch's sizes, states and rules for labels.

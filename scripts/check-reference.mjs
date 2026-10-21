@@ -11,13 +11,19 @@ const pages = (await readdir(PAGES, { recursive: true })).filter((path) => path.
 const problems = [];
 
 for (const component of await readdir(REFERENCE)) {
-  // The page is named after the component: button.md.
-  const page = pages.find((path) => path.split("/").pop().replace(/^\d+\./, "") === `${component}.md`);
-  if (!page) {
-    problems.push(`${REFERENCE}/${component}: no page named ${component}.md in ${PAGES}`);
+  // The page is named after the component, card.md, or it's split into a folder
+  // named after it, button/, with the code on one of its parts.
+  const unnumbered = (name) => name.replace(/^\d+\./, "");
+  const files = pages.filter((path) => {
+    const parts = path.split("/").map(unnumbered);
+    return parts.at(-1) === `${component}.md` || parts.at(-2) === component;
+  });
+  if (!files.length) {
+    problems.push(`${REFERENCE}/${component}: no page named ${component}.md, or folder named ${component}, in ${PAGES}`);
     continue;
   }
-  const markdown = await readFile(join(PAGES, page), "utf8");
+  const page = files.length === 1 ? files[0] : `${files[0].split("/").slice(0, -1).join("/")}/`;
+  const markdown = (await Promise.all(files.map((file) => readFile(join(PAGES, file), "utf8")))).join("\n");
   const blocks = new Map(
     [...markdown.matchAll(/^```\w+ \[(.+?)\]\n([\s\S]*?)^```$/gm)].map(([, name, code]) => [name, code]),
   );

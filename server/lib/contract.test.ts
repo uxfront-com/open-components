@@ -1,11 +1,11 @@
 // @vitest-environment node
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { buildContract } from "./contract";
+import { readPages } from "./raw";
 
 // The schema every contract names on its first line, which the site publishes at
 // /schemas/contract.json.
@@ -19,12 +19,10 @@ function errors(contract: unknown) {
 }
 
 // Every contract the docs publish at /raw/<path>.yaml, by page.
-const contracts = readdirSync("content/docs", { recursive: true, encoding: "utf8" }).flatMap(
-  (file): [string, any][] => {
-    const contract = file.endsWith(".md") && buildContract(readFileSync(join("content/docs", file), "utf8"));
-    return contract ? [[file, parse(contract)]] : [];
-  },
-);
+const contracts = readPages("content/docs").flatMap(({ file, source }): [string, any][] => {
+  const contract = buildContract(source);
+  return contract ? [[file, parse(contract)]] : [];
+});
 
 describe("Contracts", () => {
   it.each(contracts)("%s's contract follows the schema", (_, contract) => {
@@ -39,7 +37,7 @@ describe("Contracts", () => {
 
   // A schema that accepts anything would pass every contract above, so these break
   // the Button's contract one way at a time.
-  const [, button] = contracts.find(([file]) => file.endsWith("button.md"))!;
+  const [, button] = contracts.find(([file]) => file.endsWith("button/index.md"))!;
   const withRule = (change: (rule: any) => unknown) => (contract: any) => ({
     ...contract,
     rules: [change(contract.rules[0])],

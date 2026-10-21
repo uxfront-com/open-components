@@ -635,7 +635,7 @@ The close button comes last, even though it comes first on the page, since start
 
 We use `data-autofocus` rather than `autofocus`, since it works the same in every framework, while React focuses an `autoFocus` element as it renders, before the dialog is open. Browsers honour `autofocus` in a dialog too, so the Dialog counts it as well.
 
-When the dialog closes, focus goes back to the control that opened it, so people carry on where they left off. Sometimes that control is gone, like a Delete button on a row the dialog just deleted. Focus then has nowhere to go, and falls back to the top of the page, so move it yourself, to the next row or the list, as the Button's [Move focus where people expect it](/docs/components/button#move-focus-where-people-expect-it) explains.
+When the dialog closes, focus goes back to the control that opened it, so people carry on where they left off. Sometimes that control is gone, like a Delete button on a row the dialog just deleted. Focus then has nowhere to go, and falls back to the top of the page, so move it yourself, to the next row or the list, as the Button's [Move focus where people expect it](/docs/components/button/ux#move-focus-where-people-expect-it) explains.
 
 #### Keyboard
 
@@ -841,7 +841,7 @@ An alert dialog works a little differently, since a stray click shouldn't count 
 - Focus starts on that action, the least destructive one, so a quick `Enter` never deletes anything. Mark it with `data-autofocus`, or, when the body has no controls, put it first, since the Dialog then starts on the first action.
 - Name both actions by what they do, like "Keep project" and "Delete project", rather than "Cancel" and "OK", so people know what they're agreeing to without reading the question again.
 
-Keep alert dialogs for what can't be undone. For everyday actions, like archiving a message, it's kinder to act straight away and offer undo, as the Button's [Make destructive actions recoverable](/docs/components/button#make-destructive-actions-recoverable) explains, since people soon learn to press through a confirmation without reading it.
+Keep alert dialogs for what can't be undone. For everyday actions, like archiving a message, it's kinder to act straight away and offer undo, as the Button's [Make destructive actions recoverable](/docs/components/button/ux#make-destructive-actions-recoverable) explains, since people soon learn to press through a confirmation without reading it.
 
 ### Adaptive
 
@@ -1146,7 +1146,7 @@ Vanilla and Astro have no state to bind `open` to, so their script opens the dia
 
 ### Consistent
 
-Once you've learned the [Button](/docs/components/button#consistent)'s API, you already know most of the Dialog's. These names mean the same thing everywhere in Open Components:
+Once you've learned the [Button](/docs/components/button/dx#consistent)'s API, you already know most of the Dialog's. These names mean the same thing everywhere in Open Components:
 
 | Name      | Kind  | What it means                                                         |
 | --------- | ----- | --------------------------------------------------------------------- |

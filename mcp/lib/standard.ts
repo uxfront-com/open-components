@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { parse, parseDocument } from "yaml";
 import { buildContract } from "../../server/lib/contract";
-import { docsPath, rawContract, rawPage } from "../../server/lib/raw";
+import { docsPath, rawContract, rawPage, readPages } from "../../server/lib/raw";
 import { agentMarkdown } from "./agent-markdown";
 import { renderFrameworks } from "./frameworks";
 import { anchors, cells, heading, scan, tokens } from "./markdown";
@@ -30,14 +30,10 @@ export function buildStandard(options: { root: string; site: string; frameworks:
   const problems: string[] = [];
   const docs = join(root, "content/docs");
 
-  const files = readdirSync(docs, { recursive: true, encoding: "utf8" })
-    .filter((file) => file.endsWith(".md"))
-    .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-
   const sources = new Map<string, string>();
   const contracts = new Map<string, { rules?: unknown }>();
-  const pages = files.map((file): Page => {
-    const source = readFileSync(join(docs, file), "utf8");
+  // A page split into parts, like the Button's, is one page here (see readPages).
+  const pages = readPages(docs).map(({ file, source, parts }): Page => {
     const path = docsPath(file);
     // Read the way Nuxt Content reads it, which builds past a YAML slip.
     const frontmatter = parseDocument(source.match(FRONTMATTER)?.[1] ?? "");
@@ -72,6 +68,7 @@ export function buildStandard(options: { root: string; site: string; frameworks:
       frameworks: frameworks
         .map((framework) => framework.value)
         .filter((value) => markdown.includes(`<!-- framework: ${value} -->`)),
+      ...(parts.length && { parts: parts.map(docsPath) }),
     };
     // MDC gives a heading its id from its text without markup, while ours keeps it,
     // so headings stay plain text. Inline code is fine: both read it as written.

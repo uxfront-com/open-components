@@ -34,6 +34,23 @@ describe("agentMarkdown", () => {
     expect(agent("::accordion", `  ${start}`, "  Not here.", "  :::", "::")).toBe(`**${label}**\n\nNot here.`);
   });
 
+  // The Button's Overview links each layer's page from a card.
+  it("keeps a card's title as a bold link to where it goes, above its description", () => {
+    expect(
+      agent(
+        "::card-group",
+        ':::card{to="/docs/components/button/ui" icon="i-lucide-palette" title="User Interface (UI)"}',
+        "How a button looks.",
+        ":::",
+        "::",
+      ),
+    ).toBe("[**User Interface (UI)**](https://opencomponents.dev/docs/components/button/ui)\n\nHow a button looks.");
+  });
+
+  it("keeps the title of a card without a link, in bold", () => {
+    expect(agent(':::card{icon="i-lucide-palette" title="Colours"}', "Seven of them.", ":::")).toBe("**Colours**\n\nSeven of them.");
+  });
+
   it("keeps each tab's label, in bold, above its body", () => {
     expect(
       agent(

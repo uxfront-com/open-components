@@ -10,6 +10,8 @@
 @source "./components/docs";
 @source "./components/changelog";
 @source "./pages/changelog";
+/* And the theme's own classes in app.config.ts, like the link cards'. */
+@source "./app.config.ts";
 
 /* Identifiers in a table's first column, like prop names and rule IDs, read as
    one word: don't break them at their hyphens. */

@@ -34,6 +34,15 @@ export default defineAppConfig({
           indicator: "bottom-0",
         },
       },
+      // Link cards, like the ones the Button's Overview has for its layers' pages,
+      // lead with a large icon. A hovered card's tint takes the muted description
+      // below 4.5:1 in light mode, so it darkens on hover.
+      card: {
+        slots: {
+          description: "group-hover:text-toned",
+          icon: "size-12 mb-4",
+        },
+      },
     },
   },
 });
