@@ -107,6 +107,8 @@ describe("joinPage", () => {
   it("fails on a part without a title or a section to go before", () => {
     expect(() => joinPage(index, ["---\ntitle: Lost\n---\n\nText.\n"])).toThrow("needs a title and the section it goes before");
     expect(() => joinPage(index, [part("Lost", "Glossary", "Text.")])).toThrow("no section named Glossary");
+    const unruled = index.replace("## Checklist", "## Rules");
+    expect(() => joinPage(unruled, [part("Lost", "Reference implementation", "Text.", "", "## UI rules", "", "| r |")])).toThrow("no section named Checklist");
     const bare = index.replace("## Sources", "## Links");
     expect(() => joinPage(bare, [part("Lost", "Checklist", "Text.", "", "## FAQ", "", "Answers.")])).toThrow("no section named Sources");
   });

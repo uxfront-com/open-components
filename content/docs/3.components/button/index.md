@@ -1,6 +1,8 @@
 ---
 title: Button
 description: How to build a button that looks right, works for everyone, feels familiar to every developer and can be checked by your agents.
+navigation:
+  title: Overview
 ---
 
 Buttons let people act on what's in front of them, whether that's saving a form, sending a message, opening a dialog or deleting a file. They're the most common interactive component in any interface, and also the one we most often get wrong. Think of a `<div>` that you can't reach with the keyboard, a form that gets sent twice, or a spinner that throws your focus back to the top of the page.

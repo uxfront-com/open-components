@@ -9,8 +9,10 @@ import type theme from "#build/ui/content/content-navigation";
  * - A group without a page of its own, like a top-level section, has a label and
  *   stays open.
  * - A group with a page of its own, like the Button's folder, whose index.md is
- *   its Overview, is a link to that page, in place of an "Overview" entry, with a
- *   chevron button beside it that opens and closes the group without navigating.
+ *   its Overview, is a link to that page, which opens the group, with a chevron
+ *   button beside it that opens and closes the group without navigating. The
+ *   group still lists its Overview first, which marks the page as current, so the
+ *   label doesn't too.
  *   It opens on any of its pages and closes once you leave them, and in between
  *   the chevron decides. The sidebar stays mounted as you move between pages, so
  *   the route sets it, rather than the state it mounted with.
@@ -56,9 +58,15 @@ watch(
         :class="ui.itemWithChildren({ level: level > 0 })"
       >
         <div v-if="ownPage(item)" class="flex items-center">
-          <ULink v-slot="{ active, ...link }" :to="item.path" exact custom>
-            <ULinkBase v-bind="link" data-slot="link" :class="ui.link({ active, level: level > 0 })">
-              <UIcon v-if="item.icon" :name="String(item.icon)" :class="ui.linkLeadingIcon({ active })" />
+          <ULink v-slot="link" :to="item.path" :active="false" custom>
+            <!-- The label opens the group, even on its own page, where the route doesn't change. -->
+            <ULinkBase
+              v-bind="link"
+              data-slot="link"
+              :class="ui.link({ active: false, level: level > 0 })"
+              @click="open[item.path] = true"
+            >
+              <UIcon v-if="item.icon" :name="String(item.icon)" :class="ui.linkLeadingIcon({ active: false })" />
               <span :class="ui.linkTitle()">{{ item.title }}</span>
             </ULinkBase>
           </ULink>
@@ -84,7 +92,7 @@ watch(
 
         <div v-show="!ownPage(item) || open[item.path]" :id="`${id}-${index}`" data-slot="content" :class="ui.content()">
           <DocsNavigationList
-            :navigation="item.children.filter((child) => child.path !== item.path)"
+            :navigation="item.children"
             :ui
             :level="level + 1"
             :wrap="ownPage(item)"

@@ -10,6 +10,9 @@ export default defineNuxtRouteMiddleware((to) => {
   if (import.meta.server || !to.hash) return;
   const pages: Record<string, Record<string, string> | undefined> = useAppConfig().splitAnchors ?? {};
   // The router has already decoded the hash.
-  const target = pages[to.path]?.[to.hash.slice(1)];
+  const anchors = pages[to.path];
+  const anchor = to.hash.slice(1);
+  // Only the map's own anchors, so a hash like #constructor stays as it is.
+  const target = anchors && Object.hasOwn(anchors, anchor) ? anchors[anchor] : undefined;
   if (target) return navigateTo(target, { replace: true });
 });
