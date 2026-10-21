@@ -42,11 +42,11 @@ describe("findPage", () => {
   });
 });
 
-// The Overview's cards come back as links to the layer pages, at the start of At a glance.
-describe("The Button's At a glance", () => {
-  it("starts with a link to each layer page, named by its layer, then its description, before its table", () => {
-    const glance = button.headings.find((heading) => heading.text === "At a glance")!;
-    const text = sectionText(standard, button, glance).trim();
+// The Overview's cards come back as links to the layer pages, in its introduction.
+describe("The Button's introduction", () => {
+  it("links each layer page, named by its layer, then its description, before its At a glance table", () => {
+    const [intro] = findSections(button, ["Button"]).found;
+    const text = sectionText(standard, button, intro!).trim();
     const links = [
       ["User Interface (UI)", "ui"],
       ["User Experience (UX)", "ux"],

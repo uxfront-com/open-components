@@ -8,17 +8,6 @@ navigation:
 Buttons let people act on what's in front of them, whether that's saving a form, sending a message, opening a dialog or deleting a file. They're the most common interactive component in any interface, and also the one we most often get wrong. Think of a `<div>` that you can't reach with the keyboard, a form that gets sent twice, or a spinner that throws your focus back to the top of the page.
 
 This page walks you through building one the right way. We'll look at:
-- [**User Interface**](/docs/components/button/ui) (UI) - how a button looks
-- [**User Experience**](/docs/components/button/ux) (UX) - how it behaves for every person and every input
-- [**Developer Experience**](/docs/components/button/dx) (DX) - how developers work with it
-- [**Agentic Experience**](/docs/components/button/ax) (AX) - how agents can read and verify it
-
-Every example on this page runs on our [reference implementation](/docs/components/button#reference-implementation), which does its part of every rule in the [checklist](/docs/components/button#checklist), so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
-
-::button-playground
-::
-
-## At a glance
 
 ::card-group
 :::card{to="/docs/components/button/ui" icon="i-lucide-palette" title="User Interface (UI)"}
@@ -38,6 +27,11 @@ How agents read, build and check a button, from its accessibility tree to its co
 :::
 ::
 
+Every example on this page runs on our [reference implementation](/docs/components/button#reference-implementation), which does its part of every rule in the [checklist](/docs/components/button#checklist), so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
+
+::button-playground
+::
+
 | Aspect   | Button                                                                                       |
 | -------- | -------------------------------------------------------------------------------------------- |
 | Element  | `<button type="button">`, or `<a href>` when it takes you somewhere                          |
@@ -51,7 +45,6 @@ How agents read, build and check a button, from its accessibility tree to its co
 | Pattern  | [WAI-ARIA APG Button](https://www.w3.org/WAI/ARIA/apg/patterns/button/)                      |
 | WCAG 2.2 | 1.4.3, 1.4.11, 2.1.1, 2.4.7, 2.5.2, 2.5.3, 2.5.8, 4.1.2 and 4.1.3, among others              |
 
-
 ## Checklist
 
 Here's every rule in one place, along with where it comes from and how to check it. A button meets the standard when it meets every **must**, and each **should** is expected unless you have a good reason not to follow it.
@@ -62,10 +55,10 @@ The basis says where a rule comes from. About half the rules rest on **WCAG** 2.
 
 You'll find the rules for each layer on its page:
 
-- [UI Checklist](/docs/components/button/ui#ui-checklist)
-- [UX Checklist](/docs/components/button/ux#ux-checklist)
-- [DX Checklist](/docs/components/button/dx#dx-checklist)
-- [AX Checklist](/docs/components/button/ax#ax-checklist)
+- [User Interface (UI) Checklist](/docs/components/button/ui#ui-checklist)
+- [User Experience (UX) Checklist](/docs/components/button/ux#ux-checklist)
+- [Developer Experience (DX) Checklist](/docs/components/button/dx#dx-checklist)
+- [Agentic Experience (AX) Checklist](/docs/components/button/ax#ax-checklist)
 
 ## Reference implementation
 

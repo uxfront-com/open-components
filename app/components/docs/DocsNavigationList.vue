@@ -23,8 +23,6 @@ const props = withDefaults(
     // The classes DocsNavigation.vue builds from Nuxt UI's theme.
     ui: Record<keyof typeof theme.slots, (variants?: Record<string, unknown>) => string>;
     level?: number;
-    // Whether titles wrap rather than get cut short, like the Button's layers' full names.
-    wrap?: boolean;
   }>(),
   { level: 0 },
 );
@@ -95,7 +93,6 @@ watch(
             :navigation="item.children"
             :ui
             :level="level + 1"
-            :wrap="ownPage(item)"
           />
         </div>
       </li>
@@ -104,7 +101,7 @@ watch(
         <ULink v-slot="{ active, ...link }" :to="item.path" exact custom>
           <ULinkBase v-bind="link" data-slot="link" :class="ui.link({ active, level: level > 0 })">
             <UIcon v-if="item.icon" :name="String(item.icon)" :class="ui.linkLeadingIcon({ active })" />
-            <span :class="ui.linkTitle({ class: wrap && 'whitespace-normal' })">{{ item.title }}</span>
+            <span :class="ui.linkTitle()">{{ item.title }}</span>
           </ULinkBase>
         </ULink>
       </li>

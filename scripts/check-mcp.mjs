@@ -248,13 +248,13 @@ async function checkServer() {
   check(partOutline.text === outline.text, "get-page {path: /docs/components/button/ux} isn't the Button's page");
   const together = await call("get-page", { path: "button", sections: ["User Interface (UI)", "User Experience (UX)", "Reference implementation"] });
   check(together.text.includes("too long to return together"), "get-page returns sections that are too long together instead of their outline");
-  // A split page's rules, from its layer pages, and the Overview's cards, as links.
+  // A split page's rules, from its layer pages, and the Overview's cards, as links in its introduction.
   const uxRules = await call("get-page", { path: "button", sections: ["UX rules"] });
   check(uxRules.text.includes("`button/keep-focus`"), "get-page's UX rules section doesn't have button/keep-focus");
-  const glance = await call("get-page", { path: "button", sections: ["At a glance"] });
+  const intro = await call("get-page", { path: "button", sections: ["Button"] });
   check(
-    ["ui", "ux", "dx", "ax"].every((layer) => glance.text.includes(`](${SITE}/docs/components/button/${layer})`)),
-    "get-page's At a glance section doesn't link the Button's four layer pages",
+    ["ui", "ux", "dx", "ax"].every((layer) => intro.text.includes(`](${SITE}/docs/components/button/${layer})`)),
+    "get-page's introduction of the Button doesn't link its four layer pages",
   );
   const every = await call("get-page", { path: "button", sections: ["Variants"] });
   check(every.text.includes("**React**") && every.text.includes("**Vanilla**"), "get-page's Variants section doesn't label each framework");
