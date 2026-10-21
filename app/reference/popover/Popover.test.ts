@@ -383,6 +383,24 @@ describe("Popover", () => {
     expect(screen.getByRole("button", { name: "Filters", hidden: true })).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("closes alone on Escape inside a Dialog with focus on the Dialog itself, like after a click on its text", async () => {
+    const user = userEvent.setup();
+    const { onDialogClose, onClose } = inDialog();
+    await openFrom(user);
+
+    // A click on text that can't take focus leaves it on the <dialog>.
+    const dialog = screen.getByRole("dialog", { name: "Settings" });
+    dialog.tabIndex = -1;
+    dialog.focus();
+    await user.keyboard("{Escape}");
+    expect(popover()).toHaveAttribute("data-state", "closed");
+    expect(onClose.mock.calls).toEqual([["escape"]]);
+    expect(onDialogClose).not.toHaveBeenCalled();
+
+    await user.keyboard("{Escape}");
+    expect(onDialogClose).toHaveBeenCalledWith("escape", "");
+  });
+
   it("leaves Escape to a control in the Dialog that handles it first", async () => {
     const user = userEvent.setup();
     const doneKeydown = vi.fn((event: KeyboardEvent) => event.key === "Escape" && event.preventDefault());

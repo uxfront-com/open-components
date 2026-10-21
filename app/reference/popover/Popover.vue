@@ -197,6 +197,13 @@ function onHostKeydown(event: KeyboardEvent) {
   onKeydown(event);
 }
 
+// With focus on the Dialog itself, like after a click on text in the popover, which can't
+// take focus, none of its parts hears the key. So the Dialog does too, in the capture
+// phase, but only then: with no control focused, it takes the key from nobody.
+function onDialogKeydown(event: KeyboardEvent) {
+  if (event.target === event.currentTarget) onKeydown(event);
+}
+
 // A Dialog that closes, like from its Done button, takes the popover with it.
 function onHostClose() {
   if (showing) dismiss("closed");
@@ -235,6 +242,7 @@ function listen(on: boolean) {
   const host = popover.value?.parentElement?.closest("dialog");
   if (on) hostParts = [...(host?.children ?? [])];
   for (const part of hostParts) part[method]("keydown", onHostKeydown as EventListener);
+  host?.[method]("keydown", onDialogKeydown as EventListener, true);
   host?.[method]("close", onHostClose);
   if (!on) hostParts = [];
   if (!anchored()) {
