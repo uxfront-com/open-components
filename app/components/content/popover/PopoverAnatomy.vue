@@ -5,7 +5,7 @@ import "~/reference/button/tokens.css";
 /**
  * The parts of a popover, numbered on a Filters Button with its popover drawn open below
  * it, the same as ButtonAnatomy on the Button page. The popover is a picture of the
- * reference Popover, drawn with its arrow on, since a real one opens in the top layer.
+ * reference Popover, at its size and with its arrow, since a real one opens in the top layer.
  * The list the numbers point to is the default slot, so the page's markdown keeps it:
  *
  * ```md
@@ -92,7 +92,8 @@ import "~/reference/button/tokens.css";
   outline-offset: 3px;
 }
 
-/* The reference Popover's look: its padding, border, radius, shadow and type. */
+/* The reference Popover's look, with its own values: its width, padding, gap, border,
+   radius, shadow and type. Change them together. */
 .anatomy-panel {
   position: relative;
   display: flex;
@@ -132,11 +133,16 @@ import "~/reference/button/tokens.css";
 .anatomy-title {
   font-weight: 600;
 }
+/* Its close button, an `xs` Button: 24 × 24px, with a 14px icon. */
 .anatomy-close {
   display: inline-flex;
   margin: -0.25rem -0.25rem 0 0;
-  padding: 0.25rem;
+  padding: 0.3125rem;
   border-radius: 0.375rem;
+}
+.anatomy-close :deep(svg) {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 .anatomy-body {
   display: flex;

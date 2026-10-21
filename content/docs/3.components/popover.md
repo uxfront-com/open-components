@@ -48,7 +48,7 @@ Let's start with how a popover looks: its parts, where it opens, what goes in it
 4. **Close button** — A Button, named "Close", for people who can't press `Escape`, like on a phone.
 5. **Body** — Optional. The content, like a few options, a short form or a hint, which scrolls when it doesn't fit.
 6. **Offset** — The gap between the trigger and the panel.
-7. **Arrow** — Off by default. A small point on the edge that faces the trigger, hidden from assistive technologies.
+7. **Arrow** — On by default. A small point on the edge that faces the trigger, hidden from assistive technologies.
 ::
 
 Every popover has a panel, a title and a close button, and it always renders right after its trigger. That's what puts its content next in the reading order, so `Tab` and screen readers reach it straight after the button that opened it ([WCAG 1.3.2](https://www.w3.org/WAI/WCAG22/Understanding/meaningful-sequence.html), [2.4.3](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html)). You can see the order of its parts in the [DOM contract](/docs/components/popover#deterministic).
@@ -134,7 +134,7 @@ The popover opens in the [top layer](https://developer.mozilla.org/en-US/docs/Gl
 
 CSS anchor positioning then places it beside its trigger (`position-area`) and flips it when there's no room (`position-try-fallbacks`), the same way as the Tooltip. Its last fallbacks, `@position-try` rules, send a `start` or `end` popover below or above its trigger, and cap its height at the room on the side it opens on, as long as that's about half the screen. Browsers that don't have anchor positioning yet get the same side from a few lines of script, which you'll find in `place()` in the [reference implementation](/docs/components/popover#reference-implementation), without the cap on its height.
 
-The arrow is off by default, which differs from the Tooltip too. A popover is bigger than the button that opened it and opens right against it, so it's already clear which button it belongs to. Turn it on with `arrow` where it isn't, like for a toggletip in a line of text, and set its size with `--popover--arrow--size`. It points at the trigger's centre, and moves to the other edge when the popover flips.
+Every popover has an arrow by default, as every tooltip does. It sits on the edge that faces the trigger and points at the trigger's centre, or as close as the rounded corners allow, and moves to the other edge when the popover flips. It shows at a glance which button a popover belongs to, which matters most where several sit close together, as the Tooltip's [Placement](/docs/components/tooltip#placement) explains. Where only one trigger could be meant, you can turn it off by setting `arrow` to `false`, and set its size with `--popover--arrow--size`.
 
 ### Title and content
 
@@ -210,7 +210,7 @@ A popover's content goes in two places: a title at the top, beside the close but
 <div class="popover" id="filters" role="dialog" aria-labelledby="filters-title" popover="auto" data-state="closed" data-placement="bottom">
   <div data-slot="header">
     <p id="filters-title" data-slot="title">Filters</p>
-    <button class="button" type="button" data-variant="ghost" data-color="neutral" data-size="sm" data-icon-only data-slot="close">
+    <button class="button" type="button" data-variant="ghost" data-color="neutral" data-size="xs" data-icon-only data-slot="close">
       <span data-slot="leading" aria-hidden="true"><svg class="lucide-x">…</svg></span>
       <span data-slot="label">Close</span>
     </button>
@@ -223,6 +223,7 @@ A popover's content goes in two places: a title at the top, beside the close but
     </label>
     <!-- Assigned to me and Has a pull request follow the same way. -->
   </div>
+  <span data-slot="arrow" aria-hidden="true"></span>
 </div>
 ```
 ::
@@ -234,7 +235,7 @@ A popover's content goes in two places: a title at the top, beside the close but
 
 ### Toggletips
 
-A toggletip is a small button, often an "i" icon, that shows a hint when it's pressed, which makes it a Popover rather than a Tooltip. Unlike a tooltip, it works on touch screens, and it can hold a link, like the one below. It's also where the arrow earns its place, since the button it points at is small and sits in a line of text:
+A toggletip is a small button, often an "i" icon, that shows a hint when it's pressed, which makes it a Popover rather than a Tooltip. Unlike a tooltip, it works on touch screens, and it can hold a link, like the one below. Its arrow matters most here, since the button it points at is small and sits in a line of text:
 
 ::popover-toggletip-example
 ::framework-switcher
@@ -242,7 +243,7 @@ A toggletip is a small button, often an "i" icon, that shows a hint when it's pr
 ```tsx
 <span>Billing cycle</span>
 <Button popoverTarget="billing-cycle" aria-haspopup="dialog" label="About billing cycles" variant="ghost" size="sm" iconOnly leading={<InfoIcon />} />
-<Popover id="billing-cycle" title="Billing cycles" arrow>
+<Popover id="billing-cycle" title="Billing cycles">
   <p>You're billed on the day you signed up, every month. <a href="/billing">How billing works</a></p>
 </Popover>
 ```
@@ -253,7 +254,7 @@ A toggletip is a small button, often an "i" icon, that shows a hint when it's pr
 <Button popovertarget="billing-cycle" aria-haspopup="dialog" label="About billing cycles" variant="ghost" size="sm" icon-only>
   <template #leading><InfoIcon /></template>
 </Button>
-<Popover id="billing-cycle" title="Billing cycles" arrow>
+<Popover id="billing-cycle" title="Billing cycles">
   <p>You're billed on the day you signed up, every month. <a href="/billing">How billing works</a></p>
 </Popover>
 ```
@@ -264,7 +265,7 @@ A toggletip is a small button, often an "i" icon, that shows a hint when it's pr
 <Button popovertarget="billing-cycle" aria-haspopup="dialog" label="About billing cycles" variant="ghost" size="sm" iconOnly>
   {#snippet leading()}<InfoIcon />{/snippet}
 </Button>
-<Popover id="billing-cycle" title="Billing cycles" arrow>
+<Popover id="billing-cycle" title="Billing cycles">
   <p>You're billed on the day you signed up, every month. <a href="/billing">How billing works</a></p>
 </Popover>
 ```
@@ -275,7 +276,7 @@ A toggletip is a small button, often an "i" icon, that shows a hint when it's pr
 <button appButton popovertarget="billing-cycle" aria-haspopup="dialog" label="About billing cycles" variant="ghost" size="sm" iconOnly>
   <lucide-icon leading [img]="InfoIcon" />
 </button>
-<div appPopover id="billing-cycle" popoverTitle="Billing cycles" arrow>
+<div appPopover id="billing-cycle" popoverTitle="Billing cycles">
   <p>You're billed on the day you signed up, every month. <a href="/billing">How billing works</a></p>
 </div>
 ```
@@ -284,7 +285,7 @@ A toggletip is a small button, often an "i" icon, that shows a hint when it's pr
 ```tsx
 <span>Billing cycle</span>
 <Button popovertarget="billing-cycle" aria-haspopup="dialog" label="About billing cycles" variant="ghost" size="sm" iconOnly leading={<InfoIcon />} />
-<Popover id="billing-cycle" title="Billing cycles" arrow>
+<Popover id="billing-cycle" title="Billing cycles">
   <p>You're billed on the day you signed up, every month. <a href="/billing">How billing works</a></p>
 </Popover>
 ```
@@ -295,7 +296,7 @@ A toggletip is a small button, often an "i" icon, that shows a hint when it's pr
 <Button popovertarget="billing-cycle" aria-haspopup="dialog" label="About billing cycles" variant="ghost" size="sm" iconOnly>
   <InfoIcon slot="leading" />
 </Button>
-<Popover id="billing-cycle" title="Billing cycles" arrow>
+<Popover id="billing-cycle" title="Billing cycles">
   <p>You're billed on the day you signed up, every month. <a href="/billing">How billing works</a></p>
 </Popover>
 ```
@@ -334,7 +335,7 @@ A popover is either closed or open, and it shows which with `data-state`, so you
 
 ### Tokens
 
-The panel looks like a smaller Dialog, with the same border, background and type. Only its padding, its corners and its shadow differ: there's no backdrop behind a popover to set it apart from the page, so a soft shadow does. Its background is `Canvas`, the background browsers give a document, which follows `color-scheme`, so it covers what's behind it in your light and dark themes alike.
+The panel looks like a smaller Dialog, with the same border, background and type. Only its width, its padding, its corners and its shadow differ. It's 15rem wide, 240px at the default text size, so every popover is the same size whatever it holds, and there's no backdrop behind it to set it apart from the page, so a soft shadow does. Its background is `Canvas`, the background browsers give a document, which follows `color-scheme`, so it covers what's behind it in your light and dark themes alike.
 
 Its text reads one [theme token](/docs/foundations/design-tokens#theme-tokens), `--color--neutral-text`, like the Dialog's. The Buttons and Checkboxes inside read their own tokens, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button into your theme. With our reference tokens, the title and the content come to 14.9:1 on white, the same as in the Dialog. If you change the tokens or the background, make sure to check the same pair.
 
@@ -342,7 +343,7 @@ If you need to tune a popover, you can set its [own variables](/docs/foundations
 
 | Variable                  | Default                                              | What it sets                                                      |
 | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------- |
-| `--popover--max-width`    | `20rem`                                              | How wide it gets, at most, and never wider than the screen less 32px |
+| `--popover--width`        | `15rem`                                              | How wide it is, and never wider than the screen less 32px         |
 | `--popover--padding`      | `1rem`                                               | The space inside the panel                                        |
 | `--popover--gap`          | `0.75rem`                                            | The space between the header and the body                         |
 | `--popover--radius`       | `0.5rem`                                             | The corners                                                       |
@@ -369,7 +370,7 @@ export function ShareLink() {
 ```
 ```css [ShareLink.module.css]
 .wide {
-  --popover--max-width: 28rem;
+  --popover--width: 20rem;
 }
 ```
 
@@ -383,7 +384,7 @@ export function ShareLink() {
 
 <style scoped>
 .wide {
-  --popover--max-width: 28rem;
+  --popover--width: 20rem;
 }
 </style>
 ```
@@ -397,7 +398,7 @@ export function ShareLink() {
 <style>
   /* The class lands on the Popover's own element, which this component's scoped styles don't reach. */
   :global(.wide) {
-    --popover--max-width: 28rem;
+    --popover--width: 20rem;
   }
 </style>
 ```
@@ -414,7 +415,7 @@ export function ShareLink() {
   `,
   styles: `
     .wide {
-      --popover--max-width: 28rem;
+      --popover--width: 20rem;
     }
   `,
 })
@@ -435,7 +436,7 @@ export function ShareLink() {
 ```
 ```css [ShareLink.module.css]
 .wide {
-  --popover--max-width: 28rem;
+  --popover--width: 20rem;
 }
 ```
 
@@ -447,7 +448,7 @@ export function ShareLink() {
 
 <style>
   .wide {
-    --popover--max-width: 28rem;
+    --popover--width: 20rem;
   }
 </style>
 ```
@@ -460,7 +461,7 @@ export function ShareLink() {
 
 <style>
   .wide {
-    --popover--max-width: 28rem;
+    --popover--width: 20rem;
   }
 </style>
 ```
@@ -601,7 +602,7 @@ Focus isn't trapped inside, since the page around a popover still works ([WCAG 2
 
 - The title and the content need a contrast of at least 4.5:1 against the panel ([WCAG 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)).
 - The panel's border doesn't need 3:1, since the panel isn't a control, and its title, its shadow and its place beside the trigger already set it apart.
-- The close button is a `sm` Button, 32 × 32px, above the 24 × 24px minimum ([WCAG 2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)).
+- The close button is an `xs` Button, 24 × 24px, the minimum ([WCAG 2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)), so it stays small beside the title.
 
 ### Predictable
 
@@ -939,7 +940,7 @@ import Popover from "../components/Popover.astro";
 <div class="popover" id="filters" role="dialog" aria-labelledby="filters-title" popover="auto" data-state="closed" data-placement="bottom">
   <div data-slot="header">
     <p id="filters-title" data-slot="title">Filters</p>
-    <button class="button" type="button" data-variant="ghost" data-color="neutral" data-size="sm" data-icon-only data-slot="close">
+    <button class="button" type="button" data-variant="ghost" data-color="neutral" data-size="xs" data-icon-only data-slot="close">
       <span data-slot="leading" aria-hidden="true"><svg class="lucide-x">…</svg></span>
       <span data-slot="label">Close</span>
     </button>
@@ -956,6 +957,7 @@ import Popover from "../components/Popover.astro";
       <span data-slot="label">Assigned to me</span>
     </label>
   </div>
+  <span data-slot="arrow" aria-hidden="true"></span>
 </div>
 
 <script type="module" src="/scripts/popover.js"></script>
@@ -1087,11 +1089,11 @@ Once you've learned the [Dialog](/docs/components/dialog#consistent) and the [To
 | `closeLabel` | Prop  | The close button's label, for other languages, as on the Dialog              |
 | `close`      | Event | It closed, and why                                                           |
 
-We recommend `placement="bottom"` and no arrow as the defaults, which differ from the Tooltip's, as [Placement](/docs/components/popover#placement) explains. The Popover also leaves a few things out, on purpose:
+We recommend `placement="bottom"`, which differs from the Tooltip's `top`, as [Placement](/docs/components/popover#placement) explains, and an arrow, as on the Tooltip. The Popover also leaves a few things out, on purpose:
 
 - There's no `trigger` slot. The button that opens a popover is a Button of yours, which points at it with `popovertarget`, so it works before any script loads, and keeps its own label and its own place on the page.
 - There's no `modal` prop. A popover that blocks the page is a [Dialog](/docs/components/dialog).
-- There's no `variant`, `color` or `size`. A popover has no intent of its own, its content says what it's about, and `--popover--max-width` sets how wide it gets.
+- There's no `variant`, `color` or `size`. A popover has no intent of its own, its content says what it's about, and `--popover--width` sets how wide it is.
 - There's no prop to turn off light dismiss or `Escape`. Both are the browser's, and both are how people expect a popover to close. Something that should stay open until people answer it is a Dialog.
 
 ### Type-safe
@@ -1104,7 +1106,7 @@ Props, events and slots are typed, so your editor can autocomplete them and your
 | `id`         | `string`                                |            | Required. Its trigger's `popovertarget` points to it, and its title's ID starts with it |
 | `title`      | `string`                                |            | Required. The text that names the popover                           |
 | `placement`  | `"top" \| "bottom" \| "start" \| "end"` | `"bottom"` | The side of the trigger it opens on, before it flips                |
-| `arrow`      | `boolean`                               | `false`    | Draws an arrow that points at the trigger                           |
+| `arrow`      | `boolean`                               | `true`     | Draws an arrow that points at the trigger. Turn it off with `false` |
 | `closeLabel` | `string`                                | `"Close"`  | The close button's label, for other languages                       |
 
 | Event    | Payload                                                          | Description                                                       |
@@ -1381,7 +1383,7 @@ props:
   id: { type: string } # required. Its trigger's popovertarget points to it, and its title's ID starts with it
   title: { type: string } # required
   placement: { type: [top, bottom, start, end], default: bottom }
-  arrow: { type: boolean, default: false }
+  arrow: { type: boolean, default: true }
   closeLabel: { type: string, default: Close }
 slots:
   default: The content, like a few options, a short form or a hint with a link, which scrolls when it doesn't fit.
@@ -1396,10 +1398,10 @@ keyboard:
   Space: On its trigger, the same as Enter.
   Tab: Moves between its controls, then on to what comes after its trigger, leaving it open.
   Escape: Closes it, wherever focus is, and stops there, giving focus back to its trigger when it was inside. A popover open inside it, or a control that handles Escape itself, goes first.
-parts: [header, title, close, body, arrow] # data-slot, in this order. The arrow is only there with arrow
+parts: [header, title, close, body, arrow] # data-slot, in this order. The arrow is there unless arrow is false
 tokens:
   theme: ["--color--neutral-text"]
-  variables: [--popover--max-width, --popover--padding, --popover--gap, --popover--radius, --popover--border-color, --popover--background, --popover--box-shadow, --popover--offset, --popover--arrow--size]
+  variables: [--popover--width, --popover--padding, --popover--gap, --popover--radius, --popover--border-color, --popover--background, --popover--box-shadow, --popover--offset, --popover--arrow--size]
   layer: components # in Tailwind's order: theme, base, components, utilities
 rules: https://opencomponents.dev/docs/components/popover#checklist
 ```
@@ -1424,7 +1426,7 @@ And here's what it renders, before it opens:
 <div class="popover" id="filters" role="dialog" aria-labelledby="filters-title" popover="auto" data-state="closed" data-placement="bottom">
   <div data-slot="header">
     <p id="filters-title" data-slot="title">Filters</p>
-    <button class="button" type="button" data-variant="ghost" data-color="neutral" data-size="sm" data-icon-only data-slot="close">
+    <button class="button" type="button" data-variant="ghost" data-color="neutral" data-size="xs" data-icon-only data-slot="close">
       <span data-slot="leading" aria-hidden="true"><svg>…</svg></span>
       <span data-slot="label">Close</span>
     </button>
@@ -1432,10 +1434,11 @@ And here's what it renders, before it opens:
   <div data-slot="body">
     <p>Pick what to show.</p>
   </div>
+  <span data-slot="arrow" aria-hidden="true"></span>
 </div>
 ```
 
-- `data-state` and `data-placement` are always there. With `arrow`, the popover ends with a `<span data-slot="arrow" aria-hidden="true">`, and once it's open, `data-side` says which side of the trigger it's on, so the arrow can point back. It's a physical side, `top`, `bottom`, `left` or `right`, so `start` comes out as `left` or `right` by direction.
+- `data-state` and `data-placement` are always there. Unless `arrow` is `false`, the popover ends with a `<span data-slot="arrow" aria-hidden="true">`, and once it's open, `data-side` says which side of the trigger it's on, so the arrow can point back. It's a physical side, `top`, `bottom`, `left` or `right`, so `start` comes out as `left` or `right` by direction.
 - Parts are marked with `data-slot` and always come in the same order: `header`, holding `title` and `close`, then `body` and `arrow`. Only the body and the arrow can be left out.
 - The title's ID is the popover's own, with `-title` on the end. There's nothing random in the server's markup, so it's the same on the server, on the client and in every snapshot.
 - Once it mounts, every trigger that points at it gets `aria-expanded="false"`, and the one that opens it `"true"` while it's open. The popover gets `position-anchor` in its `style`, and the trigger that opens it gets the matching `anchor-name` until it closes. The name comes from your framework's ID helper, since an `id` can hold characters a CSS name can't, like `1:2`. In browsers without CSS anchor positioning, an open popover also gets `top` and `left`, from the script that places it.
@@ -1681,7 +1684,10 @@ export interface PopoverProps {
   title: string;
   /** The side of the trigger it opens on. It flips to the other side when there's no room. */
   placement?: "top" | "bottom" | "start" | "end";
-  /** Draws an arrow that points at the trigger, on whichever side it opens. */
+  /**
+   * Draws an arrow that points at the trigger, on whichever side it opens, so it's clear which
+   * trigger it belongs to when several sit close together. Turn it off with `false`.
+   */
   arrow?: boolean;
   /** The close button's label, which screen readers read and voice control users say. */
   closeLabel?: string;
@@ -1691,7 +1697,7 @@ const {
   id,
   title,
   placement = "bottom",
-  arrow = false,
+  arrow = true,
   closeLabel = "Close",
 } = defineProps<PopoverProps>();
 
@@ -2048,7 +2054,7 @@ onBeforeUnmount(() => {
         data-slot="close"
         :label="closeLabel"
         variant="ghost"
-        size="sm"
+        size="xs"
         icon-only
         @click="dismiss('close-button')"
       >
@@ -2075,7 +2081,8 @@ onBeforeUnmount(() => {
    backdrop to set it apart from the page. */
 @layer components {
   .popover {
-    --popover--max-width: 20rem;
+    /* Set wide enough for a few options or a short form, so every popover is the same size. */
+    --popover--width: 15rem;
     --popover--padding: 1rem;
     --popover--gap: 0.75rem;
     --popover--radius: 0.5rem;
@@ -2101,8 +2108,7 @@ onBeforeUnmount(() => {
     flex-direction: column;
     gap: var(--popover--gap);
     /* Never wider or taller than the screen, less 16px on each side, so it fits at 320px wide. */
-    width: max-content;
-    max-width: min(var(--popover--max-width), 100vw - 2rem);
+    width: min(var(--popover--width), 100vw - 2rem);
     max-height: calc(100dvh - 2rem);
     padding: var(--popover--padding);
     border: 1px solid var(--popover--border-color);
@@ -2146,12 +2152,12 @@ onBeforeUnmount(() => {
   .popover [data-slot="title"] {
     margin: 0;
     font-weight: 600;
-    line-height: 1.375;
   }
+  /* An `xs` Button, 24 × 24px, the smallest target WCAG 2.5.8 allows, pulled up and out by
+     its own padding, so its icon lines up with the title and the edge of the content. */
   .popover [data-slot="close"] {
-    /* Centred on the title's first line, and lined up with the edge of the content. */
-    margin-block: calc((1.2rem - 2rem) / 2);
-    margin-inline-end: -0.5rem;
+    margin-block-start: -0.25rem;
+    margin-inline-end: -0.25rem;
   }
   .popover > [data-slot="body"] {
     flex: 1 1 auto;
@@ -2914,7 +2920,7 @@ describe("Popover", () => {
     const parts = [...el.querySelectorAll("[data-slot]")]
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))
       .map((part) => part.getAttribute("data-slot"));
-    expect(parts).toEqual(["header", "title", "close", "body"]);
+    expect(parts).toEqual(["header", "title", "close", "body", "arrow"]);
   });
 
   it("renders the same markup every time, with IDs from its own, and keeps its elements as it opens", async () => {
@@ -2935,9 +2941,9 @@ describe("Popover", () => {
     expect(el.querySelector('[data-slot="title"]')).toBe(title);
   });
 
-  it("draws an arrow when asked, hidden from assistive technologies, and sets data-side once it opens", async () => {
+  it("draws an arrow by default, hidden from assistive technologies, and sets data-side once it opens", async () => {
     const user = userEvent.setup();
-    page({ arrow: true });
+    page();
     const arrow = popover().querySelector('[data-slot="arrow"]');
     expect(arrow).toHaveAttribute("aria-hidden", "true");
     expect(arrow).toBeEmptyDOMElement();
@@ -2962,6 +2968,17 @@ describe("Popover", () => {
     popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
     expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
+  });
+
+  it("has no arrow, and no data-side, when you turn it off", async () => {
+    const user = userEvent.setup();
+    page({ arrow: false });
+
+    await openFrom(user);
+    expect(popover()).toHaveAttribute("data-state", "open");
+    expect(popover().querySelector('[data-slot="arrow"]')).toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popover()).not.toHaveAttribute("data-side");
   });
 
   it("anchors to its trigger, and places start on the right in right-to-left text without anchor positioning", async () => {

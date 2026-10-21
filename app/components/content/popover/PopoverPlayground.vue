@@ -18,7 +18,7 @@ type Placement = NonNullable<PopoverProps["placement"]>;
 type Content = "filters" | "hint";
 
 const placement = ref<Placement>("bottom");
-const arrow = ref(false);
+const arrow = ref(true);
 const content = ref<Content>("filters");
 
 const placements: Placement[] = ["top", "bottom", "start", "end"];
@@ -82,7 +82,7 @@ const code = computed(() => {
   if (fw === "vanilla") {
     const close = element(
       "button",
-      ['class="button"', 'type="button"', 'data-variant="ghost"', 'data-color="neutral"', 'data-size="sm"', "data-icon-only", 'data-slot="close"'],
+      ['class="button"', 'type="button"', 'data-variant="ghost"', 'data-color="neutral"', 'data-size="xs"', "data-icon-only", 'data-slot="close"'],
       ['<span data-slot="leading" aria-hidden="true"><svg class="lucide-x">…</svg></span>', '<span data-slot="label">Close</span>'],
     );
     popover = element(
@@ -99,6 +99,7 @@ const code = computed(() => {
       [
         ...element("div", ['data-slot="header"'], [`<p id="${id}-title" data-slot="title">${title}</p>`, ...close]),
         ...element("div", ['data-slot="body"'], body),
+        // Unless it's turned off, like the reference's.
         ...(arrow.value ? ['<span data-slot="arrow" aria-hidden="true"></span>'] : []),
       ],
     );
@@ -109,7 +110,9 @@ const code = computed(() => {
       // Angular's Popover is on the element itself, which keeps a `title` attribute as a tooltip.
       `${fw === "angular" ? "popoverTitle" : "title"}="${title}"`,
       placement.value !== "bottom" && `placement="${placement.value}"`,
-      arrow.value && "arrow",
+      // The arrow is on by default, so it's only written out to turn it off.
+      !arrow.value &&
+        ({ react: "arrow={false}", vue: ':arrow="false"', svelte: "arrow={false}", angular: '[arrow]="false"', solid: "arrow={false}", astro: "arrow={false}" } as Record<string, string>)[fw],
     ];
     popover = element(fw === "angular" ? "div" : "Popover", props, body);
   }

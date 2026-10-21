@@ -12,7 +12,7 @@ import Popover from "~/reference/popover/Popover.vue";
       <Button popovertarget="billing-cycle" aria-haspopup="dialog" label="About billing cycles" variant="ghost" size="sm" icon-only>
         <template #leading><UIcon name="i-lucide-info" mode="svg" /></template>
       </Button>
-      <Popover id="billing-cycle" title="Billing cycles" arrow>
+      <Popover id="billing-cycle" title="Billing cycles">
         <p>
           You're billed on the day you signed up, every month.
           <a href="/docs/components/popover#toggletips" class="underline">How billing works</a>

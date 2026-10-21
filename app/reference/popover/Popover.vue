@@ -16,7 +16,10 @@ export interface PopoverProps {
   title: string;
   /** The side of the trigger it opens on. It flips to the other side when there's no room. */
   placement?: "top" | "bottom" | "start" | "end";
-  /** Draws an arrow that points at the trigger, on whichever side it opens. */
+  /**
+   * Draws an arrow that points at the trigger, on whichever side it opens, so it's clear which
+   * trigger it belongs to when several sit close together. Turn it off with `false`.
+   */
   arrow?: boolean;
   /** The close button's label, which screen readers read and voice control users say. */
   closeLabel?: string;
@@ -26,7 +29,7 @@ const {
   id,
   title,
   placement = "bottom",
-  arrow = false,
+  arrow = true,
   closeLabel = "Close",
 } = defineProps<PopoverProps>();
 
@@ -383,7 +386,7 @@ onBeforeUnmount(() => {
         data-slot="close"
         :label="closeLabel"
         variant="ghost"
-        size="sm"
+        size="xs"
         icon-only
         @click="dismiss('close-button')"
       >
@@ -410,7 +413,8 @@ onBeforeUnmount(() => {
    backdrop to set it apart from the page. */
 @layer components {
   .popover {
-    --popover--max-width: 20rem;
+    /* Set wide enough for a few options or a short form, so every popover is the same size. */
+    --popover--width: 15rem;
     --popover--padding: 1rem;
     --popover--gap: 0.75rem;
     --popover--radius: 0.5rem;
@@ -436,8 +440,7 @@ onBeforeUnmount(() => {
     flex-direction: column;
     gap: var(--popover--gap);
     /* Never wider or taller than the screen, less 16px on each side, so it fits at 320px wide. */
-    width: max-content;
-    max-width: min(var(--popover--max-width), 100vw - 2rem);
+    width: min(var(--popover--width), 100vw - 2rem);
     max-height: calc(100dvh - 2rem);
     padding: var(--popover--padding);
     border: 1px solid var(--popover--border-color);
@@ -481,12 +484,12 @@ onBeforeUnmount(() => {
   .popover [data-slot="title"] {
     margin: 0;
     font-weight: 600;
-    line-height: 1.375;
   }
+  /* An `xs` Button, 24 × 24px, the smallest target WCAG 2.5.8 allows, pulled up and out by
+     its own padding, so its icon lines up with the title and the edge of the content. */
   .popover [data-slot="close"] {
-    /* Centred on the title's first line, and lined up with the edge of the content. */
-    margin-block: calc((1.2rem - 2rem) / 2);
-    margin-inline-end: -0.5rem;
+    margin-block-start: -0.25rem;
+    margin-inline-end: -0.25rem;
   }
   .popover > [data-slot="body"] {
     flex: 1 1 auto;

@@ -662,7 +662,7 @@ describe("Popover", () => {
     const parts = [...el.querySelectorAll("[data-slot]")]
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))
       .map((part) => part.getAttribute("data-slot"));
-    expect(parts).toEqual(["header", "title", "close", "body"]);
+    expect(parts).toEqual(["header", "title", "close", "body", "arrow"]);
   });
 
   it("renders the same markup every time, with IDs from its own, and keeps its elements as it opens", async () => {
@@ -683,9 +683,9 @@ describe("Popover", () => {
     expect(el.querySelector('[data-slot="title"]')).toBe(title);
   });
 
-  it("draws an arrow when asked, hidden from assistive technologies, and sets data-side once it opens", async () => {
+  it("draws an arrow by default, hidden from assistive technologies, and sets data-side once it opens", async () => {
     const user = userEvent.setup();
-    page({ arrow: true });
+    page();
     const arrow = popover().querySelector('[data-slot="arrow"]');
     expect(arrow).toHaveAttribute("aria-hidden", "true");
     expect(arrow).toBeEmptyDOMElement();
@@ -710,6 +710,17 @@ describe("Popover", () => {
     popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
     expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
+  });
+
+  it("has no arrow, and no data-side, when you turn it off", async () => {
+    const user = userEvent.setup();
+    page({ arrow: false });
+
+    await openFrom(user);
+    expect(popover()).toHaveAttribute("data-state", "open");
+    expect(popover().querySelector('[data-slot="arrow"]')).toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popover()).not.toHaveAttribute("data-side");
   });
 
   it("anchors to its trigger, and places start on the right in right-to-left text without anchor positioning", async () => {
