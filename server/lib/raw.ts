@@ -63,9 +63,10 @@ export function rawContract(page: { title: string; path: string }, contract: str
  *
  * A component page's part also carries its share of two sections every component
  * page has (AGENTS.md, "Component pages"), which the join gathers back, in file
- * order: its rules table, like `## UI rules`, goes under the Overview's
- * `## Checklist` as `### UI rules`, and its questions, under `## FAQ`, go into one
- * `## FAQ` before the Overview's `## Sources`.
+ * order: its rules table, under `## UI Checklist` on its page, goes under the
+ * Overview's `## Checklist` as `### UI rules`, the name every component page gives
+ * it, and its questions, under `## FAQ`, go into one `## FAQ` before the
+ * Overview's `## Sources`.
  */
 export function joinPage(index: string, parts: string[]): string {
   const blocks = new Map<string, string[]>();
@@ -77,9 +78,13 @@ export function joinPage(index: string, parts: string[]): string {
     for (const { text, code } of scan(body)) {
       const match = !code && heading(text);
       if (match && match.level === 2) {
-        section = match.text.endsWith(" rules") ? "rules" : match.text === "FAQ" ? "faq" : "own";
+        section = RULES.test(match.text) ? "rules" : match.text === "FAQ" ? "faq" : "own";
         // One `## FAQ` heads every part's questions.
         if (section === "faq") continue;
+        if (section === "rules") {
+          sections.rules.push(`### ${wholeRules(match.text)}`);
+          continue;
+        }
       }
       sections[section].push(match ? `#${text}` : text);
     }
@@ -120,6 +125,8 @@ export function joinPage(index: string, parts: string[]): string {
  * Each part's headings get their anchors on their own, as the site gives them on
  * the part's page. A heading on more than one part, like the FAQ, goes to the part
  * whose section under it is longest, where most of the whole page's section went.
+ * A rules table's anchor on the whole page, like `ui-rules`, goes to its heading
+ * on the part, like `/docs/components/button/ui#ui-checklist`.
  */
 export function splitAnchors(parts: { path: string; source: string }[]): Record<string, string> {
   const found = parts.flatMap(({ path, source }) => {
@@ -132,10 +139,11 @@ export function splitAnchors(parts: { path: string; source: string }[]): Record<
     });
     return [
       { anchor: anchors()(title), target: path, length: lines.length },
-      ...headings.map(({ level, text, start }) => {
+      ...headings.flatMap(({ level, text, start }) => {
         const end = headings.find((other) => other.start > start && other.level <= level)?.start ?? lines.length;
         const anchor = slug(text);
-        return { anchor, target: `${path}#${anchor}`, length: end - start };
+        const entry = { anchor, target: `${path}#${anchor}`, length: end - start };
+        return level === 2 && RULES.test(text) ? [entry, { ...entry, anchor: anchors()(wholeRules(text)) }] : [entry];
       }),
     ];
   });
@@ -145,6 +153,11 @@ export function splitAnchors(parts: { path: string; source: string }[]): Record<
   }
   return Object.fromEntries(Object.entries(map).map(([anchor, { target }]) => [anchor, target]));
 }
+
+// A layer page's rules table is headed like `## UI Checklist`, which is
+// `### UI rules` on the whole page, as on every component page.
+const RULES = / Checklist$/;
+const wholeRules = (text: string) => text.replace(RULES, " rules");
 
 // A part's title, the section it goes before and its body, from its source.
 function readPart(source: string): { title: string; before: string; body: string } {

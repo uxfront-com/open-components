@@ -210,11 +210,13 @@ async function checkServer() {
   const wholeOf = (pathname) => pages.find((other) => partsOf(other).includes(pathname)) ?? pathname;
   // Every anchor the server links agents to is on its page, or on one of its parts.
   // A part's own section, like the Button's #user-experience-ux, is the top of the
-  // part's page, where the site sends its anchor (app/middleware/split-pages.global.ts).
+  // part's page, and a rules table, like #ui-rules, is headed "UI Checklist" there
+  // (#ui-checklist): the site sends both anchors there (app/middleware/split-pages.global.ts).
   const html = (pathname) => readFileSync(join("dist", `${pathname}.html`), "utf8");
   const title = (part) => readFileSync(join("dist/raw", `${part}.md`), "utf8").match(/^# (.+)$/m)[1];
   const has = (pathname, anchor) =>
     [pathname, ...partsOf(pathname)].some((path) => html(path).includes(`id="${anchor}"`)) ||
+    partsOf(pathname).some((part) => html(part).includes(`id="${anchor.replace(/-rules$/, "-checklist")}"`)) ||
     partsOf(pathname).some((part) => slug(title(part)) === anchor);
   for (const rule of all) {
     const { pathname, hash } = new URL(rule.url);

@@ -760,7 +760,7 @@ Screen readers never see a tooltip open. They read the trigger, so what matters 
 | `label`       | `aria-hidden="true"`, with no role      | Keeps its own name, like a visually hidden label | "Bold, button"                   |
 | `description` | `role="tooltip"`, with an `id`          | Points to it with `aria-describedby`             | "Archive, button, Archived projects stay in search" |
 
-Never point to a tooltip with `aria-labelledby`. It would replace the trigger's own name with the tooltip's text, and an icon-only Button's name comes from its hidden label, as the Button's [`button/accessible-name`](/docs/components/button/ux#ux-rules) rule asks. Hidden text gets translated along with the page, and stays the name when the tooltip's text changes, like a shortcut added to it. With `type="label"`, the Tooltip links nothing at all, and the name stays where it was.
+Never point to a tooltip with `aria-labelledby`. It would replace the trigger's own name with the tooltip's text, and an icon-only Button's name comes from its hidden label, as the Button's [`button/accessible-name`](/docs/components/button/ux#ux-checklist) rule asks. Hidden text gets translated along with the page, and stays the name when the tooltip's text changes, like a shortcut added to it. With `type="label"`, the Tooltip links nothing at all, and the name stays where it was.
 
 #### Open it on focus
 

@@ -42,21 +42,19 @@ describe("findPage", () => {
   });
 });
 
-// The Overview's cards come back as links to the layer pages, at the end of At a glance.
+// The Overview's cards come back as links to the layer pages, at the start of At a glance.
 describe("The Button's At a glance", () => {
-  it("ends with a link to each layer page, named by its layer, then its description", () => {
+  it("starts with a link to each layer page, named by its layer, then its description, before its table", () => {
     const glance = button.headings.find((heading) => heading.text === "At a glance")!;
     const text = sectionText(standard, button, glance).trim();
-    for (const [title, path] of [
+    const links = [
       ["User Interface (UI)", "ui"],
       ["User Experience (UX)", "ux"],
       ["Developer Experience (DX)", "dx"],
-    ]) {
-      expect(text).toContain(`[**${title}**](https://opencomponents.dev/docs/components/button/${path})\n\nHow `);
-    }
-    expect(text).toMatch(
-      /\[\*\*Agentic Experience \(AX\)\*\*\]\(https:\/\/opencomponents\.dev\/docs\/components\/button\/ax\)\n\nHow agents read, build and check a button[^\n]*$/,
-    );
+      ["Agentic Experience (AX)", "ax"],
+    ].map(([title, path]) => text.indexOf(`[**${title}**](https://opencomponents.dev/docs/components/button/${path})\n\nHow `));
+    expect(links.every((at, i) => at > 0 && (i === 0 || at > links[i - 1]!))).toBe(true);
+    expect(text.indexOf("| Aspect")).toBeGreaterThan(links.at(-1)!);
   });
 });
 

@@ -20,6 +20,24 @@ Every example on this page runs on our [reference implementation](/docs/componen
 
 ## At a glance
 
+::card-group
+:::card{to="/docs/components/button/ui" icon="i-lucide-palette" title="User Interface (UI)"}
+How a button looks, from its parts, variants and colours to its sizes, icons, states and tokens.
+:::
+
+:::card{to="/docs/components/button/ux" icon="i-lucide-user" title="User Experience (UX)"}
+How a button behaves for every person, input and setting, so it's accessible, predictable, clear in every state and adaptive.
+:::
+
+:::card{to="/docs/components/button/dx" icon="i-lucide-code-xml" title="Developer Experience (DX)"}
+How developers use the Button, with one consistent, typed API that composes with links, routers and other components.
+:::
+
+:::card{to="/docs/components/button/ax" icon="i-lucide-bot" title="Agentic Experience (AX)"}
+How agents read, build and check a button, from its accessibility tree to its contract, its DOM and its tests.
+:::
+::
+
 | Aspect   | Button                                                                                       |
 | -------- | -------------------------------------------------------------------------------------------- |
 | Element  | `<button type="button">`, or `<a href>` when it takes you somewhere                          |
@@ -33,23 +51,6 @@ Every example on this page runs on our [reference implementation](/docs/componen
 | Pattern  | [WAI-ARIA APG Button](https://www.w3.org/WAI/ARIA/apg/patterns/button/)                      |
 | WCAG 2.2 | 1.4.3, 1.4.11, 2.1.1, 2.4.7, 2.5.2, 2.5.3, 2.5.8, 4.1.2 and 4.1.3, among others              |
 
-::card-group
-:::card{to="/docs/components/button/ui" icon="i-lucide-palette" title="User Interface (UI)"}
-How a button looks, from its parts, variants and colours to its sizes, icons, states and tokens.
-:::
-
-:::card{to="/docs/components/button/ux" icon="i-lucide-accessibility" title="User Experience (UX)"}
-How a button behaves for every person, input and setting, so it's accessible, predictable, clear in every state and adaptive.
-:::
-
-:::card{to="/docs/components/button/dx" icon="i-lucide-code-xml" title="Developer Experience (DX)"}
-How developers use the Button, with one consistent, typed API that composes with links, routers and other components.
-:::
-
-:::card{to="/docs/components/button/ax" icon="i-lucide-bot" title="Agentic Experience (AX)"}
-How agents read, build and check a button, from its accessibility tree to its contract, its DOM and its tests.
-:::
-::
 
 ## Checklist
 
@@ -59,7 +60,12 @@ The scope says who meets a rule. **Component** rules are met by the Button itsel
 
 The basis says where a rule comes from. About half the rules rest on **WCAG** 2.2, which we follow at level AA, and name the success criteria behind them, and a few come from **HTML**, **WAI-ARIA** or the **APG**. The rest are **Open Components** rules, which are our own, like never changing a button's size between states. Where a rule goes further than WCAG asks at level AA, its basis says so: some come from level **AAA**, like the 44 × 44px hit area on touch screens, and a rule that asks for more than its criterion says **beyond**, like the underline on `link` buttons, which WCAG would let you swap for a 3:1 contrast with the text around it.
 
-You'll find the rules for each layer on its page: [UI rules](/docs/components/button/ui#ui-rules), [UX rules](/docs/components/button/ux#ux-rules), [DX rules](/docs/components/button/dx#dx-rules) and [AX rules](/docs/components/button/ax#ax-rules).
+You'll find the rules for each layer on its page:
+
+- [UI Checklist](/docs/components/button/ui#ui-checklist)
+- [UX Checklist](/docs/components/button/ux#ux-checklist)
+- [DX Checklist](/docs/components/button/dx#dx-checklist)
+- [AX Checklist](/docs/components/button/ax#ax-checklist)
 
 ## Reference implementation
 

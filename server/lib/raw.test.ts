@@ -56,11 +56,11 @@ describe("joinPage", () => {
     );
   });
 
-  it("gathers each part's rules under the Checklist, and its questions into one FAQ before the Sources", () => {
+  it("gathers each part's rules under the Checklist, named as on every component page, and its questions into one FAQ before the Sources", () => {
     const joined = joinPage(index, [
-      part("User Interface (UI)", "Checklist", "How it looks.", "", "## UI rules", "", "| ui/one |", "", "## FAQ", "", "::accordion", "UI question.", "::"),
-      part("User Experience (UX)", "Checklist", "How it behaves.", "", "## UX rules", "", "| ux/one |", "", "## FAQ", "", "### Button or link?", "", "Links go places."),
-      part("Agentic Experience (AX)", "Checklist", "How agents read it.", "", "## AX rules", "", "| ax/one |"),
+      part("User Interface (UI)", "Checklist", "How it looks.", "", "## UI Checklist", "", "| ui/one |", "", "## FAQ", "", "::accordion", "UI question.", "::"),
+      part("User Experience (UX)", "Checklist", "How it behaves.", "", "## UX Checklist", "", "| ux/one |", "", "## FAQ", "", "### Button or link?", "", "Links go places."),
+      part("Agentic Experience (AX)", "Checklist", "How agents read it.", "", "## AX Checklist", "", "| ax/one |"),
     ]);
     expect(joined).toBe(
       [
@@ -108,7 +108,7 @@ describe("joinPage", () => {
     expect(() => joinPage(index, ["---\ntitle: Lost\n---\n\nText.\n"])).toThrow("needs a title and the section it goes before");
     expect(() => joinPage(index, [part("Lost", "Glossary", "Text.")])).toThrow("no section named Glossary");
     const unruled = index.replace("## Checklist", "## Rules");
-    expect(() => joinPage(unruled, [part("Lost", "Reference implementation", "Text.", "", "## UI rules", "", "| r |")])).toThrow("no section named Checklist");
+    expect(() => joinPage(unruled, [part("Lost", "Reference implementation", "Text.", "", "## UI Checklist", "", "| r |")])).toThrow("no section named Checklist");
     const bare = index.replace("## Sources", "## Links");
     expect(() => joinPage(bare, [part("Lost", "Checklist", "Text.", "", "## FAQ", "", "Answers.")])).toThrow("no section named Sources");
   });
@@ -183,8 +183,9 @@ describe("splitAnchors", () => {
     ["deterministic", "/docs/components/button/ax#deterministic"],
     ["links-and-routers", "/docs/components/button/dx#links-and-routers"],
     ["user-interface-ui", "/docs/components/button/ui"],
-    ["ui-rules", "/docs/components/button/ui#ui-rules"],
-    ["ux-rules", "/docs/components/button/ux#ux-rules"],
+    ["ui-rules", "/docs/components/button/ui#ui-checklist"],
+    ["ui-checklist", "/docs/components/button/ui#ui-checklist"],
+    ["ux-rules", "/docs/components/button/ux#ux-checklist"],
     ["faq", "/docs/components/button/ux#faq"],
     ["button-or-link", "/docs/components/button/ux#button-or-link"],
   ])("sends the Button's #%s to %s", (anchor, target) => {
@@ -200,11 +201,12 @@ describe("splitAnchors", () => {
         return [file, ...outline(readFileSync(join(DOCS, BUTTON, file), "utf8")).map((line) => slug(line.replace(/^#+ /, "")))];
       }),
     );
-    expect(Object.keys(anchors)).toHaveLength(ids.size);
+    // And each rules table's anchor on the whole page, like `ui-rules`.
+    expect(Object.keys(anchors)).toHaveLength(ids.size + parts.length);
     for (const [anchor, target] of Object.entries(anchors)) {
       const [path, hash] = target.split("#");
       expect(parts.map((file) => docsPath(`${BUTTON}/${file}`))).toContain(path);
-      if (hash) expect(hash).toBe(anchor);
+      if (hash) expect(hash).toBe(anchor.replace(/-rules$/, "-checklist"));
     }
     for (const anchor of ["at-a-glance", "checklist", "reference-implementation", "sources"]) {
       expect(anchors).not.toHaveProperty(anchor);
