@@ -55,7 +55,7 @@ import "~/reference/button/tokens.css";
 .popover-anatomy {
   color-scheme: light;
 }
-:global(.dark) .popover-anatomy {
+:global(.dark .popover-anatomy) {
   color-scheme: dark;
 }
 

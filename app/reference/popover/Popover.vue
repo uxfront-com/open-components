@@ -321,8 +321,10 @@ function place() {
   el.style.top = `${Math.max(0, Math.min(y, clientHeight - height)) - gap}px`;
 }
 
-// With an arrow: the side it opened on, from where its centre is, which its scale doesn't move,
-// and the arrow across from the trigger's centre, or as close as the rounded corners allow.
+// With an arrow: the side it opened on, from where its edges are against the trigger's, since
+// the screen's edge can push a side popover off the trigger's centre, and the scale it grows
+// in from only moves them inwards. Then the arrow across from the trigger's centre, or as
+// close as the rounded corners allow.
 function aim() {
   const el = popover.value;
   const part = arrowPart.value;
@@ -331,7 +333,7 @@ function aim() {
   const p = el.getBoundingClientRect();
   const x = p.left + p.width / 2;
   const y = p.top + p.height / 2;
-  side.value = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
+  side.value = p.right <= a.left ? "left" : p.left >= a.right ? "right" : p.bottom <= a.top ? "top" : "bottom";
   const across = side.value === "top" || side.value === "bottom";
   const box = getComputedStyle(el);
   const length = parseFloat(across ? box.width : box.height);

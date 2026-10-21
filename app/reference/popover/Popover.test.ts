@@ -712,6 +712,25 @@ describe("Popover", () => {
     expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
   });
 
+  it("points its arrow from the side it opened on when the screen's edge pushes it off the trigger's centre", async () => {
+    const user = userEvent.setup();
+    page({ placement: "start" });
+    const arrow = popover().querySelector<HTMLElement>('[data-slot="arrow"]')!;
+    // Beside a trigger near the bottom of the screen, pushed up so its centre is above the
+    // trigger's, but wholly to its left.
+    screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(400, 700, 100, 30);
+    popover().getBoundingClientRect = () => new DOMRect(180, 580, 200, 200);
+    popover().style.width = "200px";
+    popover().style.height = "200px";
+    popover().style.borderTopLeftRadius = "8px";
+    arrow.style.width = "12px";
+
+    await openFrom(user);
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "left"));
+    // Across from the trigger's centre, at 715, 135px down from the popover's top at 580.
+    expect(arrow.style.top).toBe("135px");
+  });
+
   it("has no arrow, and no data-side, when you turn it off", async () => {
     const user = userEvent.setup();
     page({ arrow: false });

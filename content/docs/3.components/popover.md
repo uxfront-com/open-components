@@ -335,7 +335,7 @@ A popover is either closed or open, and it shows which with `data-state`, so you
 
 ### Tokens
 
-The panel looks like a smaller Dialog, with the same border, background and type. Only its width, its padding, its corners and its shadow differ. It's 15rem wide, 240px at the default text size, so every popover is the same size whatever it holds, and there's no backdrop behind it to set it apart from the page, so a soft shadow does. Its background is `Canvas`, the background browsers give a document, which follows `color-scheme`, so it covers what's behind it in your light and dark themes alike.
+The panel looks like a smaller Dialog, with the same border and background. Its width, padding, corners and shadow differ, and so does its type, with a title at the text's own size, 14px rather than 16px, and an `xs` close button rather than an `sm` one. It's 15rem wide, 240px at the default text size, so every popover is the same size whatever it holds, and there's no backdrop behind it to set it apart from the page, so a soft shadow does. Its background is `Canvas`, the background browsers give a document, which follows `color-scheme`, so it covers what's behind it in your light and dark themes alike.
 
 Its text reads one [theme token](/docs/foundations/design-tokens#theme-tokens), `--color--neutral-text`, like the Dialog's. The Buttons and Checkboxes inside read their own tokens, so copy [`tokens.css`](/docs/components/button#reference-implementation) from the Button into your theme. With our reference tokens, the title and the content come to 14.9:1 on white, the same as in the Dialog. If you change the tokens or the background, make sure to check the same pair.
 
@@ -1008,14 +1008,14 @@ for (const popover of document.querySelectorAll(".popover")) {
   // hears the key, so the dialog does, but only then.
   host?.addEventListener("keydown", (event) => event.target === host && onKeydown(event), true);
 
-  // The arrow sits on the side that faces the trigger, across from its centre, or as close
-  // as the rounded corners allow.
+  // The arrow sits on the side that faces the trigger, from where the popover's edges are,
+  // across from the trigger's centre, or as close as the rounded corners allow.
   function aim() {
     const a = trigger.getBoundingClientRect();
     const p = popover.getBoundingClientRect();
     const x = p.left + p.width / 2;
     const y = p.top + p.height / 2;
-    const side = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
+    const side = p.right <= a.left ? "left" : p.left >= a.right ? "right" : p.bottom <= a.top ? "top" : "bottom";
     popover.dataset.side = side;
     const across = side === "top" || side === "bottom";
     const box = getComputedStyle(popover);
@@ -1989,8 +1989,10 @@ function place() {
   el.style.top = `${Math.max(0, Math.min(y, clientHeight - height)) - gap}px`;
 }
 
-// With an arrow: the side it opened on, from where its centre is, which its scale doesn't move,
-// and the arrow across from the trigger's centre, or as close as the rounded corners allow.
+// With an arrow: the side it opened on, from where its edges are against the trigger's, since
+// the screen's edge can push a side popover off the trigger's centre, and the scale it grows
+// in from only moves them inwards. Then the arrow across from the trigger's centre, or as
+// close as the rounded corners allow.
 function aim() {
   const el = popover.value;
   const part = arrowPart.value;
@@ -1999,7 +2001,7 @@ function aim() {
   const p = el.getBoundingClientRect();
   const x = p.left + p.width / 2;
   const y = p.top + p.height / 2;
-  side.value = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
+  side.value = p.right <= a.left ? "left" : p.left >= a.right ? "right" : p.bottom <= a.top ? "top" : "bottom";
   const across = side.value === "top" || side.value === "bottom";
   const box = getComputedStyle(el);
   const length = parseFloat(across ? box.width : box.height);
@@ -2968,6 +2970,25 @@ describe("Popover", () => {
     popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
     expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
+  });
+
+  it("points its arrow from the side it opened on when the screen's edge pushes it off the trigger's centre", async () => {
+    const user = userEvent.setup();
+    page({ placement: "start" });
+    const arrow = popover().querySelector<HTMLElement>('[data-slot="arrow"]')!;
+    // Beside a trigger near the bottom of the screen, pushed up so its centre is above the
+    // trigger's, but wholly to its left.
+    screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(400, 700, 100, 30);
+    popover().getBoundingClientRect = () => new DOMRect(180, 580, 200, 200);
+    popover().style.width = "200px";
+    popover().style.height = "200px";
+    popover().style.borderTopLeftRadius = "8px";
+    arrow.style.width = "12px";
+
+    await openFrom(user);
+    await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "left"));
+    // Across from the trigger's centre, at 715, 135px down from the popover's top at 580.
+    expect(arrow.style.top).toBe("135px");
   });
 
   it("has no arrow, and no data-side, when you turn it off", async () => {
