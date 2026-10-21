@@ -126,9 +126,10 @@ describe("The Button's page", () => {
     expect(isPart(DOCS, "3.components/card.md")).toBe(false);
   });
 
-  it("has the outline every component page has, in its order, with At a glance in its intro", () => {
+  it("has the outline every component page has, in its order", () => {
     const sections = outline(readPage(DOCS, `${BUTTON}/index.md`)).filter((line) => line.startsWith("## "));
     expect(sections).toEqual([
+      "## At a glance",
       "## User Interface (UI)",
       "## User Experience (UX)",
       "## Developer Experience (DX)",

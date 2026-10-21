@@ -44,7 +44,7 @@ describe("findPage", () => {
 
 // The Overview's cards come back as links to the layer pages, in its introduction.
 describe("The Button's introduction", () => {
-  it("links each layer page, named by its layer, then its description, before its At a glance table", () => {
+  it("links each layer page, named by its layer, then its description", () => {
     const [intro] = findSections(button, ["Button"]).found;
     const text = sectionText(standard, button, intro!).trim();
     const links = [
@@ -54,7 +54,6 @@ describe("The Button's introduction", () => {
       ["Agentic Experience (AX)", "ax"],
     ].map(([title, path]) => text.indexOf(`[**${title}**](https://opencomponents.dev/docs/components/button/${path})\n\nHow `));
     expect(links.every((at, i) => at > 0 && (i === 0 || at > links[i - 1]!))).toBe(true);
-    expect(text.indexOf("| Aspect")).toBeGreaterThan(links.at(-1)!);
   });
 });
 
