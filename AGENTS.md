@@ -53,7 +53,7 @@ Most of the site is generated from the docs, so a change in one place often need
 - **The plugin's version.** Clients cache the plugin by its `version`, so bump it in `plugins/open-components/plugin.json` and in `.claude-plugin/marketplace.json` whenever the plugin changes.
 - **MCP tools and prompts.** A new tool is named in the instructions in `mcp/nuxt.config.ts`, in `TOOLS` in `scripts/check-mcp.mjs` and on the MCP Server page. A new prompt goes in `PROMPTS` and `filled` there, and gets a skill in the plugin.
 - **A component that ships.** Its Roadmap row becomes `:roadmap-check{shipped}`, and it gets a changelog entry.
-- **Replaced theme components.** `app/components/app/AppHeaderBody.vue`, `app/components/docs/DocsPageHeaderLinks.vue` and `app/components/docs/DocsAsideLeftBody.vue` replace the layer's and Docus's own, and `app/components/docs/DocsNavigation.vue` renders the sidebar's and the menu's navigation in place of Nuxt UI's `UContentNavigation`, so keep them in step with the originals.
+- **Replaced theme components.** `app/components/app/AppHeaderBody.vue`, `app/components/docs/DocsPageHeaderLinks.vue` and `app/components/docs/DocsAsideLeftBody.vue` replace the layer's and Docus's own, `app/components/docs/DocsNavigation.vue` renders the sidebar's and the menu's navigation in place of Nuxt UI's `UContentNavigation`, and `app/components/UContentSurround.vue` replaces Nuxt UI's links to the previous and next pages, so both list the component pages by name (`app/lib/navigation.ts`). Keep them in step with the originals.
 
 ## Markdown conventions
 
