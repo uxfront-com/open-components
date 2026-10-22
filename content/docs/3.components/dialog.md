@@ -15,7 +15,7 @@ This page walks you through building one the right way. We'll look at:
 
 Every example on this page runs on our [reference implementation](/docs/components/dialog#reference-implementation), which does its part of every rule in the [checklist](/docs/components/dialog#checklist), so feel free to open them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Dialog with the same API in each, apart from two names in Angular, which [Type-safe](/docs/components/dialog#type-safe) explains. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/dialog#deterministic).
 
-The Dialog is modal: while it's open, nothing else on the page can be used. Showing more next to what opened it, without blocking the page, is what a Popover is for, and it's on our [Roadmap](/docs/getting-started/roadmap).
+The Dialog is modal: while it's open, nothing else on the page can be used. Showing more next to what opened it, without blocking the page, is what a [Popover](/docs/components/popover) is for.
 
 ::dialog-playground
 ::
@@ -1159,7 +1159,7 @@ We recommend `size="md"` and `role="dialog"` as the defaults. The Dialog also le
 
 - There's no `variant` or `color`. A dialog has no intent of its own, so its actions say what it's about, like a Delete project Button with `color="error"`.
 - There's no `trigger` slot. The button that opens a dialog is a Button of yours, with its own label and its own place on the page, and the Dialog gives focus back to it on its own.
-- There's no `modal` prop. A dialog that leaves the page working, next to what opened it, is a Popover, which is on our [Roadmap](/docs/getting-started/roadmap).
+- There's no `modal` prop. A dialog that leaves the page working, next to what opened it, is a [Popover](/docs/components/popover).
 - There's no `closable` prop either. Every dialog closes on `Escape`, and an alert dialog leaves out the close button and ignores the backdrop on its own.
 
 ### Type-safe
@@ -1430,7 +1430,7 @@ A form in the body works like any other, so a dialog that edits something can se
 - A [Button](/docs/components/button) opens the dialog, and gets focus back when it closes. The close button is a Button too, and so are the actions, with their names, focus rings and `type="button"`.
 - An [Input](/docs/components/input) in the body gets the focus when the dialog opens, if it's the first control there, and keeps its label and error message as it would anywhere else.
 - A [Spinner](/docs/components/spinner) shows that an action is under way, inside its Button, with `loading`, which keeps the focus on the Button while the dialog waits.
-- Menus, popovers and tooltips inside a dialog, which are on our [Roadmap](/docs/getting-started/roadmap), open in the top layer too, above the dialog, and close on `Escape` before it does.
+- A [Popover](/docs/components/popover) or a [Tooltip](/docs/components/tooltip) inside a dialog opens in the top layer too, above the dialog, and closes on `Escape` before it does, and so will the menus on our [Roadmap](/docs/getting-started/roadmap).
 
 ### Controllable
 
@@ -2622,7 +2622,7 @@ A dialog interrupts people, so it's best kept for what needs an answer before th
 | Confirm that something happened, like "Changes saved"               | Toast                                   |
 | Edit something with many fields, or that people come back to       | A page of its own                       |
 
-The Popover, the Dropdown Menu and the Toast are on our [Roadmap](/docs/getting-started/roadmap), and they'll share the Dialog's rules for focus, `Escape` and the top layer.
+The [Popover](/docs/components/popover) shares the Dialog's rules for focus, `Escape` and the top layer, and the Dropdown Menu and the Toast on our [Roadmap](/docs/getting-started/roadmap) will too.
 
 ::accordion
 :::accordion-item{label="Can a dialog open another dialog?"}

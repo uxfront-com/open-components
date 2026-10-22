@@ -15,7 +15,7 @@ This page walks you through building one the right way. We'll look at:
 
 Every example on this page runs on our [reference implementation](/docs/components/tooltip#reference-implementation), which does its part of every rule in the [checklist](/docs/components/tooltip#checklist), so hover or tab to the examples as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Tooltip with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/tooltip#deterministic).
 
-The Tooltip is one of the overlays on our [Roadmap](/docs/getting-started/roadmap), the components that sit on top of the page. The rules it settles for opening in the top layer and closing with `Escape` are the ones the Popover, the Dialog and the Dropdown Menu will follow too.
+The Tooltip is one of the overlays on our [Roadmap](/docs/getting-started/roadmap), the components that sit on top of the page. The rules it settles for opening in the top layer and closing with `Escape` are the ones the [Popover](/docs/components/popover) and the [Dialog](/docs/components/dialog) follow too, and the Dropdown Menu will.
 
 ::tooltip-playground
 ::
@@ -798,13 +798,13 @@ Opening a tooltip closes any other one that's open. Two tooltips at once would c
 
 When a tooltip is open inside something else that closes with `Escape`, like a Dialog, `Escape` closes the tooltip and goes no further. Otherwise one key press would close both, and people would lose the dialog along with their work in it.
 
-Our Tooltip listens for `Escape` only while it's open, in the capture phase on the `document`, so it comes before a dialog's own handler, and stops it there. It cancels its default action too, so a native `<dialog>` doesn't close either. With no tooltip open, `Escape` reaches the dialog as usual. The Popover, Dialog and Dropdown Menu on our Roadmap will follow the same rule, so `Escape` always closes the layer on top first.
+Our Tooltip listens for `Escape` only while it's open, in the capture phase on the `document`, so it comes before a dialog's own handler, and stops it there. It cancels its default action too, so a native `<dialog>` doesn't close either. With no tooltip open, `Escape` reaches the dialog as usual. The [Popover](/docs/components/popover) and the [Dialog](/docs/components/dialog) each take `Escape` after the layers above them, and so will the Dropdown Menu on our [Roadmap](/docs/getting-started/roadmap), so `Escape` always closes the layer on top first.
 
 #### Keep it short and plain
 
 A tooltip holds a few words of plain text, like a name or a short hint. It's never the place for instructions, an error message or anything people need to act on.
 
-Nothing in it can be focused or clicked. A link or a button inside a tooltip can't be reached, since focus would have to leave the trigger, which closes the tooltip. If you need either, use a Popover, which is on our [Roadmap](/docs/getting-started/roadmap).
+Nothing in it can be focused or clicked. A link or a button inside a tooltip can't be reached, since focus would have to leave the trigger, which closes the tooltip. If you need either, use a [Popover](/docs/components/popover).
 
 Don't add a `title` attribute to the trigger as well. Browsers draw a tooltip of their own for it, which can't be styled, doesn't open for the keyboard and would show up next to yours.
 
@@ -904,7 +904,7 @@ The reason is on the page too, since a tap never opens a tooltip. A disabled but
 
 Touch screens have no hover, and a tap on a button is meant to press it, so a tap never opens a tooltip. That includes the focus a tap moves to the trigger, which would otherwise open a tooltip that nothing closes until the next tap somewhere else. The reference implementation tells a tap apart by its pointer type, `touch`, rather than by the screen's size, so a laptop with a touch screen still shows tooltips to its mouse.
 
-That's why a tooltip is never the only place something lives. A `label` repeats the trigger's own name, and a `description` adds a hint people can do without, or one that's on the page too, like the reason in the example under [Disabled triggers](/docs/components/tooltip#disabled-triggers). For a hint people need on every device, use visible text, or a toggletip, a button that shows the hint when it's pressed, which belongs to the Popover on our Roadmap.
+That's why a tooltip is never the only place something lives. A `label` repeats the trigger's own name, and a `description` adds a hint people can do without, or one that's on the page too, like the reason in the example under [Disabled triggers](/docs/components/tooltip#disabled-triggers). For a hint people need on every device, use visible text, or a [toggletip](/docs/components/popover#toggletips), a button that shows the hint when it's pressed, which is a Popover.
 
 #### More contrast
 
@@ -1060,7 +1060,7 @@ The Tooltip uses the same names as every other component in Open Components, so 
 We recommend `type="description"`, `delay={500}`, `placement="top"` and an arrow as the defaults. The Tooltip also leaves a few things out, on purpose:
 
 - There's no slot for its content, only `label`. A slot would invite links, buttons and icons, which nobody could reach (see [Keep it short and plain](/docs/components/tooltip#keep-it-short-and-plain)).
-- There's no `open` prop. When a tooltip opens is what makes it accessible, so the Tooltip keeps it to itself, and something you'd want to show on your own terms is a Popover.
+- There's no `open` prop. When a tooltip opens is what makes it accessible, so the Tooltip keeps it to itself, and something you'd want to show on your own terms is a [Popover](/docs/components/popover).
 - There's no `color` or `size`. A tooltip has no intent of its own, and its text is always small and short.
 - There's no `disabled` either. To have no tooltip, render the trigger without one.
 
@@ -1188,7 +1188,7 @@ Bind the props on the element that takes focus, which is usually the trigger's r
 - A Button with `focusableWhenDisabled` stays focusable while it's disabled, so its tooltip can still say why (see [Disabled triggers](/docs/components/tooltip#disabled-triggers)).
 - An [Input](/docs/components/input) is described by its hint, which stays on the page rather than in a tooltip, since people need it while they type.
 - A Dialog or Popover around a Tooltip keeps its own `Escape` handling. The Tooltip only takes `Escape` while it's open, and stops it there.
-- A toggletip, which shows a hint when a button is pressed, and anything with links or buttons inside, will be a Popover, on our [Roadmap](/docs/getting-started/roadmap).
+- A toggletip, which shows a hint when a button is pressed, and anything with links or buttons inside, is a [Popover](/docs/components/popover).
 
 ### Controllable
 
@@ -2341,7 +2341,7 @@ A tooltip is one of a few ways to show a hint, and each one suits a different hi
 | Names an icon-only button                                         | A Tooltip, with `type="label"`       | It shows the name the button already has, on hover and focus     |
 | Adds a few words people can do without                            | A Tooltip, with `type="description"` | Screen readers read it with the trigger, and it stays out of the way |
 | Is something people need, like a field's format                   | Visible text, like an Input's hint   | It's there on every device, and while people type                |
-| Needs a press to show, or holds a link or a button                | A Popover, on our Roadmap            | It opens on purpose, takes focus and closes when people are done |
+| Needs a press to show, or holds a link or a button                | A Popover                            | It opens on purpose, takes focus and closes when people are done |
 
 #### Can a tooltip stay dark in dark mode?
 
@@ -2487,7 +2487,7 @@ export function SettingsButton() {
 
 ::accordion
 :::accordion-item{label="Can a tooltip hold a link?"}
-No. A link in a tooltip can't be reached with the keyboard, since moving focus to it means leaving the trigger, which closes the tooltip. Touch screen users never see it at all. If a hint needs a link, like "Learn more", use a Popover, which opens when you press its button and takes focus, and which is on our [Roadmap](/docs/getting-started/roadmap).
+No. A link in a tooltip can't be reached with the keyboard, since moving focus to it means leaving the trigger, which closes the tooltip. Touch screen users never see it at all. If a hint needs a link, like "Learn more", use a [Popover](/docs/components/popover), which opens when you press its button and takes focus.
 :::
 
 :::accordion-item{label="Why not use the title attribute?"}
