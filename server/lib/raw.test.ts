@@ -1,12 +1,17 @@
 // @vitest-environment node
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { parse } from "yaml";
 import { anchors as anchorsOf, heading, scan } from "../../mcp/lib/markdown";
 import { docsPath, isPart, joinPage, readPage, readPages, readSplitAnchors, splitAnchors } from "./raw";
 
 const DOCS = "content/docs";
-const BUTTON = "3.components/button";
+const COMPONENTS = "3.components";
+// Every component page split into parts, like the Button's: a folder with an index.md.
+const SPLIT = readdirSync(join(DOCS, COMPONENTS), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && existsSync(join(DOCS, COMPONENTS, entry.name, "index.md")))
+  .map((entry) => entry.name);
 
 // A part's source, with the frontmatter joinPage reads.
 const part = (title: string, before: string, ...lines: string[]) =>
@@ -17,6 +22,14 @@ const outline = (markdown: string) =>
     const match = !code && heading(text);
     return match ? [`${"#".repeat(match.level)} ${match.text}`] : [];
   });
+const frontmatter = (source: string) => parse(source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)?.[1] ?? "") ?? {};
+// A section of a page, outside its code, from its `## ` heading up to the next.
+const section = (markdown: string, title: string) => {
+  const lines = scan(markdown);
+  const start = lines.findIndex(({ text, code }) => !code && text === `## ${title}`);
+  const end = lines.findIndex(({ text, code }, i) => i > start && !code && heading(text)?.level === 2);
+  return lines.slice(start, end === -1 ? undefined : end).map(({ text }) => text).join("\n");
+};
 
 describe("docsPath", () => {
   it.each([
@@ -114,20 +127,25 @@ describe("joinPage", () => {
   });
 });
 
-describe("The Button's page", () => {
-  const parts = readdirSync(join(DOCS, BUTTON)).filter((file) => file.endsWith(".md") && file !== "index.md");
+// Every component page split like the Button's, each checked on its own, so a
+// component's split is in the gate as soon as its folder is.
+describe.each(SPLIT)("The %s page, split into parts,", (name) => {
+  const folder = `${COMPONENTS}/${name}`;
+  const parts = readdirSync(join(DOCS, folder)).filter((file) => file.endsWith(".md") && file !== "index.md");
+  const index = readFileSync(join(DOCS, folder, "index.md"), "utf8");
+  const read = (file: string) => readFileSync(join(DOCS, folder, file), "utf8");
 
   it("is one page, with its parts joined back in", () => {
-    expect(readPages(DOCS).filter(({ file }) => file.startsWith(BUTTON))).toEqual([
-      { file: `${BUTTON}/index.md`, source: readPage(DOCS, `${BUTTON}/index.md`), parts: parts.map((file) => `${BUTTON}/${file}`) },
+    expect(readPages(DOCS).filter(({ file }) => file.startsWith(`${folder}/`))).toEqual([
+      { file: `${folder}/index.md`, source: readPage(DOCS, `${folder}/index.md`), parts: parts.map((file) => `${folder}/${file}`) },
     ]);
-    expect(parts.every((file) => isPart(DOCS, `${BUTTON}/${file}`))).toBe(true);
-    expect(isPart(DOCS, `${BUTTON}/index.md`)).toBe(false);
+    expect(parts.every((file) => isPart(DOCS, `${folder}/${file}`))).toBe(true);
+    expect(isPart(DOCS, `${folder}/index.md`)).toBe(false);
     expect(isPart(DOCS, "3.components/card.md")).toBe(false);
   });
 
   it("has the outline every component page has, in its order", () => {
-    const sections = outline(readPage(DOCS, `${BUTTON}/index.md`)).filter((line) => line.startsWith("## "));
+    const sections = outline(readPage(DOCS, `${folder}/index.md`)).filter((line) => line.startsWith("## "));
     expect(sections).toEqual([
       "## At a glance",
       "## User Interface (UI)",
@@ -141,11 +159,68 @@ describe("The Button's page", () => {
     ]);
   });
 
+  it("has a page per layer, each ending with its rules, then its questions if it has any", () => {
+    expect(parts).toEqual(["1.ui.md", "2.ux.md", "3.dx.md", "4.ax.md"]);
+    for (const [file, layer] of [["1.ui.md", "UI"], ["2.ux.md", "UX"], ["3.dx.md", "DX"], ["4.ax.md", "AX"]] as const) {
+      const sections = outline(read(file)).filter((line) => line.startsWith("## "));
+      const end = sections.at(-1) === "## FAQ" ? [`## ${layer} Checklist`, "## FAQ"] : [`## ${layer} Checklist`];
+      expect(sections.slice(-end.length), file).toEqual(end);
+      expect(sections.filter((line) => line.endsWith(" Checklist") || line === "## FAQ"), file).toEqual(end);
+    }
+  });
+
   it("reads each part as itself", () => {
-    const ux = readFileSync(join(DOCS, BUTTON, "2.ux.md"), "utf8");
-    expect(readPage(DOCS, `${BUTTON}/2.ux.md`)).toBe(ux);
-    expect(outline(ux)).toContain("## Every state");
-    expect(outline(ux)).toContain("### Loading");
+    for (const file of parts) expect(readPage(DOCS, `${folder}/${file}`)).toBe(read(file));
+  });
+
+  it("names its folder in the sidebar, with an icon", () => {
+    const { title, icon } = parse(readFileSync(join(DOCS, folder, ".navigation.yml"), "utf8")) ?? {};
+    expect(title).toEqual(expect.any(String));
+    expect(icon).toMatch(/^i-/);
+  });
+
+  it("has an Overview with no questions of its own, a card for each part and a link to each part's rules", () => {
+    expect(frontmatter(index).navigation?.title).toBe("Overview");
+    expect(outline(index)).not.toContain("## FAQ");
+    const group = index.match(/^::card-group\n([\s\S]*?)^::$/m)?.[1];
+    const cards = [...(group ?? "").matchAll(/^:::card\{([^}]*)\}\n([\s\S]*?)\n:::$/gm)].map(([, attributes, text]) => ({
+      ...Object.fromEntries([...attributes!.matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value])),
+      text,
+    }));
+    const checklist = section(index, "Checklist");
+    expect(cards).toEqual(
+      parts.map((file) => {
+        const { title, description } = frontmatter(read(file));
+        return expect.objectContaining({ to: docsPath(`${folder}/${file}`), title, text: description });
+      }),
+    );
+    for (const file of parts) {
+      const { title } = frontmatter(read(file));
+      const rules = outline(read(file)).find((line) => / Checklist$/.test(line))!.replace(/^## /, "");
+      expect(checklist).toContain(`- [${title} Checklist](${docsPath(`${folder}/${file}`)}#${anchorsOf()(rules)})`);
+    }
+  });
+
+  it("sends every section of its parts on to them, and none of its Overview's", () => {
+    const anchors = readSplitAnchors(DOCS)[docsPath(`${folder}/index.md`)]!;
+    // Every heading of every part, plus the part's own section, once each.
+    const ids = new Set(
+      parts.flatMap((file) => {
+        const slug = anchorsOf();
+        return [file, ...outline(read(file)).map((line) => slug(line.replace(/^#+ /, "")))];
+      }),
+    );
+    // And each rules table's anchor on the whole page, like `ui-rules`.
+    expect(Object.keys(anchors)).toHaveLength(ids.size + parts.length);
+    for (const [anchor, target] of Object.entries(anchors)) {
+      const [path, hash] = target.split("#");
+      expect(parts.map((file) => docsPath(`${folder}/${file}`))).toContain(path);
+      if (hash) expect(hash).toBe(anchor.replace(/-rules$/, "-checklist"));
+    }
+    const slug = anchorsOf();
+    for (const line of outline(index).filter((line) => line.startsWith("## "))) {
+      expect(anchors).not.toHaveProperty(slug(line.replace(/^## /, "")));
+    }
   });
 });
 
@@ -190,26 +265,5 @@ describe("splitAnchors", () => {
     ["button-or-link", "/docs/components/button/ux#button-or-link"],
   ])("sends the Button's #%s to %s", (anchor, target) => {
     expect(anchors[anchor]).toBe(target);
-  });
-
-  it("covers every section of the Button's parts, and none of its Overview's", () => {
-    const parts = readdirSync(join(DOCS, BUTTON)).filter((file) => file.endsWith(".md") && file !== "index.md");
-    // Every heading of every part, plus the part's own section, once each.
-    const ids = new Set(
-      parts.flatMap((file) => {
-        const slug = anchorsOf();
-        return [file, ...outline(readFileSync(join(DOCS, BUTTON, file), "utf8")).map((line) => slug(line.replace(/^#+ /, "")))];
-      }),
-    );
-    // And each rules table's anchor on the whole page, like `ui-rules`.
-    expect(Object.keys(anchors)).toHaveLength(ids.size + parts.length);
-    for (const [anchor, target] of Object.entries(anchors)) {
-      const [path, hash] = target.split("#");
-      expect(parts.map((file) => docsPath(`${BUTTON}/${file}`))).toContain(path);
-      if (hash) expect(hash).toBe(anchor.replace(/-rules$/, "-checklist"));
-    }
-    for (const anchor of ["at-a-glance", "checklist", "reference-implementation", "sources"]) {
-      expect(anchors).not.toHaveProperty(anchor);
-    }
   });
 });
