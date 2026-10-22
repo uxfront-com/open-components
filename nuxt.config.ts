@@ -17,8 +17,8 @@ const MCP_URL = "https://mcp.opencomponents.dev/mcp";
 process.env.NUXT_SITE_URL ||= SITE_URL;
 
 // The docs pages with a contract, which server/middleware/raw-contract.ts serves at
-// /raw/<path>.yaml: 3.components/card.md has /raw/docs/components/card.yaml, and
-// the Button, split into a folder, has /raw/docs/components/button.yaml.
+// /raw/<path>.yaml: every component page, split into a folder like
+// 3.components/button/, has one, like /raw/docs/components/button.yaml.
 const contracts = readPages("content/docs").flatMap(({ file, source }) => {
   if (!buildContract(source)) return [];
   return {
