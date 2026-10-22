@@ -2,6 +2,7 @@
 import type { ContentNavigationItem } from "@nuxt/content";
 import theme from "#build/ui/content/content-navigation";
 import { tv } from "#ui/utils/tv";
+import { sortNavigation } from "~/lib/navigation";
 
 /**
  * The docs' navigation, in the sidebar (DocsAsideLeftBody.vue) and the header's
@@ -10,9 +11,11 @@ import { tv } from "#ui/utils/tv";
  * Nuxt UI's theme for it and Docus's options, and the top-level sections stay
  * open, but a group with a page of its own, like the Button's Overview, is a link
  * to that page with a chevron beside it that opens and closes the group (see
- * DocsNavigationList.vue).
+ * DocsNavigationList.vue). It lists the component pages by name, as the links
+ * to the previous and next pages do (app/lib/navigation.ts).
  */
-defineProps<{ navigation: ContentNavigationItem[] }>();
+const props = defineProps<{ navigation: ContentNavigationItem[] }>();
+const navigation = computed(() => sortNavigation(props.navigation));
 
 const appConfig = useAppConfig();
 const variants = useUIConfig("contentNavigation");
