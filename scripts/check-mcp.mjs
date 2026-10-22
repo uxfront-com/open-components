@@ -11,6 +11,7 @@ import { createServer } from "node:net";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { slug } from "github-slugger";
 import { parse } from "yaml";
 
 const SITE = "https://opencomponents.dev";
@@ -200,21 +201,33 @@ async function checkServer() {
   const { structuredContent: empty } = await call("list-rules", { ids: [], scope: [], layer: [], level: [], check: [] });
   check(empty.total === rules, `list-rules with empty lists lists ${empty.total} rules, not ${rules}`);
 
-  // Every anchor the server links agents to is on its page.
-  const html = (pathname) => readFileSync(join("dist", `${pathname}.html`), "utf8");
-  for (const rule of all) {
-    const { pathname, hash } = new URL(rule.url);
-    check(html(pathname).includes(`id="${hash.slice(1)}"`), `${rule.id} links to ${rule.url}, which isn't on the page`);
-  }
   const pages = readdirSync("dist/raw/docs", { recursive: true, encoding: "utf8" })
     .filter((file) => file.endsWith(".md"))
     .map((file) => `/docs/${file.replace(/\.md$/, "")}`);
+  // A page split into parts, like the Button's, has a page per part under its path,
+  // /docs/components/button/ux, while the server reads it as one page.
+  const partsOf = (pathname) => pages.filter((other) => other.startsWith(`${pathname}/`));
+  const wholeOf = (pathname) => pages.find((other) => partsOf(other).includes(pathname)) ?? pathname;
+  // Every anchor the server links agents to is on its page, or on one of its parts.
+  // A part's own section, like the Button's #user-experience-ux, is the top of the
+  // part's page, and a rules table, like #ui-rules, is headed "UI Checklist" there
+  // (#ui-checklist): the site sends both anchors there (app/middleware/split-pages.global.ts).
+  const html = (pathname) => readFileSync(join("dist", `${pathname}.html`), "utf8");
+  const title = (part) => readFileSync(join("dist/raw", `${part}.md`), "utf8").match(/^# (.+)$/m)[1];
+  const has = (pathname, anchor) =>
+    [pathname, ...partsOf(pathname)].some((path) => html(path).includes(`id="${anchor}"`)) ||
+    partsOf(pathname).some((part) => html(part).includes(`id="${anchor.replace(/-rules$/, "-checklist")}"`)) ||
+    partsOf(pathname).some((part) => slug(title(part)) === anchor);
+  for (const rule of all) {
+    const { pathname, hash } = new URL(rule.url);
+    check(has(pathname, hash.slice(1)), `${rule.id} links to ${rule.url}, which isn't on the page`);
+  }
   for (const pathname of pages) {
     // An unknown section lists the page's sections, with their anchors.
     const { text, isError } = await call("get-page", { path: pathname, sections: ["?"] });
     check(isError, `get-page {path: ${pathname}, sections: ["?"]} didn't fail`);
     for (const [, anchor] of text.matchAll(/\(#([^)]+)\)/g)) {
-      check(html(pathname).includes(`id="${anchor}"`), `get-page lists #${anchor} on ${pathname}, which isn't on the page`);
+      check(has(wholeOf(pathname), anchor), `get-page lists #${anchor} on ${pathname}, which isn't on the page`);
     }
     const page = await call("get-page", { path: pathname });
     check(!page.isError && page.text.startsWith("# "), `get-page {path: ${pathname}} failed: ${page.text.slice(0, 200)}`);
@@ -228,8 +241,21 @@ async function checkServer() {
   check(loading.text.includes("```tsx") && !loading.text.includes("```vue"), "get-page's Loading section in React has other frameworks' code");
   const linked = await call("get-page", { path: `${SITE}/docs/components/button#loading` });
   check(linked.text.includes("#### Loading") && !linked.text.includes("(#loading)"), "get-page with a link to #loading doesn't read that section");
+  // A part's page, like the Button's UX, reaches the whole page.
+  const part = await call("get-page", { path: `${SITE}/docs/components/button/ux#loading` });
+  check(part.text.includes("#### Loading") && !part.text.includes("(#loading)"), "get-page with a link to the Button's UX page's #loading doesn't read that section");
+  const partOutline = await call("get-page", { path: "/docs/components/button/ux" });
+  check(partOutline.text === outline.text, "get-page {path: /docs/components/button/ux} isn't the Button's page");
   const together = await call("get-page", { path: "button", sections: ["User Interface (UI)", "User Experience (UX)", "Reference implementation"] });
   check(together.text.includes("too long to return together"), "get-page returns sections that are too long together instead of their outline");
+  // A split page's rules, from its layer pages, and the Overview's cards, as links in its introduction.
+  const uxRules = await call("get-page", { path: "button", sections: ["UX rules"] });
+  check(uxRules.text.includes("`button/keep-focus`"), "get-page's UX rules section doesn't have button/keep-focus");
+  const intro = await call("get-page", { path: "button", sections: ["Button"] });
+  check(
+    ["ui", "ux", "dx", "ax"].every((layer) => intro.text.includes(`](${SITE}/docs/components/button/${layer})`)),
+    "get-page's introduction of the Button doesn't link its four layer pages",
+  );
   const every = await call("get-page", { path: "button", sections: ["Variants"] });
   check(every.text.includes("**React**") && every.text.includes("**Vanilla**"), "get-page's Variants section doesn't label each framework");
 
@@ -262,7 +288,7 @@ async function checkServer() {
   // Resources: the same bytes as the files the site publishes at their URIs.
   const { resources } = await client.listResources();
   const { resourceTemplates } = await client.listResourceTemplates();
-  check(resources.length > pages.length, `There are only ${resources.length} resources`);
+  check(resources.length > pages.filter((pathname) => wholeOf(pathname) === pathname).length, `There are only ${resources.length} resources`);
   // Codex reads a resource's priority as a number type that values like 0.9 don't
   // fit, and then drops every resource the server lists.
   for (const resource of [...resources, ...resourceTemplates]) {

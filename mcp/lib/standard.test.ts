@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { FRAMEWORKS } from "../../app/data/frameworks";
 import { buildContract } from "../../server/lib/contract";
-import { docsPath, rawContract, rawPage } from "../../server/lib/raw";
+import { docsPath, isPart, rawContract, rawPage, readPages } from "../../server/lib/raw";
 import { SWITCHER, SWITCHER_END } from "./frameworks";
 import { heading, scan } from "./markdown";
 import { buildStandard } from "./standard";
@@ -14,12 +14,9 @@ import { buildStandard } from "./standard";
 const SITE = "https://opencomponents.dev";
 const { standard, problems } = buildStandard({ root: process.cwd(), site: SITE, frameworks: FRAMEWORKS });
 
-// Every docs page's source, by its path on the site.
-const sources = new Map(
-  readdirSync("content/docs", { recursive: true, encoding: "utf8" })
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => [docsPath(file), readFileSync(join("content/docs", file), "utf8")]),
-);
+// Every docs page's source, by its path on the site, with a split page's parts
+// joined back in (see readPages).
+const sources = new Map(readPages("content/docs").map(({ file, source }) => [docsPath(file), source]));
 const frontmatter = (source: string) => parse(source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)?.[1] ?? "") ?? {};
 const pages = standard.pages.map((page) => [page.path, page] as const);
 
@@ -53,6 +50,28 @@ describe("The standard", () => {
     const { title, description } = frontmatter(sources.get(path)!);
     expect(title).toEqual(expect.any(String));
     expect(description).toEqual(expect.any(String));
+  });
+
+  // A split page's parts are pages on the site too, each with a /raw file of its own,
+  // and the sidebar and joinPage() read the rest.
+  const parts = readdirSync("content/docs", { recursive: true, encoding: "utf8" }).filter(
+    (file) => file.endsWith(".md") && isPart("content/docs", file),
+  );
+  it.each(parts)("%s, a part of a split page, sets its title, description, sidebar title and where it goes", (file) => {
+    const { title, description, navigation, before } = frontmatter(readFileSync(join("content/docs", file), "utf8"));
+    expect(title).toEqual(expect.any(String));
+    expect(description).toEqual(expect.any(String));
+    expect(navigation?.title).toEqual(expect.any(String));
+    expect(before).toEqual(expect.any(String));
+  });
+
+  // list-rules reads a split page's rules from its layer pages' tables, in their order.
+  it("has the Button's rules from its layer pages' tables, in layer order", () => {
+    const dir = "content/docs/3.components/button";
+    const rows = ["1.ui.md", "2.ux.md", "3.dx.md", "4.ax.md"].flatMap((file) =>
+      [...readFileSync(join(dir, file), "utf8").matchAll(/^\| `(button\/[a-z-]+)`/gm)].map((row) => row[1]),
+    );
+    expect(standard.rules.filter((rule) => rule.component === "button").map((rule) => rule.id)).toEqual(rows);
   });
 
   // Agents read the same page and contract whichever way they reach them.

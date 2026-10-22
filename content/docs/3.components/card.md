@@ -1052,7 +1052,7 @@ const { projects } = Astro.props;
 
 ### Consistent
 
-Once you've learned the [Button](/docs/components/button#consistent)'s and the [Input](/docs/components/input#consistent)'s APIs, you already know the Card's `href` and `actions`. These names mean the same thing everywhere in Open Components:
+Once you've learned the [Button](/docs/components/button/dx#consistent)'s and the [Input](/docs/components/input#consistent)'s APIs, you already know the Card's `href` and `actions`. These names mean the same thing everywhere in Open Components:
 
 | Name      | Kind | What it means                                                         |
 | --------- | ---- | --------------------------------------------------------------------- |

@@ -760,7 +760,7 @@ The Textarea leaves text editing to the browser, so moving the caret, selecting,
 
 `maxlength` stops people typing past a limit, but it also silently cuts off what they paste, and they may never notice that the end is missing. The Textarea's `limit` counts instead. People can type and paste past it, the count says by how much, and the textarea is marked invalid until they've cut it back, so they decide what to keep. Check the limit on the server too, since the count only helps people stay within it.
 
-The count is a status message, so screen reader users hear it without leaving the textarea ([WCAG 4.1.3](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)). It would talk over them if it were announced on every keystroke, though, so the Textarea waits until people pause for a second, and only announces it once they've used 80% of the limit, or gone over. It goes through the same polite live region as the Button's loading announcement, one for the whole page, which you can read about under the Button's [Loading](/docs/components/button#loading).
+The count is a status message, so screen reader users hear it without leaving the textarea ([WCAG 4.1.3](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)). It would talk over them if it were announced on every keystroke, though, so the Textarea waits until people pause for a second, and only announces it once they've used 80% of the limit, or gone over. It goes through the same polite live region as the Button's loading announcement, one for the whole page, which you can read about under the Button's [Loading](/docs/components/button/ux#loading).
 
 #### Help people fill it in
 

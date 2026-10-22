@@ -9,7 +9,9 @@ import { collapse, heading, scan } from "./markdown";
  * - `::framework-switcher` blocks are marked, slot by slot, for renderFrameworks()
  *   (frameworks.ts) to keep every framework's examples or one's.
  * - An `:::accordion-item` keeps its label, in bold, as the question it answers,
- *   and a `:::tabs-item` as what its tab is for, like the client it sets up.
+ *   and a `:::tabs-item` as what its tab is for, like the client it sets up. A
+ *   `:::card` keeps its title, in bold, as a link to where it goes, if it goes
+ *   somewhere, like the Button's cards for its layers' pages.
  * - Any other component, like `::button-variants-example`, `::code-collapse` or
  *   `::button-anatomy`, keeps its content: examples, code and lists.
  * - `:roadmap-check` becomes `[x]` once a component has shipped, `[ ]` before.
@@ -42,8 +44,10 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
       const [, space, name, props] = start;
       open.push({ name: name!, indent: space!.length });
       if (name === "framework-switcher") lines.push(SWITCHER);
-      const label = props?.match(/label=(?:"([^"]*)"|'([^']*)')/);
-      if ((name === "accordion-item" || name === "tabs-item") && label) lines.push(`**${label[1] ?? label[2]}**`, "");
+      const label = prop(props, "label");
+      if ((name === "accordion-item" || name === "tabs-item") && label) lines.push(`**${label}**`, "");
+      const [title, to] = name === "card" ? [prop(props, "title"), prop(props, "to")] : [];
+      if (title) lines.push(to ? `[**${title}**](${to.startsWith("/") ? page.site : ""}${to})` : `**${title}**`, "");
       continue;
     }
     if (/^\s*:{2,}\s*$/.test(text)) {
@@ -73,4 +77,10 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
   }
   if (open.length) throw new Error(`${page.path}: ::${open.at(-1)!.name} is never closed`);
   return collapse(lines.join("\n"));
+}
+
+// A component's prop, like `label` in {label="Why not?"}, in double or single quotes.
+function prop(props: string | undefined, name: string): string | undefined {
+  const match = props?.match(new RegExp(`(?:^|[\\s{])${name}=(?:"([^"]*)"|'([^']*)')`));
+  return match ? (match[1] ?? match[2]) : undefined;
 }

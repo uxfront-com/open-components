@@ -8,13 +8,23 @@
  * MCP server's build import it too.
  */
 
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { parseDocument } from "yaml";
+import { anchors, heading, scan } from "../../mcp/lib/markdown";
+
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
+
 /**
  * The path a docs page is served at, from its file in content/docs/, without the
  * numbers that order the sidebar: 1.getting-started/2.roadmap.md is served at
  * /docs/getting-started/roadmap.
  */
 export function docsPath(file: string): string {
-  return `/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1")}`;
+  return `/docs/${file
+    .replace(/\.md$/, "")
+    .replace(/(^|\/)\d+\./g, "$1")
+    .replace(/\/index$/, "")}`;
 }
 
 /** `/raw/<path>.md`: the title and description, then the page without its frontmatter. */
@@ -36,4 +46,183 @@ export function rawContract(page: { title: string; path: string }, contract: str
     "",
     contract,
   ].join("\n");
+}
+
+/**
+ * A page split into parts, like the Button's, is a folder: its index.md is the
+ * Overview, and every other page in it is a part, with a page of its own on the
+ * site (content/docs/3.components/button/2.ux.md is /docs/components/button/ux).
+ * Agents still read it as one page: joinPage() puts the parts back where they came
+ * from, for /raw, the contract and the MCP server.
+ *
+ * Each part's title is the heading it had on the whole page, and `before` in its
+ * frontmatter names the Overview's section it goes before, like `Checklist`. Its
+ * headings sit one level higher than they did, since its title is the part's page
+ * heading, so joining moves them down again. Parts with the same `before` go in
+ * file order.
+ *
+ * A component page's part also carries its share of two sections every component
+ * page has (AGENTS.md, "Component pages"), which the join gathers back, in file
+ * order: its rules table, under `## UI Checklist` on its page, goes under the
+ * Overview's `## Checklist` as `### UI rules`, the name every component page gives
+ * it, and its questions, under `## FAQ`, go into one `## FAQ` before the
+ * Overview's `## Sources`.
+ */
+export function joinPage(index: string, parts: string[]): string {
+  const blocks = new Map<string, string[]>();
+  const gathered = { rules: [] as string[], faq: [] as string[] };
+  for (const source of parts) {
+    const { title, before, body } = readPart(source);
+    const sections = { own: [] as string[], rules: [] as string[], faq: [] as string[] };
+    let section: keyof typeof sections = "own";
+    for (const { text, code } of scan(body)) {
+      const match = !code && heading(text);
+      if (match && match.level === 2) {
+        section = RULES.test(match.text) ? "rules" : match.text === "FAQ" ? "faq" : "own";
+        // One `## FAQ` heads every part's questions.
+        if (section === "faq") continue;
+        if (section === "rules") {
+          sections.rules.push(`### ${wholeRules(match.text)}`);
+          continue;
+        }
+      }
+      sections[section].push(match ? `#${text}` : text);
+    }
+    blocks.set(before, [...(blocks.get(before) ?? []), `## ${title}\n\n${sections.own.join("\n").trim()}\n\n`]);
+    for (const key of ["rules", "faq"] as const) {
+      if (sections[key].length) gathered[key].push(sections[key].join("\n").trim());
+    }
+  }
+
+  // The rules go at the end of the Checklist, before the section after it, and
+  // the questions before the Sources.
+  let rules = gathered.rules.length ? `${gathered.rules.join("\n\n")}\n\n` : "";
+  let faq = gathered.faq.length ? `## FAQ\n\n${gathered.faq.join("\n\n")}\n\n` : "";
+  let section = "";
+  const joined = scan(index).map(({ text, code }) => {
+    const match = !code && heading(text);
+    if (!match || match.level !== 2) return text;
+    let before = "";
+    if (section === "Checklist") [before, rules] = [rules, ""];
+    if (match.text === "Sources") [before, faq] = [before + faq, ""];
+    before += blocks.get(match.text)?.join("") ?? "";
+    blocks.delete(match.text);
+    section = match.text;
+    return `${before}${text}`;
+  });
+  const missing = [...blocks.keys(), ...(rules ? ["Checklist"] : []), ...(faq ? ["Sources"] : [])];
+  if (missing.length) throw new Error(`A split page has no section named ${missing.join(", ")} for its parts to go before or into`);
+  return joined.join("\n");
+}
+
+/**
+ * Where each section of a split page went, by its anchor on the whole page: `loading`
+ * to `/docs/components/button/ux#loading`, and a part's own section, like
+ * `user-experience-ux`, to the top of the part's page. Links to the whole page, like
+ * /docs/components/button#loading, still land on the Overview, so
+ * app/middleware/split-pages.global.ts sends them on from this map.
+ *
+ * Each part's headings get their anchors on their own, as the site gives them on
+ * the part's page. A heading on more than one part, like the FAQ, goes to the part
+ * whose section under it is longest, where most of the whole page's section went.
+ * A rules table's anchor on the whole page, like `ui-rules`, goes to its heading
+ * on the part, like `/docs/components/button/ui#ui-checklist`.
+ */
+export function splitAnchors(parts: { path: string; source: string }[]): Record<string, string> {
+  const found = parts.flatMap(({ path, source }) => {
+    const { title, body } = readPart(source);
+    const lines = scan(body);
+    const slug = anchors();
+    const headings = lines.flatMap(({ text, code }, start) => {
+      const match = !code && heading(text);
+      return match ? [{ ...match, start }] : [];
+    });
+    return [
+      { anchor: anchors()(title), target: path, length: lines.length },
+      ...headings.flatMap(({ level, text, start }) => {
+        const end = headings.find((other) => other.start > start && other.level <= level)?.start ?? lines.length;
+        const anchor = slug(text);
+        const entry = { anchor, target: `${path}#${anchor}`, length: end - start };
+        return level === 2 && RULES.test(text) ? [entry, { ...entry, anchor: anchors()(wholeRules(text)) }] : [entry];
+      }),
+    ];
+  });
+  const map: Record<string, { target: string; length: number }> = {};
+  for (const { anchor, target, length } of found) {
+    if (!map[anchor] || length > map[anchor].length) map[anchor] = { target, length };
+  }
+  return Object.fromEntries(Object.entries(map).map(([anchor, { target }]) => [anchor, target]));
+}
+
+// A layer page's rules table is headed like `## UI Checklist`, which is
+// `### UI rules` on the whole page, as on every component page.
+const RULES = / Checklist$/;
+const wholeRules = (text: string) => text.replace(RULES, " rules");
+
+// A part's title, the section it goes before and its body, from its source.
+function readPart(source: string): { title: string; before: string; body: string } {
+  // Read the way Nuxt Content reads it, which builds past a YAML slip.
+  const { title, before } = (parseDocument(source.match(FRONTMATTER)?.[1] ?? "").toJSON() ?? {}) as { title?: unknown; before?: unknown };
+  if (typeof title !== "string" || typeof before !== "string") {
+    throw new Error(`A part of a split page needs a title and the section it goes before: ${source.slice(0, 200)}`);
+  }
+  return { title, before, body: source.replace(FRONTMATTER, "").trim() };
+}
+
+/**
+ * A docs page's source, from its file in `dir` (content/docs): a split page's
+ * index.md comes joined with its parts (see joinPage).
+ */
+export function readPage(dir: string, file: string): string {
+  const source = readFileSync(join(dir, file), "utf8");
+  const parts = partsOf(dir, file);
+  return parts.length ? joinPage(source, parts.map((part) => readFileSync(join(dir, part), "utf8"))) : source;
+}
+
+/**
+ * Every docs page in `dir` (content/docs), by its file, in the order the sidebar
+ * lists them. The parts of a split page aren't pages of their own here: their
+ * index.md stands for the whole page, and lists their files in `parts`.
+ */
+export function readPages(dir: string): { file: string; source: string; parts: string[] }[] {
+  return readdirSync(dir, { recursive: true, encoding: "utf8" })
+    .filter((file) => file.endsWith(".md") && !isPart(dir, file))
+    .sort(byNumber)
+    .map((file) => ({ file, source: readPage(dir, file), parts: partsOf(dir, file) }));
+}
+
+/**
+ * Where the sections of every split page in `dir` (content/docs) went, by the
+ * page's path (see splitAnchors): `/docs/components/button` → `loading` →
+ * `/docs/components/button/ux#loading`.
+ */
+export function readSplitAnchors(dir: string): Record<string, Record<string, string>> {
+  return Object.fromEntries(
+    readPages(dir)
+      .filter(({ parts }) => parts.length)
+      .map(({ file, parts }) => [
+        docsPath(file),
+        splitAnchors(parts.map((part) => ({ path: docsPath(part), source: readFileSync(join(dir, part), "utf8") }))),
+      ]),
+  );
+}
+
+/** Whether a file in `dir` is a part of a split page, next to its index.md. */
+export function isPart(dir: string, file: string): boolean {
+  return basename(file) !== "index.md" && existsSync(join(dir, dirname(file), "index.md"));
+}
+
+// The files of an index.md's parts, in file order, or none for any other page.
+function partsOf(dir: string, file: string): string[] {
+  if (basename(file) !== "index.md") return [];
+  const folder = dirname(file);
+  return readdirSync(join(dir, folder))
+    .filter((name) => name.endsWith(".md") && name !== "index.md")
+    .sort(byNumber)
+    .map((name) => join(folder, name));
+}
+
+// File names in the order the sidebar lists them: 2.ux.md before 10.faq.md.
+function byNumber(a: string, b: string): number {
+  return a.localeCompare(b, "en", { numeric: true });
 }
