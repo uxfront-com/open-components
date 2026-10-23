@@ -9,9 +9,8 @@ import { sortNavigation } from "~/lib/navigation";
  * menu (app/components/app/AppHeaderBody.vue), in place of the UContentNavigation
  * Docus renders in both, which keeps every group open. It looks the same, with
  * Nuxt UI's theme for it and Docus's options, and the top-level sections stay
- * open, but a group with a page of its own, like the Button's Overview, is a link
- * to that page with a chevron beside it that opens and closes the group (see
- * DocsNavigationList.vue). It lists the component pages by name, as the links
+ * open, but a group with a page of its own, like the Button's, has a label that
+ * opens and closes the group (see DocsNavigationList.vue). It lists the component pages by name, as the links
  * to the previous and next pages do (app/lib/navigation.ts).
  */
 const props = defineProps<{ navigation: ContentNavigationItem[] }>();

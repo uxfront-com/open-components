@@ -9,12 +9,11 @@ import type theme from "#build/ui/content/content-navigation";
  * - A group without a page of its own, like a top-level section, has a label and
  *   stays open.
  * - A group with a page of its own, like the Button's folder, whose index.md is
- *   its Overview, is a link to that page, which opens the group, with a chevron
- *   button beside it that opens and closes the group without navigating. The
- *   group still lists its Overview first, which marks the page as current, so the
- *   label doesn't too.
+ *   its Overview, has a label that opens and closes the group without
+ *   navigating. You reach its pages from the group, which lists its Overview
+ *   first.
  *   It opens on any of its pages and closes once you leave them, and in between
- *   the chevron decides. The sidebar stays mounted as you move between pages, so
+ *   the label decides. The sidebar stays mounted as you move between pages, so
  *   the route sets it, rather than the state it mounted with.
  */
 const props = withDefaults(
@@ -55,34 +54,23 @@ watch(
         :data-state="!ownPage(item) || open[item.path] ? 'open' : 'closed'"
         :class="ui.itemWithChildren({ level: level > 0 })"
       >
-        <div v-if="ownPage(item)" class="flex items-center">
-          <ULink v-slot="link" :to="item.path" :active="false" custom>
-            <!-- The label opens the group, even on its own page, where the route doesn't change. -->
-            <ULinkBase
-              v-bind="link"
-              data-slot="link"
-              :class="ui.link({ active: false, level: level > 0 })"
-              @click="open[item.path] = true"
-            >
-              <UIcon v-if="item.icon" :name="String(item.icon)" :class="ui.linkLeadingIcon({ active: false })" />
-              <span :class="ui.linkTitle()">{{ item.title }}</span>
-            </ULinkBase>
-          </ULink>
-          <button
-            type="button"
-            :aria-label="`${item.title} pages`"
-            :aria-expanded="open[item.path]"
-            :aria-controls="`${id}-${index}`"
-            class="shrink-0 inline-flex items-center justify-center size-7 rounded-md text-muted hover:text-highlighted focus-visible:outline-2 focus-visible:outline-primary transition-colors"
-            @click="open[item.path] = !open[item.path]"
-          >
-            <UIcon
-              :name="appConfig.ui.icons.chevronDown"
-              class="size-5 transition-transform duration-200 ease-out motion-reduce:transition-none"
-              :class="{ 'rotate-180': open[item.path] }"
-            />
-          </button>
-        </div>
+        <button
+          v-if="ownPage(item)"
+          type="button"
+          data-slot="link"
+          :data-state="open[item.path] ? 'open' : 'closed'"
+          :aria-expanded="open[item.path]"
+          :aria-controls="`${id}-${index}`"
+          :class="ui.link({ active: false, level: level > 0 })"
+          @click="open[item.path] = !open[item.path]"
+        >
+          <UIcon v-if="item.icon" :name="String(item.icon)" :class="ui.linkLeadingIcon({ active: false })" />
+          <span :class="ui.linkTitle()">{{ item.title }}</span>
+          <!-- Docus hides the theme's linkTrailing slot, which would hide the chevron too. -->
+          <span data-slot="linkTrailing" class="ms-auto inline-flex items-center">
+            <UIcon :name="appConfig.ui.icons.chevronDown" :class="ui.linkTrailingIcon()" />
+          </span>
+        </button>
         <div v-else data-state="open" :class="[ui.link({ active: false }), ui.trigger({ disabled: true })]">
           <UIcon v-if="item.icon" :name="String(item.icon)" :class="ui.linkLeadingIcon({ active: false })" />
           <span :class="ui.linkTitle()">{{ item.title }}</span>
