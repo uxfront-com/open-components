@@ -24,16 +24,26 @@ describe("findPage", () => {
     ["https://opencomponents.dev/docs/components/button#loading", "button"],
     ["https://opencomponents.dev/raw/docs/components/button.yaml", "button"],
     ["https://opencomponents.dev/docs/getting-started/roadmap?ref=mcp", "roadmap"],
-    // The parts of a split page, which agents read as the whole page.
-    ["/docs/components/button/ux", "button"],
-    ["components/button/dx", "button"],
-    ["https://opencomponents.dev/docs/components/button/ux#loading", "button"],
-    ["/raw/docs/components/button/ux.md", "button"],
     ["Introduction", "introduction"],
     // The contracts' names, and the prefix of the Design Tokens' rule IDs.
     ["token-paths", "design-tokens"],
     ["tokens", "design-tokens"],
   ])("finds %j", (name, key) => {
+    expect(findPage(standard, name)?.key).toBe(key);
+  });
+
+  // The parts of a split page, which agents read as the whole page: by path, with an
+  // anchor, and as their /raw file.
+  it.each(
+    standard.pages.flatMap((page) =>
+      (page.parts ?? []).flatMap((part) => [
+        [part, page.key],
+        [part.replace(/^\/docs\//, ""), page.key],
+        [`https://opencomponents.dev${part}#${part.split("/").at(-1)}-checklist`, page.key],
+        [`/raw${part}.md`, page.key],
+      ]),
+    ),
+  )("finds %j, a part of a split page", (name, key) => {
     expect(findPage(standard, name)?.key).toBe(key);
   });
 

@@ -2,13 +2,14 @@ import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vitest/config";
 
 // Runs the reference implementations' tests, app/reference/<component>/*.test.ts,
-// which the component pages show along with the code they test, the server's,
+// which the component pages show along with the code they test, the app's helpers,
+// like app/lib/navigation.test.ts, the server's,
 // like server/lib/contract.test.ts, which validates the contracts against their schema,
 // the MCP server's (mcp/) and the agent plugin's (plugins/open-components.test.ts).
 export default defineConfig({
   plugins: [vue()],
   test: {
-    include: ["app/reference/**/*.test.ts", "server/**/*.test.ts", "mcp/**/*.test.ts", "plugins/*.test.ts"],
+    include: ["app/reference/**/*.test.ts", "app/lib/**/*.test.ts", "server/**/*.test.ts", "mcp/**/*.test.ts", "plugins/*.test.ts"],
     environment: "jsdom",
     // Testing Library unmounts what each test rendered from the global afterEach.
     globals: true,
