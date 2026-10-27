@@ -31,7 +31,7 @@ How agents read, open and check a dialog, from its accessibility tree to its con
 
 Every example on this page runs on our [reference implementation](/docs/components/dialog#reference-implementation), which does its part of every rule in the [checklist](/docs/components/dialog#checklist), so feel free to open them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Dialog with the same API in each, apart from two names in Angular, which [Type-safe](/docs/components/dialog/dx#type-safe) explains. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/dialog/ax#deterministic).
 
-The Dialog is modal: while it's open, nothing else on the page can be used. Showing more next to what opened it, without blocking the page, is what a Popover is for, and it's on our [Roadmap](/docs/getting-started/roadmap).
+The Dialog is modal: while it's open, nothing else on the page can be used. Showing more next to what opened it, without blocking the page, is what a [Popover](/docs/components/popover) is for.
 
 ::dialog-playground
 ::

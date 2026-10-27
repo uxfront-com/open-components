@@ -31,7 +31,7 @@ How agents read, build and check a tooltip, from its accessibility tree to its c
 
 Every example on this page runs on our [reference implementation](/docs/components/tooltip#reference-implementation), which does its part of every rule in the [checklist](/docs/components/tooltip#checklist), so hover or tab to the examples as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Tooltip with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/tooltip/ax#deterministic).
 
-The Tooltip is one of the overlays on our [Roadmap](/docs/getting-started/roadmap), the components that sit on top of the page. The rules it settles for opening in the top layer and closing with `Escape` are the ones the Popover, the Dialog and the Dropdown Menu will follow too.
+The Tooltip is one of the overlays on our [Roadmap](/docs/getting-started/roadmap), the components that sit on top of the page. The rules it settles for opening in the top layer and closing with `Escape` are the ones the [Popover](/docs/components/popover) and the [Dialog](/docs/components/dialog) follow too, and the Dropdown Menu will.
 
 ::tooltip-playground
 ::
