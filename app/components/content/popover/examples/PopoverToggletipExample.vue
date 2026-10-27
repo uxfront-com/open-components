@@ -15,7 +15,7 @@ import Popover from "~/reference/popover/Popover.vue";
       <Popover id="billing-cycle" title="Billing cycles">
         <p>
           You're billed on the day you signed up, every month.
-          <a href="/docs/components/popover#toggletips" class="underline">How billing works</a>
+          <a href="/docs/components/popover/ui#toggletips" class="underline">How billing works</a>
         </p>
       </Popover>
     </div>

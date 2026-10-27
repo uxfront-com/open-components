@@ -143,7 +143,7 @@ const code = computed(() => {
         <div v-if="content === 'filters'" class="flex flex-col gap-2">
           <Checkbox v-for="(filter, index) in filters" :key="filter" :checked="index === 0">{{ filter }}</Checkbox>
         </div>
-        <p v-else>Press <kbd>?</kbd> anywhere to see them all. <a href="/docs/components/popover#keyboard" class="underline">Every shortcut</a></p>
+        <p v-else>Press <kbd>?</kbd> anywhere to see them all. <a href="/docs/components/popover/ux#keyboard" class="underline">Every shortcut</a></p>
       </Popover>
     </div>
 

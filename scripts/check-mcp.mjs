@@ -244,18 +244,52 @@ async function checkServer() {
   // A part's page, like the Button's UX, reaches the whole page.
   const part = await call("get-page", { path: `${SITE}/docs/components/button/ux#loading` });
   check(part.text.includes("#### Loading") && !part.text.includes("(#loading)"), "get-page with a link to the Button's UX page's #loading doesn't read that section");
-  const partOutline = await call("get-page", { path: "/docs/components/button/ux" });
-  check(partOutline.text === outline.text, "get-page {path: /docs/components/button/ux} isn't the Button's page");
   const together = await call("get-page", { path: "button", sections: ["User Interface (UI)", "User Experience (UX)", "Reference implementation"] });
   check(together.text.includes("too long to return together"), "get-page returns sections that are too long together instead of their outline");
-  // A split page's rules, from its layer pages, and the Overview's cards, as links in its introduction.
-  const uxRules = await call("get-page", { path: "button", sections: ["UX rules"] });
-  check(uxRules.text.includes("`button/keep-focus`"), "get-page's UX rules section doesn't have button/keep-focus");
-  const intro = await call("get-page", { path: "button", sections: ["Button"] });
-  check(
-    ["ui", "ux", "dx", "ax"].every((layer) => intro.text.includes(`](${SITE}/docs/components/button/${layer})`)),
-    "get-page's introduction of the Button doesn't link its four layer pages",
-  );
+  // Every page split into parts, like the Button's: each part reaches the whole page,
+  // its rules come from its layer pages, and its Overview's cards come back as links
+  // in its introduction.
+  for (const whole of pages.filter((pathname) => partsOf(pathname).length)) {
+    const key = whole.split("/").at(-1);
+    const wholeOutline = await call("get-page", { path: whole });
+    // The page's headings, from its outline, as `{ depth, text, anchor, size }`, the size
+    // in tokens, roughly.
+    const headings = [...wholeOutline.text.matchAll(/^( *)- (.+) \(#([^)]+)\) ~([\d.]+)(k?)/gm)].map(([, indent, text, anchor, size, k]) => ({
+      depth: indent.length / 2,
+      text,
+      anchor,
+      size: Number(size) * (k ? 1000 : 1),
+    }));
+    for (const pathname of partsOf(whole)) {
+      const partOutline = await call("get-page", { path: pathname });
+      check(partOutline.text === wholeOutline.text, `get-page {path: ${pathname}} isn't the page at ${whole}`);
+      // A section on the part's page, like the Button's UX page's #loading: the shortest
+      // one under the part's own whose anchor the page doesn't repeat.
+      const own = headings.findIndex(({ depth, text }) => depth === 0 && text === title(pathname));
+      const end = headings.findIndex(({ depth }, i) => i > own && depth === 0);
+      const [section] = headings
+        .slice(own + 1, end === -1 ? undefined : end)
+        .filter(({ anchor }) => !/-\d+$/.test(anchor))
+        .sort((a, b) => a.size - b.size);
+      if (own === -1 || !section) {
+        check(false, `get-page's outline of ${whole} has no section under ${title(pathname)} to read`);
+        continue;
+      }
+      const linked = await call("get-page", { path: `${SITE}${pathname}#${section.anchor}` });
+      check(
+        linked.text.includes(`${SITE}${whole}#${section.anchor}`) && linked.text.includes(`${"#".repeat(section.depth + 2)} `) && !linked.text.includes(`(#${section.anchor})`),
+        `get-page with a link to ${pathname}#${section.anchor} doesn't read that section`,
+      );
+    }
+    const uxRules = await call("get-page", { path: whole, sections: ["UX rules"] });
+    const ux = all.filter((rule) => rule.component === key && rule.layer === "ux");
+    check(ux.length && ux.some((rule) => uxRules.text.includes(`\`${rule.id}\``)), `get-page's UX rules section of ${whole} has none of its UX rules`);
+    const intro = await call("get-page", { path: whole, sections: [readFileSync(join("dist/raw", `${whole}.md`), "utf8").match(/^# (.+)$/m)[1]] });
+    check(
+      partsOf(whole).every((pathname) => intro.text.includes(`](${SITE}${pathname})`)),
+      `get-page's introduction of ${whole} doesn't link its layer pages`,
+    );
+  }
   const every = await call("get-page", { path: "button", sections: ["Variants"] });
   check(every.text.includes("**React**") && every.text.includes("**Vanilla**"), "get-page's Variants section doesn't label each framework");
 
