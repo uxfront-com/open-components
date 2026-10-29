@@ -31,7 +31,7 @@ How agents read, build and check a switch, from its accessibility tree to its co
 
 Every example on this page runs on our [reference implementation](/docs/components/switch#reference-implementation), which does its part of every rule in the [checklist](/docs/components/switch#checklist), so feel free to flip them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Switch with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/switch/ax#deterministic).
 
-The Switch is the control you flip. Its label, hint and error message are elements of their own, which you link to it by ID, just like the [Input](/docs/components/input)'s, and a Field component, which is on our [Roadmap](/docs/getting-started/roadmap), will put them together for you. Until then, the examples do it with a plain `<label>`, and the rules hold either way.
+The Switch is the control you flip. Its label, hint and error message are elements of their own, which you link to it by ID, just like the [Input](/docs/components/input)'s, and the [Field](/docs/components/field) puts them together for you. The examples on this page link them with a plain `<label>`, so you can see the markup the Field writes, and the rules hold either way.
 
 ::switch-playground
 ::

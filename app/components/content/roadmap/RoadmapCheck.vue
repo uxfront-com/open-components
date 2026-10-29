@@ -5,7 +5,7 @@
  *
  * ```md
  * | :roadmap-check{shipped} [Button](/docs/components/button) | … |
- * | :roadmap-check Field                                     | … |
+ * | :roadmap-check Select                                    | … |
  * ```
  *
  * It only shows a status, so it draws a checkbox rather than rendering a form
