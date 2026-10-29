@@ -220,7 +220,7 @@ describe("Field", () => {
     warn.mockRestore();
   });
 
-  it("disables a Checkbox, a Switch and a Checkbox Group, so none of them can be focused or sent", async () => {
+  it("disables a Checkbox, a Switch and a Checkbox Group, so none of them can be focused", async () => {
     const user = userEvent.setup();
     render({
       render: () => [
