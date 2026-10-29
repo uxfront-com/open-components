@@ -108,19 +108,21 @@ function component(fw: string, spread: boolean) {
   }
 }
 
-// The same control in Angular, a directive on the native element you write out.
+// The same control in Angular, a directive on the native element you write out. The
+// `id` goes on the native control, since a static attribute stays on the Field's host.
 function angular() {
+  const id = `id="${copy.value.id}"`;
   switch (control.value) {
     case "Input":
-      return ['<div appInput><input type="email" /></div>'];
+      return [`<div appInput><input ${id} type="email" /></div>`];
     case "Textarea":
-      return ['<div appTextarea [limit]="200"><textarea></textarea></div>'];
+      return [`<div appTextarea [limit]="200"><textarea ${id}></textarea></div>`];
     case "Checkbox":
-      return [`<label appCheckbox><input type="checkbox" />${copy.value.text}</label>`];
+      return [`<label appCheckbox><input ${id} type="checkbox" />${copy.value.text}</label>`];
     case "Switch":
-      return ['<span appSwitch><input type="checkbox" role="switch" /></span>'];
+      return [`<span appSwitch><input ${id} type="checkbox" role="switch" /></span>`];
     case "CheckboxGroup":
-      return ['<fieldset appCheckboxGroup name="contact" [options]="contact">', `  <legend>${copy.value.text}</legend>`, "</fieldset>"];
+      return [`<fieldset appCheckboxGroup ${id} name="contact" [options]="contact">`, `  <legend>${copy.value.text}</legend>`, "</fieldset>"];
     case "RadioGroup":
       return [
         '<fieldset appRadioGroup name="delivery" legend="Delivery">',
@@ -237,7 +239,7 @@ const code = computed(() => {
     required.value && takesRequired.value && "required",
     disabled.value && "disabled",
   ];
-  if (fw === "angular") return element("div", ["appField", ...props], angular()).join("\n");
+  if (fw === "angular") return element("div", ["appField", ...props.slice(1)], angular()).join("\n");
   let body: string[];
   if (fw === "react" || fw === "vue") body = component(fw, false);
   else if (fw === "svelte") body = ["{#snippet children(control)}", ...indent(component(fw, true)), "{/snippet}"];

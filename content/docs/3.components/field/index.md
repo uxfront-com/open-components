@@ -38,12 +38,12 @@ The Field holds one control: an [Input](/docs/components/input), a [Textarea](/d
 
 | Aspect      | Field                                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------------------------ |
-| Element     | A `<div>` around the control, with a `<label>`, and a `<p>` each for the hint and the error             |
+| Element     | A `<div>` around the control, with a `<label>` and a `<p>` each for the hint and the error, except around a Radio Group, which renders its own |
 | Role        | None of its own, so the control keeps its role, like `textbox`, `checkbox`, `switch`, `group` or `radiogroup` |
 | Name        | Its `<label>`, linked with `for`, or a Checkbox's own label, or a group's legend                       |
 | Description | The hint, then the error, through the control's `aria-describedby`                                     |
 | States      | Required, disabled and invalid, which it sets on the control                                            |
-| Controls    | Input, Textarea, Checkbox, Switch, Checkbox Group, Radio Group, and native text controls                |
+| Controls    | Input, Textarea, Checkbox, Switch, Checkbox Group, Radio Group and native text controls                |
 | Sizes       | `xs`, `sm`, `md`, `lg` and `xl`, which it passes on to the control, unless it's a native one              |
 | Pattern     | None in the APG, since a native [`<label>`](https://html.spec.whatwg.org/multipage/forms.html#the-label-element) and `aria-describedby` cover it |
 | WCAG 2.2    | 1.3.1, 1.4.1, 1.4.3, 2.4.6, 3.3.1, 3.3.2, 3.3.3, 4.1.2 and 4.1.3, among others                          |
@@ -102,7 +102,7 @@ export interface FieldProps {
  * What the Field renders around a control depends on what it is, which it reads from
  * the control's component, so none of the controls needs to know about the Field:
  *
- * - `text`: an Input, a Textarea, or a native <input>, <textarea> or <select>. The label
+ * - `text`: an Input, a Textarea or a native <input>, <textarea> or <select>. The label
  *   above it, the hint between them, the error after it.
  * - `checkbox`: a Checkbox, which its own <label> names. The hint and error after it.
  * - `switch`: a Switch. The label before it on the same row, the hint and error under it.
@@ -145,13 +145,16 @@ export default defineComponent({
     size: String as PropType<FieldProps["size"]>,
   },
   slots: Object as SlotsType<{
-    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group, or a native text control. */
+    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group or a native text control. */
     default?: () => VNode[];
   }>,
   setup(props, { slots }) {
+    // What the last render found in the slot, which the development checks read once it
+    // has mounted, since calling the slot outside a render wouldn't track what it reads.
+    let found: VNode[] = [];
+
     onMounted(() => {
       if (!import.meta.env.DEV) return;
-      const found = controls(slots.default?.());
       const control = found[0];
       if (found.length !== 1 || !control) {
         console.warn(`[Field] needs exactly one control, and has ${found.length}: give each control a Field of its own.`);
@@ -171,7 +174,8 @@ export default defineComponent({
     });
 
     return () => {
-      const control = controls(slots.default?.())[0];
+      found = controls(slots.default?.());
+      const control = found[0];
       if (!control) return null;
       const kind = kindOf(control);
       const own = control.props ?? {};
@@ -317,13 +321,14 @@ export default defineComponent({
   }
 
   /* States. Each one reads the control's own attribute, so the label can't look
-     disabled while the control isn't. */
-  .field:has(:disabled) > [data-slot="label"] {
+     disabled while the control isn't. Only the control counts, whether it's native or
+     a component's control part, and not a button in an Input's actions. */
+  .field:has(> :disabled, > * > [data-slot="control"]:disabled) > [data-slot="label"] {
     opacity: 0.5;
   }
 
   @media (forced-colors: active) {
-    .field:has(:disabled) > [data-slot="label"] {
+    .field:has(> :disabled, > * > [data-slot="control"]:disabled) > [data-slot="label"] {
       color: GrayText;
       opacity: 1;
     }
@@ -446,14 +451,17 @@ describe("Field", () => {
     expect(input).toHaveAccessibleDescription("Enter a code that hasn't expired");
   });
 
-  it("puts a Textarea's count after the hint and the error, and lets it stay invalid over its limit", () => {
-    render(Field, {
+  it("puts a Textarea's count after the hint and the error, and lets it stay invalid over its limit without one", async () => {
+    const { rerender } = render(Field, {
       props: { id: "bio", label: "Bio", hint: "A sentence or two", error: "Tell us a little about yourself" },
       slots: { default: () => h(Textarea, { limit: 5, value: "Too long" }) },
     });
 
     const textarea = screen.getByRole("textbox", { name: "Bio" });
     expect(textarea).toHaveAttribute("aria-describedby", "bio-hint bio-error bio-count");
+
+    await rerender({ error: undefined });
+    expect(textarea).toHaveAttribute("aria-describedby", "bio-hint bio-count");
     expect(textarea).toHaveAttribute("aria-invalid", "true");
   });
 
@@ -491,9 +499,16 @@ describe("Field", () => {
     expect(select.closest(".field")).toHaveAttribute("data-control", "text");
   });
 
-  it("gives a Checkbox no second label, and describes it with the hint and error after it", () => {
+  it("gives a Checkbox no second label, even with a label of its own, and describes it with the hint and error after it", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { container } = render(Field, {
-      props: { id: "terms", hint: "You can read them before you sign up", error: "Agree to the terms to continue", required: true },
+      props: {
+        id: "terms",
+        label: "Terms",
+        hint: "You can read them before you sign up",
+        error: "Agree to the terms to continue",
+        required: true,
+      },
       slots: { default: () => h(Checkbox, () => "I agree to the terms") },
     });
 
@@ -505,6 +520,7 @@ describe("Field", () => {
     expect(container.querySelectorAll("label")).toHaveLength(1);
     expect(parts(container.firstElementChild!)).toEqual(["checkbox", "hint", "error"]);
     expect(container.firstElementChild).toHaveAttribute("data-control", "checkbox");
+    warn.mockRestore();
   });
 
   it("puts a Switch after its label, which names it, with the hint and error under them", async () => {
@@ -522,9 +538,10 @@ describe("Field", () => {
     expect(toggle).toBeChecked();
   });
 
-  it("renders a Checkbox Group's hint and error after its fieldset, linked to it, and never makes it required", () => {
+  it("renders a Checkbox Group's hint and error after its fieldset, linked to it, with no label, and never makes it required", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { container } = render(Field, {
-      props: { id: "contact", hint: "Pick at least one", error: "Choose how we can contact you", required: true },
+      props: { id: "contact", label: "Contact", hint: "Pick at least one", error: "Choose how we can contact you", required: true },
       slots: { default: () => h(CheckboxGroup, { options, name: "contact" }, () => "How can we contact you?") },
     });
 
@@ -538,7 +555,27 @@ describe("Field", () => {
       expect(box).toHaveAttribute("aria-invalid", "true");
     }
     expect(container.querySelector(".field > label")).toBeNull();
+    expect(screen.queryByText("Contact")).toBeNull();
     expect(parts(container.firstElementChild!)).toEqual(["checkbox-group", "hint", "error"]);
+    warn.mockRestore();
+  });
+
+  it("disables a Checkbox, a Switch and a Checkbox Group, so none of them can be focused or sent", async () => {
+    const user = userEvent.setup();
+    render({
+      render: () => [
+        h(Field, { id: "terms", disabled: true }, () => h(Checkbox, () => "I agree to the terms")),
+        h(Field, { id: "alerts", label: "Price alerts", disabled: true }, () => h(Switch)),
+        h(Field, { id: "contact", disabled: true }, () => h(CheckboxGroup, { options, name: "contact" }, () => "How can we contact you?")),
+      ],
+    });
+
+    expect(screen.getByRole("checkbox", { name: "I agree to the terms" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Price alerts" })).toBeDisabled();
+    expect(screen.getByRole("group", { name: "How can we contact you?" })).toBeDisabled();
+    for (const box of within(screen.getByRole("group")).getAllByRole("checkbox")) expect(box).toBeDisabled();
+    await user.tab();
+    expect(document.body).toHaveFocus();
   });
 
   it("hands a Radio Group its hint, error, required and disabled, and renders nothing of its own", () => {
@@ -644,13 +681,14 @@ describe("Field", () => {
 
 ## Sources
 
-- [HTML Standard: the label element](https://html.spec.whatwg.org/multipage/forms.html#the-label-element), [the fieldset element](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) and [the constraint validation API](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-constraint-validation-api), for linking labels, naming groups, `required`, `novalidate` and `validity`
-- [WAI-ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/), for [`aria-describedby`](https://www.w3.org/TR/wai-aria-1.2/#aria-describedby), [`aria-invalid`](https://www.w3.org/TR/wai-aria-1.2/#aria-invalid), and [`aria-errormessage`](https://www.w3.org/TR/wai-aria-1.2/#aria-errormessage), which we don't use
+- [HTML Standard: the id attribute](https://html.spec.whatwg.org/multipage/dom.html#the-id-attribute), [the label element](https://html.spec.whatwg.org/multipage/forms.html#the-label-element), [disabled form controls](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#enabling-and-disabling-form-controls:-the-disabled-attribute), [the fieldset element](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) and [the constraint validation API](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-constraint-validation-api), for unique IDs, linking labels, what a disabled control leaves out, naming groups, `required`, `novalidate` and `validity`
+- [WAI-ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/), for [`aria-describedby`](https://www.w3.org/TR/wai-aria-1.2/#aria-describedby), [`aria-errormessage`](https://www.w3.org/TR/wai-aria-1.2/#aria-errormessage), which we don't use, and [`aria-invalid`](https://www.w3.org/TR/wai-aria-1.2/#aria-invalid), and the roles it applies to
 - [Accessible Name and Description Computation 1.2](https://www.w3.org/TR/accname-1.2/), for how a description is joined from the elements `aria-describedby` points at, in order
-- [HTML Accessibility API Mappings](https://www.w3.org/TR/html-aam-1.0/), for how a `<label>` names its control, a `<legend>` its `<fieldset>`, and how `required` is announced
+- [HTML Accessibility API Mappings](https://www.w3.org/TR/html-aam-1.0/), for how a `<label>` names its control, a `<legend>` its `<fieldset>` and how `required` is announced
 - [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/), and its Understanding pages for [3.3.1](https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html), [3.3.2](https://www.w3.org/WAI/WCAG22/Understanding/labels-or-instructions.html) and [4.1.3](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
 - [WAI Forms Tutorial](https://www.w3.org/WAI/tutorials/forms/), for labels, where they go for checkboxes, instructions and validation
 - [GOV.UK Design System: Error message](https://design-system.service.gov.uk/components/error-message/), [Error summary](https://design-system.service.gov.uk/components/error-summary/), [Question pages](https://design-system.service.gov.uk/patterns/question-pages/) and [Checkboxes](https://design-system.service.gov.uk/components/checkboxes/), for "(optional)" in the label, hints for groups and where the error goes, where we differ
 - [Adrian Roselli: Exposing Field Errors](https://adrianroselli.com/2023/04/exposing-field-errors.html), for how screen readers read `aria-describedby`, `aria-errormessage` and live regions on a field
-- [Material Design 3: Switch](https://m3.material.io/components/switch/guidelines), for a switch's label on its own row
+- [Material Design 3: Switch](https://m3.material.io/components/switch/guidelines), for a switch's label on the same row as the switch, and [Text fields](https://m3.material.io/components/text-fields/guidelines), for supporting text below a single control
+- [React: useId](https://react.dev/reference/react/useId), for why a generated ID only matches between the server and the browser when both render the same tree
 - [Base UI: Field](https://base-ui.com/react/components/field), for one component that puts a label, a description and an error around any control

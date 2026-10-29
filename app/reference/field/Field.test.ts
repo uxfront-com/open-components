@@ -111,14 +111,17 @@ describe("Field", () => {
     expect(input).toHaveAccessibleDescription("Enter a code that hasn't expired");
   });
 
-  it("puts a Textarea's count after the hint and the error, and lets it stay invalid over its limit", () => {
-    render(Field, {
+  it("puts a Textarea's count after the hint and the error, and lets it stay invalid over its limit without one", async () => {
+    const { rerender } = render(Field, {
       props: { id: "bio", label: "Bio", hint: "A sentence or two", error: "Tell us a little about yourself" },
       slots: { default: () => h(Textarea, { limit: 5, value: "Too long" }) },
     });
 
     const textarea = screen.getByRole("textbox", { name: "Bio" });
     expect(textarea).toHaveAttribute("aria-describedby", "bio-hint bio-error bio-count");
+
+    await rerender({ error: undefined });
+    expect(textarea).toHaveAttribute("aria-describedby", "bio-hint bio-count");
     expect(textarea).toHaveAttribute("aria-invalid", "true");
   });
 
@@ -156,9 +159,16 @@ describe("Field", () => {
     expect(select.closest(".field")).toHaveAttribute("data-control", "text");
   });
 
-  it("gives a Checkbox no second label, and describes it with the hint and error after it", () => {
+  it("gives a Checkbox no second label, even with a label of its own, and describes it with the hint and error after it", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { container } = render(Field, {
-      props: { id: "terms", hint: "You can read them before you sign up", error: "Agree to the terms to continue", required: true },
+      props: {
+        id: "terms",
+        label: "Terms",
+        hint: "You can read them before you sign up",
+        error: "Agree to the terms to continue",
+        required: true,
+      },
       slots: { default: () => h(Checkbox, () => "I agree to the terms") },
     });
 
@@ -170,6 +180,7 @@ describe("Field", () => {
     expect(container.querySelectorAll("label")).toHaveLength(1);
     expect(parts(container.firstElementChild!)).toEqual(["checkbox", "hint", "error"]);
     expect(container.firstElementChild).toHaveAttribute("data-control", "checkbox");
+    warn.mockRestore();
   });
 
   it("puts a Switch after its label, which names it, with the hint and error under them", async () => {
@@ -187,9 +198,10 @@ describe("Field", () => {
     expect(toggle).toBeChecked();
   });
 
-  it("renders a Checkbox Group's hint and error after its fieldset, linked to it, and never makes it required", () => {
+  it("renders a Checkbox Group's hint and error after its fieldset, linked to it, with no label, and never makes it required", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { container } = render(Field, {
-      props: { id: "contact", hint: "Pick at least one", error: "Choose how we can contact you", required: true },
+      props: { id: "contact", label: "Contact", hint: "Pick at least one", error: "Choose how we can contact you", required: true },
       slots: { default: () => h(CheckboxGroup, { options, name: "contact" }, () => "How can we contact you?") },
     });
 
@@ -203,7 +215,27 @@ describe("Field", () => {
       expect(box).toHaveAttribute("aria-invalid", "true");
     }
     expect(container.querySelector(".field > label")).toBeNull();
+    expect(screen.queryByText("Contact")).toBeNull();
     expect(parts(container.firstElementChild!)).toEqual(["checkbox-group", "hint", "error"]);
+    warn.mockRestore();
+  });
+
+  it("disables a Checkbox, a Switch and a Checkbox Group, so none of them can be focused or sent", async () => {
+    const user = userEvent.setup();
+    render({
+      render: () => [
+        h(Field, { id: "terms", disabled: true }, () => h(Checkbox, () => "I agree to the terms")),
+        h(Field, { id: "alerts", label: "Price alerts", disabled: true }, () => h(Switch)),
+        h(Field, { id: "contact", disabled: true }, () => h(CheckboxGroup, { options, name: "contact" }, () => "How can we contact you?")),
+      ],
+    });
+
+    expect(screen.getByRole("checkbox", { name: "I agree to the terms" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Price alerts" })).toBeDisabled();
+    expect(screen.getByRole("group", { name: "How can we contact you?" })).toBeDisabled();
+    for (const box of within(screen.getByRole("group")).getAllByRole("checkbox")) expect(box).toBeDisabled();
+    await user.tab();
+    expect(document.body).toHaveFocus();
   });
 
   it("hands a Radio Group its hint, error, required and disabled, and renders nothing of its own", () => {

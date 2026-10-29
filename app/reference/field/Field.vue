@@ -26,7 +26,7 @@ export interface FieldProps {
  * What the Field renders around a control depends on what it is, which it reads from
  * the control's component, so none of the controls needs to know about the Field:
  *
- * - `text`: an Input, a Textarea, or a native <input>, <textarea> or <select>. The label
+ * - `text`: an Input, a Textarea or a native <input>, <textarea> or <select>. The label
  *   above it, the hint between them, the error after it.
  * - `checkbox`: a Checkbox, which its own <label> names. The hint and error after it.
  * - `switch`: a Switch. The label before it on the same row, the hint and error under it.
@@ -69,13 +69,16 @@ export default defineComponent({
     size: String as PropType<FieldProps["size"]>,
   },
   slots: Object as SlotsType<{
-    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group, or a native text control. */
+    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group or a native text control. */
     default?: () => VNode[];
   }>,
   setup(props, { slots }) {
+    // What the last render found in the slot, which the development checks read once it
+    // has mounted, since calling the slot outside a render wouldn't track what it reads.
+    let found: VNode[] = [];
+
     onMounted(() => {
       if (!import.meta.env.DEV) return;
-      const found = controls(slots.default?.());
       const control = found[0];
       if (found.length !== 1 || !control) {
         console.warn(`[Field] needs exactly one control, and has ${found.length}: give each control a Field of its own.`);
@@ -95,7 +98,8 @@ export default defineComponent({
     });
 
     return () => {
-      const control = controls(slots.default?.())[0];
+      found = controls(slots.default?.());
+      const control = found[0];
       if (!control) return null;
       const kind = kindOf(control);
       const own = control.props ?? {};
@@ -241,13 +245,14 @@ export default defineComponent({
   }
 
   /* States. Each one reads the control's own attribute, so the label can't look
-     disabled while the control isn't. */
-  .field:has(:disabled) > [data-slot="label"] {
+     disabled while the control isn't. Only the control counts, whether it's native or
+     a component's control part, and not a button in an Input's actions. */
+  .field:has(> :disabled, > * > [data-slot="control"]:disabled) > [data-slot="label"] {
     opacity: 0.5;
   }
 
   @media (forced-colors: active) {
-    .field:has(:disabled) > [data-slot="label"] {
+    .field:has(> :disabled, > * > [data-slot="control"]:disabled) > [data-slot="label"] {
       color: GrayText;
       opacity: 1;
     }
