@@ -42,6 +42,10 @@ const base = url ?? wrangler.url;
 try {
   await checkRoutes();
   await checkServer();
+} catch (error) {
+  // Why the Worker stopped answering, if it did, is only in wrangler dev's own output.
+  if (wrangler) console.error(`wrangler dev's output:\n${wrangler.log()}`);
+  throw error;
 } finally {
   wrangler?.process.kill();
 }
@@ -72,7 +76,7 @@ async function serve() {
   for (let attempt = 0; attempt < 120; attempt++) {
     if (child.exitCode !== null) break;
     // Any response will do: `/` redirects to the site.
-    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) return { url, process: child };
+    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) return { url, process: child, log: () => log };
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   child.kill();
@@ -208,15 +212,22 @@ async function checkServer() {
   // /docs/components/button/ux, while the server reads it as one page.
   const partsOf = (pathname) => pages.filter((other) => other.startsWith(`${pathname}/`));
   const wholeOf = (pathname) => pages.find((other) => partsOf(other).includes(pathname)) ?? pathname;
+  // Each page's IDs and each part's title are read once. Reading and searching the
+  // pages again for every rule kept the event loop busy for seconds, long enough for
+  // wrangler dev to close the client's idle connection, which the next call then
+  // found closed ("other side closed").
+  const read = new Map();
+  const once = (key, load) => read.get(key) ?? read.set(key, load()).get(key);
+  const ids = (pathname) =>
+    once(`ids:${pathname}`, () => new Set([...readFileSync(join("dist", `${pathname}.html`), "utf8").matchAll(/ id="([^"]*)"/g)].map((match) => match[1])));
+  const title = (part) => once(`title:${part}`, () => readFileSync(join("dist/raw", `${part}.md`), "utf8").match(/^# (.+)$/m)[1]);
   // Every anchor the server links agents to is on its page, or on one of its parts.
   // A part's own section, like the Button's #user-experience-ux, is the top of the
   // part's page, and a rules table, like #ui-rules, is headed "UI Checklist" there
   // (#ui-checklist): the site sends both anchors there (app/middleware/split-pages.global.ts).
-  const html = (pathname) => readFileSync(join("dist", `${pathname}.html`), "utf8");
-  const title = (part) => readFileSync(join("dist/raw", `${part}.md`), "utf8").match(/^# (.+)$/m)[1];
   const has = (pathname, anchor) =>
-    [pathname, ...partsOf(pathname)].some((path) => html(path).includes(`id="${anchor}"`)) ||
-    partsOf(pathname).some((part) => html(part).includes(`id="${anchor.replace(/-rules$/, "-checklist")}"`)) ||
+    [pathname, ...partsOf(pathname)].some((path) => ids(path).has(anchor)) ||
+    partsOf(pathname).some((part) => ids(part).has(anchor.replace(/-rules$/, "-checklist"))) ||
     partsOf(pathname).some((part) => slug(title(part)) === anchor);
   for (const rule of all) {
     const { pathname, hash } = new URL(rule.url);

@@ -31,7 +31,7 @@ How agents read, fill in and check an input, from its accessibility tree to its 
 
 Every example on this page runs on our [reference implementation](/docs/components/input#reference-implementation), which does its part of every rule in the [checklist](/docs/components/input#checklist), so feel free to type into them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for an Input with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/input/ax#deterministic).
 
-The Input is the box you type in. Its label, hint and error message are elements of their own, which you link to it by ID, and a Field component, which is on our [Roadmap](/docs/getting-started/roadmap), will put them together for you. Until then, the examples do it with a plain `<label>`, and the rules hold either way.
+The Input is the box you type in. Its label, hint and error message are elements of their own, which you link to it by ID, and the [Field](/docs/components/field) puts them together for you. The examples on this page link them with a plain `<label>`, so you can see the markup the Field writes, and the rules hold either way.
 
 ::input-playground
 ::
