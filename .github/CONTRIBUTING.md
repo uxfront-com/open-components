@@ -55,7 +55,7 @@ The page (`app/pages/index.vue`) holds the copy and the order of the formations.
 
 Every section but the finale shows the `plates` formation, Open Components' three glass plates drawn with the UX, DX and AX line art. The hero shows the stack drawn apart, with a callout per plate, and the UX, DX and AX chapters close in on one plate each, lighting it. The finale closes on the `corridor`. It shows the UXFront mark and a link to the documentation (`UxFinale`'s `mark` and `actions` slots), and the header signs the wordmark "by UXFront" (`UxHeader`'s `byline` slot).
 
-`app/lib/formations.ts` adapts the catalog formation for that:
+`hold(formation, local)`, from `@uxfront/scene`, and `app/lib/formations.ts` adapt the catalog formation for that:
 
 - `hold(formation, local)` freezes a formation's progress. A section plays its formation through while it fills the screen, give or take a quarter screen. The hero starts at the top of the page, so it only gets the first quarter screen of scroll and the stack would rush apart the moment the page scrolls. It holds the stack drawn apart from the start instead.
 - `spotlight(formation, plate)` lights one plate and dims the other two.
@@ -76,9 +76,9 @@ The sidebar and the header's menu show a split page as a group whose label opens
 How it shares the app with the homepage:
 
 - `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs`, `/changelog` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
-- The docs header links to the docs and the changelog (`useHeaderLinks()`): beside its buttons from 768px up (`app/components/app/AppHeaderCTA.vue`), and at the top of its menu on smaller screens (`app/components/app/AppHeaderBody.vue`, which replaces the one from `@uxfront/layer-docs`, so keep it in step with the layer's).
+- The docs header links to the docs and the changelog (`docsTheme.headerLinks` in `app/app.config.ts`): `@uxfront/layer-docs` puts them beside its buttons from 768px up, and at the top of its menu on smaller screens (`app/components/app/AppHeaderBody.vue`, which replaces the layer's, so keep it in step with the layer's).
 - Docus adds Tailwind CSS and Nuxt UI to the entry stylesheet. On the homepage, `@uxfront/layer-ui` loads that stylesheet after first paint, and the `.ux-site` styles take precedence over it. Keep `app/app.css`, which Docus imports into the same stylesheet, off `.ux-site` too.
-- `nuxt.config.ts` turns off Nuxt's prefetch hints. Otherwise every page, the homepage included, would prefetch the docs' lazy chunks, which delays the homepage's fonts and stylesheet, and with them its LCP.
+- `@uxfront/layer-ui` turns off Nuxt's prefetch hints. Otherwise every page, the homepage included, would prefetch the docs' lazy chunks, which delays the homepage's fonts and stylesheet, and with them its LCP.
 - `app/app.config.ts` sets the theme colors and the GitHub, "Edit this page" and "Report an issue" links. `app/app.css` darkens Nuxt UI's light-mode primary to pass WCAG AA contrast. Nuxt UI's callouts (`::tip`, `::note`, …) still draw their text in fixed shades that fail it in light mode, so avoid them until they're themed.
 - Docus reads the site URL from `NUXT_SITE_URL`, which `nuxt.config.ts` defaults to the production origin, and generates `robots.txt` (with `@nuxtjs/robots`). Don't add a `public/robots.txt`: the module renames it to `_robots.txt` and merges it in.
 - The site is static, so Docus's MCP server is off (`mcp.enabled` in `nuxt.config.ts`), and so is its AI assistant, which only starts with an `AI_GATEWAY_API_KEY`. Our MCP server is a Nuxt app of its own, in `mcp/` (see [The MCP server](#the-mcp-server)). `app/components/docs/DocsPageHeaderLinks.vue` replaces Docus's page menu so its "Copy MCP Server URL" and "Add MCP Server" point at it (`mcpUrl` in `nuxt.config.ts`), rather than at `/mcp` on the site: keep it in step with Docus's.

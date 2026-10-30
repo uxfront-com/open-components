@@ -1,5 +1,5 @@
-import { glslFloat } from "@uxfront/scene";
-import type { Formation, FormationProgress, FormationShader, Vec3 } from "@uxfront/scene";
+import { editShader, glslFloat, wrapMain } from "@uxfront/scene";
+import type { Formation, Vec3 } from "@uxfront/scene";
 
 /**
  * Wrappers that reuse a catalog formation in ways the catalog doesn't cover.
@@ -7,67 +7,8 @@ import type { Formation, FormationProgress, FormationShader, Vec3 } from "@uxfro
  * namespaced to `key_name`, `setup()` for uniforms that never change).
  */
 
-const MAIN = /\bParticle\s+\$main\s*\(/;
 const UNIFORM = /^[ \t]*uniform\s+\w+\s+\$([A-Za-z][A-Za-z0-9_]*)\s*(?:\[[^\]]*\])?\s*;[ \t]*\n?/gm;
 const PRIVATE = /\$([A-Za-z][A-Za-z0-9_]*)/g;
-
-type ShaderEdit = (shader: FormationShader) => FormationShader;
-
-const editShader = (formation: Formation, edit: ShaderEdit): Formation => ({
-  ...formation,
-  shader: () => formation.shader().then(edit),
-});
-
-/**
- * Renames the formation's `$main` to `$<inner>` and appends a new `$main`
- * with the given body, which calls `$<inner>(id, sel, f)`.
- */
-const wrapMain = (formation: Formation, inner: string, body: string): Formation =>
-  editShader(formation, (shader) => {
-    if (!MAIN.test(shader.glsl)) {
-      throw new Error(`Formation "${formation.key}" has no Particle $main() to wrap.`);
-    }
-    return {
-      ...shader,
-      glsl: `${shader.glsl.replace(MAIN, `Particle $${inner}(`)}
-Particle $main(uint id, float sel, Frame f) {
-${body}
-}
-`,
-    };
-  });
-
-/**
- * Holds a formation at a fixed `local` progress, whatever the scroll.
- *
- * A section plays its formation through (`local` 0 → 1) while it fills the
- * screen, give or take a quarter screen (`HOLD_MARGIN`). The hero starts at
- * the top of the page, so it only gets the first quarter screen of scroll: a
- * formation that moves with `local`, like `plates`, would start at the
- * beginning and rush to its end state the moment the page scrolls. Held, it
- * stays put while it morphs into the next formation. Anchors and `update()`
- * see the same `local`.
- */
-export function hold(formation: Formation, local: number): Formation {
-  const at = <T extends FormationProgress>(progress: T): T => ({ ...progress, local });
-  const held = wrapMain(
-    formation,
-    "held",
-    `  f.local = ${glslFloat(local)};
-  return $held(id, sel, f);`,
-  );
-  return {
-    ...editShader(held, ({ update, ...shader }) => ({
-      ...shader,
-      ...(update && { update: (uniforms, frame) => update(uniforms, at(frame)) }),
-    })),
-    anchors: formation.anchors.map(({ place, render, ...anchor }) => ({
-      ...anchor,
-      place: (progress, out) => place(at(progress), out),
-      ...(render && { render: (el, progress) => render(el, at(progress)) }),
-    })),
-  };
-}
 
 /**
  * Lights one plate of a `plates` formation and dims the other two, glass and
