@@ -1,16 +1,12 @@
 <script setup lang="ts">
-// Replaces @uxfront/layer-docs's to start the header's menu with the
-// Documentation and Changelog links below 768px, where AppHeaderCTA has no room
-// for them beside the header's buttons. The rest is the layer's, which its package doesn't export:
-// the Framework select, then Docus's navigation (docus/app/components/app/AppHeaderBody.vue),
-// rendered with DocsNavigation.vue, as the sidebar is (DocsAsideLeftBody.vue), so a
-// group with a page of its own, like the Button's, collapses there too.
+// Replaces @uxfront/layer-docs's to render Docus's navigation with
+// DocsNavigation.vue, as the sidebar does (DocsAsideLeftBody.vue), so a group with
+// a page of its own, like the Button's, collapses there too. The rest is the
+// layer's: `docsTheme.headerLinks` below 768px, where AppHeaderCTA hides them,
+// then the Framework select. The navigation is Docus's
+// (docus/app/components/app/AppHeaderBody.vue).
 import type { ContentNavigationItem } from "@nuxt/content";
 import { getFirstPagePath } from "docus/app/composables/useSubNavigation";
-
-const links = useHeaderLinks();
-const { frameworks } = useFramework();
-const labelId = useId();
 
 const navigation = inject<Ref<ContentNavigationItem[]>>("navigation");
 const { subNavigationMode } = useSubNavigation();
@@ -25,12 +21,7 @@ const items = computed<ContentNavigationItem[]>(() => {
 </script>
 
 <template>
-  <UNavigationMenu :items="links" orientation="vertical" class="mb-4 -mx-2.5 md:hidden" />
-  <div v-if="frameworks.length">
-    <span :id="labelId" class="w-full pr-2.5 py-1.5 flex items-center text-sm text-muted">
-      Framework
-    </span>
-    <DocsFrameworkSelect :aria-labelledby="labelId" class="mb-2" />
-  </div>
+  <AppHeaderLinks orientation="vertical" class="mb-4 -mx-2.5 md:hidden" />
+  <AppHeaderFramework />
   <DocsNavigation :navigation="items" />
 </template>

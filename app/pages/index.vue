@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { hold } from "@uxfront/scene";
 import type { FormationOptions } from "@uxfront/scene";
 import { corridor, plates } from "@uxfront/scene/formations";
 
 import { CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL } from "~/data/site";
-import { hold, share, spotlight } from "~/lib/formations";
+import { share, spotlight } from "~/lib/formations";
 
 useUxHead({
   title: "Open Components - The standard for perfect UI components",
