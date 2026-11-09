@@ -114,6 +114,7 @@ const announcements = () => document.querySelector('[role="status"]')?.textConte
 async function change(user: ReturnType<typeof userEvent.setup>, value: string, label: string, isNative: boolean) {
   if (isNative) {
     native().value = value;
+    native().dispatchEvent(new Event("input", { bubbles: true }));
     native().dispatchEvent(new Event("change", { bubbles: true }));
   } else {
     await user.click(trigger());
@@ -290,6 +291,15 @@ describe("Select", () => {
         await press(user, "{Alt>}{ArrowUp}{/Alt}");
         expect(trigger()).toHaveAttribute("aria-expanded", "false");
         expect(trigger()).toHaveTextContent("Spain");
+      });
+
+      it("closes on Alt+ArrowUp with several values, keeping what's toggled", async () => {
+        const user = userEvent.setup();
+        await page({ multiple: true, nativeOnTouch: false });
+        await press(user, "{ArrowDown}");
+        await press(user, "{Alt>}{ArrowUp}{/Alt}");
+        expect(trigger()).toHaveAttribute("aria-expanded", "false");
+        expect(submitted()).toEqual([]);
       });
 
       it("commits the highlighted option on Tab and moves on", async () => {
@@ -516,6 +526,24 @@ describe("Select", () => {
       expect(announcements()).toContain("Spain removed");
     });
 
+    it("fires one update, in the list's order, when a value is removed", async () => {
+      const user = userEvent.setup();
+      const value = ref(["es", "fr", "de"]);
+      const update = vi.fn((next: unknown) => (value.value = next as string[]));
+      render({
+        render: () =>
+          h(Field, { label: "Country" }, () =>
+            h(Select, { id: "country", name: "country", multiple: true, options: countries, nativeOnTouch: false, modelValue: value.value, "onUpdate:modelValue": update }),
+          ),
+      });
+      await nextTick();
+      await user.click(screen.getByRole("button", { name: "Remove Germany" }));
+      await nextTick();
+      await nextTick();
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(["fr", "es"]);
+    });
+
     it("has no remove buttons while disabled or read-only", async () => {
       await page({ ...several, value: ["fr"], disabled: true });
       expect(screen.queryByRole("button", { name: "Remove France" })).toBeNull();
@@ -625,6 +653,29 @@ describe("Select", () => {
       await user.click(screen.getByRole("button", { name: "Reset" }));
       await waitFor(() => expect(value.value).toBe("fr"));
       expect(native().value).toBe("fr");
+    });
+
+    it("has the new value by the time a listener on it hears input and change", async () => {
+      const user = userEvent.setup();
+      const value = ref("fr");
+      const heard: string[] = [];
+      render({
+        render: () =>
+          h(Field, { label: "Country" }, () =>
+            h(Select, {
+              id: "country",
+              name: "country",
+              options: countries,
+              modelValue: value.value,
+              "onUpdate:modelValue": (next: unknown) => (value.value = next as string),
+              onInput: () => heard.push(value.value),
+              onChange: () => heard.push(value.value),
+            }),
+          ),
+      });
+      await nextTick();
+      await change(user, "es", "Spain", isCoarse);
+      expect(heard).toEqual(["es", "es"]);
     });
 
     it("goes back to several first values on reset", async () => {
@@ -862,6 +913,53 @@ describe("Select", () => {
       expect(document.querySelector('[data-slot="chip"]')).toHaveTextContent("Chip: Apple");
       expect(document.querySelector('[data-slot="group-label"]')).toHaveTextContent("Group: Citrus");
       expect(within(listbox()).getByRole("option", { name: "Fruit: Lemon", hidden: true })).toBeInTheDocument();
+    });
+  });
+
+  describe("placing the panel without CSS anchor positioning", () => {
+    const place = async (field: Partial<DOMRect>, viewport: [number, number], natural: number) => {
+      const user = userEvent.setup();
+      vi.stubGlobal("CSS", { supports: () => false });
+      await page({ nativeOnTouch: false });
+      const root = document.querySelector<HTMLElement>(".select")!;
+      vi.spyOn(root, "getBoundingClientRect").mockReturnValue({ width: 320, left: 0, top: 0, bottom: 0, ...field } as DOMRect);
+      vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(viewport[0]);
+      vi.spyOn(document.documentElement, "clientHeight", "get").mockReturnValue(viewport[1]);
+      listbox().style.marginTop = "4px";
+      vi.spyOn(listbox(), "offsetHeight", "get").mockReturnValue(natural);
+      await user.click(trigger());
+      await nextTick();
+      return listbox().style;
+    };
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    it("lines up with the field, under it, as wide as it", async () => {
+      const style = await place({ left: 588, top: 432, bottom: 468 }, [1440, 900], 160);
+      expect(style.left).toBe("588px");
+      expect(style.top).toBe("468px");
+      expect(style.width).toBe("320px");
+      expect(style.maxHeight).toBe("");
+    });
+
+    it("flips above the field when there's no room below", async () => {
+      const style = await place({ left: 20, top: 700, bottom: 736 }, [1440, 800], 160);
+      expect(style.top).toBe(`${700 - 8 - 160}px`);
+    });
+
+    it("shrinks on the bigger side when it fits neither, and stays on screen", async () => {
+      const style = await place({ left: 20, top: 114, bottom: 150, width: 400 }, [320, 256], 300);
+      expect(style.maxHeight).toBe("106px");
+      expect(style.top).toBe("0px");
+      expect(style.left).toBe("20px");
+      expect(style.width).toBe("288px");
+    });
+
+    it("stays on screen when the field runs past the edge", async () => {
+      const style = await place({ left: 300, top: 100, bottom: 136, width: 300 }, [320, 800], 160);
+      expect(style.left).toBe("32px");
     });
   });
 

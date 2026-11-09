@@ -183,8 +183,9 @@ function readSelect() {
   return multiple ? picked : picked[0];
 }
 
-// The native picker's change, or autofill's, and the one a selection in the panel fires
-// itself, which has nothing new to report.
+// The native picker's choice, or autofill's, and the events a selection in the panel fires
+// itself, which have nothing new to report. It's bound before your own listeners, so they
+// read the new value in both renderings.
 function onNativeChange() {
   const next = readSelect();
   if ([next].flat().join() !== values.value.join()) model.value = next;
@@ -215,7 +216,7 @@ function pickOption(option: SelectOption) {
 // it, so keyboard users never fall back to the top of the page.
 function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
-  commit(values.value.filter((value) => value !== option.value));
+  commit(selected.value.filter((item) => item !== option).map((item) => item.value));
   announce(removedLabel(option.label));
   if (moveFocus) {
     nextTick(() => {
@@ -343,6 +344,7 @@ function onKeydown(event: KeyboardEvent) {
     active.value = step(active.value, 1);
   } else if (key === "ArrowUp" && event.altKey) {
     event.preventDefault();
+    // Several values close and keep what people toggled, as Tab does.
     if (option && !multiple) pickOption(option);
     hide();
   } else if (key === "ArrowUp") {
@@ -425,20 +427,30 @@ const uid = useId();
 const anchorName = ref<string>();
 
 // CSS anchor positioning places the panel, where the browser has it. Elsewhere, place()
-// does: under the field, or above it when there's no room, as wide as the field.
+// does the same: as wide as the field, flipped when there's no room and kept on screen.
 const anchored = () => globalThis.CSS?.supports?.("position-area: top") ?? false;
 function place() {
   const el = panel.value;
   const anchor = root.value;
   if (anchored() || !el || !anchor) return;
   const a = anchor.getBoundingClientRect();
+  // Its margin is the gap, on the block sides only, which `top` places it outside of.
   const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
-  const { clientHeight } = document.documentElement;
-  el.style.width = `${a.width}px`;
-  const height = el.offsetHeight;
-  const below = a.bottom + gap + height <= clientHeight || a.top - gap - height < 0;
-  el.style.left = `${a.left - gap}px`;
-  el.style.top = `${(below ? a.bottom + gap : a.top - gap - height) - gap}px`;
+  const { clientWidth, clientHeight } = document.documentElement;
+  const width = Math.min(a.width, clientWidth - 32);
+  el.style.width = `${width}px`;
+  el.style.maxHeight = "";
+  const natural = el.offsetHeight;
+  const below = clientHeight - a.bottom - 2 * gap;
+  const above = a.top - 2 * gap;
+  // Under the field, or above it when there's no room, and when neither side has room,
+  // shrunk on the bigger one, with its options scrolling.
+  const under = natural <= below || (natural > above && below >= above);
+  const height = Math.min(natural, Math.max(under ? below : above, 0));
+  if (height < natural) el.style.maxHeight = `${height}px`;
+  const top = under ? a.bottom : a.top - 2 * gap - height;
+  el.style.left = `${Math.max(0, Math.min(a.left, clientWidth - width))}px`;
+  el.style.top = `${Math.max(-gap, Math.min(top, clientHeight - height - gap))}px`;
 }
 
 // Moving to the native rendering, like when a tablet's keyboard is detached, closes the panel.
@@ -494,6 +506,8 @@ onBeforeUnmount(() => {
          which would make a required select unfocusable and block the submit in silence. -->
     <select
       ref="select"
+      @input="onNativeChange"
+      @change="onNativeChange"
       v-bind="{ ...formAttrs(), ...(native ? activeAttrs() : {}) }"
       :data-slot="native ? 'control' : 'native'"
       :multiple="multiple"
@@ -501,7 +515,6 @@ onBeforeUnmount(() => {
       :disabled="disabled"
       :tabindex="native ? undefined : -1"
       :aria-hidden="native ? undefined : 'true'"
-      @change="onNativeChange"
       @focus="onSelectFocus"
     >
       <!-- Stands for no value. Disabled, so a native picker can't choose it, and selected
@@ -860,7 +873,8 @@ onBeforeUnmount(() => {
     rotate: 180deg;
   }
 
-  /* The chips sit over the control. Only they take a press, so one between them opens the panel. */
+  /* The chips sit in the control's cell. Only their remove buttons take a press of their
+     own, so a press on a chip's label, or between chips, opens the panel. */
   .select > [data-slot="chips"] {
     grid-area: 1 / 1;
     display: flex;
@@ -921,8 +935,7 @@ onBeforeUnmount(() => {
   .select [data-slot="chip-remove"]::before {
     content: "";
     position: absolute;
-    inset-block: min(0px, (var(--select--chip--height) - 1.5rem) / 2);
-    inset-inline: 0;
+    inset: min(0px, (var(--select--chip--height) - 1.5rem) / 2);
   }
   .select [data-slot="chip-remove"]:focus-visible {
     outline: 2px solid var(--color--focus);
@@ -1042,18 +1055,26 @@ onBeforeUnmount(() => {
     .select {
       font-size: max(var(--select--font-size), 1rem);
     }
+    /* Less 1px, since these reach out from inside the root's border. */
     .select > select {
-      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2);
+      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
       height: auto;
     }
     .select > button[role="combobox"]::after {
       content: "";
       position: absolute;
-      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2);
+      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
       inset-inline: 0;
     }
     .select [data-slot="option"] {
       min-height: 2.75rem;
+    }
+    .select [data-slot="chip-remove"]::before {
+      inset-block: min(0px, (var(--select--chip--height) - 2.75rem) / 2);
+    }
+    /* Rows of chips sit far enough apart that those targets don't cover each other. */
+    .select > [data-slot="chips"] {
+      row-gap: max(0.25rem, 2.75rem - var(--select--chip--height));
     }
   }
 

@@ -259,8 +259,9 @@ function readSelect() {
   return multiple ? picked : picked[0];
 }
 
-// The native picker's change, or autofill's, and the one a selection in the panel fires
-// itself, which has nothing new to report.
+// The native picker's choice, or autofill's, and the events a selection in the panel fires
+// itself, which have nothing new to report. It's bound before your own listeners, so they
+// read the new value in both renderings.
 function onNativeChange() {
   const next = readSelect();
   if ([next].flat().join() !== values.value.join()) model.value = next;
@@ -291,7 +292,7 @@ function pickOption(option: SelectOption) {
 // it, so keyboard users never fall back to the top of the page.
 function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
-  commit(values.value.filter((value) => value !== option.value));
+  commit(selected.value.filter((item) => item !== option).map((item) => item.value));
   announce(removedLabel(option.label));
   if (moveFocus) {
     nextTick(() => {
@@ -419,6 +420,7 @@ function onKeydown(event: KeyboardEvent) {
     active.value = step(active.value, 1);
   } else if (key === "ArrowUp" && event.altKey) {
     event.preventDefault();
+    // Several values close and keep what people toggled, as Tab does.
     if (option && !multiple) pickOption(option);
     hide();
   } else if (key === "ArrowUp") {
@@ -501,20 +503,30 @@ const uid = useId();
 const anchorName = ref<string>();
 
 // CSS anchor positioning places the panel, where the browser has it. Elsewhere, place()
-// does: under the field, or above it when there's no room, as wide as the field.
+// does the same: as wide as the field, flipped when there's no room and kept on screen.
 const anchored = () => globalThis.CSS?.supports?.("position-area: top") ?? false;
 function place() {
   const el = panel.value;
   const anchor = root.value;
   if (anchored() || !el || !anchor) return;
   const a = anchor.getBoundingClientRect();
+  // Its margin is the gap, on the block sides only, which `top` places it outside of.
   const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
-  const { clientHeight } = document.documentElement;
-  el.style.width = `${a.width}px`;
-  const height = el.offsetHeight;
-  const below = a.bottom + gap + height <= clientHeight || a.top - gap - height < 0;
-  el.style.left = `${a.left - gap}px`;
-  el.style.top = `${(below ? a.bottom + gap : a.top - gap - height) - gap}px`;
+  const { clientWidth, clientHeight } = document.documentElement;
+  const width = Math.min(a.width, clientWidth - 32);
+  el.style.width = `${width}px`;
+  el.style.maxHeight = "";
+  const natural = el.offsetHeight;
+  const below = clientHeight - a.bottom - 2 * gap;
+  const above = a.top - 2 * gap;
+  // Under the field, or above it when there's no room, and when neither side has room,
+  // shrunk on the bigger one, with its options scrolling.
+  const under = natural <= below || (natural > above && below >= above);
+  const height = Math.min(natural, Math.max(under ? below : above, 0));
+  if (height < natural) el.style.maxHeight = `${height}px`;
+  const top = under ? a.bottom : a.top - 2 * gap - height;
+  el.style.left = `${Math.max(0, Math.min(a.left, clientWidth - width))}px`;
+  el.style.top = `${Math.max(-gap, Math.min(top, clientHeight - height - gap))}px`;
 }
 
 // Moving to the native rendering, like when a tablet's keyboard is detached, closes the panel.
@@ -570,6 +582,8 @@ onBeforeUnmount(() => {
          which would make a required select unfocusable and block the submit in silence. -->
     <select
       ref="select"
+      @input="onNativeChange"
+      @change="onNativeChange"
       v-bind="{ ...formAttrs(), ...(native ? activeAttrs() : {}) }"
       :data-slot="native ? 'control' : 'native'"
       :multiple="multiple"
@@ -577,7 +591,6 @@ onBeforeUnmount(() => {
       :disabled="disabled"
       :tabindex="native ? undefined : -1"
       :aria-hidden="native ? undefined : 'true'"
-      @change="onNativeChange"
       @focus="onSelectFocus"
     >
       <!-- Stands for no value. Disabled, so a native picker can't choose it, and selected
@@ -936,7 +949,8 @@ onBeforeUnmount(() => {
     rotate: 180deg;
   }
 
-  /* The chips sit over the control. Only they take a press, so one between them opens the panel. */
+  /* The chips sit in the control's cell. Only their remove buttons take a press of their
+     own, so a press on a chip's label, or between chips, opens the panel. */
   .select > [data-slot="chips"] {
     grid-area: 1 / 1;
     display: flex;
@@ -997,8 +1011,7 @@ onBeforeUnmount(() => {
   .select [data-slot="chip-remove"]::before {
     content: "";
     position: absolute;
-    inset-block: min(0px, (var(--select--chip--height) - 1.5rem) / 2);
-    inset-inline: 0;
+    inset: min(0px, (var(--select--chip--height) - 1.5rem) / 2);
   }
   .select [data-slot="chip-remove"]:focus-visible {
     outline: 2px solid var(--color--focus);
@@ -1118,18 +1131,26 @@ onBeforeUnmount(() => {
     .select {
       font-size: max(var(--select--font-size), 1rem);
     }
+    /* Less 1px, since these reach out from inside the root's border. */
     .select > select {
-      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2);
+      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
       height: auto;
     }
     .select > button[role="combobox"]::after {
       content: "";
       position: absolute;
-      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2);
+      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
       inset-inline: 0;
     }
     .select [data-slot="option"] {
       min-height: 2.75rem;
+    }
+    .select [data-slot="chip-remove"]::before {
+      inset-block: min(0px, (var(--select--chip--height) - 2.75rem) / 2);
+    }
+    /* Rows of chips sit far enough apart that those targets don't cover each other. */
+    .select > [data-slot="chips"] {
+      row-gap: max(0.25rem, 2.75rem - var(--select--chip--height));
     }
   }
 
@@ -1321,6 +1342,7 @@ const announcements = () => document.querySelector('[role="status"]')?.textConte
 async function change(user: ReturnType<typeof userEvent.setup>, value: string, label: string, isNative: boolean) {
   if (isNative) {
     native().value = value;
+    native().dispatchEvent(new Event("input", { bubbles: true }));
     native().dispatchEvent(new Event("change", { bubbles: true }));
   } else {
     await user.click(trigger());
@@ -1497,6 +1519,15 @@ describe("Select", () => {
         await press(user, "{Alt>}{ArrowUp}{/Alt}");
         expect(trigger()).toHaveAttribute("aria-expanded", "false");
         expect(trigger()).toHaveTextContent("Spain");
+      });
+
+      it("closes on Alt+ArrowUp with several values, keeping what's toggled", async () => {
+        const user = userEvent.setup();
+        await page({ multiple: true, nativeOnTouch: false });
+        await press(user, "{ArrowDown}");
+        await press(user, "{Alt>}{ArrowUp}{/Alt}");
+        expect(trigger()).toHaveAttribute("aria-expanded", "false");
+        expect(submitted()).toEqual([]);
       });
 
       it("commits the highlighted option on Tab and moves on", async () => {
@@ -1723,6 +1754,24 @@ describe("Select", () => {
       expect(announcements()).toContain("Spain removed");
     });
 
+    it("fires one update, in the list's order, when a value is removed", async () => {
+      const user = userEvent.setup();
+      const value = ref(["es", "fr", "de"]);
+      const update = vi.fn((next: unknown) => (value.value = next as string[]));
+      render({
+        render: () =>
+          h(Field, { label: "Country" }, () =>
+            h(Select, { id: "country", name: "country", multiple: true, options: countries, nativeOnTouch: false, modelValue: value.value, "onUpdate:modelValue": update }),
+          ),
+      });
+      await nextTick();
+      await user.click(screen.getByRole("button", { name: "Remove Germany" }));
+      await nextTick();
+      await nextTick();
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(["fr", "es"]);
+    });
+
     it("has no remove buttons while disabled or read-only", async () => {
       await page({ ...several, value: ["fr"], disabled: true });
       expect(screen.queryByRole("button", { name: "Remove France" })).toBeNull();
@@ -1832,6 +1881,29 @@ describe("Select", () => {
       await user.click(screen.getByRole("button", { name: "Reset" }));
       await waitFor(() => expect(value.value).toBe("fr"));
       expect(native().value).toBe("fr");
+    });
+
+    it("has the new value by the time a listener on it hears input and change", async () => {
+      const user = userEvent.setup();
+      const value = ref("fr");
+      const heard: string[] = [];
+      render({
+        render: () =>
+          h(Field, { label: "Country" }, () =>
+            h(Select, {
+              id: "country",
+              name: "country",
+              options: countries,
+              modelValue: value.value,
+              "onUpdate:modelValue": (next: unknown) => (value.value = next as string),
+              onInput: () => heard.push(value.value),
+              onChange: () => heard.push(value.value),
+            }),
+          ),
+      });
+      await nextTick();
+      await change(user, "es", "Spain", isCoarse);
+      expect(heard).toEqual(["es", "es"]);
     });
 
     it("goes back to several first values on reset", async () => {
@@ -2072,6 +2144,53 @@ describe("Select", () => {
     });
   });
 
+  describe("placing the panel without CSS anchor positioning", () => {
+    const place = async (field: Partial<DOMRect>, viewport: [number, number], natural: number) => {
+      const user = userEvent.setup();
+      vi.stubGlobal("CSS", { supports: () => false });
+      await page({ nativeOnTouch: false });
+      const root = document.querySelector<HTMLElement>(".select")!;
+      vi.spyOn(root, "getBoundingClientRect").mockReturnValue({ width: 320, left: 0, top: 0, bottom: 0, ...field } as DOMRect);
+      vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(viewport[0]);
+      vi.spyOn(document.documentElement, "clientHeight", "get").mockReturnValue(viewport[1]);
+      listbox().style.marginTop = "4px";
+      vi.spyOn(listbox(), "offsetHeight", "get").mockReturnValue(natural);
+      await user.click(trigger());
+      await nextTick();
+      return listbox().style;
+    };
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    it("lines up with the field, under it, as wide as it", async () => {
+      const style = await place({ left: 588, top: 432, bottom: 468 }, [1440, 900], 160);
+      expect(style.left).toBe("588px");
+      expect(style.top).toBe("468px");
+      expect(style.width).toBe("320px");
+      expect(style.maxHeight).toBe("");
+    });
+
+    it("flips above the field when there's no room below", async () => {
+      const style = await place({ left: 20, top: 700, bottom: 736 }, [1440, 800], 160);
+      expect(style.top).toBe(`${700 - 8 - 160}px`);
+    });
+
+    it("shrinks on the bigger side when it fits neither, and stays on screen", async () => {
+      const style = await place({ left: 20, top: 114, bottom: 150, width: 400 }, [320, 256], 300);
+      expect(style.maxHeight).toBe("106px");
+      expect(style.top).toBe("0px");
+      expect(style.left).toBe("20px");
+      expect(style.width).toBe("288px");
+    });
+
+    it("stays on screen when the field runs past the edge", async () => {
+      const style = await place({ left: 300, top: 100, bottom: 136, width: 300 }, [320, 800], 160);
+      expect(style.left).toBe("32px");
+    });
+  });
+
   describe("server rendering", () => {
     it.each([
       ["coarse", true],
@@ -2173,6 +2292,7 @@ describe("Select", () => {
 - [HTML Standard: the popover attribute](https://html.spec.whatwg.org/multipage/popover.html), for the top layer and light dismiss
 - [Media Queries Level 4: pointer](https://www.w3.org/TR/mediaqueries-4/#pointer), for `pointer` reading the primary pointer and `any-pointer` reading any of them
 - [CSS Anchor Positioning](https://www.w3.org/TR/css-anchor-position-1/), for placing the panel and flipping it
+- MDN's browser compatibility data for [`position-area`](https://developer.mozilla.org/en-US/docs/Web/CSS/position-area) (Chrome and Edge 129, Firefox 147, Safari 26)
 - [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/)
 - [Understanding SC 4.1.2: Name, Role, Value](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html), for a combobox that has a name and a value
 - [Understanding SC 4.1.3: Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html), for announcing a removed value
