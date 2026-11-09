@@ -366,20 +366,25 @@ describe("Select", () => {
 
     it("stops Escape, so a Dialog around it stays open", async () => {
       const user = userEvent.setup();
+      const outside = vi.fn();
       render({
         render: () =>
-          h(Dialog, { id: "shipping", title: "Shipping", open: true }, () =>
-            h(Field, { label: "Country" }, () => h(Select, { id: "country", options: countries, nativeOnTouch: false })),
-          ),
+          h("div", { onKeydown: outside }, [
+            h(Dialog, { id: "shipping", title: "Shipping", open: true }, () =>
+              h(Field, { label: "Country" }, () => h(Select, { id: "country", options: countries, nativeOnTouch: false })),
+            ),
+          ]),
       });
       await nextTick();
       const control = screen.getByRole("combobox", { name: "Country" });
       control.focus();
       await user.keyboard("{ArrowDown}");
+      outside.mockClear();
       await user.keyboard("{Escape}");
       await nextTick();
       expect(control).toHaveAttribute("aria-expanded", "false");
       expect(document.querySelector("dialog")!.open).toBe(true);
+      expect(outside).not.toHaveBeenCalled();
     });
 
     it("lists groups and separators the way a listbox allows", async () => {
@@ -882,7 +887,7 @@ describe("Select", () => {
       error.mockRestore();
     });
 
-    it("keeps a value picked after hydrating, where browsers leave an option's selectedness unset", async () => {
+    it("keeps a value picked after hydrating, where a new selected attribute selects an untouched option", async () => {
       coarse = true;
       const render = () => h("form", [h(Select, { id: "country", name: "country", "aria-label": "Country", options: countries })]);
       const host = document.createElement("div");
@@ -891,20 +896,22 @@ describe("Select", () => {
       const app = createSSRApp({ render });
       app.mount(host);
       await nextTick();
-      // Browsers return from setting `selected` to the value it already has, so the property
-      // doesn't count as set, and an option that was never set takes a `selected` attribute.
-      const selected = Object.getOwnPropertyDescriptor(HTMLOptionElement.prototype, "selected")!;
-      Object.defineProperty(HTMLOptionElement.prototype, "selected", {
-        ...selected,
+      // A browser selects an option whose selectedness was never set when it gains the
+      // `selected` attribute, and hydrating never sets it. jsdom marks them all as set.
+      const defaultSelected = Object.getOwnPropertyDescriptor(HTMLOptionElement.prototype, "defaultSelected")!;
+      Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", {
+        ...defaultSelected,
         set(this: HTMLOptionElement, value: boolean) {
-          if (selected.get!.call(this) !== value) selected.set!.call(this, value);
+          const gaining = value && !this.hasAttribute("selected");
+          defaultSelected.set!.call(this, value);
+          if (gaining) this.selected = true;
         },
       });
       const el = host.querySelector("select")!;
       Array.from(el.options).find((item) => item.value === "es")!.selected = true;
       el.dispatchEvent(new Event("change", { bubbles: true }));
       await nextTick();
-      Object.defineProperty(HTMLOptionElement.prototype, "selected", selected);
+      Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", defaultSelected);
       expect(el.value).toBe("es");
       app.unmount();
       host.remove();
