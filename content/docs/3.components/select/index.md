@@ -159,6 +159,12 @@ defineSlots<{
   "group-label"?: (props: { label: string }) => unknown;
   /** The rule between options or groups. */
   separator?: () => unknown;
+  /**
+   * An icon for an option, like a label's colour or a country's flag, shown before its label in
+   * the panel, in the field once it's picked and in its chip. It's hidden from assistive
+   * technologies, since the label names the option. The native rendering draws text only.
+   */
+  icon?: (props: { option: SelectOption }) => unknown;
 }>();
 
 const attrs = useAttrs();
@@ -643,6 +649,10 @@ onBeforeUnmount(() => {
       @keyup.space.prevent
       @blur="hide"
     >
+      <!-- The picked option's icon, beside the value, so it looks the same here as in the panel. -->
+      <span v-if="$slots.icon && !multiple && selected[0]" data-slot="icon" aria-hidden="true">
+        <slot name="icon" :option="selected[0]" />
+      </span>
       <span data-slot="value" :data-placeholder="selected.length ? undefined : ''" :data-chips="multiple && selected.length ? '' : undefined">
         <slot name="value" :selected="selected">{{ selected.length ? summary : placeholder }}</slot>
       </span>
@@ -651,6 +661,7 @@ onBeforeUnmount(() => {
          reaches the remove buttons after the control. -->
     <div v-if="multiple && selected.length" data-slot="chips">
       <span v-for="option in selected" :key="option.value" data-slot="chip">
+        <span v-if="$slots.icon" data-slot="icon" aria-hidden="true"><slot name="icon" :option="option" /></span>
         <span data-slot="chip-label"><slot name="chip" :option="option">{{ option.label }}</slot></span>
         <button
           v-if="!disabled && !readonly"
@@ -716,6 +727,7 @@ onBeforeUnmount(() => {
             :data-active="flat[active] === option ? 'true' : undefined"
             @click="pickOption(option)"
           >
+            <span v-if="$slots.icon" data-slot="icon" aria-hidden="true"><slot name="icon" :option="option" /></span>
             <span data-slot="option-label">
               <slot name="option" :option="option" :selected="isPicked(option)" :active="flat[active] === option">{{ option.label }}</slot>
             </span>
@@ -777,6 +789,7 @@ onBeforeUnmount(() => {
     --select--chip--font-size: 0.75rem;
     --select--chip--background: color-mix(in srgb, currentColor 10%, transparent);
     --select--chip--color: inherit;
+    --select--chip--icon--size: 1em;
 
     --select--group-label--padding-block: 0.375rem;
     --select--group-label--padding-inline: 0.5rem;
@@ -982,6 +995,26 @@ onBeforeUnmount(() => {
   .select [data-slot="chip"]:not(:has(> [data-slot="chip-remove"])) {
     padding-inline-end: var(--select--chip--padding);
   }
+  /* An option's icon, in the panel, the field and its chip, at the size of the text around it. */
+  .select [data-slot="icon"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+  .select [data-slot="icon"] > :slotted(svg) {
+    width: var(--select--icon--size);
+    height: var(--select--icon--size);
+  }
+  .select > button > [data-slot="icon"] {
+    margin-inline-end: var(--select--gap);
+  }
+  .select [data-slot="chip"] > [data-slot="icon"] {
+    margin-inline-end: 0.25rem;
+  }
+  .select [data-slot="chip"] > [data-slot="icon"] > :slotted(svg) {
+    width: var(--select--chip--icon--size);
+    height: var(--select--chip--icon--size);
+  }
   .select [data-slot="chip-label"] {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1061,13 +1094,17 @@ onBeforeUnmount(() => {
   .select [data-slot="option"] {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--select--gap);
     padding-block: var(--select--option--padding-block);
     padding-inline: var(--select--option--padding-inline);
     border-radius: var(--select--option--radius);
     color: var(--select--option--color);
     cursor: pointer;
+  }
+  /* The label takes the room between the icon and the check mark. */
+  .select [data-slot="option"] > [data-slot="option-label"] {
+    flex: 1;
+    min-width: 0;
   }
   .select [data-slot="option"] > [data-slot="check"] {
     flex-shrink: 0;
@@ -2185,9 +2222,58 @@ describe("Select", () => {
       expect(style.width).toBe("288px");
     });
 
+    it("stays on screen when the field has scrolled past the bottom", async () => {
+      const style = await place({ left: 20, top: 900, bottom: 936 }, [1440, 800], 160);
+      expect(style.top).toBe(`${800 - 160 - 4}px`);
+    });
+
     it("stays on screen when the field runs past the edge", async () => {
       const style = await place({ left: 300, top: 100, bottom: 136, width: 300 }, [320, 800], 160);
       expect(style.left).toBe("32px");
+    });
+  });
+
+  describe("icons", () => {
+    const withIcons = async (props: Props) => {
+      render({
+        render: () =>
+          h(Field, { label: "Country" }, () =>
+            h(
+              Select,
+              { id: "country", name: "country", options: countries, nativeOnTouch: false, ...props },
+              { icon: ({ option }: { option: { value: string } }) => h("svg", { "data-testid": `icon-${option.value}` }) },
+            ),
+          ),
+      });
+      await nextTick();
+    };
+
+    it("shows the picked option's icon in the field, and each option's in the panel, hidden from assistive technologies", async () => {
+      const user = userEvent.setup();
+      await withIcons({ value: "es" });
+      const control = screen.getByRole("combobox", { name: "Country" });
+      expect(within(control).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(control).toHaveTextContent("Spain");
+      await user.click(control);
+      const spain = within(listbox()).getByRole("option", { name: "Spain", hidden: true });
+      expect(within(spain).getByTestId("icon-es").parentElement).toHaveAttribute("data-slot", "icon");
+      expect(within(spain).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("shows each picked option's icon in its chip", async () => {
+      await withIcons({ multiple: true, value: ["fr", "es"] });
+      const chips = document.querySelectorAll('[data-slot="chip"]');
+      expect(within(chips[0] as HTMLElement).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(chips[1] as HTMLElement).getByTestId("icon-es")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Remove France" })).toBeInTheDocument();
+    });
+
+    it("has no icon in the field while nothing is picked, and no icon part without the slot", async () => {
+      await withIcons({ placeholder: "Choose a country" });
+      expect(screen.getByRole("combobox", { name: "Country" }).querySelector('[data-slot="icon"]')).toBeNull();
+      document.body.innerHTML = "";
+      await page({ value: "fr", nativeOnTouch: false });
+      expect(document.querySelector('[data-slot="icon"]')).toBeNull();
     });
   });
 

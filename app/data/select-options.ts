@@ -27,3 +27,11 @@ export const destinations: SelectItem[] = [
     ],
   },
 ];
+
+/** Issue labels, for the example that shows each option's icon. */
+export const labels: SelectItem[] = [
+  { value: "bug", label: "Bug" },
+  { value: "feature", label: "Feature" },
+  { value: "docs", label: "Docs" },
+  { value: "question", label: "Question" },
+];

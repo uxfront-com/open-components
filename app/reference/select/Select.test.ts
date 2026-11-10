@@ -957,9 +957,58 @@ describe("Select", () => {
       expect(style.width).toBe("288px");
     });
 
+    it("stays on screen when the field has scrolled past the bottom", async () => {
+      const style = await place({ left: 20, top: 900, bottom: 936 }, [1440, 800], 160);
+      expect(style.top).toBe(`${800 - 160 - 4}px`);
+    });
+
     it("stays on screen when the field runs past the edge", async () => {
       const style = await place({ left: 300, top: 100, bottom: 136, width: 300 }, [320, 800], 160);
       expect(style.left).toBe("32px");
+    });
+  });
+
+  describe("icons", () => {
+    const withIcons = async (props: Props) => {
+      render({
+        render: () =>
+          h(Field, { label: "Country" }, () =>
+            h(
+              Select,
+              { id: "country", name: "country", options: countries, nativeOnTouch: false, ...props },
+              { icon: ({ option }: { option: { value: string } }) => h("svg", { "data-testid": `icon-${option.value}` }) },
+            ),
+          ),
+      });
+      await nextTick();
+    };
+
+    it("shows the picked option's icon in the field, and each option's in the panel, hidden from assistive technologies", async () => {
+      const user = userEvent.setup();
+      await withIcons({ value: "es" });
+      const control = screen.getByRole("combobox", { name: "Country" });
+      expect(within(control).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(control).toHaveTextContent("Spain");
+      await user.click(control);
+      const spain = within(listbox()).getByRole("option", { name: "Spain", hidden: true });
+      expect(within(spain).getByTestId("icon-es").parentElement).toHaveAttribute("data-slot", "icon");
+      expect(within(spain).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("shows each picked option's icon in its chip", async () => {
+      await withIcons({ multiple: true, value: ["fr", "es"] });
+      const chips = document.querySelectorAll('[data-slot="chip"]');
+      expect(within(chips[0] as HTMLElement).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(chips[1] as HTMLElement).getByTestId("icon-es")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Remove France" })).toBeInTheDocument();
+    });
+
+    it("has no icon in the field while nothing is picked, and no icon part without the slot", async () => {
+      await withIcons({ placeholder: "Choose a country" });
+      expect(screen.getByRole("combobox", { name: "Country" }).querySelector('[data-slot="icon"]')).toBeNull();
+      document.body.innerHTML = "";
+      await page({ value: "fr", nativeOnTouch: false });
+      expect(document.querySelector('[data-slot="icon"]')).toBeNull();
     });
   });
 
