@@ -241,8 +241,20 @@ import "~/reference/button/tokens.css";
   width: var(--anatomy--distance);
   height: 1px;
 }
+/* The panel's number sits below it, away from the options and the numbers beside them, and
+   its line runs up to the panel's bottom border, so it can only mean the panel. */
 .anatomy-panel > .anatomy-marker-side {
-  top: 1.25rem;
+  top: calc(100% + var(--anatomy--distance));
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
+}
+.anatomy-panel > .anatomy-marker-side::before {
+  top: auto;
+  bottom: 100%;
+  left: 50%;
+  width: 1px;
+  height: var(--anatomy--distance);
 }
 
 /* A part in the field has its number above the field, and its line runs down to the part's
