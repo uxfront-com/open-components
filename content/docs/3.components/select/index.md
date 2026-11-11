@@ -11,7 +11,7 @@ This page walks you through building one the right way. We'll look at:
 
 ::card-group
 :::card{to="/docs/components/select/ui" icon="i-lucide-palette" title="User Interface (UI)"}
-How a select looks, from its seven parts and its sizes to one or several values, its states and the tokens that restyle each part.
+How a select looks, from its parts and its sizes to one or several values, its states and the tokens that restyle each part.
 :::
 
 :::card{to="/docs/components/select/ux" icon="i-lucide-user" title="User Experience (UX)"}
@@ -29,32 +29,34 @@ How agents read, operate and check a select, from its accessibility tree to its 
 
 ## At a glance
 
-Every example on this page runs on our [reference implementation](/docs/components/select#reference-implementation), which does its part of every rule in the [checklist](/docs/components/select#checklist), so feel free to open them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Select with the same API in each, apart from a few names in Angular and in React and Solid, which [Type-safe](/docs/components/select/dx#type-safe) explains. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/select/ax#deterministic).
+Every example on this page runs on our [reference implementation](/docs/components/select#reference-implementation), which does its part of every rule in the [checklist](/docs/components/select#checklist), so feel free to open them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Select with the same API in each, apart from a few names in React, Solid and Angular, which [Type-safe](/docs/components/select/dx#type-safe) explains. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/select/ax#deterministic).
 
 The Select builds on the [Popover](/docs/components/popover) for where its panel opens, how it flips and how it closes, and on the [Field](/docs/components/field) for its label, hint and error. Most of the examples turn off the native picker, so you'll see the panel and the tags on a phone too.
 
 ::select-playground
 ::
 
-| Aspect    | Select                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------- |
-| Element   | A `<div>` that draws the field, holding a `<button>`, a `<select>` and a `<div popover="auto">` panel   |
-| Role      | `combobox` on the button, with a `listbox` popup of options                                             |
-| Name      | The Field's `<label for>`, or `aria-label`                                                              |
-| Value     | The button's text, which is the option's label, a list of labels, or a count past three                 |
-| Keyboard  | `ArrowDown`, `Enter` or `Space` opens it, letters search it, `Enter` picks, `Escape` closes             |
-| Pointer   | A press on the field opens it, a press outside closes it, and a press on its label only takes focus     |
-| Values    | One, or several as removable tags, with `multiple`                                                     |
-| Forms     | A native `<select>` is always in the page, which submits, validates and resets                          |
-| Touch     | `nativeOnTouch` shows the native `<select>` where the primary pointer is coarse, and is on by default   |
-| Pattern   | The APG's [select-only combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/)                                                                 |
-| WCAG 2.2  | 1.3.1, 1.4.1, 1.4.3, 1.4.10, 1.4.11, 2.1.1, 2.4.3, 2.4.7, 2.5.8, 4.1.2 and 4.1.3, among others          |
+| Aspect   | Select                                                                                                                |
+| -------- | --------------------------------------------------------------------------------------------------------------------- |
+| Element  | A `<div>` that draws the field, holding a `<button>`, a `<select>` and a `<div popover="auto">` panel                 |
+| Role     | `combobox` on the button, with a `listbox` popup of options                                                           |
+| Name     | The Field's `<label for>`, or `aria-label`                                                                            |
+| Value    | The button's text, which is the option's label, a list of labels, or a count past three                               |
+| Keyboard | `ArrowDown`, `Enter` or `Space` opens it, letters search it, `Enter` picks, `Escape` closes                           |
+| Pointer  | A press on the field opens it, a press outside closes it, and a press on its label only takes focus                   |
+| States   | Hover, focus, open, disabled, read-only and invalid, and highlighted, selected and disabled options                   |
+| Values   | One, or several as removable tags, with `multiple`                                                                    |
+| Sizes    | `xs`, `sm`, `md`, `lg` and `xl`, the Input's five                                                                     |
+| Forms    | A native `<select>` is always in the page, which submits, validates and resets                                        |
+| Touch    | `nativeOnTouch` shows the native `<select>` where the primary pointer is coarse, and is on by default                 |
+| Pattern  | [WAI-ARIA APG Select-Only Combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/) |
+| WCAG 2.2 | 1.3.1, 1.4.1, 1.4.3, 1.4.10, 1.4.11, 2.1.1, 2.4.3, 2.4.7, 2.5.8, 4.1.2 and 4.1.3, among others                        |
 
 ## Checklist
 
 Here's every rule in one place, along with where it comes from and how to check it. A select meets the standard when it meets every **must**, and each **should** is expected unless you have a good reason not to follow it.
 
-The scope says who meets a rule. **Component** rules are met by the Select itself, so they're the ones to check when you build or review one. **Usage** rules are met by the screens that use it, like giving it a label, so they're the ones to check when you review a screen. **Both** rules need the two to work together, like a Select inside a Dialog, which only works when it's rendered inside it.
+The scope says who meets a rule. **Component** rules are met by the Select itself, so they're the ones to check when you build or review one. **Usage** rules are met by the screens that use it, like giving it a label, so they're the ones to check when you review a screen. **Both** rules need the two to work together, like a Select in a Dialog: the Select keeps `Escape` to its panel, as long as you render it inside the Dialog.
 
 The basis says where a rule comes from. Many of the rules rest on **WCAG** 2.2, which we follow at level AA, and name the success criteria behind them, and several come from **HTML**, **WAI-ARIA** and the **APG**. The rest are **Open Components** rules, which are our own, like not picking a first option nobody looked at. Where a rule goes further than WCAG asks at level AA, its basis says so: reduced motion comes from level **AAA**, and a rule that asks for more than its criterion says **beyond**.
 
@@ -69,7 +71,7 @@ You'll find the rules for each layer on its page:
 
 Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves: the keyboard model, focus staying on the control, and the native `<select>` doing the form's work. It announces through the Button's `announce.ts`, so copy that from the [Button](/docs/components/button#reference-implementation) too.
 
-The tests are in `Select.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`. jsdom has no Popover API, `matchMedia` or `scrollIntoView`, so the tests stand in for them, at the top of the file, and for one thing jsdom gets wrong: it enters a selected option in the form data even when it's disabled. They also mount the Field and the Dialog.
+The tests are in `Select.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`. The tests stand in for what jsdom lacks, which [Unit tests](/docs/components/select/ax#unit-tests) explains, and they also mount the Field and the Dialog.
 
 ::code-collapse
 :::code-group
@@ -2388,7 +2390,7 @@ describe("Select", () => {
 - [web.dev: New to the web platform in September](https://web.dev/blog/web-platform-09-2026) and [caniuse: appearance base-select](https://caniuse.com/mdn-css_properties_appearance_base-select), for support in Chrome 135, Safari 27 and not yet in Firefox
 - [Sarah Higley: `<select>` Your Poison](https://www.24a11y.com/2019/select-your-poison/), for the mapping of a native select to a combobox on Windows and a popup button on macOS, iOS and Android
 - [GOV.UK Design System: Select](https://design-system.service.gov.uk/components/select/), for trying fewer options first, and for not preselecting an answer
-- [Styleframe: Select](https://www.styleframe.dev/docs/theme/components/select), for the seven parts and what each one styles
+- [Styleframe: Select](https://www.styleframe.dev/docs/theme/components/select), for the parts and what each one styles
 - [Radix Primitives: Select](https://www.radix-ui.com/primitives/docs/components/select), for a trigger that's a `<button>` with the `combobox` role
 - [React Aria: Select](https://react-spectrum.adobe.com/react-aria/Select.html), for a hidden native select that takes part in the form
 - [Material UI: Select](https://mui.com/material-ui/react-select/), for offering the platform's native select on mobile

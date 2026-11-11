@@ -13,7 +13,7 @@ Selects let people pick one option, or several, out of a list that's too long to
 ## New
 
 - The Select is a `<button role="combobox">` with a `listbox` panel, so the Field names it with the same `<label for>` it gives an Input, and it follows the APG's keyboard model, typing to search included.
-- It picks one value or several, with removable tags you can reach by keyboard, shows an icon beside each option where you give one, and its seven parts each restyle through tokens and slots.
+- It picks one value or several, with removable tags you can reach by keyboard, shows an icon beside each option where you give one, and each of its parts restyles through tokens and slots.
 - A native `<select>` is always in the page, so it submits under its `name`, validates and resets with its form, and the `nativeOnTouch` prop shows it where the primary pointer is coarse, with no layout shift or hydration mismatch.
 - It comes with its own contract, live examples and a tested reference implementation.
 

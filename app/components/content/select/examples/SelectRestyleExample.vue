@@ -4,7 +4,7 @@ import Select from "~/reference/select/Select.vue";
 import { countries, destinations } from "~/data/select-options";
 
 /**
- * `::select-restyle-example{part="tag"}`: one of the Select's seven parts, restyled with a
+ * `::select-restyle-example{part="tag"}`: one of the seven parts the UI page restyles, with a
  * class that sets its variables, and with its slot where it has one. No inline styles.
  */
 const { part } = defineProps<{ part: "trigger" | "panel" | "option" | "tag" | "arrow" | "group-label" | "separator" }>();
