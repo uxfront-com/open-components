@@ -31,7 +31,7 @@ How agents read, fill in and check a field, from its accessibility tree to its c
 
 Every example on this page runs on our [reference implementation](/docs/components/field#reference-implementation), which does its part of every rule in the [checklist](/docs/components/field#checklist), so feel free to fill them in as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Field with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/field/ax#deterministic).
 
-The Field holds one control: an [Input](/docs/components/input), a [Textarea](/docs/components/textarea), a [Checkbox](/docs/components/checkbox), a [Switch](/docs/components/switch), a [Checkbox Group](/docs/components/checkbox-group) or a [Radio Group](/docs/components/radio-group). It renders the label, hint and error message around it, gives it its `id`, and sets its `aria-describedby`, `aria-invalid`, `required` and `disabled` for you. The controls themselves don't change, so everything their own pages say still holds inside a Field.
+The Field holds one control: an [Input](/docs/components/input), a [Textarea](/docs/components/textarea), a [Checkbox](/docs/components/checkbox), a [Switch](/docs/components/switch), a [Checkbox Group](/docs/components/checkbox-group), a [Radio Group](/docs/components/radio-group) or a [Select](/docs/components/select). It renders the label, hint and error message around it, gives it its `id`, and sets its `aria-describedby`, `aria-invalid`, `required` and `disabled` for you. The controls themselves don't change, so everything their own pages say still holds inside a Field.
 
 ::field-playground
 ::
@@ -43,7 +43,7 @@ The Field holds one control: an [Input](/docs/components/input), a [Textarea](/d
 | Name        | Its `<label>`, linked with `for`, or a Checkbox's own label, or a group's legend                       |
 | Description | The hint, then the error, through the control's `aria-describedby`                                     |
 | States      | Required, disabled and invalid, which it sets on the control                                            |
-| Controls    | Input, Textarea, Checkbox, Switch, Checkbox Group, Radio Group and native text controls                |
+| Controls    | Input, Textarea, Checkbox, Switch, Checkbox Group, Radio Group, Select and native text controls        |
 | Sizes       | `xs`, `sm`, `md`, `lg` and `xl`, which it passes on to the control, unless it's a native one              |
 | Pattern     | None in the APG, since a native [`<label>`](https://html.spec.whatwg.org/multipage/forms.html#the-label-element) and `aria-describedby` cover it |
 | WCAG 2.2    | 1.3.1, 1.4.1, 1.4.3, 2.4.6, 3.3.1, 3.3.2, 3.3.3, 4.1.2 and 4.1.3, among others                          |
@@ -102,7 +102,7 @@ export interface FieldProps {
  * What the Field renders around a control depends on what it is, which it reads from
  * the control's component, so none of the controls needs to know about the Field:
  *
- * - `text`: an Input, a Textarea or a native <input>, <textarea> or <select>. The label
+ * - `text`: an Input, a Textarea, a Select or a native <input>, <textarea> or <select>. The label
  *   above it, the hint between them, the error after it.
  * - `checkbox`: a Checkbox, which its own <label> names. The hint and error after it.
  * - `switch`: a Switch. The label before it on the same row, the hint and error under it.
@@ -145,7 +145,7 @@ export default defineComponent({
     size: String as PropType<FieldProps["size"]>,
   },
   slots: Object as SlotsType<{
-    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group or a native text control. */
+    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group, a Select or a native text control. */
     default?: () => VNode[];
   }>,
   setup(props, { slots }) {
