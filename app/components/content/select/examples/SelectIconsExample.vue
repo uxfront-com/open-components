@@ -3,7 +3,7 @@ import Field from "~/reference/field/Field.vue";
 import Select from "~/reference/select/Select.vue";
 import { labels } from "~/data/select-options";
 
-/** `::select-icons-example`: an icon per option, shown in the panel, in the field and in each chip. */
+/** `::select-icons-example`: an icon per option, shown in the panel, in the field and in each tag. */
 const one = ref<string | string[]>("feature");
 const several = ref<string | string[]>(["bug", "docs"]);
 </script>

@@ -4,13 +4,13 @@ import Select from "~/reference/select/Select.vue";
 import { countries, destinations } from "~/data/select-options";
 
 /**
- * `::select-restyle-example{part="chip"}`: one of the Select's seven parts, restyled with a
+ * `::select-restyle-example{part="tag"}`: one of the Select's seven parts, restyled with a
  * class that sets its variables, and with its slot where it has one. No inline styles.
  */
-const { part } = defineProps<{ part: "trigger" | "panel" | "option" | "chip" | "arrow" | "group-label" | "separator" }>();
+const { part } = defineProps<{ part: "trigger" | "panel" | "option" | "tag" | "arrow" | "group-label" | "separator" }>();
 
 const grouped = computed(() => part === "group-label" || part === "separator");
-const several = computed(() => part === "chip");
+const several = computed(() => part === "tag");
 const value = ref<string | string[]>(several.value ? ["fr", "es"] : "fr");
 </script>
 
@@ -33,7 +33,7 @@ const value = ref<string | string[]>(several.value ? ["fr", "es"] : "fr");
           <template v-if="part === 'option'" #option="{ option, selected }">
             {{ option.label }}<span v-if="selected"> (yours)</span>
           </template>
-          <template v-if="part === 'chip'" #chip="{ option }">{{ option.value.toUpperCase() }}</template>
+          <template v-if="part === 'tag'" #tag="{ option }">{{ option.value.toUpperCase() }}</template>
           <template v-if="part === 'arrow'" #arrow><UIcon name="i-lucide-chevrons-up-down" mode="svg" /></template>
           <template v-if="part === 'group-label'" #group-label="{ label }">{{ label }} shipping</template>
           <template v-if="part === 'separator'" #separator><span class="restyle-rule" /></template>
@@ -61,10 +61,10 @@ const value = ref<string | string[]>(several.value ? ["fr", "es"] : "fr");
   --select--option--hover--background: color-mix(in srgb, var(--color--primary) 15%, transparent);
   --select--option--selected--background: color-mix(in srgb, var(--color--primary) 15%, transparent);
 }
-.restyle-chip {
-  --select--chip--radius: 1rem;
-  --select--chip--background: var(--color--primary);
-  --select--chip--color: var(--color--primary-contrast);
+.restyle-tag {
+  --select--tag--radius: 1rem;
+  --select--tag--background: var(--color--primary);
+  --select--tag--color: var(--color--primary-contrast);
 }
 .restyle-arrow {
   --select--arrow--color: var(--color--primary-text);

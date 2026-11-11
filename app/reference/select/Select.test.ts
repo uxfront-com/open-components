@@ -480,9 +480,9 @@ describe("Select", () => {
       expect(trigger()).toHaveTextContent("4 selected");
     });
 
-    it("shows a chip per value, with a remove button named after it", async () => {
+    it("shows a tag per value, with a remove button named after it", async () => {
       await page({ ...several, value: ["fr", "es"] });
-      expect(screen.getByRole("button", { name: "Remove France" })).toHaveAttribute("data-slot", "chip-remove");
+      expect(screen.getByRole("button", { name: "Remove France" })).toHaveAttribute("data-slot", "tag-remove");
       expect(screen.getByRole("button", { name: "Remove Spain" })).toBeInTheDocument();
     });
 
@@ -884,7 +884,7 @@ describe("Select", () => {
   });
 
   describe("slots", () => {
-    it("fills the value, option, chip, group label, separator, leading and arrow slots", async () => {
+    it("fills the value, option, tag, group label, separator, leading and arrow slots", async () => {
       const user = userEvent.setup();
       render({
         render: () =>
@@ -897,7 +897,7 @@ describe("Select", () => {
                 arrow: () => h("i", { "data-testid": "arrow" }),
                 value: ({ selected }: { selected: { label: string }[] }) => `Picked ${selected.length}`,
                 option: ({ option }: { option: { label: string } }) => `Fruit: ${option.label}`,
-                chip: ({ option }: { option: { label: string } }) => `Chip: ${option.label}`,
+                tag: ({ option }: { option: { label: string } }) => `Tag: ${option.label}`,
                 "group-label": ({ label }: { label: string }) => `Group: ${label}`,
                 separator: () => h("i", { "data-testid": "separator" }),
               },
@@ -910,7 +910,7 @@ describe("Select", () => {
       expect(screen.getByTestId("leading")).toBeInTheDocument();
       expect(screen.getByTestId("arrow")).toBeInTheDocument();
       expect(screen.getByTestId("separator")).toBeInTheDocument();
-      expect(document.querySelector('[data-slot="chip"]')).toHaveTextContent("Chip: Apple");
+      expect(document.querySelector('[data-slot="tag"]')).toHaveTextContent("Tag: Apple");
       expect(document.querySelector('[data-slot="group-label"]')).toHaveTextContent("Group: Citrus");
       expect(within(listbox()).getByRole("option", { name: "Fruit: Lemon", hidden: true })).toBeInTheDocument();
     });
@@ -995,11 +995,11 @@ describe("Select", () => {
       expect(within(spain).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
     });
 
-    it("shows each picked option's icon in its chip", async () => {
+    it("shows each picked option's icon in its tag", async () => {
       await withIcons({ multiple: true, value: ["fr", "es"] });
-      const chips = document.querySelectorAll('[data-slot="chip"]');
-      expect(within(chips[0] as HTMLElement).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
-      expect(within(chips[1] as HTMLElement).getByTestId("icon-es")).toBeInTheDocument();
+      const tags = document.querySelectorAll('[data-slot="tag"]');
+      expect(within(tags[0] as HTMLElement).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(tags[1] as HTMLElement).getByTestId("icon-es")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Remove France" })).toBeInTheDocument();
     });
 

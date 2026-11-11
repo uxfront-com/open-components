@@ -3,7 +3,7 @@ import Field from "~/reference/field/Field.vue";
 import Select from "~/reference/select/Select.vue";
 import { countries } from "~/data/select-options";
 
-/** `::select-multiple-example`: several values, each a chip with a remove button. */
+/** `::select-multiple-example`: several values, each a tag with a remove button. */
 const value = ref<string | string[]>(["fr", "es"]);
 </script>
 

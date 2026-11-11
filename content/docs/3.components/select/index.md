@@ -31,7 +31,7 @@ How agents read, operate and check a select, from its accessibility tree to its 
 
 Every example on this page runs on our [reference implementation](/docs/components/select#reference-implementation), which does its part of every rule in the [checklist](/docs/components/select#checklist), so feel free to open them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Select with the same API in each, apart from a few names in Angular and in React and Solid, which [Type-safe](/docs/components/select/dx#type-safe) explains. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/select/ax#deterministic).
 
-The Select builds on the [Popover](/docs/components/popover) for where its panel opens, how it flips and how it closes, and on the [Field](/docs/components/field) for its label, hint and error. Most of the examples turn off the native picker, so you'll see the panel and the chips on a phone too.
+The Select builds on the [Popover](/docs/components/popover) for where its panel opens, how it flips and how it closes, and on the [Field](/docs/components/field) for its label, hint and error. Most of the examples turn off the native picker, so you'll see the panel and the tags on a phone too.
 
 ::select-playground
 ::
@@ -44,7 +44,7 @@ The Select builds on the [Popover](/docs/components/popover) for where its panel
 | Value     | The button's text, which is the option's label, a list of labels, or a count past three                 |
 | Keyboard  | `ArrowDown`, `Enter` or `Space` opens it, letters search it, `Enter` picks, `Escape` closes             |
 | Pointer   | A press on the field opens it, a press outside closes it, and a press on its label only takes focus     |
-| Values    | One, or several as removable chips, with `multiple`                                                     |
+| Values    | One, or several as removable tags, with `multiple`                                                     |
 | Forms     | A native `<select>` is always in the page, which submits, validates and resets                          |
 | Touch     | `nativeOnTouch` shows the native `<select>` where the primary pointer is coarse, and is on by default   |
 | Pattern   | The APG's [select-only combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/)                                                                 |
@@ -98,7 +98,7 @@ export type SelectItem = SelectOption | SelectGroup | SelectSeparator;
 export interface SelectProps {
   /** What people pick from. A prop rather than child components, since both renderings need the same list. */
   options: SelectItem[];
-  /** Picks any number of values, each shown as a chip, so the value is an array. */
+  /** Picks any number of values, each shown as a tag, so the value is an array. */
   multiple?: boolean;
   /** Text shown while nothing is picked. It's never a value, so nothing submits. */
   placeholder?: string;
@@ -109,11 +109,11 @@ export interface SelectProps {
   required?: boolean;
   /**
    * Shows a native <select> where the primary pointer is coarse, so phones and tablets get
-   * their own picker. It can't draw the panel, the options or the chips, so turn it off
+   * their own picker. It can't draw the panel, the options or the tags, so turn it off
    * with `false` when those have to look like your brand everywhere.
    */
   nativeOnTouch?: boolean;
-  /** A chip's remove button's name, which screen readers read and voice control users say. */
+  /** A tag's remove button's name, which screen readers read and voice control users say. */
   removeLabel?: (label: string) => string;
   /** What screen readers hear once a value is removed. */
   removedLabel?: (label: string) => string;
@@ -153,15 +153,15 @@ defineSlots<{
   arrow?: () => unknown;
   /** How an option reads in the panel. The check mark stays beside it. */
   option?: (props: { option: SelectOption; selected: boolean; active: boolean }) => unknown;
-  /** How a picked value reads in its chip. The remove button stays beside it. */
-  chip?: (props: { option: SelectOption }) => unknown;
+  /** How a picked value reads in its tag. The remove button stays beside it. */
+  tag?: (props: { option: SelectOption }) => unknown;
   /** How a group's heading reads. */
   "group-label"?: (props: { label: string }) => unknown;
   /** The rule between options or groups. */
   separator?: () => unknown;
   /**
    * An icon for an option, like a label's colour or a country's flag, shown before its label in
-   * the panel, in the field once it's picked and in its chip. It's hidden from assistive
+   * the panel, in the field once it's picked and in its tag. It's hidden from assistive
    * technologies, since the label names the option. The native rendering draws text only.
    */
   icon?: (props: { option: SelectOption }) => unknown;
@@ -231,7 +231,7 @@ const values = computed<string[]>(() => {
 const selected = computed(() => flat.value.filter((option) => values.value.includes(option.value)));
 const isPicked = (option: SelectOption) => values.value.includes(option.value);
 
-// What the combobox reads as its value, which the chips can't give it from outside the
+// What the combobox reads as its value, which the tags can't give it from outside the
 // button. Past three, a count, since nobody wants a long list read out on every focus.
 const SUMMARY_LIMIT = 3;
 const summary = computed(() =>
@@ -294,7 +294,7 @@ function pickOption(option: SelectOption) {
   if (values.value[0] !== option.value) commit(option.value);
 }
 
-// The next chip's remove button takes focus, or the control when there's no chip after
+// The next tag's remove button takes focus, or the control when there's no tag after
 // it, so keyboard users never fall back to the top of the page.
 function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
@@ -302,7 +302,7 @@ function remove(option: SelectOption, moveFocus = true) {
   announce(removedLabel(option.label));
   if (moveFocus) {
     nextTick(() => {
-      const next = root.value?.querySelectorAll<HTMLElement>('[data-slot="chip-remove"]')[index];
+      const next = root.value?.querySelectorAll<HTMLElement>('[data-slot="tag-remove"]')[index];
       (next ?? control.value)?.focus();
     });
   }
@@ -653,19 +653,19 @@ onBeforeUnmount(() => {
       <span v-if="$slots.icon && !multiple && selected[0]" data-slot="icon" aria-hidden="true">
         <slot name="icon" :option="selected[0]" />
       </span>
-      <span data-slot="value" :data-placeholder="selected.length ? undefined : ''" :data-chips="multiple && selected.length ? '' : undefined">
+      <span data-slot="value" :data-placeholder="selected.length ? undefined : ''" :data-tags="multiple && selected.length ? '' : undefined">
         <slot name="value" :selected="selected">{{ selected.length ? summary : placeholder }}</slot>
       </span>
     </button>
     <!-- Beside the button, since a <button> can't hold other buttons, and after it, so Tab
          reaches the remove buttons after the control. -->
-    <div v-if="multiple && selected.length" data-slot="chips">
-      <span v-for="option in selected" :key="option.value" data-slot="chip">
+    <div v-if="multiple && selected.length" data-slot="tags">
+      <span v-for="option in selected" :key="option.value" data-slot="tag">
         <span v-if="$slots.icon" data-slot="icon" aria-hidden="true"><slot name="icon" :option="option" /></span>
-        <span data-slot="chip-label"><slot name="chip" :option="option">{{ option.label }}</slot></span>
+        <span data-slot="tag-label"><slot name="tag" :option="option">{{ option.label }}</slot></span>
         <button
           v-if="!disabled && !readonly"
-          data-slot="chip-remove"
+          data-slot="tag-remove"
           type="button"
           :aria-label="removeLabel(option.label)"
           @click="remove(option)"
@@ -783,13 +783,13 @@ onBeforeUnmount(() => {
     --select--option--selected--font-weight: 600;
     --select--option--disabled--opacity: 0.5;
 
-    --select--chip--height: 1.5rem;
-    --select--chip--padding: 0.5rem;
-    --select--chip--radius: 0.25rem;
-    --select--chip--font-size: 0.75rem;
-    --select--chip--background: color-mix(in srgb, currentColor 10%, transparent);
-    --select--chip--color: inherit;
-    --select--chip--icon--size: 1em;
+    --select--tag--height: 1.5rem;
+    --select--tag--padding: 0.5rem;
+    --select--tag--radius: 0.25rem;
+    --select--tag--font-size: 0.75rem;
+    --select--tag--background: color-mix(in srgb, currentColor 10%, transparent);
+    --select--tag--color: inherit;
+    --select--tag--icon--size: 1em;
 
     --select--group-label--padding-block: 0.375rem;
     --select--group-label--padding-inline: 0.5rem;
@@ -806,8 +806,8 @@ onBeforeUnmount(() => {
 
     position: relative;
     display: grid;
-    /* The parts share one cell, so the control fills the field under the chips and the
-       icons, and a press anywhere on the field reaches it, while chips grow the field. */
+    /* The parts share one cell, so the control fills the field under the tags and the
+       icons, and a press anywhere on the field reaches it, while tags grow the field. */
     grid-template-columns: minmax(0, 1fr);
     box-sizing: border-box;
     /* A min-height rather than a height, so the field grows with larger text. */
@@ -834,15 +834,15 @@ onBeforeUnmount(() => {
     --select--icon--size: 0.875rem;
     --select--arrow--size: 0.875rem;
     --select--radius: 0.375rem;
-    --select--chip--height: 1.125rem;
-    --select--chip--padding: 0.25rem;
-    --select--chip--font-size: 0.6875rem;
+    --select--tag--height: 1.125rem;
+    --select--tag--padding: 0.25rem;
+    --select--tag--font-size: 0.6875rem;
   }
   .select[data-size="sm"] {
     --select--height: 2rem;
     --select--padding: 0.625rem;
     --select--radius: 0.375rem;
-    --select--chip--height: 1.25rem;
+    --select--tag--height: 1.25rem;
   }
   .select[data-size="lg"] {
     --select--height: 2.5rem;
@@ -850,8 +850,8 @@ onBeforeUnmount(() => {
     --select--font-size: 1rem;
     --select--icon--size: 1.25rem;
     --select--arrow--size: 1.25rem;
-    --select--chip--height: 1.75rem;
-    --select--chip--font-size: 0.875rem;
+    --select--tag--height: 1.75rem;
+    --select--tag--font-size: 0.875rem;
   }
   .select[data-size="xl"] {
     --select--height: 3rem;
@@ -860,8 +860,8 @@ onBeforeUnmount(() => {
     --select--icon--size: 1.25rem;
     --select--arrow--size: 1.25rem;
     --select--radius: 0.75rem;
-    --select--chip--height: 2rem;
-    --select--chip--font-size: 0.875rem;
+    --select--tag--height: 2rem;
+    --select--tag--font-size: 0.875rem;
   }
 
   /* The <select>, which fills the field, see-through and out of reach in the custom
@@ -890,7 +890,7 @@ onBeforeUnmount(() => {
     color: var(--select--value--placeholder-color);
   }
 
-  /* The control. It shares the field's one cell, under the chips and the icons. */
+  /* The control. It shares the field's one cell, under the tags and the icons. */
   .select > button[role="combobox"] {
     grid-area: 1 / 1;
     position: relative;
@@ -922,8 +922,8 @@ onBeforeUnmount(() => {
   .select > button > [data-slot="value"][data-placeholder] {
     color: var(--select--value--placeholder-color);
   }
-  /* The value the combobox reads out, while the chips show it. */
-  .select > button > [data-slot="value"][data-chips] {
+  /* The value the combobox reads out, while the tags show it. */
+  .select > button > [data-slot="value"][data-tags] {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -962,9 +962,9 @@ onBeforeUnmount(() => {
     rotate: 180deg;
   }
 
-  /* The chips sit in the control's cell. Only their remove buttons take a press of their
-     own, so a press on a chip's label, or between chips, opens the panel. */
-  .select > [data-slot="chips"] {
+  /* The tags sit in the control's cell. Only their remove buttons take a press of their
+     own, so a press on a tag's label, or between tags, opens the panel. */
+  .select > [data-slot="tags"] {
     grid-area: 1 / 1;
     display: flex;
     flex-wrap: wrap;
@@ -976,26 +976,26 @@ onBeforeUnmount(() => {
     padding-inline: calc(var(--select--padding) / 2) var(--select--padding-end);
     pointer-events: none;
   }
-  .select:has(> [data-slot="leading"]) > [data-slot="chips"] {
+  .select:has(> [data-slot="leading"]) > [data-slot="tags"] {
     padding-inline-start: var(--select--padding-start);
   }
-  .select [data-slot="chip"] {
+  .select [data-slot="tag"] {
     display: inline-flex;
     align-items: center;
     box-sizing: border-box;
     max-width: 100%;
-    min-height: var(--select--chip--height);
-    padding-inline: var(--select--chip--padding) 0;
-    border-radius: var(--select--chip--radius);
-    background-color: var(--select--chip--background);
-    color: var(--select--chip--color);
-    font-size: var(--select--chip--font-size);
+    min-height: var(--select--tag--height);
+    padding-inline: var(--select--tag--padding) 0;
+    border-radius: var(--select--tag--radius);
+    background-color: var(--select--tag--background);
+    color: var(--select--tag--color);
+    font-size: var(--select--tag--font-size);
     pointer-events: auto;
   }
-  .select [data-slot="chip"]:not(:has(> [data-slot="chip-remove"])) {
-    padding-inline-end: var(--select--chip--padding);
+  .select [data-slot="tag"]:not(:has(> [data-slot="tag-remove"])) {
+    padding-inline-end: var(--select--tag--padding);
   }
-  /* An option's icon, in the panel, the field and its chip, at the size of the text around it. */
+  /* An option's icon, in the panel, the field and its tag, at the size of the text around it. */
   .select [data-slot="icon"] {
     display: inline-flex;
     flex-shrink: 0;
@@ -1008,26 +1008,26 @@ onBeforeUnmount(() => {
   .select > button > [data-slot="icon"] {
     margin-inline-end: var(--select--gap);
   }
-  .select [data-slot="chip"] > [data-slot="icon"] {
+  .select [data-slot="tag"] > [data-slot="icon"] {
     margin-inline-end: 0.25rem;
   }
-  .select [data-slot="chip"] > [data-slot="icon"] > :slotted(svg) {
-    width: var(--select--chip--icon--size);
-    height: var(--select--chip--icon--size);
+  .select [data-slot="tag"] > [data-slot="icon"] > :slotted(svg) {
+    width: var(--select--tag--icon--size);
+    height: var(--select--tag--icon--size);
   }
-  .select [data-slot="chip-label"] {
+  .select [data-slot="tag-label"] {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .select [data-slot="chip-remove"] {
+  .select [data-slot="tag-remove"] {
     position: relative;
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: var(--select--chip--height);
-    height: var(--select--chip--height);
+    width: var(--select--tag--height);
+    height: var(--select--tag--height);
     margin: 0;
     padding: 0;
     border: 0;
@@ -1036,17 +1036,17 @@ onBeforeUnmount(() => {
     color: inherit;
     cursor: pointer;
   }
-  .select [data-slot="chip-remove"] svg {
+  .select [data-slot="tag-remove"] svg {
     width: 0.75em;
     height: 0.75em;
   }
-  /* At least 24 × 24px to press, whatever the chip's size. */
-  .select [data-slot="chip-remove"]::before {
+  /* At least 24 × 24px to press, whatever the tag's size. */
+  .select [data-slot="tag-remove"]::before {
     content: "";
     position: absolute;
-    inset: min(0px, (var(--select--chip--height) - 1.5rem) / 2);
+    inset: min(0px, (var(--select--tag--height) - 1.5rem) / 2);
   }
-  .select [data-slot="chip-remove"]:focus-visible {
+  .select [data-slot="tag-remove"]:focus-visible {
     outline: 2px solid var(--color--focus);
     outline-offset: -2px;
   }
@@ -1182,24 +1182,24 @@ onBeforeUnmount(() => {
     .select [data-slot="option"] {
       min-height: 2.75rem;
     }
-    .select [data-slot="chip-remove"]::before {
-      inset-block: min(0px, (var(--select--chip--height) - 2.75rem) / 2);
+    .select [data-slot="tag-remove"]::before {
+      inset-block: min(0px, (var(--select--tag--height) - 2.75rem) / 2);
     }
-    /* Rows of chips sit far enough apart that those targets don't cover each other. */
-    .select > [data-slot="chips"] {
-      row-gap: max(0.25rem, 2.75rem - var(--select--chip--height));
+    /* Rows of tags sit far enough apart that those targets don't cover each other. */
+    .select > [data-slot="tags"] {
+      row-gap: max(0.25rem, 2.75rem - var(--select--tag--height));
     }
   }
 
   /* The native rendering, where the primary pointer is coarse, the same query the script
-     uses, so the two can't disagree. The <select> paints and the control and chips don't. */
+     uses, so the two can't disagree. The <select> paints and the control and tags don't. */
   @media (pointer: coarse) {
     .select[data-native] > select {
       opacity: 1;
       pointer-events: auto;
     }
     .select[data-native] > button[role="combobox"],
-    .select[data-native] > [data-slot="chips"] {
+    .select[data-native] > [data-slot="tags"] {
       display: none;
     }
   }
@@ -1232,7 +1232,7 @@ onBeforeUnmount(() => {
   @media (forced-colors: active) {
     .select:has(> [data-slot="control"]:focus-visible),
     .select [data-slot="option"][data-active="true"],
-    .select [data-slot="chip-remove"]:focus-visible {
+    .select [data-slot="tag-remove"]:focus-visible {
       outline-color: Highlight;
     }
     .select:has(> [data-slot="control"]:disabled) {
@@ -1243,7 +1243,7 @@ onBeforeUnmount(() => {
     .select > [data-slot="panel"] {
       border-color: CanvasText;
     }
-    .select [data-slot="chip"] {
+    .select [data-slot="tag"] {
       border: 1px solid CanvasText;
     }
     .select [data-slot="option"][aria-disabled="true"] {
@@ -1745,9 +1745,9 @@ describe("Select", () => {
       expect(trigger()).toHaveTextContent("4 selected");
     });
 
-    it("shows a chip per value, with a remove button named after it", async () => {
+    it("shows a tag per value, with a remove button named after it", async () => {
       await page({ ...several, value: ["fr", "es"] });
-      expect(screen.getByRole("button", { name: "Remove France" })).toHaveAttribute("data-slot", "chip-remove");
+      expect(screen.getByRole("button", { name: "Remove France" })).toHaveAttribute("data-slot", "tag-remove");
       expect(screen.getByRole("button", { name: "Remove Spain" })).toBeInTheDocument();
     });
 
@@ -2149,7 +2149,7 @@ describe("Select", () => {
   });
 
   describe("slots", () => {
-    it("fills the value, option, chip, group label, separator, leading and arrow slots", async () => {
+    it("fills the value, option, tag, group label, separator, leading and arrow slots", async () => {
       const user = userEvent.setup();
       render({
         render: () =>
@@ -2162,7 +2162,7 @@ describe("Select", () => {
                 arrow: () => h("i", { "data-testid": "arrow" }),
                 value: ({ selected }: { selected: { label: string }[] }) => `Picked ${selected.length}`,
                 option: ({ option }: { option: { label: string } }) => `Fruit: ${option.label}`,
-                chip: ({ option }: { option: { label: string } }) => `Chip: ${option.label}`,
+                tag: ({ option }: { option: { label: string } }) => `Tag: ${option.label}`,
                 "group-label": ({ label }: { label: string }) => `Group: ${label}`,
                 separator: () => h("i", { "data-testid": "separator" }),
               },
@@ -2175,7 +2175,7 @@ describe("Select", () => {
       expect(screen.getByTestId("leading")).toBeInTheDocument();
       expect(screen.getByTestId("arrow")).toBeInTheDocument();
       expect(screen.getByTestId("separator")).toBeInTheDocument();
-      expect(document.querySelector('[data-slot="chip"]')).toHaveTextContent("Chip: Apple");
+      expect(document.querySelector('[data-slot="tag"]')).toHaveTextContent("Tag: Apple");
       expect(document.querySelector('[data-slot="group-label"]')).toHaveTextContent("Group: Citrus");
       expect(within(listbox()).getByRole("option", { name: "Fruit: Lemon", hidden: true })).toBeInTheDocument();
     });
@@ -2260,11 +2260,11 @@ describe("Select", () => {
       expect(within(spain).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
     });
 
-    it("shows each picked option's icon in its chip", async () => {
+    it("shows each picked option's icon in its tag", async () => {
       await withIcons({ multiple: true, value: ["fr", "es"] });
-      const chips = document.querySelectorAll('[data-slot="chip"]');
-      expect(within(chips[0] as HTMLElement).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
-      expect(within(chips[1] as HTMLElement).getByTestId("icon-es")).toBeInTheDocument();
+      const tags = document.querySelectorAll('[data-slot="tag"]');
+      expect(within(tags[0] as HTMLElement).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(tags[1] as HTMLElement).getByTestId("icon-es")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Remove France" })).toBeInTheDocument();
     });
 

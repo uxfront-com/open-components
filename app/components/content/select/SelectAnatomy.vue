@@ -4,7 +4,7 @@ import "~/reference/button/tokens.css";
 /**
  * The parts of a Select, numbered on a picture of the field with its panel drawn open under
  * it, the same as CardAnatomy on the Card page: each number sits beside its part, with a
- * line to it, and each part is outlined. It's a picture, since a real panel opens in the top
+ * line to it, and the parts whose edges you can't see are outlined. It's a picture, since a real panel opens in the top
  * layer. The list the numbers point to is the default slot, so the page's markdown keeps it.
  */
 </script>
@@ -20,16 +20,16 @@ import "~/reference/button/tokens.css";
             <UIcon name="i-lucide-tag" mode="svg" />
             <span class="anatomy-marker anatomy-marker-up">2</span>
           </span>
-          <span class="anatomy-part anatomy-chip">
+          <span class="anatomy-part anatomy-tag">
             <span class="anatomy-part anatomy-icon">
               <UIcon name="i-lucide-bug" mode="svg" />
               <span class="anatomy-marker anatomy-marker-up">3</span>
             </span>
             Bug
             <UIcon name="i-lucide-x" mode="svg" class="anatomy-remove" />
-            <span class="anatomy-marker anatomy-marker-up anatomy-marker-chip">4</span>
+            <span class="anatomy-marker anatomy-marker-up anatomy-marker-tag">4</span>
           </span>
-          <span class="anatomy-part anatomy-value">
+          <span class="anatomy-part anatomy-outlined anatomy-value">
             Docs
             <span class="anatomy-marker anatomy-marker-up">5</span>
           </span>
@@ -40,11 +40,11 @@ import "~/reference/button/tokens.css";
         </div>
         <div class="anatomy-panel">
           <span class="anatomy-marker anatomy-marker-side">7</span>
-          <span class="anatomy-part anatomy-group">
+          <span class="anatomy-part anatomy-outlined anatomy-group">
             Type
             <span class="anatomy-marker anatomy-marker-row">8</span>
           </span>
-          <span class="anatomy-part anatomy-option anatomy-option-picked">
+          <span class="anatomy-part anatomy-outlined anatomy-option anatomy-option-picked">
             <UIcon name="i-lucide-bug" mode="svg" class="anatomy-option-icon" />
             <span class="anatomy-option-label">Bug</span>
             <UIcon name="i-lucide-check" mode="svg" class="anatomy-option-icon" />
@@ -100,9 +100,8 @@ import "~/reference/button/tokens.css";
 
 /* Every number sits beside what it names, and a line joins the two. */
 .anatomy-stage {
-  /* How far a number sits from what it names, and a part's outline from the part. */
+  /* How far a number sits from what it names. */
   --anatomy--distance: 0.625rem;
-  --anatomy--outline: 2px;
   /* The field's height, which the numbers above it reach across. */
   --anatomy--field: 2.25rem;
 
@@ -123,8 +122,17 @@ import "~/reference/button/tokens.css";
   position: absolute;
   background: var(--ui-bg-inverted);
 }
+/* A part that shows its own edges, like an icon, a tag or a rule, needs no outline, and its line
+   ends on it. Only the parts whose extent you can't see, the value, the group label and an
+   option, are outlined, and their lines end on the outline. */
 .anatomy-part {
+  --anatomy--outline: 0px;
+
   position: relative;
+}
+.anatomy-outlined {
+  --anatomy--outline: 2px;
+
   outline: 1px dashed color-mix(in srgb, var(--color--neutral-text) 70%, transparent);
   outline-offset: var(--anatomy--outline);
 }
@@ -158,7 +166,7 @@ import "~/reference/button/tokens.css";
 .anatomy-arrow {
   margin-inline-start: auto;
 }
-.anatomy-chip {
+.anatomy-tag {
   --anatomy--height: 1.5rem;
 
   display: inline-flex;
@@ -174,7 +182,6 @@ import "~/reference/button/tokens.css";
   --anatomy--height: 0.75rem;
 
   display: inline-flex;
-  outline-offset: 1px;
 }
 .anatomy-icon svg,
 .anatomy-remove {
@@ -253,8 +260,8 @@ import "~/reference/button/tokens.css";
   width: 1px;
   height: calc(var(--anatomy--reach) - var(--anatomy--outline));
 }
-/* The chip's number sits over its label, clear of its icon's. */
-.anatomy-marker-chip {
+/* The tag's number sits over its label, clear of its icon's. */
+.anatomy-marker-tag {
   left: 75%;
 }
 
