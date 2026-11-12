@@ -84,6 +84,12 @@
               "uniqueItems": true,
               "items": { "$ref": "#/$defs/tokenPath" }
             },
+            "shared": {
+              "description": "Another component's variables it reads, for the parts they share, as in `--select--option--radius`. Its root sets them too.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/tokenPath" }
+            },
             "layer": {
               "description": "The cascade layer it styles itself in, out of Tailwind's order: theme, base, components and utilities.",
               "enum": ["theme", "base", "components", "utilities"]
