@@ -5,6 +5,7 @@ import { createSSRApp, h, nextTick, ref } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
+import Select from "../select/Select.vue";
 import type { SelectItem } from "../select/listbox";
 import Combobox, { type ComboboxProps } from "./Combobox.vue";
 
@@ -86,11 +87,13 @@ async function page(props: Props = {}, field: Record<string, unknown> = {}) {
 
 const form = () => screen.getByRole<HTMLFormElement>("form", { name: "Shipping" });
 const input = () => screen.getByRole<HTMLInputElement>("combobox", { name: "Country" });
-const listbox = () => document.querySelector<HTMLElement>('[role="listbox"]')!;
+// The panel the text field controls, which is how assistive technologies find it. A
+// multiple <select> is a listbox too, so the role alone doesn't tell them apart.
+const listbox = () => document.getElementById(input().getAttribute("aria-controls")!)!;
 const options = () => within(listbox()).queryAllByRole("option", { hidden: true }).map((el) => el.textContent?.trim());
 const option = (name: string) => within(listbox()).getByRole("option", { name, hidden: true });
 const submitted = () => new FormData(form()).getAll("country");
-const announcements = () => document.querySelector('[role="status"]')?.textContent ?? "";
+const announcements = () => screen.queryByRole("status")?.textContent ?? "";
 const highlighted = () => {
   const id = input().getAttribute("aria-activedescendant");
   return id ? document.getElementById(id)?.textContent?.trim() : undefined;
@@ -158,9 +161,31 @@ describe("Combobox", () => {
       const user = userEvent.setup();
       await page();
       await user.click(input());
-      await user.keyboard("new z{Home}N{End}x");
-      expect(input()).toHaveValue("Nnew zx");
+      await user.keyboard("new z{Home}N{End}x{ArrowLeft}{ArrowLeft}y{ArrowRight}w");
+      expect(input()).toHaveValue("Nnew yzwx");
       expect(highlighted()).toBeUndefined();
+    });
+
+    it("drops the highlight as soon as people type, so Enter never picks what was highlighted before", async () => {
+      const user = userEvent.setup();
+      await page();
+      await user.click(input());
+      await user.keyboard("{ArrowDown}");
+      expect(highlighted()).toBe("France");
+      await user.keyboard("r");
+      expect(highlighted()).toBeUndefined();
+      await user.keyboard("{Enter}");
+      expect(submitted()).toEqual([""]);
+      expect(input()).toHaveValue("");
+    });
+
+    it("points aria-activedescendant at nothing once the panel closes", async () => {
+      const user = userEvent.setup();
+      await page();
+      await user.click(input());
+      await user.keyboard("{ArrowDown}{Escape}");
+      expect(input()).toHaveAttribute("aria-expanded", "false");
+      expect(input()).not.toHaveAttribute("aria-activedescendant");
     });
 
     it("highlights nothing as people type, so Enter keeps what they typed rather than the first match", async () => {
@@ -242,6 +267,17 @@ describe("Combobox", () => {
       expect(input()).toHaveAttribute("aria-expanded", "false");
     });
 
+    it("keeps what people toggled on Tab with multiple, rather than picking the highlighted option", async () => {
+      const user = userEvent.setup();
+      await page({ multiple: true });
+      await user.click(input());
+      await user.keyboard("{ArrowDown}");
+      expect(highlighted()).toBe("France");
+      await user.tab();
+      expect(submitted()).toEqual([]);
+      expect(input()).toHaveAttribute("aria-expanded", "false");
+    });
+
     it("closes with Escape and keeps the text, then clears the text and the value with a second Escape", async () => {
       const user = userEvent.setup();
       await page({ value: "fr" });
@@ -288,6 +324,8 @@ describe("Combobox", () => {
       await page();
       input().focus();
       input().dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", isComposing: true, bubbles: true }));
+      // Safari's Enter that ends a composition.
+      input().dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", keyCode: 229, bubbles: true }));
       await nextTick();
       expect(input()).toHaveAttribute("aria-expanded", "false");
     });
@@ -341,8 +379,7 @@ describe("Combobox", () => {
       await page();
       await user.click(input());
       await user.type(input(), "xyz");
-      const empty = listbox().querySelector('[data-slot="empty"]');
-      expect(empty).toHaveTextContent("No results");
+      const empty = within(listbox()).getByText("No results");
       expect(empty).toHaveAttribute("aria-hidden", "true");
       expect(options()).toEqual([]);
     });
@@ -406,6 +443,51 @@ describe("Combobox", () => {
       expect(submitted()).toEqual([""]);
     });
 
+    it("keeps the picked option when people leave without changing its text, even when another has the same label", async () => {
+      const user = userEvent.setup();
+      const others: SelectItem[] = [
+        { label: "Europe", options: [{ value: "eu-other", label: "Other" }] },
+        { label: "Asia", options: [{ value: "as-other", label: "Other" }] },
+      ];
+      await page({ options: others });
+      await user.click(input());
+      await user.keyboard("{ArrowUp}{Enter}");
+      expect(submitted()).toEqual(["as-other"]);
+      await user.tab();
+      expect(submitted()).toEqual(["as-other"]);
+      await user.click(input());
+      await user.tab();
+      expect(submitted()).toEqual(["as-other"]);
+    });
+
+    it("keeps a picked disabled option when people leave without changing its text, with allowCustomValue", async () => {
+      const user = userEvent.setup();
+      await page({ value: "de", allowCustomValue: true });
+      expect(input()).toHaveValue("Germany");
+      await user.click(input());
+      await user.tab();
+      expect(submitted()).toEqual(["de"]);
+    });
+
+    it("never turns text that's an option's value, but not its label, into that option", async () => {
+      const user = userEvent.setup();
+      await page({ allowCustomValue: true });
+      await user.click(input());
+      await user.type(input(), "es");
+      await user.tab();
+      expect(submitted()).toEqual([""]);
+      expect(input()).toHaveValue("");
+    });
+
+    it("doesn't offer to create text that's an option's value", async () => {
+      const user = userEvent.setup();
+      await page({ creatable: true, multiple: true });
+      await user.click(input());
+      await user.type(input(), "es");
+      expect(options()).toEqual([]);
+      expect(within(listbox()).getByText("No results")).toBeInTheDocument();
+    });
+
     it("reverts unmatched text with Enter on a closed panel, before the form submits", async () => {
       const user = userEvent.setup();
       const values: unknown[] = [];
@@ -444,6 +526,43 @@ describe("Combobox", () => {
       await user.type(input(), "Lyon");
       await user.keyboard("{Escape}{Enter}");
       await waitFor(() => expect(values).toEqual(["Lyon"]));
+    });
+
+    it.each([
+      ["typed text, with allowCustomValue", { allowCustomValue: true }, "fr", "Lyon", ["Lyon"]],
+      ["a label, with multiple", { multiple: true }, ["fr"], "Spain", ["fr", "es"]],
+      ["another option's label", {}, "es", "France", ["fr"]],
+    ])("submits the new value with Enter on a closed panel when its value is bound, after %s", async (_, props, start, typed, expected) => {
+      const user = userEvent.setup();
+      const value = ref<string | string[] | undefined>(start);
+      const values: unknown[] = [];
+      const submit = vi.fn((event: Event) => {
+        event.preventDefault();
+        values.push(new FormData(event.target as HTMLFormElement).getAll("country"));
+      });
+      render({
+        render: () =>
+          h("form", { "aria-label": "Shipping", onSubmit: submit }, [
+            h(Field, { label: "Country" }, () =>
+              h(Combobox, {
+                id: "country",
+                name: "country",
+                options: countries,
+                ...props,
+                modelValue: value.value,
+                "onUpdate:modelValue": (next?: string | string[]) => (value.value = next),
+              }),
+            ),
+            h("button", { type: "submit" }, "Save"),
+          ]),
+      });
+      await nextTick();
+      await user.click(input());
+      await user.clear(input());
+      await user.type(input(), typed);
+      await user.keyboard("{Escape}{Enter}");
+      await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+      expect(values).toEqual([expected]);
     });
 
     it("offers a create option with creatable, which fires create and becomes the value", async () => {
@@ -605,6 +724,7 @@ describe("Combobox", () => {
       await user.keyboard("{ArrowDown}");
       expect(input()).toHaveAttribute("aria-expanded", "false");
       expect(screen.queryByRole("button", { name: "Remove France" })).toBeNull();
+      await user.keyboard("{Backspace}");
       expect(submitted()).toEqual(["fr"]);
     });
 
@@ -636,13 +756,13 @@ describe("Combobox", () => {
 
     it("fires the select's input and change events when the value changes, not on every key", async () => {
       const user = userEvent.setup();
-      const change = vi.fn();
-      await page({ onChange: change });
+      const fired: string[] = [];
+      await page({ onChange: () => fired.push("change"), onInput: () => fired.push("input") });
       await user.click(input());
       await user.type(input(), "sp");
-      expect(change).not.toHaveBeenCalled();
+      expect(fired).toEqual([]);
       await user.keyboard("{ArrowDown}{Enter}");
-      await waitFor(() => expect(change).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(fired).toEqual(["input", "change"]));
     });
 
     it("puts classes on the root, the name on the select, and id, ARIA and autocomplete on the text field", async () => {
@@ -652,6 +772,20 @@ describe("Combobox", () => {
       expect(input()).toHaveAttribute("id", "country");
       expect(input()).toHaveAttribute("autocomplete", "country-name");
       expect(input()).toHaveAttribute("aria-describedby", expect.stringContaining("help"));
+    });
+
+    it("takes every name and message it reads out from a prop, for another language", async () => {
+      const user = userEvent.setup();
+      await page({
+        multiple: true,
+        value: ["fr"],
+        toggleLabel: "Suggestions de pays",
+        removeLabel: (label: string) => `Retirer ${label}`,
+        removedLabel: (label: string) => `${label} retiré`,
+      });
+      expect(screen.getByRole("button", { name: "Suggestions de pays", hidden: true })).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Retirer France" }));
+      expect(announcements()).toBe("France retiré");
     });
 
     it("turns the browser's own suggestions off by default, since they'd cover the panel", async () => {
@@ -686,8 +820,8 @@ describe("Combobox", () => {
       expect(screen.getByTestId("arrow")).toBeInTheDocument();
       expect(screen.getByTestId("separator")).toBeInTheDocument();
       expect(screen.getAllByTestId("icon").length).toBeGreaterThan(1);
-      expect(document.querySelector('[data-slot="tag"]')).toHaveTextContent("Tag: France");
-      expect(document.querySelector('[data-slot="group-label"]')).toHaveTextContent("Group: Europe");
+      expect(screen.getByText("Tag: France")).toBeInTheDocument();
+      expect(within(listbox()).getByRole("group", { name: "Group: Europe", hidden: true })).toBeInTheDocument();
       expect(option("Place: Spain")).toBeInTheDocument();
     });
 
@@ -747,6 +881,29 @@ describe("Combobox", () => {
       const panel = await openOn({ top: 450, bottom: 486 }, 100);
       expect(panel.style.top).toBe("486px");
       expect(panel.style.maxHeight).toBe("");
+    });
+
+    it("fits the panel when the keyboard comes up after it opened", async () => {
+      viewport(844);
+      const panel = await openOn({ top: 300, bottom: 336 }, 256);
+      expect(panel).not.toHaveAttribute("data-fit");
+      (window.visualViewport as unknown as { height: number }).height = 400;
+      window.visualViewport!.dispatchEvent(new Event("resize"));
+      expect(panel).toHaveAttribute("data-fit", "visual");
+      expect(panel.style.top).toBe(`${300 - 8 - 256}px`);
+    });
+
+    it("leaves the Select's placement alone, since only a text field brings up a keyboard", async () => {
+      const user = userEvent.setup();
+      viewport(400);
+      vi.stubGlobal("CSS", { supports: () => true });
+      render({ render: () => h(Field, { label: "Size" }, () => h(Select, { id: "size", options: countries, nativeOnTouch: false })) });
+      await nextTick();
+      await user.click(screen.getByRole("combobox", { name: "Size" }));
+      await nextTick();
+      const panel = screen.getByRole("listbox", { hidden: true });
+      expect(panel).not.toHaveAttribute("data-fit");
+      expect(panel.style.top).toBe("");
     });
 
     it("goes back to anchor positioning once the keyboard closes", async () => {
@@ -809,7 +966,10 @@ describe("Combobox", () => {
       await user.keyboard("{ArrowDown}");
       await user.pointer({ keys: "[MouseLeft]", target: input() });
       expect(input()).toHaveAttribute("aria-expanded", "true");
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      // A press on something that doesn't take focus, so the text keeps it.
+      document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      await nextTick();
+      expect(input()).toHaveFocus();
       expect(input()).toHaveAttribute("aria-expanded", "false");
     });
   });

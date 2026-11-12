@@ -23,8 +23,8 @@ function add(text: string) {
 <template>
   <ComboboxExample>
     <div class="w-full max-w-xs">
-      <Field v-if="mode === 'custom'" id="custom-city" label="Country or region" hint="Type one that isn't in the list, and it's kept.">
-        <Combobox v-model="value" name="custom-city" :options="nations" allow-custom-value placeholder="Type a country" />
+      <Field v-if="mode === 'custom'" id="custom-destination" label="Destination" hint="Type one that isn't in the list, and it's kept.">
+        <Combobox v-model="value" name="custom-destination" :options="nations" allow-custom-value placeholder="Type a country or a city" />
       </Field>
       <Field v-else id="creatable-topics" label="Topics">
         <Combobox v-model="value" name="creatable-topics" multiple creatable :options="list" placeholder="Type a topic" @create="add" />

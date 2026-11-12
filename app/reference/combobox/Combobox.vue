@@ -179,8 +179,12 @@ const { sections, flat, panelId, optionId, groupId, step, firstEnabled, lastEnab
   active,
 });
 
-// The create option, after the matches, while the text isn't an option's label or a value.
-const creating = computed(() => (creatable && query.value && !byLabel(query.value) && !values.value.includes(query.value) ? query.value : ""));
+// The create option, after the matches, while the text isn't an option's label, an option's
+// value, which would submit as that option, or a value already picked.
+const creating = computed(() => {
+  const q = query.value;
+  return creatable && q && !byLabel(q) && !byValue.value.has(q) && !values.value.includes(q) ? q : "";
+});
 const createIndex = () => flat.value.length;
 const onCreate = () => !!creating.value && active.value === createIndex();
 const create = computed(
@@ -251,9 +255,12 @@ function commit(next: string | string[]) {
     select.value?.dispatchEvent(new Event("change", { bubbles: true }));
   });
 }
+// Whether the value changed, from what was decided here, since a bound value only changes
+// once your framework renders it again.
 function setValue(next: string[]) {
-  if (next.join() === values.value.join()) return;
+  if (next.join() === values.value.join()) return false;
   commit(multiple ? next : (next[0] ?? ""));
+  return true;
 }
 
 function pickOption(option: SelectOption) {
@@ -287,20 +294,31 @@ function pickCreate() {
 
 // What happens to the text when people leave the field, press Tab, or Enter with nothing
 // highlighted. Text that's an option's label picks it, kept text becomes the value where a
-// prop allows it, and anything else goes back to what the field showed.
+// prop allows it, and anything else goes back to what the field showed. It returns whether
+// the value changed.
 function commitText() {
   const typed = text.value.trim();
   if (multiple) {
-    const option = typed && byLabel(typed);
-    if (option && !isPicked(option)) setValue([...values.value, option.value]);
+    const option = typed ? byLabel(typed) : undefined;
     text.value = "";
-    return;
+    return !!option && !isPicked(option) && setValue([...values.value, option.value]);
   }
-  const option = typed && byLabel(typed);
-  if (!typed) setValue([]);
-  else if (option) setValue([option.value]);
-  else if (allowCustomValue) setValue([typed]);
-  text.value = display.value;
+  // Text people didn't change keeps the value it shows, even when another option has the
+  // same label, or the picked one is disabled.
+  if (fold(typed) === fold(display.value)) {
+    text.value = display.value;
+    return false;
+  }
+  const option = typed ? byLabel(typed) : undefined;
+  let next = values.value;
+  let shown = display.value;
+  if (!typed) [next, shown] = [[], ""];
+  else if (option) [next, shown] = [[option.value], option.label];
+  // Text that's an option's value, but not its label, would submit as that option, so it
+  // isn't kept, and goes back like any other text.
+  else if (allowCustomValue && !byValue.value.has(typed)) [next, shown] = [[typed], typed];
+  text.value = shown;
+  return setValue(next);
 }
 
 async function remove(option: SelectOption, moveFocus = true) {
@@ -364,6 +382,9 @@ function onChange() {
   if (document.activeElement !== control.value) commitText();
 }
 
+// The fields that keep Enter from submitting a form without a submit button, once there's more than one.
+const BLOCKING = ["text", "search", "url", "tel", "email", "password", "date", "month", "week", "time", "datetime-local", "number"];
+
 // What `Enter` does once the value has to change first. Submitting waits for the <select>
 // to render the new value, then goes through the form's default button, as it would have.
 async function submitAfter() {
@@ -372,6 +393,10 @@ async function submitAfter() {
   if (!form) return;
   const submitter = Array.from(form.elements).find((el): el is HTMLButtonElement => (el as HTMLButtonElement).type === "submit");
   if (submitter?.disabled) return;
+  // Without a submit button, Enter only submits a form with one text field, as the HTML
+  // Standard's implicit submission says.
+  const fields = Array.from(form.elements).filter((el) => el instanceof HTMLInputElement && BLOCKING.includes(el.type));
+  if (!submitter && fields.length > 1) return;
   form.requestSubmit(submitter);
 }
 
@@ -379,7 +404,8 @@ async function submitAfter() {
 // the text field, and aria-activedescendant says which option is highlighted. Letters,
 // Space, Home, End and the side arrows edit the text, as in any text field.
 function onKeydown(event: KeyboardEvent) {
-  if (readonly || event.isComposing) return;
+  // Safari ends a composition with an Enter whose keyCode is 229 and isComposing false.
+  if (readonly || event.isComposing || event.keyCode === 229) return;
   const { key } = event;
 
   if (key === "ArrowDown") {
@@ -407,9 +433,7 @@ function onKeydown(event: KeyboardEvent) {
         hide();
       }
     } else {
-      const before = values.value.join();
-      commitText();
-      if (values.value.join() !== before) {
+      if (commitText()) {
         event.preventDefault();
         submitAfter();
       }
