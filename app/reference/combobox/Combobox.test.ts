@@ -565,6 +565,29 @@ describe("Combobox", () => {
       expect(values).toEqual([expected]);
     });
 
+    it.each([
+      ["submits a form whose only text field it is", false, 1],
+      ["doesn't submit a form with another text field", true, 0],
+    ])("with no submit button, Enter on a closed panel %s, as implicit submission does", async (_, another, times) => {
+      const user = userEvent.setup();
+      const submit = vi.fn((event: Event) => event.preventDefault());
+      render({
+        render: () =>
+          h("form", { "aria-label": "Shipping", onSubmit: submit }, [
+            h(Field, { label: "Country" }, () => h(Combobox, { id: "country", name: "country", options: countries, allowCustomValue: true })),
+            another ? h("input", { type: "text", name: "city", "aria-label": "City" }) : null,
+          ]),
+      });
+      await nextTick();
+      await user.click(input());
+      await user.type(input(), "Lyon");
+      await user.keyboard("{Escape}{Enter}");
+      await nextTick();
+      await nextTick();
+      expect(submitted()).toEqual(["Lyon"]);
+      expect(submit).toHaveBeenCalledTimes(times);
+    });
+
     it("offers a create option with creatable, which fires create and becomes the value", async () => {
       const user = userEvent.setup();
       const create = vi.fn();
