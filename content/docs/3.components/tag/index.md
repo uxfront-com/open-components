@@ -51,7 +51,7 @@ A tag says what something is about, like a topic, a category or a value someone 
 
 Here's every rule in one place, along with where it comes from and how to check it. A tag meets the standard when it meets every **must**, and each **should** is expected unless you have a good reason not to follow it.
 
-The scope says who meets a rule. **Component** rules are met by the Tag itself, so they're the ones to check when you build or review one. **Usage** rules are met by the pages that use it, like keeping labels short, so they're the ones to check when you review a screen. **Both** rules need the two to work together, like the remove button's name: the Tag builds it from the label, as long as you give it one.
+The scope says who meets a rule. **Component** rules are met by the Tag itself, so they're the ones to check when you build or review one. **Usage** rules are met by the screens that use it, like keeping labels short, so they're the ones to check when you review a screen. **Both** rules need the two to work together, like the remove button's name: the Tag builds it from the label, as long as you give it one.
 
 The basis says where a rule comes from. Seven of the rules rest on **WCAG** 2.2, which we follow at level AA, and name the success criteria behind them, and a few come from **HTML** and **WAI-ARIA**. The rest are **Open Components** rules, which are our own, like keeping a status out of a tag. Where a rule goes further than WCAG asks at level AA, its basis says so: `tag/target-size` names level **AAA** for 44px on touch screens, and a rule that asks for more than its criterion says **beyond**, like a link tag that looks different from a plain one, where WCAG would let colour alone tell them apart.
 
