@@ -99,7 +99,8 @@ onMounted(() => {
 
 @layer components {
   .tag {
-    /* The same values as the Select's tags, size for size. */
+    /* The same sizes as the Select's tags. The text colour is set here, since a tag on its
+       own isn't inside a field to inherit it from. */
     --tag--height: 1.5rem;
     --tag--padding: 0.5rem;
     --tag--gap: 0.25rem;

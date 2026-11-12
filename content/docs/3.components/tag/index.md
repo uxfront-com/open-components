@@ -41,7 +41,7 @@ A tag says what something is about, like a topic, a category or a value someone 
 | Element  | `<span>`, with an `<a href>` in its label when it's a link and a `<button>` after it when it's removable |
 | Role     | None of its own. Its link is a `link`, and its remove button a `button`                               |
 | Name     | Its text. The remove button is named after it, like "Remove Bug"                                      |
-| Keyboard | `Tab` to its link, then to its remove button, and `Enter` or `Space` to press them                    |
+| Keyboard | `Tab` to its link, then to its remove button, `Enter` to follow its link, and `Enter` or `Space` to press its remove button |
 | States   | Hover and focus on its link and its remove button, disabled and read-only                             |
 | Parts    | A leading icon, the label and a remove button, of which only the label is always there                 |
 | Pattern  | None in the APG, since a link and a button cover it                                                   |
@@ -53,7 +53,7 @@ Here's every rule in one place, along with where it comes from and how to check 
 
 The scope says who meets a rule. **Component** rules are met by the Tag itself, so they're the ones to check when you build or review one. **Usage** rules are met by the pages that use it, like keeping labels short, so they're the ones to check when you review a screen. **Both** rules need the two to work together, like the remove button's name: the Tag builds it from the label, as long as you give it one.
 
-The basis says where a rule comes from. Seven of the rules rest on **WCAG** 2.2, which we follow at level AA, and name the success criteria behind them, and a few come from **HTML** and **WAI-ARIA**. The rest are **Open Components** rules, which are our own, like keeping a status out of a tag. Where a rule asks for more than its criterion, its basis says **beyond**, like a link tag that looks different from a plain one, where WCAG would let colour alone tell them apart.
+The basis says where a rule comes from. Seven of the rules rest on **WCAG** 2.2, which we follow at level AA, and name the success criteria behind them, and a few come from **HTML** and **WAI-ARIA**. The rest are **Open Components** rules, which are our own, like keeping a status out of a tag. Where a rule goes further than WCAG asks at level AA, its basis says so: `tag/target-size` names level **AAA** for 44px on touch screens, and a rule that asks for more than its criterion says **beyond**, like a link tag that looks different from a plain one, where WCAG would let colour alone tell them apart.
 
 You'll find the rules for each layer on its page:
 
@@ -172,7 +172,8 @@ onMounted(() => {
 
 @layer components {
   .tag {
-    /* The same values as the Select's tags, size for size. */
+    /* The same sizes as the Select's tags. The text colour is set here, since a tag on its
+       own isn't inside a field to inherit it from. */
     --tag--height: 1.5rem;
     --tag--padding: 0.5rem;
     --tag--gap: 0.25rem;
@@ -412,6 +413,7 @@ describe("Tag", () => {
 
     const link = screen.getByRole("link", { name: "Bug" });
     expect(link).toHaveAttribute("href", "/labels/bug");
+    expect(link).not.toHaveAttribute("aria-disabled");
     expect(container.querySelector("[data-slot='label']")).toContainElement(link);
   });
 
@@ -490,7 +492,9 @@ describe("Tag", () => {
     const { container } = render(Tag, { props: { label: "Bug", href: "/labels/bug", removable: true, readonly: true } });
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Bug" })).toHaveAttribute("href", "/labels/bug");
+    const link = screen.getByRole("link", { name: "Bug" });
+    expect(link).toHaveAttribute("href", "/labels/bug");
+    expect(link).not.toHaveAttribute("aria-disabled");
     expect(container.firstElementChild).toHaveAttribute("data-readonly", "");
   });
 
@@ -596,10 +600,18 @@ describe("Tag", () => {
     expect(plain.querySelector("a")).not.toBeInTheDocument();
   });
 
-  it("warns in development when it's removable without a label", () => {
+  it("warns in development when it's removable without a label, and only then", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    render(Tag, { props: { removable: true }, slots: { default: () => "Bug" } });
+    render({
+      render: () => [
+        h(Tag, { label: "Bug", removable: true }),
+        h(Tag, { href: "/labels/bug" }, { default: () => "Bug" }),
+      ],
+    });
+    expect(warn).not.toHaveBeenCalled();
 
+    render(Tag, { props: { removable: true }, slots: { default: () => "Bug" } });
+    expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("removable without a label"), expect.anything());
     warn.mockRestore();
   });

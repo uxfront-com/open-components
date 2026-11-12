@@ -27,6 +27,7 @@ describe("Tag", () => {
 
     const link = screen.getByRole("link", { name: "Bug" });
     expect(link).toHaveAttribute("href", "/labels/bug");
+    expect(link).not.toHaveAttribute("aria-disabled");
     expect(container.querySelector("[data-slot='label']")).toContainElement(link);
   });
 
@@ -105,7 +106,9 @@ describe("Tag", () => {
     const { container } = render(Tag, { props: { label: "Bug", href: "/labels/bug", removable: true, readonly: true } });
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Bug" })).toHaveAttribute("href", "/labels/bug");
+    const link = screen.getByRole("link", { name: "Bug" });
+    expect(link).toHaveAttribute("href", "/labels/bug");
+    expect(link).not.toHaveAttribute("aria-disabled");
     expect(container.firstElementChild).toHaveAttribute("data-readonly", "");
   });
 
@@ -211,10 +214,18 @@ describe("Tag", () => {
     expect(plain.querySelector("a")).not.toBeInTheDocument();
   });
 
-  it("warns in development when it's removable without a label", () => {
+  it("warns in development when it's removable without a label, and only then", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    render(Tag, { props: { removable: true }, slots: { default: () => "Bug" } });
+    render({
+      render: () => [
+        h(Tag, { label: "Bug", removable: true }),
+        h(Tag, { href: "/labels/bug" }, { default: () => "Bug" }),
+      ],
+    });
+    expect(warn).not.toHaveBeenCalled();
 
+    render(Tag, { props: { removable: true }, slots: { default: () => "Bug" } });
+    expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("removable without a label"), expect.anything());
     warn.mockRestore();
   });
