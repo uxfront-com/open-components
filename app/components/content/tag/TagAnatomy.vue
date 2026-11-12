@@ -90,17 +90,13 @@ import "~/reference/button/tokens.css";
   background: var(--ui-bg-inverted);
 }
 
-/* The tag, its link focused, at the largest size, with each part outlined. */
+/* The tag, its link focused, at the largest size. */
 .anatomy-tag {
   --tag--font-size: 1rem;
 }
-.anatomy-tag > :deep([data-slot]) {
+/* So the label's number shows above it. */
+.anatomy-tag > :deep([data-slot="label"]) {
   overflow: visible;
-  outline: 1px dashed color-mix(in srgb, var(--color--neutral-text) 70%, transparent);
-  outline-offset: 2px;
-}
-.anatomy-tag > :deep([data-slot="remove"]) {
-  outline-offset: -3px;
 }
 /* The leading icon and the remove button hold their numbers. The label doesn't, since the
    link's focus ring is drawn around the whole tag, so its text holds its number instead. */
@@ -113,8 +109,8 @@ import "~/reference/button/tokens.css";
   outline-offset: 2px;
 }
 
-/* A part's number sits above it, and its line runs down to the part's outline,
-   past the tag's border and its focus ring. */
+/* A part's number sits above it, and its line runs down to the part, past the tag's
+   border and its focus ring. */
 .anatomy-marker-part {
   bottom: calc(100% + var(--anatomy--distance) + 0.5rem);
   left: 50%;
@@ -124,10 +120,14 @@ import "~/reference/button/tokens.css";
   top: 100%;
   left: 50%;
   width: 1px;
-  height: calc(var(--anatomy--distance) + 0.5rem - 2px);
+  height: calc(var(--anatomy--distance) + 0.5rem);
 }
+/* The remove button reaches the tag's edge, so its number sits closer. */
 .anatomy-tag > :deep([data-slot="remove"]) .anatomy-marker-part {
   bottom: calc(100% + var(--anatomy--distance) + 0.25rem);
+}
+.anatomy-tag > :deep([data-slot="remove"]) .anatomy-marker-part::before {
+  height: calc(var(--anatomy--distance) + 0.25rem);
 }
 
 /* The container's number sits before the tag, and its line crosses the focus ring
