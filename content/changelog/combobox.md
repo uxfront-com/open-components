@@ -1,7 +1,7 @@
 ---
 title: The Combobox
 description: A new component page, on a combobox that filters a list of suggestions as people type, picks one or several, keeps typed text only where you allow it and fits the room a phone's keyboard leaves.
-date: 2026-11-12
+date: 2026-11-14
 category: Components
 link:
   label: Read the Combobox page
@@ -13,7 +13,8 @@ Comboboxes let people type to narrow a long list, like countries, and pick from 
 ## New
 
 - The Combobox is an `<input role="combobox">` with `aria-autocomplete="list"` and the Select's `listbox` panel, which filters on any part of a label, ignoring case and accents, and announces the count once typing pauses.
-- It picks one value or several, as tags, and keeps text that isn't an option only with `allowCustomValue`, or adds it as a new option with `creatable`, and the page says what each one submits.
+- It picks one value or several, as tags, and shows an icon beside each option where you give one, the way the Select does.
+- It keeps text that isn't an option only with `allowCustomValue`, or adds it as a new option with `creatable`, and the page says what each one submits.
 - A hidden `<select>` submits, validates and resets with its form, for picked and typed values alike, and the panel fits the room the on-screen keyboard leaves.
 - It comes with its own contract, live examples and a tested reference implementation.
 

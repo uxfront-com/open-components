@@ -88,7 +88,11 @@ defineSlots<{
   "group-label"?: (props: { label: string }) => unknown;
   /** The rule between options or groups. */
   separator?: () => unknown;
-  /** An icon for an option, shown before its label in the panel and in its tag, hidden from assistive technologies. */
+  /**
+   * An icon for an option, like a country's flag, shown before its label in the panel, in the
+   * field while the text shows the picked option's label, and in its tag. It's hidden from
+   * assistive technologies, since the label names the option.
+   */
   icon?: (props: { option: SelectOption }) => unknown;
 }>();
 
@@ -144,6 +148,13 @@ const display = computed(() => (multiple ? "" : (selected.value[0]?.label ?? "")
 
 const text = ref(display.value);
 watch(display, (value) => (text.value = value));
+// The picked option's icon goes beside its label in the field, as on the Select, while the
+// text still shows that label. Once people type, the text no longer names the option, so the
+// icon goes. A value people typed has no option, so nothing draws an icon for it.
+const fieldIcon = computed(() => {
+  const option = multiple ? undefined : selected.value[0];
+  return option && byValue.value.has(option.value) && text.value === display.value ? option : undefined;
+});
 // What people typed, once it differs from what the field shows. Opening the panel on a
 // picked value shows every option, rather than only the one that matches its label.
 const query = computed(() => (text.value !== display.value ? text.value.trim() : ""));
@@ -594,6 +605,10 @@ onBeforeUnmount(() => {
       @keydown="onKeydown"
       @blur="onBlur"
     />
+    <!-- The picked option's icon, beside its label, so it looks the same here as in the panel. -->
+    <span v-if="$slots.icon && fieldIcon" data-slot="icon" aria-hidden="true">
+      <slot name="icon" :option="fieldIcon" />
+    </span>
     <!-- After the text, so Tab reaches the remove buttons in the order people read them. -->
     <SelectTags v-if="multiple" ref="tags" :selected="selected" :removable="!disabled && !readonly" :remove-label="removeLabel" @remove="remove">
       <template v-if="$slots.icon" #icon="props"><slot name="icon" v-bind="props" /></template>
@@ -697,6 +712,18 @@ onBeforeUnmount(() => {
     letter-spacing: inherit;
     /* The root draws the focus ring, around the whole field. */
     outline: none;
+  }
+  /* The picked option's icon, after the leading icon, if there's one, and before the text. */
+  .combobox > [data-slot="icon"] {
+    grid-area: 1 / 1;
+    align-self: center;
+    justify-self: start;
+    margin-inline-start: var(--select--padding-start);
+    /* Decoration above the text, which a press goes through. */
+    pointer-events: none;
+  }
+  .combobox:has(> [data-slot="icon"]) > input {
+    padding-inline-start: calc(var(--select--padding-start) + var(--select--icon--size) + var(--select--gap));
   }
   .combobox > input::placeholder {
     color: var(--select--value--placeholder-color);

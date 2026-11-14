@@ -71,12 +71,12 @@ const places: SelectItem[] = [
 type Props = Partial<ComboboxProps> & Record<string, unknown>;
 
 // A Combobox in a Field in a form, the way you'd use it.
-async function page(props: Props = {}, field: Record<string, unknown> = {}) {
+async function page(props: Props = {}, field: Record<string, unknown> = {}, slots: Record<string, unknown> = {}) {
   const submit = vi.fn((event: Event) => event.preventDefault());
   const result = render({
     render: () =>
       h("form", { "aria-label": "Shipping", onSubmit: submit }, [
-        h(Field, { label: "Country", ...field }, () => h(Combobox, { id: "country", name: "country", options: countries, ...props })),
+        h(Field, { label: "Country", ...field }, () => h(Combobox, { id: "country", name: "country", options: countries, ...props }, slots)),
         h("button", { type: "submit" }, "Save"),
         h("button", { type: "reset" }, "Reset"),
       ]),
@@ -854,6 +854,69 @@ describe("Combobox", () => {
       await nextTick();
       expect(combobox.value?.control).toBe(input());
       expect(combobox.value?.select.tagName).toBe("SELECT");
+    });
+  });
+
+  describe("icons", () => {
+    const icon = { icon: ({ option }: { option: { value: string } }) => h("svg", { "data-testid": `icon-${option.value}` }) };
+    // The icon beside the text, which is a part of the field rather than of the panel or a tag.
+    const fieldIcon = () => input().parentElement!.querySelector<HTMLElement>(':scope > [data-slot="icon"]');
+
+    it("shows the picked option's icon in the field, and each option's in the panel, hidden from assistive technologies", async () => {
+      const user = userEvent.setup();
+      await page({ value: "es" }, {}, icon);
+      expect(input()).toHaveValue("Spain");
+      expect(within(fieldIcon()!).getByTestId("icon-es")).toBeInTheDocument();
+      expect(fieldIcon()).toHaveAttribute("aria-hidden", "true");
+      await user.click(input());
+      await user.keyboard("{ArrowDown}");
+      expect(within(option("Spain")).getByTestId("icon-es").parentElement).toHaveAttribute("data-slot", "icon");
+      expect(within(option("Spain")).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(option("France")).getByTestId("icon-fr")).toBeInTheDocument();
+    });
+
+    it("shows the icon of the option people pick, in place of the one before", async () => {
+      const user = userEvent.setup();
+      await page({ value: "es" }, {}, icon);
+      await user.clear(input());
+      await user.type(input(), "fra");
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(input()).toHaveValue("France");
+      expect(within(fieldIcon()!).getByTestId("icon-fr")).toBeInTheDocument();
+      expect(within(fieldIcon()!).queryByTestId("icon-es")).toBeNull();
+    });
+
+    it("takes the icon away while the text no longer shows the picked option, and brings it back when it does", async () => {
+      const user = userEvent.setup();
+      await page({ value: "es" }, {}, icon);
+      await user.type(input(), "x");
+      expect(fieldIcon()).toBeNull();
+      await user.tab();
+      expect(input()).toHaveValue("Spain");
+      expect(within(fieldIcon()!).getByTestId("icon-es")).toBeInTheDocument();
+    });
+
+    it("shows each picked option's icon in its tag, and none beside the text, with multiple", async () => {
+      await page({ multiple: true, value: ["fr", "es"] }, {}, icon);
+      const tags = document.querySelectorAll<HTMLElement>('[data-slot="tag"]');
+      expect(within(tags[0]!).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(tags[1]!).getByTestId("icon-es")).toBeInTheDocument();
+      expect(fieldIcon()).toBeNull();
+    });
+
+    it("has no icon in the field for text people kept, or while nothing is picked", async () => {
+      const user = userEvent.setup();
+      await page({ allowCustomValue: true }, {}, icon);
+      expect(fieldIcon()).toBeNull();
+      await user.type(input(), "Lyon");
+      await user.tab();
+      expect(submitted()).toEqual(["Lyon"]);
+      expect(fieldIcon()).toBeNull();
+    });
+
+    it("has no icon part without the slot", async () => {
+      await page({ value: "es" });
+      expect(document.querySelector('[data-slot="icon"]')).toBeNull();
     });
   });
 

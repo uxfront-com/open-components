@@ -169,7 +169,11 @@ defineSlots<{
   "group-label"?: (props: { label: string }) => unknown;
   /** The rule between options or groups. */
   separator?: () => unknown;
-  /** An icon for an option, shown before its label in the panel and in its tag, hidden from assistive technologies. */
+  /**
+   * An icon for an option, like a country's flag, shown before its label in the panel, in the
+   * field while the text shows the picked option's label, and in its tag. It's hidden from
+   * assistive technologies, since the label names the option.
+   */
   icon?: (props: { option: SelectOption }) => unknown;
 }>();
 
@@ -225,6 +229,13 @@ const display = computed(() => (multiple ? "" : (selected.value[0]?.label ?? "")
 
 const text = ref(display.value);
 watch(display, (value) => (text.value = value));
+// The picked option's icon goes beside its label in the field, as on the Select, while the
+// text still shows that label. Once people type, the text no longer names the option, so the
+// icon goes. A value people typed has no option, so nothing draws an icon for it.
+const fieldIcon = computed(() => {
+  const option = multiple ? undefined : selected.value[0];
+  return option && byValue.value.has(option.value) && text.value === display.value ? option : undefined;
+});
 // What people typed, once it differs from what the field shows. Opening the panel on a
 // picked value shows every option, rather than only the one that matches its label.
 const query = computed(() => (text.value !== display.value ? text.value.trim() : ""));
@@ -675,6 +686,10 @@ onBeforeUnmount(() => {
       @keydown="onKeydown"
       @blur="onBlur"
     />
+    <!-- The picked option's icon, beside its label, so it looks the same here as in the panel. -->
+    <span v-if="$slots.icon && fieldIcon" data-slot="icon" aria-hidden="true">
+      <slot name="icon" :option="fieldIcon" />
+    </span>
     <!-- After the text, so Tab reaches the remove buttons in the order people read them. -->
     <SelectTags v-if="multiple" ref="tags" :selected="selected" :removable="!disabled && !readonly" :remove-label="removeLabel" @remove="remove">
       <template v-if="$slots.icon" #icon="props"><slot name="icon" v-bind="props" /></template>
@@ -778,6 +793,18 @@ onBeforeUnmount(() => {
     letter-spacing: inherit;
     /* The root draws the focus ring, around the whole field. */
     outline: none;
+  }
+  /* The picked option's icon, after the leading icon, if there's one, and before the text. */
+  .combobox > [data-slot="icon"] {
+    grid-area: 1 / 1;
+    align-self: center;
+    justify-self: start;
+    margin-inline-start: var(--select--padding-start);
+    /* Decoration above the text, which a press goes through. */
+    pointer-events: none;
+  }
+  .combobox:has(> [data-slot="icon"]) > input {
+    padding-inline-start: calc(var(--select--padding-start) + var(--select--icon--size) + var(--select--gap));
   }
   .combobox > input::placeholder {
     color: var(--select--value--placeholder-color);
@@ -909,12 +936,12 @@ const places: SelectItem[] = [
 type Props = Partial<ComboboxProps> & Record<string, unknown>;
 
 // A Combobox in a Field in a form, the way you'd use it.
-async function page(props: Props = {}, field: Record<string, unknown> = {}) {
+async function page(props: Props = {}, field: Record<string, unknown> = {}, slots: Record<string, unknown> = {}) {
   const submit = vi.fn((event: Event) => event.preventDefault());
   const result = render({
     render: () =>
       h("form", { "aria-label": "Shipping", onSubmit: submit }, [
-        h(Field, { label: "Country", ...field }, () => h(Combobox, { id: "country", name: "country", options: countries, ...props })),
+        h(Field, { label: "Country", ...field }, () => h(Combobox, { id: "country", name: "country", options: countries, ...props }, slots)),
         h("button", { type: "submit" }, "Save"),
         h("button", { type: "reset" }, "Reset"),
       ]),
@@ -1692,6 +1719,69 @@ describe("Combobox", () => {
       await nextTick();
       expect(combobox.value?.control).toBe(input());
       expect(combobox.value?.select.tagName).toBe("SELECT");
+    });
+  });
+
+  describe("icons", () => {
+    const icon = { icon: ({ option }: { option: { value: string } }) => h("svg", { "data-testid": `icon-${option.value}` }) };
+    // The icon beside the text, which is a part of the field rather than of the panel or a tag.
+    const fieldIcon = () => input().parentElement!.querySelector<HTMLElement>(':scope > [data-slot="icon"]');
+
+    it("shows the picked option's icon in the field, and each option's in the panel, hidden from assistive technologies", async () => {
+      const user = userEvent.setup();
+      await page({ value: "es" }, {}, icon);
+      expect(input()).toHaveValue("Spain");
+      expect(within(fieldIcon()!).getByTestId("icon-es")).toBeInTheDocument();
+      expect(fieldIcon()).toHaveAttribute("aria-hidden", "true");
+      await user.click(input());
+      await user.keyboard("{ArrowDown}");
+      expect(within(option("Spain")).getByTestId("icon-es").parentElement).toHaveAttribute("data-slot", "icon");
+      expect(within(option("Spain")).getByTestId("icon-es").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(option("France")).getByTestId("icon-fr")).toBeInTheDocument();
+    });
+
+    it("shows the icon of the option people pick, in place of the one before", async () => {
+      const user = userEvent.setup();
+      await page({ value: "es" }, {}, icon);
+      await user.clear(input());
+      await user.type(input(), "fra");
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(input()).toHaveValue("France");
+      expect(within(fieldIcon()!).getByTestId("icon-fr")).toBeInTheDocument();
+      expect(within(fieldIcon()!).queryByTestId("icon-es")).toBeNull();
+    });
+
+    it("takes the icon away while the text no longer shows the picked option, and brings it back when it does", async () => {
+      const user = userEvent.setup();
+      await page({ value: "es" }, {}, icon);
+      await user.type(input(), "x");
+      expect(fieldIcon()).toBeNull();
+      await user.tab();
+      expect(input()).toHaveValue("Spain");
+      expect(within(fieldIcon()!).getByTestId("icon-es")).toBeInTheDocument();
+    });
+
+    it("shows each picked option's icon in its tag, and none beside the text, with multiple", async () => {
+      await page({ multiple: true, value: ["fr", "es"] }, {}, icon);
+      const tags = document.querySelectorAll<HTMLElement>('[data-slot="tag"]');
+      expect(within(tags[0]!).getByTestId("icon-fr").parentElement).toHaveAttribute("aria-hidden", "true");
+      expect(within(tags[1]!).getByTestId("icon-es")).toBeInTheDocument();
+      expect(fieldIcon()).toBeNull();
+    });
+
+    it("has no icon in the field for text people kept, or while nothing is picked", async () => {
+      const user = userEvent.setup();
+      await page({ allowCustomValue: true }, {}, icon);
+      expect(fieldIcon()).toBeNull();
+      await user.type(input(), "Lyon");
+      await user.tab();
+      expect(submitted()).toEqual(["Lyon"]);
+      expect(fieldIcon()).toBeNull();
+    });
+
+    it("has no icon part without the slot", async () => {
+      await page({ value: "es" });
+      expect(document.querySelector('[data-slot="icon"]')).toBeNull();
     });
   });
 

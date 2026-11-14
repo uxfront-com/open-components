@@ -23,41 +23,47 @@ import "~/reference/button/tokens.css";
             </span>
             <span class="anatomy-part anatomy-outlined anatomy-value">
               Fr<span class="anatomy-caret" />
-              <span class="anatomy-marker anatomy-marker-up">3</span>
+              <span class="anatomy-marker anatomy-marker-up">4</span>
             </span>
             <span class="anatomy-part anatomy-arrow">
               <UIcon name="i-lucide-chevron-down" mode="svg" />
-              <span class="anatomy-marker anatomy-marker-up">4</span>
+              <span class="anatomy-marker anatomy-marker-up">5</span>
             </span>
           </div>
           <div class="anatomy-tags">
             <span class="anatomy-part anatomy-tag">
+              <span class="anatomy-icon"><UIcon name="i-lucide-flag" mode="svg" /></span>
               Spain
               <UIcon name="i-lucide-x" mode="svg" class="anatomy-remove" />
-              <span class="anatomy-marker anatomy-marker-tagside">5</span>
+              <span class="anatomy-marker anatomy-marker-tagside">6</span>
             </span>
           </div>
         </div>
         <div class="anatomy-panel">
-          <span class="anatomy-marker anatomy-marker-side">6</span>
+          <span class="anatomy-marker anatomy-marker-side">7</span>
           <span class="anatomy-part anatomy-outlined anatomy-group">
             Europe
-            <span class="anatomy-marker anatomy-marker-row">7</span>
-          </span>
-          <span class="anatomy-part anatomy-option anatomy-option-active">
-            <span class="anatomy-option-label">France</span>
             <span class="anatomy-marker anatomy-marker-row">8</span>
           </span>
+          <span class="anatomy-part anatomy-option anatomy-option-active">
+            <UIcon name="i-lucide-flag" mode="svg" class="anatomy-option-icon" />
+            <span class="anatomy-option-label">France</span>
+            <span class="anatomy-marker anatomy-marker-row">9</span>
+          </span>
           <span class="anatomy-option anatomy-option-picked">
+            <span class="anatomy-part anatomy-option-glyph">
+              <UIcon name="i-lucide-flag" mode="svg" />
+              <span class="anatomy-marker anatomy-marker-iconside">3</span>
+            </span>
             <span class="anatomy-option-label">Spain</span>
             <UIcon name="i-lucide-check" mode="svg" class="anatomy-option-icon" />
           </span>
           <span class="anatomy-part anatomy-rule">
-            <span class="anatomy-marker anatomy-marker-row">9</span>
+            <span class="anatomy-marker anatomy-marker-row">10</span>
           </span>
           <span class="anatomy-part anatomy-outlined anatomy-option">
             <span class="anatomy-option-label">Create "Fr"</span>
-            <span class="anatomy-marker anatomy-marker-row">10</span>
+            <span class="anatomy-marker anatomy-marker-row">11</span>
           </span>
         </div>
       </div>
@@ -252,6 +258,14 @@ import "~/reference/button/tokens.css";
   padding: 0.375rem 0.5rem;
   border-radius: 0.25rem;
 }
+/* An option's icon that carries a number, at the size of the other options' icons. */
+.anatomy-option-glyph {
+  display: inline-flex;
+}
+.anatomy-option-glyph svg {
+  width: 1rem;
+  height: 1rem;
+}
 .anatomy-option-label {
   flex: 1;
 }
@@ -312,6 +326,22 @@ import "~/reference/button/tokens.css";
   left: 75%;
 }
 
+/* An option's icon has its number before the panel, on the side the tags' number is, and
+   its line runs across the panel's border and padding and the option's padding to the icon. */
+.anatomy-marker-iconside {
+  --anatomy--reach: calc(0.5rem + 0.25rem + 1px + var(--anatomy--distance));
+
+  top: 50%;
+  right: calc(100% + var(--anatomy--reach));
+  translate: 0 -50%;
+}
+.anatomy-marker-iconside::before {
+  top: 50%;
+  left: 100%;
+  width: var(--anatomy--reach);
+  height: 1px;
+}
+
 /* A part in the panel has its number past the panel's edge, and its line runs back across
    the panel's padding and border to the part's outline. */
 .anatomy-marker-row {
@@ -328,7 +358,7 @@ import "~/reference/button/tokens.css";
   height: 1px;
 }
 
-/* The list from the markdown, numbered with the same markers: five parts down each column. */
+/* The list from the markdown, numbered with the same markers: six parts down the first column. */
 .anatomy-parts :deep(ol) {
   display: grid;
   gap: 0.75rem 1.5rem;
@@ -340,7 +370,7 @@ import "~/reference/button/tokens.css";
 @media (min-width: 40rem) {
   .anatomy-parts :deep(ol) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(5, auto);
+    grid-template-rows: repeat(6, auto);
     grid-auto-flow: column;
   }
 }
