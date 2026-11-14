@@ -371,6 +371,42 @@ describe("Combobox", () => {
       await user.type(input(), "pain");
       expect(options()).toEqual([]);
     });
+
+    // In Devanagari, a vowel sign is a combining mark, and a letter of its own: "कताब" isn't
+    // "किताब" (a book) without one, so neither lists nor picks it.
+    const books: SelectItem[] = [
+      { value: "kitab", label: "किताब" },
+      { value: "kalam", label: "कलम" },
+    ];
+    it.each([
+      ["the default filter", undefined],
+      ["a filter that keeps every mark", (item: { label: string }, text: string) => item.label.includes(text)],
+    ])("keeps the vowel signs of scripts like Devanagari, with %s, so another word neither matches nor is picked", async (_, filter) => {
+      const user = userEvent.setup();
+      await page({ options: books, filter });
+      await user.type(input(), "कताब");
+      expect(options()).toEqual([]);
+      await user.tab();
+      expect(input()).toHaveValue("");
+      expect(submitted()).toEqual([""]);
+      await user.type(input(), "किताब");
+      expect(options()).toEqual(["किताब"]);
+      await user.tab();
+      expect(submitted()).toEqual(["kitab"]);
+    });
+
+    it("picks an option on leaving only when your filter lists it for the text", async () => {
+      const user = userEvent.setup();
+      await page({ filter: (item: { label: string }, text: string) => item.label.includes(text) });
+      await user.type(input(), "france");
+      expect(options()).toEqual([]);
+      await user.tab();
+      expect(input()).toHaveValue("");
+      expect(submitted()).toEqual([""]);
+      await user.type(input(), "France");
+      await user.tab();
+      expect(submitted()).toEqual(["fr"]);
+    });
   });
 
   describe("results", () => {

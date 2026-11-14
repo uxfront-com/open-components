@@ -28,7 +28,10 @@ export interface ComboboxProps {
   creatable?: boolean;
   /** The create option's label. */
   createLabel?: (text: string) => string;
-  /** Whether an option matches what people typed. By default, any part of its label, ignoring case and accents. */
+  /**
+   * Whether an option matches what people typed. By default, any part of its label, ignoring
+   * case and accents. Leaving the field picks an option only when it matches, too.
+   */
   filter?: (option: SelectOption, text: string) => boolean;
   /** Shown in the panel, and announced, when no option matches. */
   emptyLabel?: string;
@@ -116,12 +119,20 @@ const panel = computed(() => panelRef.value?.element);
 const tags = useTemplateRef<InstanceType<typeof SelectTags>>("tags");
 
 // Case and accents don't count, so "zur" finds "Zürich", as people expect from a search.
-const fold = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase();
+// Only the combining diacritics that NFD splits off a letter go, the accents of the Latin,
+// Greek and Cyrillic alphabets. Other marks stay, since in scripts like Devanagari and Thai
+// they're vowels, and dropping them would let "कताब" find and pick "किताब", another word.
+const ACCENTS = /[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]/g;
+const fold = (text: string) => text.normalize("NFD").replace(ACCENTS, "").toLocaleLowerCase();
 const matches = (option: SelectOption, text: string) => (filter ? filter(option, text) : fold(option.label).includes(fold(text)));
 
 const everything = computed(() => toSections(options).flatMap((section) => section.options));
 const byValue = computed(() => new Map(everything.value.map((option) => [option.value, option])));
-const byLabel = (text: string) => everything.value.find((option) => !option.disabled && fold(option.label) === fold(text));
+// The option whose label the text is, which leaving the field picks. It has to be one the
+// panel lists for that text too, so a filter of your own that leaves an option out also
+// keeps it from being picked, and the panel never says "No results" for a pick.
+const byLabel = (text: string) =>
+  everything.value.find((option) => !option.disabled && fold(option.label) === fold(text) && matches(option, text));
 
 // Values that aren't options, which people typed and kept, are only values where a prop
 // lets people type them.
