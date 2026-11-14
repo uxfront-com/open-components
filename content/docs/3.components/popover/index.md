@@ -31,7 +31,7 @@ How agents read, open and check a popover, from its accessibility tree to its co
 
 Every example on this page runs on our [reference implementation](/docs/components/popover#reference-implementation), which does its part of every rule in the [checklist](/docs/components/popover#checklist), so feel free to open them as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Popover with the same API in each, apart from two names in Angular, which [Type-safe](/docs/components/popover/dx#type-safe) explains. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/popover/ax#deterministic).
 
-The Popover is the non-modal sibling of the [Dialog](/docs/components/dialog) and the interactive sibling of the [Tooltip](/docs/components/tooltip). It keeps the rules they settled for focus, `Escape` and the top layer, and the Dropdown Menu and the Combobox on our [Roadmap](/docs/getting-started/roadmap) will build on the ones it settles for placement and closing.
+The Popover is the non-modal sibling of the [Dialog](/docs/components/dialog) and the interactive sibling of the [Tooltip](/docs/components/tooltip). It keeps the rules they settled for focus, `Escape` and the top layer, and the [Combobox](/docs/components/combobox) builds on the ones it settles for placement and closing, as the Dropdown Menu on our [Roadmap](/docs/getting-started/roadmap) will.
 
 ::popover-playground
 ::

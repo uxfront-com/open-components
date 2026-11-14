@@ -71,31 +71,25 @@ You'll find the rules for each layer on its page:
 
 Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves: the keyboard model, focus staying on the control, and the native `<select>` doing the form's work. It announces through the Button's `announce.ts`, so copy that from the [Button](/docs/components/button#reference-implementation) too.
 
+The panel, the options, the tags and the styles they share are in files of their own, since the [Combobox](/docs/components/combobox) draws them with the same code: `SelectPanel.vue` draws the panel, `SelectTags.vue` the tags, `listbox.ts` holds the list's types, how the keys walk it and where the panel goes, and `select.css` styles all of them, along with the field. Copy them along with `Select.vue`.
+
 The tests are in `Select.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`. The tests stand in for what jsdom lacks, which [Unit tests](/docs/components/select/ax#unit-tests) explains, and they also mount the Field and the Dialog.
 
 ::code-collapse
 :::code-group
 ```vue [Select.vue]
+<script lang="ts">
+// The list's types live with the model the Select shares with the Combobox.
+export type { SelectGroup, SelectItem, SelectOption, SelectSeparator } from "./listbox";
+</script>
+
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-
-export interface SelectOption {
-  value: string;
-  /** The text people read, and what typing a letter searches. */
-  label: string;
-  disabled?: boolean;
-}
-/** A heading over some of the options. */
-export interface SelectGroup {
-  label: string;
-  options: SelectOption[];
-}
-/** A rule between options or groups. */
-export interface SelectSeparator {
-  separator: true;
-}
-export type SelectItem = SelectOption | SelectGroup | SelectSeparator;
+import { type SelectItem, type SelectOption, usePlacement, useListbox } from "./listbox";
+import SelectPanel from "./SelectPanel.vue";
+import SelectTags from "./SelectTags.vue";
+import "./select.css";
 
 export interface SelectProps {
   /** What people pick from. A prop rather than child components, since both renderings need the same list. */
@@ -184,7 +178,9 @@ const activeAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.includes(key
 const root = useTemplateRef<HTMLElement>("root");
 const select = useTemplateRef<HTMLSelectElement>("select");
 const control = useTemplateRef<HTMLButtonElement>("control");
-const panel = useTemplateRef<HTMLElement>("panel");
+const panelRef = useTemplateRef<InstanceType<typeof SelectPanel>>("panel");
+const panel = computed(() => panelRef.value?.element);
+const tags = useTemplateRef<InstanceType<typeof SelectTags>>("tags");
 
 // Whether the primary pointer is coarse. It starts true on the server and on the client's
 // first render, so the two match, which is why CSS, and never this, decides what paints.
@@ -195,29 +191,18 @@ const onPointerChange = () => (coarse.value = pointer?.matches ?? false);
 const canBeNative = computed(() => nativeOnTouch && !readonly);
 const native = computed(() => canBeNative.value && coarse.value);
 
-// The list as sections, so both renderings walk the same thing: a group, a run of options
-// outside any group, or a separator.
-const isSeparator = (item: SelectItem): item is SelectSeparator => "separator" in item;
-const isGroup = (item: SelectItem): item is SelectGroup => "options" in item;
-type Section = { separator?: true; label?: string; options: SelectOption[] };
-const sections = computed(() => {
-  const result: Section[] = [];
-  for (const item of options) {
-    if (isSeparator(item)) result.push({ separator: true, options: [] });
-    else if (isGroup(item)) result.push({ label: item.label, options: item.options });
-    else if (result.at(-1) && !result.at(-1)!.separator && result.at(-1)!.label === undefined) result.at(-1)!.options.push(item);
-    else result.push({ options: [item] });
-  }
-  return result;
-});
-const flat = computed(() => sections.value.flatMap((section) => section.options));
-const positions = computed(() => new Map(flat.value.map((option, index) => [option, index])));
+const open = ref(false);
+const active = ref(-1);
+const panelName = ref<string>();
 
-// IDs come from what you pass, rather than being made up, so the markup is the same on
-// the server, on the client and in every snapshot.
+// The list as sections, so both renderings walk the same thing: a group, a run of options
+// outside any group, or a separator. IDs come from the control's `id` or `name`.
 const baseId = () => (attrs.id ?? attrs.name) as string | undefined;
-const panelId = () => baseId() && `${baseId()}-panel`;
-const optionId = (option: SelectOption) => baseId() && `${baseId()}-option-${positions.value.get(option)}`;
+const { sections, flat, panelId, optionId, groupId, isEnabled, step, firstEnabled, lastEnabled, jump } = useListbox({
+  items: () => options,
+  baseId,
+  active,
+});
 
 // Without `v-model`, the value starts from the `value` attribute.
 const initial = attrs.value as string | string[] | undefined;
@@ -298,34 +283,11 @@ function pickOption(option: SelectOption) {
 
 // The next tag's remove button takes focus, or the control when there's no tag after
 // it, so keyboard users never fall back to the top of the page.
-function remove(option: SelectOption, moveFocus = true) {
+async function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
   commit(selected.value.filter((item) => item !== option).map((item) => item.value));
   announce(removedLabel(option.label));
-  if (moveFocus) {
-    nextTick(() => {
-      const next = root.value?.querySelectorAll<HTMLElement>('[data-slot="tag-remove"]')[index];
-      (next ?? control.value)?.focus();
-    });
-  }
-}
-
-const open = ref(false);
-const active = ref(-1);
-const panelName = ref<string>();
-
-const isEnabled = (index: number) => flat.value[index] !== undefined && !flat.value[index]!.disabled;
-// The nearest enabled option in a direction, or `from` at either end, since a listbox doesn't wrap.
-function step(from: number, by: 1 | -1) {
-  for (let index = from + by; index >= 0 && index < flat.value.length; index += by) if (isEnabled(index)) return index;
-  return from;
-}
-const firstEnabled = () => step(-1, 1);
-const lastEnabled = () => step(flat.value.length, -1);
-function jump(by: 1 | -1) {
-  let index = active.value;
-  for (let count = 0; count < 10; count++) index = step(index, by);
-  return index;
+  if (moveFocus && !(await tags.value?.focusAt(index))) control.value?.focus();
 }
 
 function show(to?: number) {
@@ -354,11 +316,7 @@ watch(active, scrollToActive, { flush: "post" });
 // before `toggle`, so a key pressed right after opening finds it open.
 function onBeforetoggle(event: Event) {
   open.value = (event as ToggleEvent).newState === "open";
-  if (!anchored()) {
-    const method = open.value ? "addEventListener" : "removeEventListener";
-    window[method]("scroll", place, { capture: true, passive: true } as AddEventListenerOptions);
-    window[method]("resize", place);
-  }
+  listen(open.value);
 }
 
 // A key that typed a printable character, without a modifier that makes it a shortcut.
@@ -510,32 +468,9 @@ function onReset() {
 const uid = useId();
 const anchorName = ref<string>();
 
-// CSS anchor positioning places the panel, where the browser has it. Elsewhere, place()
-// does the same: as wide as the field, flipped when there's no room and kept on screen.
-const anchored = () => globalThis.CSS?.supports?.("position-area: top") ?? false;
-function place() {
-  const el = panel.value;
-  const anchor = root.value;
-  if (anchored() || !el || !anchor) return;
-  const a = anchor.getBoundingClientRect();
-  // Its margin is the gap, on the block sides only, which `top` places it outside of.
-  const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
-  const { clientWidth, clientHeight } = document.documentElement;
-  const width = Math.min(a.width, clientWidth - 32);
-  el.style.width = `${width}px`;
-  el.style.maxHeight = "";
-  const natural = el.offsetHeight;
-  const below = clientHeight - a.bottom - 2 * gap;
-  const above = a.top - 2 * gap;
-  // Under the field, or above it when there's no room, and when neither side has room,
-  // shrunk on the bigger one, with its options scrolling.
-  const under = natural <= below || (natural > above && below >= above);
-  const height = Math.min(natural, Math.max(under ? below : above, 0));
-  if (height < natural) el.style.maxHeight = `${height}px`;
-  const top = under ? a.bottom : a.top - 2 * gap - height;
-  el.style.left = `${Math.max(0, Math.min(a.left, clientWidth - width))}px`;
-  el.style.top = `${Math.max(-gap, Math.min(top, clientHeight - height - gap))}px`;
-}
+// CSS anchor positioning places the panel, where the browser has it, and place() does the
+// same elsewhere, from the model the Select shares with the Combobox.
+const { place, listen } = usePlacement({ panel: () => panel.value, anchor: () => root.value });
 
 // Moving to the native rendering, like when a tablet's keyboard is detached, closes the panel.
 watch(native, (value) => value && hide());
@@ -570,8 +505,7 @@ onBeforeUnmount(() => {
   pointer?.removeEventListener("change", onPointerChange);
   document.removeEventListener("click", onDocumentClick, true);
   form?.removeEventListener("reset", onReset);
-  window.removeEventListener("scroll", place, { capture: true });
-  window.removeEventListener("resize", place);
+  listen(false);
 });
 </script>
 
@@ -661,23 +595,10 @@ onBeforeUnmount(() => {
     </button>
     <!-- Beside the button, since a <button> can't hold other buttons, and after it, so Tab
          reaches the remove buttons after the control. -->
-    <div v-if="multiple && selected.length" data-slot="tags">
-      <span v-for="option in selected" :key="option.value" data-slot="tag">
-        <span v-if="$slots.icon" data-slot="icon" aria-hidden="true"><slot name="icon" :option="option" /></span>
-        <span data-slot="tag-label"><slot name="tag" :option="option">{{ option.label }}</slot></span>
-        <button
-          v-if="!disabled && !readonly"
-          data-slot="tag-remove"
-          type="button"
-          :aria-label="removeLabel(option.label)"
-          @click="remove(option)"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-    </div>
+    <SelectTags v-if="multiple" ref="tags" :selected="selected" :removable="!disabled && !readonly" :remove-label="removeLabel" @remove="remove">
+      <template v-if="$slots.icon" #icon="props"><slot name="icon" v-bind="props" /></template>
+      <template #tag="props"><slot name="tag" v-bind="props">{{ props.option.label }}</slot></template>
+    </SelectTags>
     <span v-if="$slots.leading" data-slot="leading" aria-hidden="true">
       <slot name="leading" />
     </span>
@@ -689,183 +610,37 @@ onBeforeUnmount(() => {
       </slot>
     </span>
     <!-- A child of the root, so a class on the root reaches its tokens. popover="auto" puts
-         it in the top layer and lets the browser close it on a press outside. The press
-         doesn't move focus, which stays on the control for the keyboard model to run. -->
-    <div
+         it in the top layer and lets the browser close it on a press outside. -->
+    <SelectPanel
       :id="panelId()"
       ref="panel"
-      data-slot="panel"
-      popover="auto"
-      role="listbox"
-      :aria-multiselectable="multiple ? 'true' : undefined"
-      :aria-labelledby="attrs['aria-labelledby'] as string | undefined"
-      :aria-label="attrs['aria-labelledby'] ? undefined : panelName"
-      :style="anchorName && { 'position-anchor': anchorName }"
+      :sections="sections"
+      :active="flat[active]"
+      :is-picked="isPicked"
+      :option-id="optionId"
+      :group-id="groupId"
+      :multiple="multiple"
+      :label="panelName"
+      :labelledby="attrs['aria-labelledby'] as string | undefined"
+      :anchor-name="anchorName"
       @beforetoggle="onBeforetoggle"
-      @mousedown.prevent
+      @pick="pickOption"
     >
-      <template v-for="(section, s) in sections" :key="s">
-        <!-- role="none", since a listbox doesn't allow a separator child. -->
-        <div v-if="section.separator" role="none" data-slot="separator">
-          <slot name="separator" />
-        </div>
-        <div
-          v-else
-          :role="section.label === undefined ? 'none' : 'group'"
-          :data-slot="section.label === undefined ? undefined : 'group'"
-          :aria-labelledby="section.label === undefined ? undefined : baseId() && `${baseId()}-group-${s}`"
-        >
-          <div v-if="section.label !== undefined" :id="baseId() && `${baseId()}-group-${s}`" role="presentation" data-slot="group-label">
-            <slot name="group-label" :label="section.label">{{ section.label }}</slot>
-          </div>
-          <div
-            v-for="option in section.options"
-            :id="optionId(option)"
-            :key="option.value"
-            data-slot="option"
-            role="option"
-            :aria-selected="isPicked(option) ? 'true' : 'false'"
-            :aria-disabled="option.disabled ? 'true' : undefined"
-            :data-active="flat[active] === option ? 'true' : undefined"
-            @click="pickOption(option)"
-          >
-            <span v-if="$slots.icon" data-slot="icon" aria-hidden="true"><slot name="icon" :option="option" /></span>
-            <span data-slot="option-label">
-              <slot name="option" :option="option" :selected="isPicked(option)" :active="flat[active] === option">{{ option.label }}</slot>
-            </span>
-            <svg data-slot="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          </div>
-        </div>
-      </template>
-    </div>
+      <template v-if="$slots.icon" #icon="props"><slot name="icon" v-bind="props" /></template>
+      <template #option="props"><slot name="option" v-bind="props">{{ props.option.label }}</slot></template>
+      <template #group-label="props"><slot name="group-label" v-bind="props">{{ props.label }}</slot></template>
+      <template #separator><slot name="separator" /></template>
+    </SelectPanel>
   </div>
 </template>
 
 <style scoped>
-/* The same layer order as Tailwind CSS. The Select's styles go in `components`,
-   so they win over the resets in `base`, and give way to utilities and to any
-   style outside a layer, like a class of yours that sets its variables. */
+/* The field, the panel, the options and the tags are drawn by select.css, which the Select
+   shares with the Combobox. These are the Select's own parts: the button and the <select>.
+   The same layer order as Tailwind CSS, so a class of yours still wins. */
 @layer theme, base, components, utilities;
 
 @layer components {
-  .select {
-    /* Set per size. The Input's, so a select, an input and a button line up in a row. */
-    --select--height: 2.25rem;
-    --select--padding: 0.75rem;
-    --select--gap: 0.5rem;
-    --select--font-size: 0.875rem;
-    --select--icon--size: 1rem;
-    --select--radius: 0.5rem;
-    /* The text colour at 55%, which has 3:1 against the page, like the Input's border. */
-    --select--border-color: color-mix(in srgb, currentColor 55%, transparent);
-    --select--background: transparent;
-    /* The text colour at 70%, which has 4.5:1 against the page, like the Input's placeholder. */
-    --select--value--placeholder-color: color-mix(in srgb, currentColor 70%, transparent);
-    --select--leading--color: color-mix(in srgb, currentColor 70%, transparent);
-    --select--arrow--color: color-mix(in srgb, currentColor 70%, transparent);
-    --select--arrow--size: 1rem;
-
-    /* The panel looks like the Popover's. */
-    --select--panel--offset: 0.25rem;
-    --select--panel--padding: 0.25rem;
-    --select--panel--max-height: 16rem;
-    --select--panel--radius: 0.5rem;
-    --select--panel--border-color: color-mix(in srgb, currentColor 20%, transparent);
-    --select--panel--background: Canvas;
-    --select--panel--box-shadow: 0 0.25rem 1rem color-mix(in srgb, #000 15%, transparent);
-
-    --select--option--padding-block: 0.375rem;
-    --select--option--padding-inline: 0.5rem;
-    --select--option--radius: 0.25rem;
-    --select--option--color: inherit;
-    --select--option--hover--background: color-mix(in srgb, currentColor 8%, transparent);
-    --select--option--selected--background: transparent;
-    --select--option--selected--font-weight: 600;
-    --select--option--disabled--opacity: 0.5;
-
-    --select--tag--height: 1.5rem;
-    --select--tag--padding: 0.5rem;
-    --select--tag--radius: 0.25rem;
-    --select--tag--font-size: 0.75rem;
-    --select--tag--background: color-mix(in srgb, currentColor 10%, transparent);
-    --select--tag--color: inherit;
-    --select--tag--icon--size: 1em;
-
-    --select--group-label--padding-block: 0.375rem;
-    --select--group-label--padding-inline: 0.5rem;
-    --select--group-label--font-size: 0.75rem;
-    --select--group-label--font-weight: 500;
-    --select--group-label--color: color-mix(in srgb, currentColor 70%, transparent);
-
-    --select--separator--color: color-mix(in srgb, currentColor 20%, transparent);
-    --select--separator--margin: 0.25rem;
-
-    /* Room for the arrow, and for the leading icon where there's one. */
-    --select--padding-start: var(--select--padding);
-    --select--padding-end: calc(var(--select--padding) + var(--select--arrow--size) + var(--select--gap));
-
-    position: relative;
-    display: grid;
-    /* The parts share one cell, so the control fills the field under the tags and the
-       icons, and a press anywhere on the field reaches it, while tags grow the field. */
-    grid-template-columns: minmax(0, 1fr);
-    box-sizing: border-box;
-    /* A min-height rather than a height, so the field grows with larger text. */
-    min-height: var(--select--height);
-    min-width: 0;
-    border: 1px solid var(--select--border-color);
-    border-radius: var(--select--radius);
-    background-color: var(--select--background);
-    color: var(--color--neutral-text);
-    font-family: inherit;
-    font-size: var(--select--font-size);
-    line-height: 1.25;
-  }
-  .select:has(> [data-slot="leading"]) {
-    --select--padding-start: calc(var(--select--padding) + var(--select--icon--size) + var(--select--gap));
-  }
-
-  /* Sizes */
-  .select[data-size="xs"] {
-    --select--height: 1.5rem;
-    --select--padding: 0.5rem;
-    --select--gap: 0.25rem;
-    --select--font-size: 0.75rem;
-    --select--icon--size: 0.875rem;
-    --select--arrow--size: 0.875rem;
-    --select--radius: 0.375rem;
-    --select--tag--height: 1.125rem;
-    --select--tag--padding: 0.25rem;
-    --select--tag--font-size: 0.6875rem;
-  }
-  .select[data-size="sm"] {
-    --select--height: 2rem;
-    --select--padding: 0.625rem;
-    --select--radius: 0.375rem;
-    --select--tag--height: 1.25rem;
-  }
-  .select[data-size="lg"] {
-    --select--height: 2.5rem;
-    --select--padding: 0.875rem;
-    --select--font-size: 1rem;
-    --select--icon--size: 1.25rem;
-    --select--arrow--size: 1.25rem;
-    --select--tag--height: 1.75rem;
-    --select--tag--font-size: 0.875rem;
-  }
-  .select[data-size="xl"] {
-    --select--height: 3rem;
-    --select--padding: 1rem;
-    --select--font-size: 1rem;
-    --select--icon--size: 1.25rem;
-    --select--arrow--size: 1.25rem;
-    --select--radius: 0.75rem;
-    --select--tag--height: 2rem;
-    --select--tag--font-size: 0.875rem;
-  }
-
   /* The <select>, which fills the field, see-through and out of reach in the custom
      rendering. CSS alone decides what paints, before any script runs, so nothing moves. */
   .select > select {
@@ -932,56 +707,572 @@ onBeforeUnmount(() => {
     overflow: hidden;
     clip-path: inset(50%);
   }
+  .select > button > [data-slot="icon"] {
+    margin-inline-end: var(--select--gap);
+  }
+  .select:has(> [data-slot="control"][aria-readonly="true"]) > button[role="combobox"] {
+    cursor: default;
+  }
+  /* The default chevron. An icon in the arrow slot keeps its own size. */
+  .select > [data-slot="arrow"] svg {
+    display: block;
+    width: var(--select--arrow--size);
+    height: var(--select--arrow--size);
+  }
 
-  .select > [data-slot="leading"],
-  .select > [data-slot="arrow"] {
+  /* On touch screens, the targets reach at least 44px tall. Less 1px, since these reach
+     out from inside the root's border. */
+  @media (any-pointer: coarse) {
+    .select > select {
+      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
+      height: auto;
+    }
+    .select > button[role="combobox"]::after {
+      content: "";
+      position: absolute;
+      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
+      inset-inline: 0;
+    }
+  }
+
+  /* The native rendering, where the primary pointer is coarse, the same query the script
+     uses, so the two can't disagree. The <select> paints and the control and tags don't. */
+  @media (pointer: coarse) {
+    .select[data-native] > select {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .select[data-native] > button[role="combobox"],
+    .select[data-native] > :deep([data-slot="tags"]) {
+      display: none;
+    }
+  }
+}
+</style>
+```
+
+```vue [SelectPanel.vue]
+<script setup lang="ts">
+import { useTemplateRef } from "vue";
+import type { Section, SelectOption } from "./listbox";
+
+// The panel the Select and the Combobox both open: a listbox of options, groups and
+// separators, with the check mark beside each picked option and the highlight on the
+// active one. The component that opens it keeps focus and the keyboard model, and this
+// draws what they decide, so the two components can't look or read differently.
+
+const {
+  sections,
+  active,
+  popover = "auto",
+} = defineProps<{
+  id?: string;
+  sections: Section[];
+  /** The highlighted option, which `aria-activedescendant` on the control points at. */
+  active?: SelectOption;
+  isPicked: (option: SelectOption) => boolean;
+  optionId: (option: SelectOption) => string | undefined;
+  groupId: (section: number) => string | undefined;
+  multiple?: boolean;
+  /** The control's name, given by the label that names it, or its own `aria-label`. */
+  label?: string;
+  labelledby?: string;
+  anchorName?: string;
+  /**
+   * `auto` lets the browser close the panel on a press outside it. A text field takes
+   * `manual`, since a press in its text, outside the panel, mustn't close it.
+   */
+  popover?: "auto" | "manual";
+  /** A last option that adds what people typed, which the Combobox's `creatable` turns on. */
+  create?: SelectOption & { id?: string; active?: boolean };
+  /** Shown while no option matches what people typed. It isn't an option, so it's hidden from assistive technologies, which hear it as a status message instead. */
+  empty?: string;
+}>();
+
+const emit = defineEmits<{
+  pick: [option: SelectOption];
+  create: [];
+  beforetoggle: [event: Event];
+}>();
+
+defineSlots<{
+  option?: (props: { option: SelectOption; selected: boolean; active: boolean }) => unknown;
+  "group-label"?: (props: { label: string }) => unknown;
+  separator?: () => unknown;
+  icon?: (props: { option: SelectOption }) => unknown;
+}>();
+
+const element = useTemplateRef<HTMLElement>("element");
+defineExpose({ element });
+
+const hasOptions = () => sections.some((section) => section.options.length);
+</script>
+
+<template>
+  <!-- A child of the root, so a class on the root reaches its tokens. A popover puts it in
+       the top layer. A press on it doesn't move focus, which stays on the control for the
+       keyboard model to run. -->
+  <div
+    :id="id"
+    ref="element"
+    data-slot="panel"
+    :popover="popover"
+    role="listbox"
+    :aria-multiselectable="multiple ? 'true' : undefined"
+    :aria-labelledby="labelledby"
+    :aria-label="labelledby ? undefined : label"
+    :style="anchorName && { 'position-anchor': anchorName }"
+    @beforetoggle="emit('beforetoggle', $event)"
+    @mousedown.prevent
+  >
+    <template v-for="(section, s) in sections" :key="s">
+      <!-- role="none", since a listbox doesn't allow a separator child. -->
+      <div v-if="section.separator" role="none" data-slot="separator">
+        <slot name="separator" />
+      </div>
+      <div
+        v-else
+        :role="section.label === undefined ? 'none' : 'group'"
+        :data-slot="section.label === undefined ? undefined : 'group'"
+        :aria-labelledby="section.label === undefined ? undefined : groupId(s)"
+      >
+        <div v-if="section.label !== undefined" :id="groupId(s)" role="presentation" data-slot="group-label">
+          <slot name="group-label" :label="section.label">{{ section.label }}</slot>
+        </div>
+        <div
+          v-for="option in section.options"
+          :id="optionId(option)"
+          :key="option.value"
+          data-slot="option"
+          role="option"
+          :aria-selected="isPicked(option) ? 'true' : 'false'"
+          :aria-disabled="option.disabled ? 'true' : undefined"
+          :data-active="active === option ? 'true' : undefined"
+          @click="emit('pick', option)"
+        >
+          <span v-if="$slots.icon" data-slot="icon" aria-hidden="true"><slot name="icon" :option="option" /></span>
+          <span data-slot="option-label">
+            <slot name="option" :option="option" :selected="isPicked(option)" :active="active === option">{{ option.label }}</slot>
+          </span>
+          <svg data-slot="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </div>
+      </div>
+    </template>
+    <!-- After every match, so the arrow keys reach it last, and an option like the others,
+         so a screen reader reads it as one. -->
+    <div
+      v-if="create"
+      :id="create.id"
+      data-slot="option"
+      data-create=""
+      role="option"
+      aria-selected="false"
+      :data-active="create.active ? 'true' : undefined"
+      @click="emit('create')"
+    >
+      <span data-slot="option-label">{{ create.label }}</span>
+    </div>
+    <div v-else-if="empty !== undefined && !hasOptions()" data-slot="empty" aria-hidden="true">{{ empty }}</div>
+  </div>
+</template>
+```
+
+```vue [SelectTags.vue]
+<script setup lang="ts">
+import { nextTick, useTemplateRef } from "vue";
+import type { SelectOption } from "./listbox";
+
+// The picked values of a Select or a Combobox with `multiple`, each a tag with a button
+// that removes it. Beside the control, since a <button> can't hold other buttons, and
+// after it, so Tab reaches the remove buttons after the control.
+
+const { selected, removable = true } = defineProps<{
+  selected: SelectOption[];
+  /** Off while the control is disabled or read-only, which leaves the tags without their buttons. */
+  removable?: boolean;
+  removeLabel: (label: string) => string;
+}>();
+
+const emit = defineEmits<{ remove: [option: SelectOption] }>();
+
+defineSlots<{
+  tag?: (props: { option: SelectOption }) => unknown;
+  icon?: (props: { option: SelectOption }) => unknown;
+}>();
+
+const element = useTemplateRef<HTMLElement>("element");
+
+/**
+ * Once a tag is removed, the remove button now in its place takes focus, so keyboard users
+ * never fall back to the top of the page. It's false when there's none, so the caller can
+ * focus its control instead.
+ */
+async function focusAt(index: number) {
+  await nextTick();
+  const next = element.value?.querySelectorAll<HTMLElement>('[data-slot="tag-remove"]')[index];
+  next?.focus();
+  return !!next;
+}
+
+defineExpose({ focusAt });
+</script>
+
+<template>
+  <div v-if="selected.length" ref="element" data-slot="tags">
+    <span v-for="option in selected" :key="option.value" data-slot="tag">
+      <span v-if="$slots.icon" data-slot="icon" aria-hidden="true"><slot name="icon" :option="option" /></span>
+      <span data-slot="tag-label"><slot name="tag" :option="option">{{ option.label }}</slot></span>
+      <button v-if="removable" data-slot="tag-remove" type="button" :aria-label="removeLabel(option.label)" @click="emit('remove', option)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </span>
+  </div>
+</template>
+```
+
+```ts [listbox.ts]
+import { computed, type Ref } from "vue";
+
+// What the Select and the Combobox share about their list: its items, how they're walked
+// and where the panel goes. Both draw it with SelectPanel.vue, so neither keeps a copy.
+
+export interface SelectOption {
+  value: string;
+  /** The text people read, and what typing searches. */
+  label: string;
+  disabled?: boolean;
+}
+/** A heading over some of the options. */
+export interface SelectGroup {
+  label: string;
+  options: SelectOption[];
+}
+/** A rule between options or groups. */
+export interface SelectSeparator {
+  separator: true;
+}
+export type SelectItem = SelectOption | SelectGroup | SelectSeparator;
+
+/** A group, a run of options outside any group, or a separator, which the panel draws in turn. */
+export type Section = { separator?: true; label?: string; options: SelectOption[] };
+
+export const isSeparator = (item: SelectItem): item is SelectSeparator => "separator" in item;
+export const isGroup = (item: SelectItem): item is SelectGroup => "options" in item;
+
+export function toSections(items: SelectItem[]) {
+  const result: Section[] = [];
+  for (const item of items) {
+    if (isSeparator(item)) result.push({ separator: true, options: [] });
+    else if (isGroup(item)) result.push({ label: item.label, options: item.options });
+    else if (result.at(-1) && !result.at(-1)!.separator && result.at(-1)!.label === undefined) result.at(-1)!.options.push(item);
+    else result.push({ options: [item] });
+  }
+  return result;
+}
+
+export interface ListboxOptions {
+  /** What the panel shows. */
+  items: () => SelectItem[];
+  /** Every option, when the panel shows only some of them, so an option keeps its ID as the list narrows. */
+  all?: () => SelectItem[];
+  /** The control's `id`, or its `name`, which every ID in the panel starts with. */
+  baseId: () => string | undefined;
+  /** The highlighted option's index in what the panel shows. */
+  active: Ref<number>;
+}
+
+export function useListbox({ items, all = items, baseId, active }: ListboxOptions) {
+  const sections = computed(() => toSections(items()));
+  const flat = computed(() => sections.value.flatMap((section) => section.options));
+  const positions = computed(() => new Map(toSections(all()).flatMap((section) => section.options).map((option, index) => [option, index])));
+
+  // IDs come from what you pass, rather than being made up, so the markup is the same on
+  // the server, on the client and in every snapshot.
+  const panelId = () => baseId() && `${baseId()}-panel`;
+  const optionId = (option: SelectOption) => baseId() && `${baseId()}-option-${positions.value.get(option)}`;
+  const groupId = (section: number) => baseId() && `${baseId()}-group-${section}`;
+
+  const isEnabled = (index: number) => flat.value[index] !== undefined && !flat.value[index]!.disabled;
+  // The nearest enabled option in a direction, or `from` at either end, since a listbox doesn't wrap.
+  function step(from: number, by: 1 | -1) {
+    for (let index = from + by; index >= 0 && index < flat.value.length; index += by) if (isEnabled(index)) return index;
+    return from;
+  }
+  const firstEnabled = () => step(-1, 1);
+  const lastEnabled = () => step(flat.value.length, -1);
+  // PageDown and PageUp move ten options, stopping at either end.
+  function jump(by: 1 | -1) {
+    let index = active.value;
+    for (let count = 0; count < 10; count++) index = step(index, by);
+    return index;
+  }
+
+  return { sections, flat, panelId, optionId, groupId, isEnabled, step, firstEnabled, lastEnabled, jump };
+}
+
+export interface PlacementOptions {
+  panel: () => HTMLElement | null | undefined;
+  anchor: () => HTMLElement | null | undefined;
+  /**
+   * Fits the panel to the visual viewport while an on-screen keyboard shrinks it. CSS anchor
+   * positioning works against the layout viewport, which the keyboard doesn't shrink, so the
+   * panel takes the scripted path until the keyboard closes. Only a text field brings one up.
+   */
+  fitKeyboard?: boolean;
+}
+
+// CSS anchor positioning places the panel, where the browser has it. Elsewhere, place()
+// does the same: as wide as the field, flipped when there's no room and kept on screen.
+export const anchored = () => globalThis.CSS?.supports?.("position-area: top") ?? false;
+
+export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOptions) {
+  // Whether an on-screen keyboard covers part of the page, which shrinks the visual viewport.
+  const keyboardUp = () => fitKeyboard && !!window.visualViewport && window.visualViewport.height < window.innerHeight;
+  const scripted = () => !anchored() || keyboardUp();
+
+  function place() {
+    const el = panel();
+    const field = anchor();
+    if (!el || !field) return;
+    const keyboard = keyboardUp();
+    // The data attribute turns CSS anchor positioning off, so the styles below take over.
+    if (keyboard) el.dataset.fit = "visual";
+    else delete el.dataset.fit;
+    if (!keyboard && anchored()) {
+      el.style.removeProperty("top");
+      el.style.removeProperty("left");
+      el.style.removeProperty("width");
+      el.style.removeProperty("max-height");
+      return;
+    }
+    const a = field.getBoundingClientRect();
+    // Its margin is the gap, on the block sides only, which `top` places it outside of.
+    const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+    const { clientWidth, clientHeight } = document.documentElement;
+    // The part of the page people can see: all of it, or what the keyboard leaves.
+    const view = keyboard ? window.visualViewport! : undefined;
+    const viewTop = view ? view.offsetTop : 0;
+    const viewBottom = view ? view.offsetTop + view.height : clientHeight;
+    const width = Math.min(a.width, clientWidth - 32);
+    el.style.width = `${width}px`;
+    el.style.maxHeight = "";
+    const natural = el.offsetHeight;
+    const below = viewBottom - a.bottom - 2 * gap;
+    const above = a.top - viewTop - 2 * gap;
+    // Under the field, or above it when there's no room, and when neither side has room,
+    // shrunk on the bigger one, with its options scrolling.
+    const under = natural <= below || (natural > above && below >= above);
+    const height = Math.min(natural, Math.max(under ? below : above, 0));
+    if (height < natural) el.style.maxHeight = `${height}px`;
+    const top = under ? a.bottom : a.top - 2 * gap - height;
+    el.style.left = `${Math.max(0, Math.min(a.left, clientWidth - width))}px`;
+    el.style.top = `${Math.max(viewTop - gap, Math.min(top, viewBottom - height - gap))}px`;
+  }
+
+  // The scripted path follows the page as it scrolls and resizes, and the keyboard as it
+  // opens and closes, while the panel is open.
+  let listening = false;
+  function listen(open: boolean) {
+    const on = open && (scripted() || fitKeyboard);
+    if (on === listening) return;
+    listening = on;
+    const method = on ? "addEventListener" : "removeEventListener";
+    window[method]("scroll", place, { capture: true, passive: true } as AddEventListenerOptions);
+    window[method]("resize", place);
+    if (fitKeyboard) {
+      window.visualViewport?.[method]("resize", place);
+      window.visualViewport?.[method]("scroll", place);
+    }
+  }
+
+  return { place, listen };
+}
+```
+
+```css [select.css]
+/* What the Select and the Combobox draw alike: the field, its sizes, the panel, the options,
+   the groups, the separators and the tags. Both roots set the Select's variables, so a class
+   on either root restyles every part, and one class restyles both components.
+
+   The same layer order as Tailwind CSS. These styles go in `components`, so they win over
+   the resets in `base`, and give way to utilities and to any style outside a layer, like a
+   class of yours that sets the variables. */
+@layer theme, base, components, utilities;
+
+@layer components {
+  :is(.select, .combobox) {
+    /* Set per size. The Input's, so a select, an input and a button line up in a row. */
+    --select--height: 2.25rem;
+    --select--padding: 0.75rem;
+    --select--gap: 0.5rem;
+    --select--font-size: 0.875rem;
+    --select--icon--size: 1rem;
+    --select--radius: 0.5rem;
+    /* The text colour at 55%, which has 3:1 against the page, like the Input's border. */
+    --select--border-color: color-mix(in srgb, currentColor 55%, transparent);
+    --select--background: transparent;
+    /* The text colour at 70%, which has 4.5:1 against the page, like the Input's placeholder. */
+    --select--value--placeholder-color: color-mix(in srgb, currentColor 70%, transparent);
+    --select--leading--color: color-mix(in srgb, currentColor 70%, transparent);
+    --select--arrow--color: color-mix(in srgb, currentColor 70%, transparent);
+    --select--arrow--size: 1rem;
+
+    /* The panel looks like the Popover's. */
+    --select--panel--offset: 0.25rem;
+    --select--panel--padding: 0.25rem;
+    --select--panel--max-height: 16rem;
+    --select--panel--radius: 0.5rem;
+    --select--panel--border-color: color-mix(in srgb, currentColor 20%, transparent);
+    --select--panel--background: Canvas;
+    --select--panel--box-shadow: 0 0.25rem 1rem color-mix(in srgb, #000 15%, transparent);
+
+    --select--option--padding-block: 0.375rem;
+    --select--option--padding-inline: 0.5rem;
+    --select--option--radius: 0.25rem;
+    --select--option--color: inherit;
+    --select--option--hover--background: color-mix(in srgb, currentColor 8%, transparent);
+    --select--option--selected--background: transparent;
+    --select--option--selected--font-weight: 600;
+    --select--option--disabled--opacity: 0.5;
+
+    --select--tag--height: 1.5rem;
+    --select--tag--padding: 0.5rem;
+    --select--tag--radius: 0.25rem;
+    --select--tag--font-size: 0.75rem;
+    --select--tag--background: color-mix(in srgb, currentColor 10%, transparent);
+    --select--tag--color: inherit;
+    --select--tag--icon--size: 1em;
+
+    --select--group-label--padding-block: 0.375rem;
+    --select--group-label--padding-inline: 0.5rem;
+    --select--group-label--font-size: 0.75rem;
+    --select--group-label--font-weight: 500;
+    --select--group-label--color: color-mix(in srgb, currentColor 70%, transparent);
+
+    --select--separator--color: color-mix(in srgb, currentColor 20%, transparent);
+    --select--separator--margin: 0.25rem;
+
+    /* Room for the arrow, and for the leading icon where there's one. */
+    --select--padding-start: var(--select--padding);
+    --select--padding-end: calc(var(--select--padding) + var(--select--arrow--size) + var(--select--gap));
+
+    position: relative;
+    display: grid;
+    /* The parts share one cell, so the control fills the field under the icons, and a press
+       anywhere on the field reaches it. */
+    grid-template-columns: minmax(0, 1fr);
+    box-sizing: border-box;
+    /* A min-height rather than a height, so the field grows with larger text. */
+    min-height: var(--select--height);
+    min-width: 0;
+    border: 1px solid var(--select--border-color);
+    border-radius: var(--select--radius);
+    background-color: var(--select--background);
+    color: var(--color--neutral-text);
+    font-family: inherit;
+    font-size: var(--select--font-size);
+    line-height: 1.25;
+  }
+  :is(.select, .combobox):has(> [data-slot="leading"]) {
+    --select--padding-start: calc(var(--select--padding) + var(--select--icon--size) + var(--select--gap));
+  }
+
+  /* Sizes */
+  :is(.select, .combobox)[data-size="xs"] {
+    --select--height: 1.5rem;
+    --select--padding: 0.5rem;
+    --select--gap: 0.25rem;
+    --select--font-size: 0.75rem;
+    --select--icon--size: 0.875rem;
+    --select--arrow--size: 0.875rem;
+    --select--radius: 0.375rem;
+    --select--tag--height: 1.125rem;
+    --select--tag--padding: 0.25rem;
+    --select--tag--font-size: 0.6875rem;
+  }
+  :is(.select, .combobox)[data-size="sm"] {
+    --select--height: 2rem;
+    --select--padding: 0.625rem;
+    --select--radius: 0.375rem;
+    --select--tag--height: 1.25rem;
+  }
+  :is(.select, .combobox)[data-size="lg"] {
+    --select--height: 2.5rem;
+    --select--padding: 0.875rem;
+    --select--font-size: 1rem;
+    --select--icon--size: 1.25rem;
+    --select--arrow--size: 1.25rem;
+    --select--tag--height: 1.75rem;
+    --select--tag--font-size: 0.875rem;
+  }
+  :is(.select, .combobox)[data-size="xl"] {
+    --select--height: 3rem;
+    --select--padding: 1rem;
+    --select--font-size: 1rem;
+    --select--icon--size: 1.25rem;
+    --select--arrow--size: 1.25rem;
+    --select--radius: 0.75rem;
+    --select--tag--height: 2rem;
+    --select--tag--font-size: 0.875rem;
+  }
+
+  :is(.select, .combobox) > [data-slot="leading"],
+  :is(.select, .combobox) > [data-slot="arrow"] {
     grid-area: 1 / 1;
     align-self: center;
     display: inline-flex;
     /* Decoration above the control, which a press goes through. */
     pointer-events: none;
   }
-  .select > [data-slot="leading"] {
+  :is(.select, .combobox) > [data-slot="leading"] {
     justify-self: start;
     margin-inline-start: var(--select--padding);
     color: var(--select--leading--color);
   }
-  .select > [data-slot="arrow"] {
+  :is(.select, .combobox) > [data-slot="arrow"] {
     justify-self: end;
     margin-inline-end: var(--select--padding);
     color: var(--select--arrow--color);
   }
-  .select > [data-slot="leading"] :slotted(svg) {
+  :is(.select, .combobox) > [data-slot="leading"] svg {
     width: var(--select--icon--size);
     height: var(--select--icon--size);
   }
-  .select > [data-slot="arrow"] svg {
-    display: block;
-    width: var(--select--arrow--size);
-    height: var(--select--arrow--size);
-  }
-  .select[data-state="open"] > [data-slot="arrow"] {
+  :is(.select, .combobox)[data-state="open"] > [data-slot="arrow"] {
     rotate: 180deg;
   }
 
-  /* The tags sit in the control's cell. Only their remove buttons take a press of their
-     own, so a press on a tag's label, or between tags, opens the panel. */
+  /* The Select's tags sit in the control's cell. Only their remove buttons take a press of
+     their own, so a press on a tag's label, or between tags, opens the panel. */
   .select > [data-slot="tags"] {
     grid-area: 1 / 1;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     align-self: center;
-    gap: 0.25rem;
-    min-width: 0;
     padding-block: 0.25rem;
     padding-inline: calc(var(--select--padding) / 2) var(--select--padding-end);
-    pointer-events: none;
   }
   .select:has(> [data-slot="leading"]) > [data-slot="tags"] {
     padding-inline-start: var(--select--padding-start);
   }
-  .select [data-slot="tag"] {
+  /* The Combobox's go on a row under the text, which people still need to see as they type.
+     They come after it in the page too, so Tab reaches them in the order people read them. */
+  .combobox > [data-slot="tags"] {
+    grid-area: 2 / 1;
+    padding-block: 0 0.25rem;
+    padding-inline: calc(var(--select--padding) / 2);
+  }
+  :is(.select, .combobox) > [data-slot="tags"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    pointer-events: none;
+  }
+  :is(.select, .combobox) [data-slot="tag"] {
     display: inline-flex;
     align-items: center;
     box-sizing: border-box;
@@ -994,35 +1285,32 @@ onBeforeUnmount(() => {
     font-size: var(--select--tag--font-size);
     pointer-events: auto;
   }
-  .select [data-slot="tag"]:not(:has(> [data-slot="tag-remove"])) {
+  :is(.select, .combobox) [data-slot="tag"]:not(:has(> [data-slot="tag-remove"])) {
     padding-inline-end: var(--select--tag--padding);
   }
   /* An option's icon, in the panel, the field and its tag, at the size of the text around it. */
-  .select [data-slot="icon"] {
+  :is(.select, .combobox) [data-slot="icon"] {
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
   }
-  .select [data-slot="icon"] > :slotted(svg) {
+  :is(.select, .combobox) [data-slot="icon"] > svg {
     width: var(--select--icon--size);
     height: var(--select--icon--size);
   }
-  .select > button > [data-slot="icon"] {
-    margin-inline-end: var(--select--gap);
-  }
-  .select [data-slot="tag"] > [data-slot="icon"] {
+  :is(.select, .combobox) [data-slot="tag"] > [data-slot="icon"] {
     margin-inline-end: 0.25rem;
   }
-  .select [data-slot="tag"] > [data-slot="icon"] > :slotted(svg) {
+  :is(.select, .combobox) [data-slot="tag"] > [data-slot="icon"] > svg {
     width: var(--select--tag--icon--size);
     height: var(--select--tag--icon--size);
   }
-  .select [data-slot="tag-label"] {
+  :is(.select, .combobox) [data-slot="tag-label"] {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .select [data-slot="tag-remove"] {
+  :is(.select, .combobox) [data-slot="tag-remove"] {
     position: relative;
     display: inline-flex;
     flex-shrink: 0;
@@ -1038,24 +1326,24 @@ onBeforeUnmount(() => {
     color: inherit;
     cursor: pointer;
   }
-  .select [data-slot="tag-remove"] svg {
+  :is(.select, .combobox) [data-slot="tag-remove"] svg {
     width: 0.75em;
     height: 0.75em;
   }
   /* At least 24 × 24px to press, whatever the tag's size. */
-  .select [data-slot="tag-remove"]::before {
+  :is(.select, .combobox) [data-slot="tag-remove"]::before {
     content: "";
     position: absolute;
     inset: min(0px, (var(--select--tag--height) - 1.5rem) / 2);
   }
-  .select [data-slot="tag-remove"]:focus-visible {
+  :is(.select, .combobox) [data-slot="tag-remove"]:focus-visible {
     outline: 2px solid var(--color--focus);
     outline-offset: -2px;
   }
 
   /* The panel. Beside the field, as wide as it, and flipped when there's no room, the way
      the Popover settles it. When neither side has room, it shrinks on the bigger one. */
-  .select > [data-slot="panel"] {
+  :is(.select, .combobox) > [data-slot="panel"] {
     position: fixed;
     position-area: block-end span-inline-end;
     position-try-fallbacks: flip-block, --select-fit, flip-block --select-fit;
@@ -1077,15 +1365,21 @@ onBeforeUnmount(() => {
     line-height: 1.25;
     overflow-wrap: anywhere;
   }
+  /* While an on-screen keyboard is up, the script places the panel in what's left of the
+     screen, since anchor positioning can't see the keyboard. */
+  :is(.select, .combobox) > [data-slot="panel"][data-fit="visual"] {
+    position-area: none;
+    position-try-fallbacks: none;
+  }
 
-  .select [data-slot="group-label"] {
+  :is(.select, .combobox) [data-slot="group-label"] {
     padding-block: var(--select--group-label--padding-block);
     padding-inline: var(--select--group-label--padding-inline);
     color: var(--select--group-label--color);
     font-size: var(--select--group-label--font-size);
     font-weight: var(--select--group-label--font-weight);
   }
-  .select [data-slot="separator"] {
+  :is(.select, .combobox) [data-slot="separator"] {
     height: 1px;
     margin-block: var(--select--separator--margin);
     background-color: var(--select--separator--color);
@@ -1093,7 +1387,7 @@ onBeforeUnmount(() => {
 
   /* Options. Each state reads the attribute that exposes it, so what people see and what
      assistive technologies report can't drift apart. */
-  .select [data-slot="option"] {
+  :is(.select, .combobox) [data-slot="option"] {
     display: flex;
     align-items: center;
     gap: var(--select--gap);
@@ -1104,62 +1398,59 @@ onBeforeUnmount(() => {
     cursor: pointer;
   }
   /* The label takes the room between the icon and the check mark. */
-  .select [data-slot="option"] > [data-slot="option-label"] {
+  :is(.select, .combobox) [data-slot="option"] > [data-slot="option-label"] {
     flex: 1;
     min-width: 0;
   }
-  .select [data-slot="option"] > [data-slot="check"] {
+  :is(.select, .combobox) [data-slot="option"] > [data-slot="check"] {
     flex-shrink: 0;
     width: var(--select--icon--size);
     height: var(--select--icon--size);
     visibility: hidden;
   }
   @media (hover: hover) {
-    .select [data-slot="option"]:hover:not([aria-disabled="true"]) {
+    :is(.select, .combobox) [data-slot="option"]:hover:not([aria-disabled="true"]) {
       background-color: var(--select--option--hover--background);
     }
   }
   /* The highlight from the keyboard, as an outline, since focus stays on the control. */
-  .select [data-slot="option"][data-active="true"] {
+  :is(.select, .combobox) [data-slot="option"][data-active="true"] {
     outline: 2px solid var(--color--focus);
     outline-offset: -2px;
   }
-  .select [data-slot="option"][aria-selected="true"] {
+  :is(.select, .combobox) [data-slot="option"][aria-selected="true"] {
     background-color: var(--select--option--selected--background);
     font-weight: var(--select--option--selected--font-weight);
   }
   /* A check mark as well as the weight, so a picked option doesn't rest on one cue. */
-  .select [data-slot="option"][aria-selected="true"] > [data-slot="check"] {
+  :is(.select, .combobox) [data-slot="option"][aria-selected="true"] > [data-slot="check"] {
     visibility: visible;
   }
-  .select [data-slot="option"][aria-disabled="true"] {
+  :is(.select, .combobox) [data-slot="option"][aria-disabled="true"] {
     opacity: var(--select--option--disabled--opacity);
     cursor: not-allowed;
   }
 
   /* States of the field, read from the active control. */
   @media (hover: hover) {
-    .select:hover:where(:not(:has(> [data-slot="control"]:disabled, > [data-slot="control"][aria-readonly="true"]))) {
+    :is(.select, .combobox):hover:where(:not(:has(> [data-slot="control"]:disabled, > [data-slot="control"][aria-readonly="true"]))) {
       --select--border-color: color-mix(in srgb, currentColor 80%, transparent);
     }
   }
-  .select:has(> [data-slot="control"]:focus-visible) {
+  :is(.select, .combobox):has(> [data-slot="control"]:focus-visible) {
     outline: 2px solid var(--color--focus);
     outline-offset: 2px;
   }
-  .select:has(> [data-slot="control"][aria-readonly="true"]) {
+  :is(.select, .combobox):has(> [data-slot="control"][aria-readonly="true"]) {
     /* Dashed, like a read-only Input, while the value keeps its contrast. */
     border-style: dashed;
   }
-  .select:has(> [data-slot="control"][aria-readonly="true"]) > button[role="combobox"] {
-    cursor: default;
-  }
-  .select:has(> [data-slot="control"][aria-invalid="true"]) {
+  :is(.select, .combobox):has(> [data-slot="control"][aria-invalid="true"]) {
     --select--border-color: var(--color--error-text);
     /* A second pixel of border, drawn inside, so the field doesn't grow. */
     box-shadow: inset 0 0 0 1px var(--select--border-color);
   }
-  .select:has(> [data-slot="control"]:disabled) {
+  :is(.select, .combobox):has(> [data-slot="control"]:disabled) {
     opacity: 0.5;
     cursor: not-allowed;
   }
@@ -1167,55 +1458,31 @@ onBeforeUnmount(() => {
   /* On touch screens, the text is at least 16px, or Safari on iOS zooms in when the control
      gets focus, as with the Input, and the targets reach at least 44px tall. */
   @media (any-pointer: coarse) {
-    .select {
+    :is(.select, .combobox) {
       font-size: max(var(--select--font-size), 1rem);
     }
-    /* Less 1px, since these reach out from inside the root's border. */
-    .select > select {
-      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
-      height: auto;
-    }
-    .select > button[role="combobox"]::after {
-      content: "";
-      position: absolute;
-      inset-block: min(0px, (var(--select--height) - 2.75rem) / 2 - 1px);
-      inset-inline: 0;
-    }
-    .select [data-slot="option"] {
+    :is(.select, .combobox) [data-slot="option"] {
       min-height: 2.75rem;
     }
-    .select [data-slot="tag-remove"]::before {
+    :is(.select, .combobox) [data-slot="tag-remove"]::before {
       inset-block: min(0px, (var(--select--tag--height) - 2.75rem) / 2);
     }
     /* Rows of tags sit far enough apart that those targets don't cover each other. */
-    .select > [data-slot="tags"] {
+    :is(.select, .combobox) > [data-slot="tags"] {
       row-gap: max(0.25rem, 2.75rem - var(--select--tag--height));
-    }
-  }
-
-  /* The native rendering, where the primary pointer is coarse, the same query the script
-     uses, so the two can't disagree. The <select> paints and the control and tags don't. */
-  @media (pointer: coarse) {
-    .select[data-native] > select {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .select[data-native] > button[role="combobox"],
-    .select[data-native] > [data-slot="tags"] {
-      display: none;
     }
   }
 
   /* The arrow turns and the panel fades in, unless people have asked for less motion. */
   @media (prefers-reduced-motion: no-preference) {
-    .select > [data-slot="arrow"] {
+    :is(.select, .combobox) > [data-slot="arrow"] {
       transition: rotate 150ms ease-out;
     }
-    .select > [data-slot="panel"]:popover-open {
+    :is(.select, .combobox) > [data-slot="panel"]:popover-open {
       transition: opacity 150ms ease-out;
     }
     @starting-style {
-      .select > [data-slot="panel"]:popover-open {
+      :is(.select, .combobox) > [data-slot="panel"]:popover-open {
         opacity: 0;
       }
     }
@@ -1223,8 +1490,8 @@ onBeforeUnmount(() => {
 
   /* With more contrast, the border is drawn in the text colour at full strength. */
   @media (prefers-contrast: more) {
-    .select,
-    .select:hover {
+    :is(.select, .combobox),
+    :is(.select, .combobox):hover {
       --select--border-color: currentColor;
       --select--panel--border-color: currentColor;
     }
@@ -1232,23 +1499,23 @@ onBeforeUnmount(() => {
 
   /* Forced colors mode drops backgrounds and shadows, so states take system colours. */
   @media (forced-colors: active) {
-    .select:has(> [data-slot="control"]:focus-visible),
-    .select [data-slot="option"][data-active="true"],
-    .select [data-slot="tag-remove"]:focus-visible {
+    :is(.select, .combobox):has(> [data-slot="control"]:focus-visible),
+    :is(.select, .combobox) [data-slot="option"][data-active="true"],
+    :is(.select, .combobox) [data-slot="tag-remove"]:focus-visible {
       outline-color: Highlight;
     }
-    .select:has(> [data-slot="control"]:disabled) {
+    :is(.select, .combobox):has(> [data-slot="control"]:disabled) {
       border-color: GrayText;
       color: GrayText;
       opacity: 1;
     }
-    .select > [data-slot="panel"] {
+    :is(.select, .combobox) > [data-slot="panel"] {
       border-color: CanvasText;
     }
-    .select [data-slot="tag"] {
+    :is(.select, .combobox) [data-slot="tag"] {
       border: 1px solid CanvasText;
     }
-    .select [data-slot="option"][aria-disabled="true"] {
+    :is(.select, .combobox) [data-slot="option"][aria-disabled="true"] {
       color: GrayText;
       opacity: 1;
     }
@@ -1261,7 +1528,6 @@ onBeforeUnmount(() => {
   max-height: calc(100% - 2 * var(--select--panel--offset));
   min-height: calc(50dvh - 3rem);
 }
-</style>
 ```
 
 ```ts [Select.test.ts]

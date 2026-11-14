@@ -102,7 +102,7 @@ export interface FieldProps {
  * What the Field renders around a control depends on what it is, which it reads from
  * the control's component, so none of the controls needs to know about the Field:
  *
- * - `text`: an Input, a Textarea, a Select or a native <input>, <textarea> or <select>. The label
+ * - `text`: an Input, a Textarea, a Select, a Combobox or a native <input>, <textarea> or <select>. The label
  *   above it, the hint between them, the error after it.
  * - `checkbox`: a Checkbox, which its own <label> names. The hint and error after it.
  * - `switch`: a Switch. The label before it on the same row, the hint and error under it.
@@ -145,7 +145,7 @@ export default defineComponent({
     size: String as PropType<FieldProps["size"]>,
   },
   slots: Object as SlotsType<{
-    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group, a Select or a native text control. */
+    /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group, a Select, a Combobox or a native text control. */
     default?: () => VNode[];
   }>,
   setup(props, { slots }) {

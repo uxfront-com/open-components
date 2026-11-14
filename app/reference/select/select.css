@@ -1,0 +1,434 @@
+/* What the Select and the Combobox draw alike: the field, its sizes, the panel, the options,
+   the groups, the separators and the tags. Both roots set the Select's variables, so a class
+   on either root restyles every part, and one class restyles both components.
+
+   The same layer order as Tailwind CSS. These styles go in `components`, so they win over
+   the resets in `base`, and give way to utilities and to any style outside a layer, like a
+   class of yours that sets the variables. */
+@layer theme, base, components, utilities;
+
+@layer components {
+  :is(.select, .combobox) {
+    /* Set per size. The Input's, so a select, an input and a button line up in a row. */
+    --select--height: 2.25rem;
+    --select--padding: 0.75rem;
+    --select--gap: 0.5rem;
+    --select--font-size: 0.875rem;
+    --select--icon--size: 1rem;
+    --select--radius: 0.5rem;
+    /* The text colour at 55%, which has 3:1 against the page, like the Input's border. */
+    --select--border-color: color-mix(in srgb, currentColor 55%, transparent);
+    --select--background: transparent;
+    /* The text colour at 70%, which has 4.5:1 against the page, like the Input's placeholder. */
+    --select--value--placeholder-color: color-mix(in srgb, currentColor 70%, transparent);
+    --select--leading--color: color-mix(in srgb, currentColor 70%, transparent);
+    --select--arrow--color: color-mix(in srgb, currentColor 70%, transparent);
+    --select--arrow--size: 1rem;
+
+    /* The panel looks like the Popover's. */
+    --select--panel--offset: 0.25rem;
+    --select--panel--padding: 0.25rem;
+    --select--panel--max-height: 16rem;
+    --select--panel--radius: 0.5rem;
+    --select--panel--border-color: color-mix(in srgb, currentColor 20%, transparent);
+    --select--panel--background: Canvas;
+    --select--panel--box-shadow: 0 0.25rem 1rem color-mix(in srgb, #000 15%, transparent);
+
+    --select--option--padding-block: 0.375rem;
+    --select--option--padding-inline: 0.5rem;
+    --select--option--radius: 0.25rem;
+    --select--option--color: inherit;
+    --select--option--hover--background: color-mix(in srgb, currentColor 8%, transparent);
+    --select--option--selected--background: transparent;
+    --select--option--selected--font-weight: 600;
+    --select--option--disabled--opacity: 0.5;
+
+    --select--tag--height: 1.5rem;
+    --select--tag--padding: 0.5rem;
+    --select--tag--radius: 0.25rem;
+    --select--tag--font-size: 0.75rem;
+    --select--tag--background: color-mix(in srgb, currentColor 10%, transparent);
+    --select--tag--color: inherit;
+    --select--tag--icon--size: 1em;
+
+    --select--group-label--padding-block: 0.375rem;
+    --select--group-label--padding-inline: 0.5rem;
+    --select--group-label--font-size: 0.75rem;
+    --select--group-label--font-weight: 500;
+    --select--group-label--color: color-mix(in srgb, currentColor 70%, transparent);
+
+    --select--separator--color: color-mix(in srgb, currentColor 20%, transparent);
+    --select--separator--margin: 0.25rem;
+
+    /* Room for the arrow, and for the leading icon where there's one. */
+    --select--padding-start: var(--select--padding);
+    --select--padding-end: calc(var(--select--padding) + var(--select--arrow--size) + var(--select--gap));
+
+    position: relative;
+    display: grid;
+    /* The parts share one cell, so the control fills the field under the icons, and a press
+       anywhere on the field reaches it. */
+    grid-template-columns: minmax(0, 1fr);
+    box-sizing: border-box;
+    /* A min-height rather than a height, so the field grows with larger text. */
+    min-height: var(--select--height);
+    min-width: 0;
+    border: 1px solid var(--select--border-color);
+    border-radius: var(--select--radius);
+    background-color: var(--select--background);
+    color: var(--color--neutral-text);
+    font-family: inherit;
+    font-size: var(--select--font-size);
+    line-height: 1.25;
+  }
+  :is(.select, .combobox):has(> [data-slot="leading"]) {
+    --select--padding-start: calc(var(--select--padding) + var(--select--icon--size) + var(--select--gap));
+  }
+
+  /* Sizes */
+  :is(.select, .combobox)[data-size="xs"] {
+    --select--height: 1.5rem;
+    --select--padding: 0.5rem;
+    --select--gap: 0.25rem;
+    --select--font-size: 0.75rem;
+    --select--icon--size: 0.875rem;
+    --select--arrow--size: 0.875rem;
+    --select--radius: 0.375rem;
+    --select--tag--height: 1.125rem;
+    --select--tag--padding: 0.25rem;
+    --select--tag--font-size: 0.6875rem;
+  }
+  :is(.select, .combobox)[data-size="sm"] {
+    --select--height: 2rem;
+    --select--padding: 0.625rem;
+    --select--radius: 0.375rem;
+    --select--tag--height: 1.25rem;
+  }
+  :is(.select, .combobox)[data-size="lg"] {
+    --select--height: 2.5rem;
+    --select--padding: 0.875rem;
+    --select--font-size: 1rem;
+    --select--icon--size: 1.25rem;
+    --select--arrow--size: 1.25rem;
+    --select--tag--height: 1.75rem;
+    --select--tag--font-size: 0.875rem;
+  }
+  :is(.select, .combobox)[data-size="xl"] {
+    --select--height: 3rem;
+    --select--padding: 1rem;
+    --select--font-size: 1rem;
+    --select--icon--size: 1.25rem;
+    --select--arrow--size: 1.25rem;
+    --select--radius: 0.75rem;
+    --select--tag--height: 2rem;
+    --select--tag--font-size: 0.875rem;
+  }
+
+  :is(.select, .combobox) > [data-slot="leading"],
+  :is(.select, .combobox) > [data-slot="arrow"] {
+    grid-area: 1 / 1;
+    align-self: center;
+    display: inline-flex;
+    /* Decoration above the control, which a press goes through. */
+    pointer-events: none;
+  }
+  :is(.select, .combobox) > [data-slot="leading"] {
+    justify-self: start;
+    margin-inline-start: var(--select--padding);
+    color: var(--select--leading--color);
+  }
+  :is(.select, .combobox) > [data-slot="arrow"] {
+    justify-self: end;
+    margin-inline-end: var(--select--padding);
+    color: var(--select--arrow--color);
+  }
+  :is(.select, .combobox) > [data-slot="leading"] svg {
+    width: var(--select--icon--size);
+    height: var(--select--icon--size);
+  }
+  :is(.select, .combobox)[data-state="open"] > [data-slot="arrow"] {
+    rotate: 180deg;
+  }
+
+  /* The Select's tags sit in the control's cell. Only their remove buttons take a press of
+     their own, so a press on a tag's label, or between tags, opens the panel. */
+  .select > [data-slot="tags"] {
+    grid-area: 1 / 1;
+    align-self: center;
+    padding-block: 0.25rem;
+    padding-inline: calc(var(--select--padding) / 2) var(--select--padding-end);
+  }
+  .select:has(> [data-slot="leading"]) > [data-slot="tags"] {
+    padding-inline-start: var(--select--padding-start);
+  }
+  /* The Combobox's go on a row under the text, which people still need to see as they type.
+     They come after it in the page too, so Tab reaches them in the order people read them. */
+  .combobox > [data-slot="tags"] {
+    grid-area: 2 / 1;
+    padding-block: 0 0.25rem;
+    padding-inline: calc(var(--select--padding) / 2);
+  }
+  :is(.select, .combobox) > [data-slot="tags"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    pointer-events: none;
+  }
+  :is(.select, .combobox) [data-slot="tag"] {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: var(--select--tag--height);
+    padding-inline: var(--select--tag--padding) 0;
+    border-radius: var(--select--tag--radius);
+    background-color: var(--select--tag--background);
+    color: var(--select--tag--color);
+    font-size: var(--select--tag--font-size);
+    pointer-events: auto;
+  }
+  :is(.select, .combobox) [data-slot="tag"]:not(:has(> [data-slot="tag-remove"])) {
+    padding-inline-end: var(--select--tag--padding);
+  }
+  /* An option's icon, in the panel, the field and its tag, at the size of the text around it. */
+  :is(.select, .combobox) [data-slot="icon"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+  :is(.select, .combobox) [data-slot="icon"] > svg {
+    width: var(--select--icon--size);
+    height: var(--select--icon--size);
+  }
+  :is(.select, .combobox) [data-slot="tag"] > [data-slot="icon"] {
+    margin-inline-end: 0.25rem;
+  }
+  :is(.select, .combobox) [data-slot="tag"] > [data-slot="icon"] > svg {
+    width: var(--select--tag--icon--size);
+    height: var(--select--tag--icon--size);
+  }
+  :is(.select, .combobox) [data-slot="tag-label"] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :is(.select, .combobox) [data-slot="tag-remove"] {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: var(--select--tag--height);
+    height: var(--select--tag--height);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  :is(.select, .combobox) [data-slot="tag-remove"] svg {
+    width: 0.75em;
+    height: 0.75em;
+  }
+  /* At least 24 × 24px to press, whatever the tag's size. */
+  :is(.select, .combobox) [data-slot="tag-remove"]::before {
+    content: "";
+    position: absolute;
+    inset: min(0px, (var(--select--tag--height) - 1.5rem) / 2);
+  }
+  :is(.select, .combobox) [data-slot="tag-remove"]:focus-visible {
+    outline: 2px solid var(--color--focus);
+    outline-offset: -2px;
+  }
+
+  /* The panel. Beside the field, as wide as it, and flipped when there's no room, the way
+     the Popover settles it. When neither side has room, it shrinks on the bigger one. */
+  :is(.select, .combobox) > [data-slot="panel"] {
+    position: fixed;
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: flip-block, --select-fit, flip-block --select-fit;
+    inset: auto;
+    box-sizing: border-box;
+    width: anchor-size(width);
+    max-width: calc(100vw - 2rem);
+    max-height: min(var(--select--panel--max-height), 100dvh - 2rem);
+    margin: var(--select--panel--offset) 0;
+    padding: var(--select--panel--padding);
+    overflow-y: auto;
+    border: 1px solid var(--select--panel--border-color);
+    border-radius: var(--select--panel--radius);
+    background-color: var(--select--panel--background);
+    box-shadow: var(--select--panel--box-shadow);
+    color: var(--color--neutral-text);
+    font-family: inherit;
+    font-size: var(--select--font-size);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  /* While an on-screen keyboard is up, the script places the panel in what's left of the
+     screen, since anchor positioning can't see the keyboard. */
+  :is(.select, .combobox) > [data-slot="panel"][data-fit="visual"] {
+    position-area: none;
+    position-try-fallbacks: none;
+  }
+
+  :is(.select, .combobox) [data-slot="group-label"] {
+    padding-block: var(--select--group-label--padding-block);
+    padding-inline: var(--select--group-label--padding-inline);
+    color: var(--select--group-label--color);
+    font-size: var(--select--group-label--font-size);
+    font-weight: var(--select--group-label--font-weight);
+  }
+  :is(.select, .combobox) [data-slot="separator"] {
+    height: 1px;
+    margin-block: var(--select--separator--margin);
+    background-color: var(--select--separator--color);
+  }
+
+  /* Options. Each state reads the attribute that exposes it, so what people see and what
+     assistive technologies report can't drift apart. */
+  :is(.select, .combobox) [data-slot="option"] {
+    display: flex;
+    align-items: center;
+    gap: var(--select--gap);
+    padding-block: var(--select--option--padding-block);
+    padding-inline: var(--select--option--padding-inline);
+    border-radius: var(--select--option--radius);
+    color: var(--select--option--color);
+    cursor: pointer;
+  }
+  /* The label takes the room between the icon and the check mark. */
+  :is(.select, .combobox) [data-slot="option"] > [data-slot="option-label"] {
+    flex: 1;
+    min-width: 0;
+  }
+  :is(.select, .combobox) [data-slot="option"] > [data-slot="check"] {
+    flex-shrink: 0;
+    width: var(--select--icon--size);
+    height: var(--select--icon--size);
+    visibility: hidden;
+  }
+  @media (hover: hover) {
+    :is(.select, .combobox) [data-slot="option"]:hover:not([aria-disabled="true"]) {
+      background-color: var(--select--option--hover--background);
+    }
+  }
+  /* The highlight from the keyboard, as an outline, since focus stays on the control. */
+  :is(.select, .combobox) [data-slot="option"][data-active="true"] {
+    outline: 2px solid var(--color--focus);
+    outline-offset: -2px;
+  }
+  :is(.select, .combobox) [data-slot="option"][aria-selected="true"] {
+    background-color: var(--select--option--selected--background);
+    font-weight: var(--select--option--selected--font-weight);
+  }
+  /* A check mark as well as the weight, so a picked option doesn't rest on one cue. */
+  :is(.select, .combobox) [data-slot="option"][aria-selected="true"] > [data-slot="check"] {
+    visibility: visible;
+  }
+  :is(.select, .combobox) [data-slot="option"][aria-disabled="true"] {
+    opacity: var(--select--option--disabled--opacity);
+    cursor: not-allowed;
+  }
+
+  /* States of the field, read from the active control. */
+  @media (hover: hover) {
+    :is(.select, .combobox):hover:where(:not(:has(> [data-slot="control"]:disabled, > [data-slot="control"][aria-readonly="true"]))) {
+      --select--border-color: color-mix(in srgb, currentColor 80%, transparent);
+    }
+  }
+  :is(.select, .combobox):has(> [data-slot="control"]:focus-visible) {
+    outline: 2px solid var(--color--focus);
+    outline-offset: 2px;
+  }
+  :is(.select, .combobox):has(> [data-slot="control"][aria-readonly="true"]) {
+    /* Dashed, like a read-only Input, while the value keeps its contrast. */
+    border-style: dashed;
+  }
+  :is(.select, .combobox):has(> [data-slot="control"][aria-invalid="true"]) {
+    --select--border-color: var(--color--error-text);
+    /* A second pixel of border, drawn inside, so the field doesn't grow. */
+    box-shadow: inset 0 0 0 1px var(--select--border-color);
+  }
+  :is(.select, .combobox):has(> [data-slot="control"]:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* On touch screens, the text is at least 16px, or Safari on iOS zooms in when the control
+     gets focus, as with the Input, and the targets reach at least 44px tall. */
+  @media (any-pointer: coarse) {
+    :is(.select, .combobox) {
+      font-size: max(var(--select--font-size), 1rem);
+    }
+    :is(.select, .combobox) [data-slot="option"] {
+      min-height: 2.75rem;
+    }
+    :is(.select, .combobox) [data-slot="tag-remove"]::before {
+      inset-block: min(0px, (var(--select--tag--height) - 2.75rem) / 2);
+    }
+    /* Rows of tags sit far enough apart that those targets don't cover each other. */
+    :is(.select, .combobox) > [data-slot="tags"] {
+      row-gap: max(0.25rem, 2.75rem - var(--select--tag--height));
+    }
+  }
+
+  /* The arrow turns and the panel fades in, unless people have asked for less motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    :is(.select, .combobox) > [data-slot="arrow"] {
+      transition: rotate 150ms ease-out;
+    }
+    :is(.select, .combobox) > [data-slot="panel"]:popover-open {
+      transition: opacity 150ms ease-out;
+    }
+    @starting-style {
+      :is(.select, .combobox) > [data-slot="panel"]:popover-open {
+        opacity: 0;
+      }
+    }
+  }
+
+  /* With more contrast, the border is drawn in the text colour at full strength. */
+  @media (prefers-contrast: more) {
+    :is(.select, .combobox),
+    :is(.select, .combobox):hover {
+      --select--border-color: currentColor;
+      --select--panel--border-color: currentColor;
+    }
+  }
+
+  /* Forced colors mode drops backgrounds and shadows, so states take system colours. */
+  @media (forced-colors: active) {
+    :is(.select, .combobox):has(> [data-slot="control"]:focus-visible),
+    :is(.select, .combobox) [data-slot="option"][data-active="true"],
+    :is(.select, .combobox) [data-slot="tag-remove"]:focus-visible {
+      outline-color: Highlight;
+    }
+    :is(.select, .combobox):has(> [data-slot="control"]:disabled) {
+      border-color: GrayText;
+      color: GrayText;
+      opacity: 1;
+    }
+    :is(.select, .combobox) > [data-slot="panel"] {
+      border-color: CanvasText;
+    }
+    :is(.select, .combobox) [data-slot="tag"] {
+      border: 1px solid CanvasText;
+    }
+    :is(.select, .combobox) [data-slot="option"][aria-disabled="true"] {
+      color: GrayText;
+      opacity: 1;
+    }
+  }
+}
+/* Its last resort, as tall as the side it opens on allows, less the gap on each side. The
+   minimum turns down a side with less than about half the screen, so it shrinks on the
+   bigger side, as the Popover does. */
+@position-try --select-fit {
+  max-height: calc(100% - 2 * var(--select--panel--offset));
+  min-height: calc(50dvh - 3rem);
+}
