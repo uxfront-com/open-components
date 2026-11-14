@@ -72,6 +72,16 @@ const code = computed(() => {
   }
   const tagsProp = { react: "tags={labels}", vue: ':tags="labels"', svelte: "tags={labels}", angular: '[tags]="labels"', solid: "tags={labels()}", astro: "tags={labels}" }[fw];
   const onRemove = { react: "onRemove={remove}", vue: '@remove="remove"', svelte: "onremove={remove}", angular: '(remove)="remove($event)"', solid: "onRemove={remove}", astro: "" }[fw];
+  // The group names Reset as the place focus goes when no tag follows the one removed.
+  const fallback = {
+    react: "fallbackFocus={() => reset.current}",
+    vue: ':fallback-focus="() => reset?.$el"',
+    svelte: "fallbackFocus={() => reset}",
+    angular: '[fallbackFocus]="reset"',
+    solid: "fallbackFocus={() => reset}",
+    astro: "",
+  }[fw];
+  const empty = fw === "vue" ? 'empty-label="No labels"' : 'emptyLabel="No labels"';
   const props = [
     'label="Labels"',
     tagsProp,
@@ -79,6 +89,8 @@ const code = computed(() => {
     removable.value && "removable",
     disabled.value && "disabled",
     readonly.value && "readonly",
+    empty,
+    removable.value && fallback,
     removable.value && onRemove,
   ].filter(Boolean);
   const links = link.value ? "\n\n<!-- Each tag in labels has an href, like { value: \"bug\", label: \"Bug\", href: \"/labels/bug\" }. -->" : "";

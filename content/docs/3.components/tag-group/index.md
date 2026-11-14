@@ -31,7 +31,7 @@ How agents read, build and check a tag group, from its accessibility tree to its
 
 Every example on this page runs on our [reference implementation](/docs/components/tag-group#reference-implementation), which does its part of every rule in the [checklist](/docs/components/tag-group#checklist), so feel free to tab through them and remove a few tags as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Tag Group with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/tag-group/ax#deterministic).
 
-A tag group is a named list of [Tags](/docs/components/tag), and it only owns what sits between them: the list that names and counts them, the space between them, where focus goes when one is removed, what screen readers hear about it, and what shows once none are left. Each tag is the shipped Tag, unchanged, so its look, its link and its remove button work exactly as the Tag page says. Nobody selects a tag in a group. A filter that turns on and off is a [toggle button](/docs/components/button/ux#toggle-buttons), and picking from a set is a [Checkbox Group](/docs/components/checkbox-group).
+A tag group is a named list of [Tags](/docs/components/tag), and it only owns what sits between them: the list that names and counts them, the space between them, where focus goes when one is removed, what screen readers hear about it and what shows once none are left. Each tag is the shipped Tag, unchanged, so its look, its link and its remove button work exactly as the Tag page says. Nobody selects a tag in a group. A filter that turns on and off is a [toggle button](/docs/components/button/ux#toggle-buttons), and picking from a set is a [Checkbox Group](/docs/components/checkbox-group).
 
 ::tag-group-playground
 ::
@@ -170,7 +170,9 @@ function focusList(element: HTMLElement) {
   element.focus();
 }
 
-let previousTags = tags;
+// A copy, since an app may change the same array in place, like with splice, and the
+// labels of the tags that went are only in the copy.
+let previousTags = [...tags];
 
 // Runs before the list re-renders, while the removed tags are still in the DOM, to see
 // where focus is. Once they've gone, focus moves to the next remove button, then to
@@ -181,7 +183,7 @@ watch(
   () => tags.map((tag) => tag.value),
   (next, previous) => {
     const labels = new Map(previousTags.map((tag) => [tag.value, tag.label]));
-    previousTags = tags;
+    previousTags = [...tags];
     const removed = previous.filter((value) => !next.includes(value));
     if (!removed.length) return;
     const before = list.value ? [...list.value.children] : [];
@@ -203,10 +205,15 @@ watch(
         const prior = previous.slice(0, anchor).filter((value) => next.includes(value)).reverse();
         const find = (values: string[]) =>
           values.map((value) => removeButton(items[next.indexOf(value)])).find(Boolean) ?? null;
-        const target = find(after) ?? resolve(fallbackFocus) ?? find(prior);
-        if (target) target.focus();
-        else if (list.value) focusList(list.value);
-        else empty.value?.focus();
+        // A candidate that can't take focus, like a disabled button, gives way to the next.
+        const focused = (target: HTMLElement | null) => {
+          target?.focus();
+          return !!target && document.activeElement === target;
+        };
+        if (!focused(find(after)) && !focused(resolve(fallbackFocus)) && !focused(find(prior))) {
+          if (list.value) focusList(list.value);
+          else empty.value?.focus();
+        }
       }
       for (const value of announced) announce(removedLabel(labels.get(value) ?? value));
     });
@@ -350,8 +357,8 @@ onMounted(() => {
 ```ts [TagGroup.test.ts]
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
-import { defineComponent, h, nextTick, ref } from "vue";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { defineComponent, h, nextTick, reactive, ref } from "vue";
 import TagGroup, { type TagGroupItem, type TagGroupProps } from "./TagGroup.vue";
 
 const LABELS: TagGroupItem[] = [
@@ -362,10 +369,16 @@ const LABELS: TagGroupItem[] = [
 
 const announcements = () => document.querySelector('[role="status"]')?.textContent ?? "";
 
+// The live region is shared by the whole page, so it would outlive each test, along with what
+// it announced. Each test starts without one, and the group or an announcement makes it again.
+beforeEach(() => document.querySelector('[role="status"]')?.remove());
+
 // A page that owns its tags: it drops a tag when the group fires remove, unless it keeps it,
 // and renders a Reset button after the group, which some tests pass as fallbackFocus.
-function renderOwned(props: Partial<TagGroupProps> & { keep?: string[]; withFallback?: boolean } = {}) {
-  const { keep = [], withFallback = false, ...rest } = props;
+function renderOwned(
+  props: Partial<TagGroupProps> & { keep?: string[]; withFallback?: boolean | "element"; disabledFallback?: boolean } = {},
+) {
+  const { keep = [], withFallback = false, disabledFallback = false, ...rest } = props;
   const tags = ref<TagGroupItem[]>(props.tags ?? LABELS.map((tag) => ({ ...tag })));
   const reset = ref<HTMLElement | null>(null);
   const onRemove = vi.fn((tag: TagGroupItem) => {
@@ -378,10 +391,10 @@ function renderOwned(props: Partial<TagGroupProps> & { keep?: string[]; withFall
         removable: true,
         ...rest,
         tags: tags.value,
-        fallbackFocus: withFallback ? () => reset.value : undefined,
+        fallbackFocus: withFallback === "element" ? reset.value : withFallback ? () => reset.value : undefined,
         onRemove,
       }),
-      h("button", { ref: reset, type: "button" }, "Reset"),
+      h("button", { ref: reset, type: "button", disabled: disabledFallback }, "Reset"),
     ],
   });
   return { ...render(Page), tags, onRemove };
@@ -420,7 +433,11 @@ describe("TagGroup", () => {
   it("warns in development when the list has no name, and only then", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render({
-      render: () => [h(TagGroup, { tags: LABELS, label: "Labels" }), h(TagGroup, { tags: LABELS, "aria-labelledby": "heading" })],
+      render: () => [
+        h(TagGroup, { tags: LABELS, label: "Labels" }),
+        h(TagGroup, { tags: LABELS, "aria-labelledby": "heading" }),
+        h(TagGroup, { tags: LABELS, "aria-label": "Labels" }),
+      ],
     });
     expect(warn).not.toHaveBeenCalled();
 
@@ -482,6 +499,30 @@ describe("TagGroup", () => {
       expect(screen.getByRole("button", { name: "Remove Feature" })).toHaveFocus();
     });
 
+    it("moves focus to the next tag's remove button rather than to fallbackFocus", async () => {
+      const user = userEvent.setup();
+      renderOwned({ withFallback: true });
+
+      await user.click(screen.getByRole("button", { name: "Remove Docs" }));
+      expect(screen.getByRole("button", { name: "Remove Feature" })).toHaveFocus();
+    });
+
+    it("moves focus to fallbackFocus, given as an element, when no tag follows", async () => {
+      const user = userEvent.setup();
+      renderOwned({ withFallback: "element" });
+
+      await user.click(screen.getByRole("button", { name: "Remove Feature" }));
+      expect(screen.getByRole("button", { name: "Reset" })).toHaveFocus();
+    });
+
+    it("skips a fallbackFocus that can't take focus, like a disabled button, to the previous tag", async () => {
+      const user = userEvent.setup();
+      renderOwned({ withFallback: true, disabledFallback: true });
+
+      await user.click(screen.getByRole("button", { name: "Remove Feature" }));
+      expect(screen.getByRole("button", { name: "Remove Docs" })).toHaveFocus();
+    });
+
     it("moves focus to fallbackFocus when no tag follows", async () => {
       const user = userEvent.setup();
       renderOwned({ withFallback: true });
@@ -540,8 +581,36 @@ describe("TagGroup", () => {
       const user = userEvent.setup();
       renderOwned();
 
+      expect(announcements()).toBe("");
       await user.click(screen.getByRole("button", { name: "Remove Docs" }));
-      expect(announcements()).toContain("Docs removed");
+      expect(announcements()).toBe("Docs removed");
+    });
+
+    it("announces a tag by its label when the app removes it from the same array, in place", async () => {
+      const user = userEvent.setup();
+      const tags = reactive<TagGroupItem[]>([
+        { value: "u-1", label: "Alpha" },
+        { value: "u-2", label: "Beta" },
+      ]);
+      render({
+        render: () =>
+          h(TagGroup, {
+            label: "Labels",
+            removable: true,
+            tags,
+            onRemove: (tag: TagGroupItem) => tags.splice(tags.findIndex((other) => other.value === tag.value), 1),
+          }),
+      });
+
+      await user.click(screen.getByRole("button", { name: "Remove Alpha" }));
+      expect(announcements()).toBe("Alpha removed");
+      expect(screen.getByRole("button", { name: "Remove Beta" })).toHaveFocus();
+    });
+
+    it("prepares the live region as soon as it's removable, so the first announcement is heard", () => {
+      render(TagGroup, { props: { label: "Labels", tags: LABELS, removable: true } });
+
+      expect(document.querySelector('[role="status"]')).toBeInTheDocument();
     });
 
     it("names the announcement with removedLabel, for other languages", async () => {
@@ -549,7 +618,7 @@ describe("TagGroup", () => {
       renderOwned({ removeLabel: (label) => `${label} entfernen`, removedLabel: (label) => `${label} entfernt` });
 
       await user.click(screen.getByRole("button", { name: "Feature entfernen" }));
-      expect(announcements()).toContain("Feature entfernt");
+      expect(announcements()).toBe("Feature entfernt");
     });
 
     it("moves focus even when the press didn't focus the button, like a click in Safari", async () => {
@@ -581,13 +650,14 @@ describe("TagGroup", () => {
     const reset = screen.getByRole("button", { name: "Reset" });
 
     await user.click(screen.getByRole("button", { name: "Remove Bug" }));
+    expect(announcements()).toBe("");
     // The app asks first, somewhere else, then drops the tag.
     reset.focus();
     tags.value = tags.value.filter((tag) => tag.value !== "bug");
     await nextTick();
     await nextTick();
     expect(reset).toHaveFocus();
-    expect(announcements()).toContain("Bug removed");
+    expect(announcements()).toBe("Bug removed");
   });
 
   it("leaves focus where it is, and announces nothing, when the app takes a tag away for another reason", async () => {
@@ -602,6 +672,18 @@ describe("TagGroup", () => {
     await nextTick();
     expect(reset).toHaveFocus();
     expect(announcements()).toBe(before);
+  });
+
+  it("leaves focus where it is when it's nowhere and the app takes away a tag nobody pressed", async () => {
+    const { tags } = renderOwned();
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(document.body).toHaveFocus();
+
+    tags.value = tags.value.slice(1);
+    await nextTick();
+    await nextTick();
+    expect(document.body).toHaveFocus();
+    expect(announcements()).toBe("");
   });
 
   it("shows its empty state with no tags, from emptyLabel or the empty slot, focusable but not a tab stop", async () => {
@@ -728,6 +810,10 @@ describe("TagGroup", () => {
 - [Understanding SC 2.5.8: Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) and [SC 2.5.5: Target Size (Enhanced)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html), for rows far enough apart that the tags' hit areas never cover each other
 - [Understanding SC 2.1.1: Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html) and [SC 2.4.3: Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html), for reaching every tag and keeping focus in place when one is removed
 - [Understanding SC 4.1.3: Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html), for announcing a removal through a live region
-- [Understanding SC 1.4.3: Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), for the empty state's text
+- [Understanding SC 1.4.3: Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), for the empty state's text, and [SC 1.4.11: Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html), for the focus ring on it and on the list
+- [Understanding SC 2.4.7: Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html), for the focus ring on the empty state and the list after a removal
+- [Understanding SC 1.4.4: Resize Text](https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html) and [SC 1.4.12: Text Spacing](https://www.w3.org/WAI/WCAG22/Understanding/text-spacing.html), for rows that grow with the text and wrap rather than overflow
+- [Understanding SC 2.3.3: Animation from Interactions](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html), for a removal animation that only runs for people who haven't asked for less motion
+- [Understanding SC 4.1.2: Name, Role, Value](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html), for a list and its tags that agents and assistive technologies find by role and name
 - [React Aria: TagGroup](https://react-aria.adobe.com/TagGroup), for a tag group's name, its selection, its removal and its empty state, and [its source](https://github.com/adobe/react-spectrum/blob/main/packages/react-aria/src/tag/useTagGroup.ts), for the `grid` role it renders, with `Backspace` and `Delete` to remove a tag
 - [Atlassian Design System: Tag group](https://atlassian.design/components/tag-group/examples), for tags that wrap onto the next line, focus that goes to the next tag after a removal, and [its usage](https://atlassian.design/components/tag-group/usage), for not mixing removable tags with ones that aren't

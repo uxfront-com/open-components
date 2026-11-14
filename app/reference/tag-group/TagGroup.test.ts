@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
-import { defineComponent, h, nextTick, ref } from "vue";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { defineComponent, h, nextTick, reactive, ref } from "vue";
 import TagGroup, { type TagGroupItem, type TagGroupProps } from "./TagGroup.vue";
 
 const LABELS: TagGroupItem[] = [
@@ -12,10 +12,16 @@ const LABELS: TagGroupItem[] = [
 
 const announcements = () => document.querySelector('[role="status"]')?.textContent ?? "";
 
+// The live region is shared by the whole page, so it would outlive each test, along with what
+// it announced. Each test starts without one, and the group or an announcement makes it again.
+beforeEach(() => document.querySelector('[role="status"]')?.remove());
+
 // A page that owns its tags: it drops a tag when the group fires remove, unless it keeps it,
 // and renders a Reset button after the group, which some tests pass as fallbackFocus.
-function renderOwned(props: Partial<TagGroupProps> & { keep?: string[]; withFallback?: boolean } = {}) {
-  const { keep = [], withFallback = false, ...rest } = props;
+function renderOwned(
+  props: Partial<TagGroupProps> & { keep?: string[]; withFallback?: boolean | "element"; disabledFallback?: boolean } = {},
+) {
+  const { keep = [], withFallback = false, disabledFallback = false, ...rest } = props;
   const tags = ref<TagGroupItem[]>(props.tags ?? LABELS.map((tag) => ({ ...tag })));
   const reset = ref<HTMLElement | null>(null);
   const onRemove = vi.fn((tag: TagGroupItem) => {
@@ -28,10 +34,10 @@ function renderOwned(props: Partial<TagGroupProps> & { keep?: string[]; withFall
         removable: true,
         ...rest,
         tags: tags.value,
-        fallbackFocus: withFallback ? () => reset.value : undefined,
+        fallbackFocus: withFallback === "element" ? reset.value : withFallback ? () => reset.value : undefined,
         onRemove,
       }),
-      h("button", { ref: reset, type: "button" }, "Reset"),
+      h("button", { ref: reset, type: "button", disabled: disabledFallback }, "Reset"),
     ],
   });
   return { ...render(Page), tags, onRemove };
@@ -70,7 +76,11 @@ describe("TagGroup", () => {
   it("warns in development when the list has no name, and only then", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render({
-      render: () => [h(TagGroup, { tags: LABELS, label: "Labels" }), h(TagGroup, { tags: LABELS, "aria-labelledby": "heading" })],
+      render: () => [
+        h(TagGroup, { tags: LABELS, label: "Labels" }),
+        h(TagGroup, { tags: LABELS, "aria-labelledby": "heading" }),
+        h(TagGroup, { tags: LABELS, "aria-label": "Labels" }),
+      ],
     });
     expect(warn).not.toHaveBeenCalled();
 
@@ -132,6 +142,30 @@ describe("TagGroup", () => {
       expect(screen.getByRole("button", { name: "Remove Feature" })).toHaveFocus();
     });
 
+    it("moves focus to the next tag's remove button rather than to fallbackFocus", async () => {
+      const user = userEvent.setup();
+      renderOwned({ withFallback: true });
+
+      await user.click(screen.getByRole("button", { name: "Remove Docs" }));
+      expect(screen.getByRole("button", { name: "Remove Feature" })).toHaveFocus();
+    });
+
+    it("moves focus to fallbackFocus, given as an element, when no tag follows", async () => {
+      const user = userEvent.setup();
+      renderOwned({ withFallback: "element" });
+
+      await user.click(screen.getByRole("button", { name: "Remove Feature" }));
+      expect(screen.getByRole("button", { name: "Reset" })).toHaveFocus();
+    });
+
+    it("skips a fallbackFocus that can't take focus, like a disabled button, to the previous tag", async () => {
+      const user = userEvent.setup();
+      renderOwned({ withFallback: true, disabledFallback: true });
+
+      await user.click(screen.getByRole("button", { name: "Remove Feature" }));
+      expect(screen.getByRole("button", { name: "Remove Docs" })).toHaveFocus();
+    });
+
     it("moves focus to fallbackFocus when no tag follows", async () => {
       const user = userEvent.setup();
       renderOwned({ withFallback: true });
@@ -190,8 +224,36 @@ describe("TagGroup", () => {
       const user = userEvent.setup();
       renderOwned();
 
+      expect(announcements()).toBe("");
       await user.click(screen.getByRole("button", { name: "Remove Docs" }));
-      expect(announcements()).toContain("Docs removed");
+      expect(announcements()).toBe("Docs removed");
+    });
+
+    it("announces a tag by its label when the app removes it from the same array, in place", async () => {
+      const user = userEvent.setup();
+      const tags = reactive<TagGroupItem[]>([
+        { value: "u-1", label: "Alpha" },
+        { value: "u-2", label: "Beta" },
+      ]);
+      render({
+        render: () =>
+          h(TagGroup, {
+            label: "Labels",
+            removable: true,
+            tags,
+            onRemove: (tag: TagGroupItem) => tags.splice(tags.findIndex((other) => other.value === tag.value), 1),
+          }),
+      });
+
+      await user.click(screen.getByRole("button", { name: "Remove Alpha" }));
+      expect(announcements()).toBe("Alpha removed");
+      expect(screen.getByRole("button", { name: "Remove Beta" })).toHaveFocus();
+    });
+
+    it("prepares the live region as soon as it's removable, so the first announcement is heard", () => {
+      render(TagGroup, { props: { label: "Labels", tags: LABELS, removable: true } });
+
+      expect(document.querySelector('[role="status"]')).toBeInTheDocument();
     });
 
     it("names the announcement with removedLabel, for other languages", async () => {
@@ -199,7 +261,7 @@ describe("TagGroup", () => {
       renderOwned({ removeLabel: (label) => `${label} entfernen`, removedLabel: (label) => `${label} entfernt` });
 
       await user.click(screen.getByRole("button", { name: "Feature entfernen" }));
-      expect(announcements()).toContain("Feature entfernt");
+      expect(announcements()).toBe("Feature entfernt");
     });
 
     it("moves focus even when the press didn't focus the button, like a click in Safari", async () => {
@@ -231,13 +293,14 @@ describe("TagGroup", () => {
     const reset = screen.getByRole("button", { name: "Reset" });
 
     await user.click(screen.getByRole("button", { name: "Remove Bug" }));
+    expect(announcements()).toBe("");
     // The app asks first, somewhere else, then drops the tag.
     reset.focus();
     tags.value = tags.value.filter((tag) => tag.value !== "bug");
     await nextTick();
     await nextTick();
     expect(reset).toHaveFocus();
-    expect(announcements()).toContain("Bug removed");
+    expect(announcements()).toBe("Bug removed");
   });
 
   it("leaves focus where it is, and announces nothing, when the app takes a tag away for another reason", async () => {
@@ -252,6 +315,18 @@ describe("TagGroup", () => {
     await nextTick();
     expect(reset).toHaveFocus();
     expect(announcements()).toBe(before);
+  });
+
+  it("leaves focus where it is when it's nowhere and the app takes away a tag nobody pressed", async () => {
+    const { tags } = renderOwned();
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(document.body).toHaveFocus();
+
+    tags.value = tags.value.slice(1);
+    await nextTick();
+    await nextTick();
+    expect(document.body).toHaveFocus();
+    expect(announcements()).toBe("");
   });
 
   it("shows its empty state with no tags, from emptyLabel or the empty slot, focusable but not a tab stop", async () => {

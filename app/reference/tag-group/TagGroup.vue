@@ -97,7 +97,9 @@ function focusList(element: HTMLElement) {
   element.focus();
 }
 
-let previousTags = tags;
+// A copy, since an app may change the same array in place, like with splice, and the
+// labels of the tags that went are only in the copy.
+let previousTags = [...tags];
 
 // Runs before the list re-renders, while the removed tags are still in the DOM, to see
 // where focus is. Once they've gone, focus moves to the next remove button, then to
@@ -108,7 +110,7 @@ watch(
   () => tags.map((tag) => tag.value),
   (next, previous) => {
     const labels = new Map(previousTags.map((tag) => [tag.value, tag.label]));
-    previousTags = tags;
+    previousTags = [...tags];
     const removed = previous.filter((value) => !next.includes(value));
     if (!removed.length) return;
     const before = list.value ? [...list.value.children] : [];
@@ -130,10 +132,15 @@ watch(
         const prior = previous.slice(0, anchor).filter((value) => next.includes(value)).reverse();
         const find = (values: string[]) =>
           values.map((value) => removeButton(items[next.indexOf(value)])).find(Boolean) ?? null;
-        const target = find(after) ?? resolve(fallbackFocus) ?? find(prior);
-        if (target) target.focus();
-        else if (list.value) focusList(list.value);
-        else empty.value?.focus();
+        // A candidate that can't take focus, like a disabled button, gives way to the next.
+        const focused = (target: HTMLElement | null) => {
+          target?.focus();
+          return !!target && document.activeElement === target;
+        };
+        if (!focused(find(after)) && !focused(resolve(fallbackFocus)) && !focused(find(prior))) {
+          if (list.value) focusList(list.value);
+          else empty.value?.focus();
+        }
       }
       for (const value of announced) announce(removedLabel(labels.get(value) ?? value));
     });
