@@ -1,7 +1,7 @@
 ---
 title: The Combobox
 description: A new component page, on a combobox that filters a list of suggestions as people type, picks one or several, keeps typed text only where you allow it and fits the room a phone's keyboard leaves.
-date: 2026-11-14
+date: 2026-11-14T18:00:00Z
 category: Components
 link:
   label: Read the Combobox page
