@@ -9,11 +9,13 @@ allowBuilds:
   # platform's binary, which pnpm installs as an optional dependency.
   workerd: false
 overrides:
-  # @nuxtjs/partytown (2.0.0) asks for ^0.11.0, which reads the deprecated
-  # attributionSrc of every element when it mirrors the page for its worker:
-  # Chrome logs a deprecation, and the homepage loses its Best Practices 100.
-  # 0.14 skips it. Drop this once @nuxtjs/partytown depends on 0.14.
-  '@nuxtjs/partytown>@qwik.dev/partytown': 0.14.4
+  # @nuxtjs/partytown (2.0.0) asks for ^0.11.0, which reads deprecated members
+  # when it mirrors the page for its worker: attributionSrc on every element, and
+  # HTMLFencedFrameElement and window.fence on the window. Chrome logs a
+  # deprecation for each, and Lighthouse's Best Practices drops to 81. 1.0.5 skips
+  # all three (1.0.0 only marked Partytown stable). Drop this once
+  # @nuxtjs/partytown depends on 1.0.5 or later.
+  '@nuxtjs/partytown>@qwik.dev/partytown': 1.0.5
 minimumReleaseAgeExclude:
   - '@uxfront/layer-docs@0.8.0'
   - '@uxfront/layer-ui@0.1.7'
