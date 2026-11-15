@@ -6,12 +6,68 @@ import { corridor, plates } from "@uxfront/scene/formations";
 import { CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL } from "~/data/site";
 import { share, spotlight } from "~/lib/formations";
 
+const description =
+  "Guidelines for building UI components with a perfect user experience, developer experience and agentic experience, whether humans or AI agents write them.";
+
 useUxHead({
   title: "Open Components - The standard for perfect UI components",
-  description:
-    "Guidelines for building UI components with a perfect user experience, developer experience and agentic experience, whether humans or AI agents write them.",
+  description,
   siteName: "Open Components",
   sameAs: [GITHUB_URL],
+  // The picture a shared link shows: the hero, in public/share.png.
+  // CONTRIBUTING.md ("Keeping 100s as the site grows") says how to remake it.
+  image: {
+    path: "/share.png",
+    width: 1200,
+    height: 630,
+    alt: "Open Components, the standard for perfect UI components: three glass plates for user, developer and agentic experience.",
+  },
+});
+
+// What the site is, for search engines and AI search: the organisation, the
+// website and the standard's source code with its two licences, linked by @id.
+// useUxHead adds an Organization of its own without an @id, which validators
+// accept beside this one.
+const { siteUrl } = useRuntimeConfig().public;
+const organization = { "@id": `${siteUrl}/#organization` };
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            ...organization,
+            name: "Open Components",
+            url: `${siteUrl}/`,
+            logo: `${siteUrl}/apple-touch-icon.png`,
+            sameAs: [GITHUB_URL],
+          },
+          {
+            "@type": "WebSite",
+            "@id": `${siteUrl}/#website`,
+            name: "Open Components",
+            url: `${siteUrl}/`,
+            description,
+            publisher: organization,
+          },
+          {
+            "@type": "SoftwareSourceCode",
+            "@id": `${siteUrl}/#source`,
+            name: "Open Components",
+            description,
+            url: `${siteUrl}/`,
+            codeRepository: GITHUB_URL,
+            // The guidelines are CC BY 4.0, and the site's code MIT.
+            license: ["https://creativecommons.org/licenses/by/4.0/", "https://opensource.org/license/mit"],
+            publisher: organization,
+          },
+        ],
+      }),
+    },
+  ],
 });
 
 // Fetched when the page is prerendered, then refreshed in the browser once the
