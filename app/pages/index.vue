@@ -3,11 +3,10 @@ import { hold } from "@uxfront/scene";
 import type { FormationOptions } from "@uxfront/scene";
 import { corridor, plates } from "@uxfront/scene/formations";
 
-import { CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL } from "~/data/site";
+import { CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL, SITE_DESCRIPTION } from "~/data/site";
 import { share, spotlight } from "~/lib/formations";
 
-const description =
-  "Guidelines for building UI components with a perfect user experience, developer experience and agentic experience, whether humans or AI agents write them.";
+const description = SITE_DESCRIPTION;
 
 useUxHead({
   title: "Open Components - The standard for perfect UI components",

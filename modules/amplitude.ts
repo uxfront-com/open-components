@@ -27,6 +27,12 @@ export interface ModuleOptions {
  * The rest of the site tracks events with `window.amplitude?.track()`, which
  * Partytown forwards to the worker. An event tracked as the page unloads (a
  * click on a link to another page) doesn't reach the worker in time.
+ *
+ * Partytown itself is at the version pnpm-workspace.yaml overrides: older ones
+ * read deprecated members like `window.fence` as they mirror the page for the
+ * worker, and Chrome's deprecation warnings cost every page its Best Practices
+ * score. CI builds without a key, so check a new version with a placeholder
+ * key and Lighthouse's `deprecations` audit (CONTRIBUTING.md, "Analytics").
  */
 export default defineNuxtModule<ModuleOptions>({
   meta: { name: "amplitude", configKey: "amplitude" },

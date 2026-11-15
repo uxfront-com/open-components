@@ -56,9 +56,11 @@ export default defineNuxtConfig({
   experimental: { noVueServer: true },
 
   // dist/_headers only applies to static assets, so the Worker sets the site's
-  // security headers on its own responses.
+  // security headers on its own responses. It's an API, not a page, so it asks
+  // search engines not to index any of them, here rather than in
+  // SECURITY_HEADERS, which the site shares.
   routeRules: {
-    "/**": { headers: SECURITY_HEADERS },
+    "/**": { headers: { ...SECURITY_HEADERS, "X-Robots-Tag": "noindex" } },
     // mcp.opencomponents.dev itself, for people who open it.
     "/": { redirect: { to: `${SITE_URL}/docs/getting-started/mcp-server`, statusCode: 302 } },
   },
