@@ -1,6 +1,6 @@
 ---
 title: The Field
-description: A new component page, on a field that labels, describes and explains the errors of any form control, so screen readers announce what it asks and what's wrong, and that agents can check.
+description: A new component page, on a field that labels, describes and explains the errors of any form control, so screen readers announce what it asks and what's wrong.
 date: 2026-10-29
 category: Components
 link:

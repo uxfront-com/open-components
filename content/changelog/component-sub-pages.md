@@ -1,6 +1,6 @@
 ---
 title: Every component, a page per layer
-description: The Card, Checkbox, Checkbox Group, Dialog, Input, Radio Group, Spinner, Switch, Textarea and Tooltip pages now each have an Overview and a page for each of their UI, UX, DX and AX layers, like the Button's.
+description: Ten more component pages, from the Card to the Tooltip, now each have an Overview and a page for each of their UI, UX, DX and AX layers, like the Button's.
 date: 2026-10-22
 category: Components
 ---

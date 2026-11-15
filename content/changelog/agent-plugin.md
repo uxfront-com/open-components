@@ -1,6 +1,6 @@
 ---
 title: The agent plugin
-description: Install the standard in your agent as one plugin, with skills that build and review components rule by rule, and our MCP server.
+description: A new agent plugin, with skills your agent picks up whenever it builds or reviews a component, and the MCP server they read the standard from.
 date: 2026-10-06
 category: Getting Started
 link:
