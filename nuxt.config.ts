@@ -61,6 +61,30 @@ export default defineNuxtConfig({
     name: "Open Components",
   },
 
+  // The Open Graph images Docus's docs pages and the changelog generate, at the
+  // 1200 × 630 (1.91:1) social networks crop to, rather than nuxt-og-image's
+  // 1200 × 600.
+  ogImage: {
+    defaults: { width: 1200, height: 630 },
+  },
+
+  content: {
+    build: {
+      markdown: {
+        highlight: {
+          // GitHub's high-contrast themes, since every token colour in them
+          // reaches 4.5:1 on the code blocks' background, in light and dark mode
+          // (WCAG 1.4.3). Docus's Material themes go as low as 2.19:1 in light mode.
+          theme: {
+            default: "github-light-high-contrast",
+            light: "github-light-high-contrast",
+            dark: "github-dark-high-contrast",
+          },
+        },
+      },
+    },
+  },
+
   // llms.txt points agents at the MCP server (mcp/) and the agent plugin
   // (plugins/open-components/), then lists the contracts and their schema
   // (public/schemas/contract.json), ahead of the pages Nuxt Content adds.
