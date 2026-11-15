@@ -103,7 +103,14 @@ async function copyPage() {
         sideOffset: 8,
       }"
     >
-      <UButton icon="i-lucide-chevron-down" color="neutral" variant="soft" class="border-l border-muted" />
+      <!-- Docus's chevron has no name, so screen readers announce just "button". -->
+      <UButton
+        icon="i-lucide-chevron-down"
+        color="neutral"
+        variant="soft"
+        class="border-l border-muted"
+        aria-label="More page options"
+      />
     </UDropdownMenu>
   </UFieldGroup>
 </template>
