@@ -50,7 +50,7 @@ const RULES = {
   ogimage: "every og:image is a 1200 × 630 PNG in dist/",
   twitter: "twitter:card summary_large_image, with a twitter:image",
   jsonld: "JSON-LD that parses, on schema.org",
-  robots: "robots.txt names the sitemap and allows every AI crawler by name",
+  robots: "robots.txt names the sitemap, allows every AI crawler by name and uses only directives Lighthouse knows",
   llms: "llms.txt has a summary and links every docs page, each by a title of its own",
   raw: "every docs page has a markdown copy, each headed by its own title",
   headers: "_headers keeps other hosts and generated files out of search results, and never a page",
@@ -175,10 +175,14 @@ for (const file of readdirSync(DIST, { recursive: true, encoding: "utf8" })) {
 // robots.txt: its groups, each a run of User-agent lines and then its rules.
 const robots = read("robots.txt");
 if (!robots.split("\n").includes(`Sitemap: ${SITE}/sitemap.xml`)) fail("robots", `no "Sitemap: ${SITE}/sitemap.xml" line`);
+// The directives Lighthouse's robots.txt audit knows: any other fails it, and
+// with it every page's SEO score.
+const DIRECTIVES = new Set(["user-agent", "disallow", "allow", "sitemap", "crawl-delay", "clean-param", "host", "request-rate", "visit-time", "noindex"]);
 const groups = [];
 for (const line of robots.split("\n").map((text) => text.replace(/#.*/, "").trim())) {
   const [, field, value] = line.match(/^([\w-]+):\s*(.*)$/) ?? [];
   if (!field) continue;
+  if (!DIRECTIVES.has(field.toLowerCase())) fail("robots", `"${line}": Lighthouse doesn't know ${field}, and fails robots.txt on it`);
   if (/^user-agent$/i.test(field)) {
     if (!groups.at(-1) || groups.at(-1).rules.length) groups.push({ agents: [], rules: [] });
     groups.at(-1).agents.push(value);

@@ -32,10 +32,6 @@ const AI_CRAWLERS = [
   "CCBot",
 ];
 
-// What robots.txt says the content may be used for (contentsignals.org): search,
-// answers that quote it, and training.
-const CONTENT_SIGNAL = "search=yes, ai-input=yes, ai-train=yes";
-
 const NOINDEX = { "X-Robots-Tag": "noindex" };
 
 // Rules dist/_headers gets after the ones routeRules writes, for what routeRules
@@ -59,18 +55,6 @@ const CRAWL_HEADERS: [string, Record<string, string>][] = [
   ["/llms-full.txt", NOINDEX],
   ["/raw/*.yaml", NOINDEX],
 ];
-
-// @nuxtjs/robots's build hook, which runs once robots.txt's groups are merged.
-// Nuxt's config types don't list it, so it's typed here and spread into `hooks`.
-const robotsHooks = {
-  // A crawler reads only the group that names it, or `*` when none does, so
-  // every group carries the Content-Signal, Docus's `*` group included.
-  "robots:config"(config: { groups: { userAgent: string[]; contentSignal?: string[] }[] }) {
-    for (const group of config.groups) {
-      if (group.userAgent.includes("*")) group.contentSignal = [CONTENT_SIGNAL];
-    }
-  },
-};
 
 // The docs pages with a contract, which server/middleware/raw-contract.ts serves at
 // /raw/<path>.yaml: every component page, split into a folder like
@@ -212,10 +196,11 @@ export default defineNuxtConfig({
 
   // robots.txt: everyone may crawl everything, and each AI crawler is named, so
   // the policy is stated rather than implied. Docus adds the `User-agent: *`
-  // group and the sitemap, and the robots:config hook below gives its group the
-  // same Content-Signal.
+  // group and the sitemap. No Content-Signal line (contentsignals.org): Lighthouse
+  // reads it as an unknown directive, which fails its robots.txt audit and costs
+  // every page its SEO 100.
   robots: {
-    groups: AI_CRAWLERS.map((userAgent) => ({ userAgent, allow: "/", contentSignal: CONTENT_SIGNAL })),
+    groups: AI_CRAWLERS.map((userAgent) => ({ userAgent, allow: "/" })),
   },
 
   // The site is static, so Docus's MCP server is off: our own, in mcp/, runs at
@@ -324,7 +309,6 @@ export default defineNuxtConfig({
   },
 
   hooks: {
-    ...robotsHooks,
     // Workers rejects the `/* /404.html 404` fallback the preset writes to _redirects
     // (404 isn't a valid redirect status), failing the deploy. not_found_handling in
     // wrangler.jsonc serves 404.html instead. Registered here, not in nitro.hooks,
