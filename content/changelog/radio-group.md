@@ -1,6 +1,6 @@
 ---
 title: The Radio Group
-description: A new component page, on a radio group that asks one clear question, lets people pick one answer with a pointer or the arrow keys, says what's wrong when they skip it, and that agents can check.
+description: A new component page, on a radio group that asks one clear question, lets people answer with a pointer or the arrow keys and says what's wrong if they skip it.
 date: 2026-10-18T12:00:00Z
 category: Components
 link:

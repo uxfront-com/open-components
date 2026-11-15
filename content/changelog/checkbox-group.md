@@ -1,6 +1,6 @@
 ---
 title: The Checkbox Group
-description: A new component page, on a group of checkboxes that its question names, that people can pick any number of options from, with a select-all box that's never out of step, and that agents can check.
+description: A new component page, on a group of checkboxes that its question names, with a select-all box that's never out of step, and that agents can check.
 date: 2026-10-16T12:00:00Z
 category: Components
 link:
