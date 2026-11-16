@@ -255,8 +255,8 @@ const toRegExp = (pattern) => {
     ? { absolute: true, regexp: new RegExp(`^${segment(host, "./")}${segment(path, "/")}$`) }
     : { absolute: false, regexp: new RegExp(`^${segment(pattern, "/")}$`) };
 };
-// Cloudflare keeps only the last of two rules for the same URL, so one would
-// drop the other's headers.
+// Cloudflare keeps only the last of two rules with the same pattern, so one
+// would drop the other's headers.
 for (const [pattern, same] of Map.groupBy(rules, (rule) => rule.pattern)) {
   if (same.length > 1) fail("headers", `${same.length} rules for ${pattern}, of which Cloudflare applies only the last`);
 }
@@ -281,6 +281,10 @@ for (const { loc } of pages) {
 for (const url of [
   "https://www.opencomponents.dev/",
   "https://www.opencomponents.dev/docs/components/button",
+  // Workers Builds' branch previews on a custom domain, which Cloudflare doesn't
+  // mark noindex itself, unlike those on workers.dev.
+  "https://seo-uxf-710.opencomponents.dev/",
+  "https://abc123-seo-uxf-710.opencomponents.dev/docs/getting-started/introduction",
   "https://open-components.account.workers.dev/",
   "https://abc123-open-components.account.workers.dev/docs/getting-started/introduction",
   `${SITE}/llms.txt`,
