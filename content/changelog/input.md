@@ -1,6 +1,6 @@
 ---
 title: The Input
-description: Our third component page, on a text input that people can label, fill in and fix, that works with every keyboard, autofill and password manager, and that agents can check.
+description: Our third component page, on a text input that people can label, fill in and fix, and that works with every keyboard, autofill and password manager.
 date: 2026-10-05
 category: Components
 link:

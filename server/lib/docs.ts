@@ -8,6 +8,7 @@ interface DocsPage {
   extension: string;
   title: string;
   description: string;
+  seo?: { title?: string };
 }
 
 /**

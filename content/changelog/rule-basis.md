@@ -1,6 +1,6 @@
 ---
 title: Where each rule comes from
-description: Every rule now says where it comes from, so you can tell what WCAG asks for from where we go further, and the Button's keep-focus rule is one every button can meet.
+description: Every rule now says where it comes from, so you can tell what WCAG asks for from where we go further, and every button can meet the Button's keep-focus rule.
 date: 2026-10-04
 category: Components
 link:

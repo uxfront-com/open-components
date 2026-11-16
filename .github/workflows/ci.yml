@@ -75,6 +75,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Fails on any page that doesn't prerender (`failOnError` in nuxt.config.ts).
       - run: pnpm build
+      # What search engines and AI crawlers get: the sitemap's pages and their head
+      # tags, robots.txt, llms.txt, the markdown copies and the noindex headers.
+      - run: pnpm check-seo
       # The MCP server (mcp/), a Worker of its own.
       - run: pnpm build:mcp
       # Serves the MCP server with wrangler dev, the way Cloudflare will, and checks
@@ -105,7 +108,8 @@ jobs:
         with:
           name: dist
           path: dist
-      # Serves dist and fails below 100 in any category, using the runner's Chrome.
+      # Serves dist and fails below 95 in any category (lighthouserc.json), using
+      # the runner's Chrome.
       - run: pnpm lighthouse
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

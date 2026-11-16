@@ -1,6 +1,6 @@
 ---
 title: The Popover
-description: A new component page, on a popover that shows more next to what opened it, leaves the rest of the page working, opens and closes the way people expect and that agents can check.
+description: A new component page, on a popover that shows more next to what opened it, leaves the rest of the page working and opens and closes the way people expect.
 date: 2026-10-21
 category: Components
 link:

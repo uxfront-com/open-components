@@ -56,6 +56,20 @@ if (problems.length) {
 }
 console.log(`✓ The MCP server at ${base}/mcp serves the standard as the site publishes it.`);
 
+// Each docs page's `title`, by its path: content/docs/3.components/button/2.ux.md
+// is /docs/components/button/ux, as docsPath in server/lib/raw.ts serves it.
+function docsTitles() {
+  return new Map(
+    readdirSync("content/docs", { recursive: true, encoding: "utf8" })
+      .filter((file) => file.endsWith(".md"))
+      .map((file) => {
+        const path = `/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
+        const frontmatter = readFileSync(join("content/docs", file), "utf8").match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
+        return [path, parse(frontmatter)?.title];
+      }),
+  );
+}
+
 // Serves the Worker on a free port, the way `npx wrangler dev -c mcp/wrangler.jsonc` does.
 async function serve() {
   if (!existsSync("mcp/.output/server/index.mjs")) throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
@@ -131,6 +145,19 @@ async function checkRoutes() {
   for (const [name, value] of Object.entries(HEADERS)) {
     check(crossOrigin.headers.get(name) === value, `/mcp responses don't have the site's ${name} header`);
   }
+  // It's an API, so no response of its own is indexed: not the redirect from its
+  // subdomain, not /mcp, and not a file it doesn't have, like robots.txt. The site
+  // itself never sends noindex for every path (scripts/check-seo.mjs).
+  check(!/noindex/i.test(HEADERS["x-robots-tag"] ?? ""), "dist/_headers sends noindex for every path of the site");
+  for (const [path, init] of [
+    ["/", { headers: { accept: "text/html" }, redirect: "manual" }],
+    ["/mcp", { headers: { accept: "text/html" }, redirect: "manual" }],
+    ["/robots.txt", {}],
+  ]) {
+    const response = await fetch(`${base}${path}`, init);
+    check(response.headers.get("x-robots-tag") === "noindex", `GET ${path} returned ${response.status} without X-Robots-Tag: noindex`);
+  }
+  check(crossOrigin.headers.get("x-robots-tag") === "noindex", "/mcp responses don't have X-Robots-Tag: noindex");
 }
 
 async function checkServer() {
@@ -220,7 +247,10 @@ async function checkServer() {
   const once = (key, load) => read.get(key) ?? read.set(key, load()).get(key);
   const ids = (pathname) =>
     once(`ids:${pathname}`, () => new Set([...readFileSync(join("dist", `${pathname}.html`), "utf8").matchAll(/ id="([^"]*)"/g)].map((match) => match[1])));
-  const title = (part) => once(`title:${part}`, () => readFileSync(join("dist/raw", `${part}.md`), "utf8").match(/^# (.+)$/m)[1]);
+  // A part's title is the heading it has on the whole page, from its frontmatter.
+  // Its markdown copy is headed by its seo.title instead, like "Button: User
+  // Experience (UX)" (server/lib/raw.ts).
+  const title = (part) => once("titles", docsTitles).get(part);
   // Every anchor the server links agents to is on its page, or on one of its parts.
   // A part's own section, like the Button's #user-experience-ux, is the top of the
   // part's page, and a rules table, like #ui-rules, is headed "UI Checklist" there

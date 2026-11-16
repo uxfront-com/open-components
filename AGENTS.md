@@ -15,7 +15,8 @@ pnpm test             # Vitest: reference tests, contracts, MCP server, agent pl
 pnpm build            # nuxt generate → dist
 pnpm build:mcp        # nuxt build mcp → mcp/.output
 pnpm check-mcp        # after both builds: every tool, resource and prompt against dist
-pnpm lighthouse       # after pnpm build: fails below 100 in any category
+pnpm check-seo        # after pnpm build: the sitemap's pages, robots.txt, llms.txt and the noindex headers
+pnpm lighthouse       # after pnpm build: fails below 95 in any category
 ```
 
 Building needs Node 22.13 or later. Which checks to run depends on what you changed:
@@ -26,6 +27,7 @@ Building needs Node 22.13 or later. Which checks to run depends on what you chan
 | A docs page or `app/reference/`                  | `pnpm check-reference` too                                 |
 | `mcp/`, or the headings and contracts it reads   | `pnpm build`, `pnpm build:mcp`, then `pnpm check-mcp`      |
 | The homepage                                     | `pnpm build`, then `pnpm lighthouse`                       |
+| A page's frontmatter, or `nuxt.config.ts`        | `pnpm build`, then `pnpm check-seo`                        |
 
 ## Where things live
 
@@ -53,13 +55,15 @@ Most of the site is generated from the docs, so a change in one place often need
 - **The plugin's version.** Clients cache the plugin by its `version`, so bump it in `plugins/open-components/plugin.json` and in `.claude-plugin/marketplace.json` whenever the plugin changes.
 - **MCP tools and prompts.** A new tool is named in the instructions in `mcp/nuxt.config.ts`, in `TOOLS` in `scripts/check-mcp.mjs` and on the MCP Server page. A new prompt goes in `PROMPTS` and `filled` there, and gets a skill in the plugin.
 - **A component that ships.** Its Roadmap row becomes `:roadmap-check{shipped}`, and it gets a changelog entry.
-- **Replaced theme components.** `app/components/app/AppHeaderBody.vue`, `app/components/docs/DocsPageHeaderLinks.vue` and `app/components/docs/DocsAsideLeftBody.vue` replace the layer's and Docus's own, `app/components/docs/DocsNavigation.vue` renders the sidebar's and the menu's navigation in place of Nuxt UI's `UContentNavigation`, and `app/components/UContentSurround.vue` replaces Nuxt UI's links to the previous and next pages, so both list the component pages by name (`app/lib/navigation.ts`). Keep them in step with the originals.
+- **Replaced theme components.** `app/components/app/AppHeaderBody.vue`, `app/components/docs/DocsPageHeaderLinks.vue` and `app/components/docs/DocsAsideLeftBody.vue` replace the layer's and Docus's own, `app/components/docs/DocsNavigation.vue` renders the sidebar's and the menu's navigation in place of Nuxt UI's `UContentNavigation`, `app/components/UContentSurround.vue` replaces Nuxt UI's links to the previous and next pages, so both list the component pages by name (`app/lib/navigation.ts`), and `app/components/IconMenuToggle.vue` replaces Docus's mobile menu toggle, to name it. Keep them in step with the originals.
 
 ## Markdown conventions
 
 The MCP server reads the same markdown as the site, and knows less MDC syntax than Docus does. Content it can't read doesn't fail the build, but `pnpm test` fails on most of it, so keep to these:
 
 - Every page has a `title` and a `description`, and a file name that's unique across `content/docs/` once its number is dropped. The parts of a split page, below, count as one page.
+- Every description runs 70 to 160 characters, the length search results show. Where a page's `description` runs longer, give it a shorter `seo.description`.
+- Every layer page has a `seo.title` that names its component in at most 42 characters, like "Checkbox Group: Developer Experience (DX)", since its `title` is only its layer and the site adds " - Open Components". `pnpm check-seo` fails on a title or description that's too long or used twice.
 - Number the folders and the pages outside `3.components/` to order them in the sidebar, and leave component folders without one, like `3.components/card/`, so the sidebar lists them by name. It sorts file names as text, which would put a `10.` before a `2.`, and two component branches open at once would reach for the same number.
 - Every component page is split into parts, like the Button's in `3.components/button/`, which stays the model: its Overview in `index.md`, with link cards to the parts, and a page per layer, numbered to set their order inside the folder. A part's `title` is the heading it has on the whole page, its `before` names the Overview's section it goes before, and its headings sit a level higher. After its sections come its rules table, under `## UI Checklist` and so on, then its questions, if it has any, under `## FAQ`. Agents still read one page, which `server/lib/raw.ts` joins back together with one Checklist and one FAQ, and links from before the split go on to the right part (`app/middleware/split-pages.global.ts`). [The docs](./.github/CONTRIBUTING.md#the-docs) has the details.
 - Headings are plain text and inline code, with no links, emphasis, HTML, components or `{#id}`.

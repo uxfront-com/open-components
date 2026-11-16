@@ -27,10 +27,16 @@ export function docsPath(file: string): string {
     .replace(/\/index$/, "")}`;
 }
 
-/** `/raw/<path>.md`: the title and description, then the page without its frontmatter. */
-export function rawPage(page: { title: string; description: string }, source: string): string {
+/**
+ * `/raw/<path>.md`: the title and description, then the page without its
+ * frontmatter. The heading is the page's `seo.title` where it has one: a layer
+ * page's `title`, like "User Experience (UX)", is the heading it has on the
+ * whole page, so its copy is headed "Button: User Experience (UX)", naming its
+ * component. The whole page keeps each part's `title` (see joinPage).
+ */
+export function rawPage(page: { title: string; description: string; seo?: { title?: string } }, source: string): string {
   const body = source.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
-  return `# ${page.title}\n\n> ${page.description}\n\n${body}\n`;
+  return `# ${page.seo?.title || page.title}\n\n> ${page.description}\n\n${body}\n`;
 }
 
 /**

@@ -1,6 +1,6 @@
 ---
 title: The Tag Group
-description: A new component page, on a group of tags that screen readers name and count, that wraps without crowding touch targets, and that keeps keyboard users in place as tags are removed.
+description: A new component page, on a group of tags that screen readers name and count, and that keeps keyboard users in place as tags are removed.
 date: 2026-11-14
 category: Components
 link:

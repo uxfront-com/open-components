@@ -1,6 +1,6 @@
 ---
 title: The Card
-description: Our fourth component page, on a card that groups what people need to know about one thing, that keyboard and screen reader users can move through, and that agents can check.
+description: Our fourth component page, on a card that groups what people need to know about one thing and that keyboard and screen reader users can move through.
 date: 2026-10-13
 category: Components
 link:

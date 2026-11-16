@@ -5,11 +5,12 @@ import { defineConfig } from "vitest/config";
 // which the component pages show along with the code they test, the app's helpers,
 // like app/lib/navigation.test.ts, the server's,
 // like server/lib/contract.test.ts, which validates the contracts against their schema,
-// the MCP server's (mcp/) and the agent plugin's (plugins/open-components.test.ts).
+// the MCP server's (mcp/), the agent plugin's (plugins/open-components.test.ts)
+// and the local Nuxt modules' (modules/).
 export default defineConfig({
   plugins: [vue()],
   test: {
-    include: ["app/reference/**/*.test.ts", "app/lib/**/*.test.ts", "server/**/*.test.ts", "mcp/**/*.test.ts", "plugins/*.test.ts"],
+    include: ["app/reference/**/*.test.ts", "app/lib/**/*.test.ts", "server/**/*.test.ts", "mcp/**/*.test.ts", "plugins/*.test.ts", "modules/*.test.ts"],
     environment: "jsdom",
     // Testing Library unmounts what each test rendered from the global afterEach.
     globals: true,

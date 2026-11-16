@@ -1,10 +1,16 @@
 import { queryCollection } from "@nuxt/content/server";
+import { lastModified } from "../lib/git";
 
 // The fields read below. Nitro's types don't see the collections Docus defines.
 interface DocsPage {
   path: string;
+  stem: string;
+  extension: string;
   meta: { sitemap?: boolean; modifiedAt?: string };
 }
+
+// The homepage's source, which dates it in the sitemap.
+const HOMEPAGE = "app/pages/index.vue";
 
 /**
  * Serves `/sitemap.xml` in place of Docus's route, which robots.txt points
@@ -12,8 +18,10 @@ interface DocsPage {
  * collection when the app has its own app/pages/index.vue, so the homepage
  * never made it in. This lists the homepage first, then the docs pages by
  * Docus's rules: `sitemap: false` in a page's frontmatter leaves it out, and
- * `modifiedAt` sets its `<lastmod>`. Then the changelog, which is last modified
- * with its newest entry, and each entry, on the day it was published.
+ * `modifiedAt` sets its `<lastmod>`. Without one, a page and the homepage date
+ * from the last commit that changed their source file. Then the changelog, which
+ * is last modified with its newest entry, and each entry, on the day it was
+ * published.
  *
  * Nitro keeps the first handler for a route, and it scans the app's server/
  * before the layers'. Docus still adds the route to the prerendered ones.
@@ -23,11 +31,16 @@ export default defineEventHandler(async (event) => {
   const pages = (await queryCollection(event, "docs" as never).all()) as DocsPage[];
   const entries = await queryCollection(event, "changelog").order("date", "DESC").all();
 
+  const changed = lastModified(["content/docs", HOMEPAGE]);
+
   const urls = [
-    { loc: "/", lastmod: undefined },
+    { loc: "/", lastmod: changed.get(HOMEPAGE) },
     ...pages
       .filter((page) => page.meta.sitemap !== false && !isNavigationPath(page.path))
-      .map((page) => ({ loc: page.path, lastmod: page.meta.modifiedAt?.split("T")[0] })),
+      .map((page) => ({
+        loc: page.path,
+        lastmod: page.meta.modifiedAt?.split("T")[0] ?? changed.get(`content/${page.stem}.${page.extension}`),
+      })),
     { loc: "/changelog", lastmod: entries[0]?.date },
     ...entries.map((entry) => ({ loc: entry.path, lastmod: entry.date })),
   ];

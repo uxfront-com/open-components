@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { appendFile, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Features } from "lightningcss";
+import { SITE_DESCRIPTION } from "./app/data/site";
 import { MCP_DEV_PORT } from "./mcp/port.mjs";
 import { buildContract } from "./server/lib/contract";
 import { SECURITY_HEADERS } from "./server/lib/headers";
@@ -15,6 +16,45 @@ const MCP_URL = "https://mcp.opencomponents.dev/mcp";
 // Docus reads the site URL from the environment: for canonical URLs, robots.txt
 // and llms.txt at build time, and for the sitemap when it's prerendered.
 process.env.NUXT_SITE_URL ||= SITE_URL;
+
+// The crawlers robots.txt names, each allowed everywhere, since the guidelines
+// are open (CC BY 4.0) and gain from being found and quoted: answer engines,
+// which fetch pages to cite in an answer, then the crawlers that train models.
+const AI_CRAWLERS = [
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "PerplexityBot",
+  "Claude-SearchBot",
+  "Claude-User",
+  "GPTBot",
+  "ClaudeBot",
+  "Google-Extended",
+  "CCBot",
+];
+
+const NOINDEX = { "X-Robots-Tag": "noindex" };
+
+// Rules dist/_headers gets after the ones routeRules writes, for what routeRules
+// can't match: other hosts, and files by their extension. Cloudflare applies
+// every rule that matches a request, and joins an X-Robots-Tag set twice.
+const CRAWL_HEADERS: [string, Record<string, string>][] = [
+  // Only opencomponents.dev is indexed. www serves the same pages until its
+  // redirect is set up in Cloudflare, and the Worker answers on workers.dev too:
+  // the placeholders match its own hosts, like <worker>.<account>.workers.dev,
+  // and its preview URLs, never opencomponents.dev itself. Cloudflare ignores
+  // the scheme, so http:// matches as well.
+  ["https://www.opencomponents.dev/*", NOINDEX],
+  ["https://:worker.:account.workers.dev/*", NOINDEX],
+  // The markdown copy of a docs page (server/middleware/raw-markdown.ts) points
+  // search engines at the page itself.
+  ["/raw/docs/*.md", { Link: `<${SITE_URL}/docs/:splat>; rel="canonical"` }],
+  // Files for agents, which aren't pages. noindex keeps them out of search
+  // results, while agents still read them. The schemas get it from routeRules:
+  // Cloudflare keeps only the last of two rules for one URL.
+  ["/llms.txt", NOINDEX],
+  ["/llms-full.txt", NOINDEX],
+  ["/raw/*.yaml", NOINDEX],
+];
 
 // The docs pages with a contract, which server/middleware/raw-contract.ts serves at
 // /raw/<path>.yaml: every component page, split into a folder like
@@ -61,10 +101,36 @@ export default defineNuxtConfig({
     name: "Open Components",
   },
 
+  // The Open Graph images Docus's docs pages and the changelog generate, at the
+  // 1200 × 630 (1.91:1) social networks crop to, rather than nuxt-og-image's
+  // 1200 × 600.
+  ogImage: {
+    defaults: { width: 1200, height: 630 },
+  },
+
+  content: {
+    build: {
+      markdown: {
+        highlight: {
+          // GitHub's high-contrast themes, since every token colour in them
+          // reaches 4.5:1 on the code blocks' background, in light and dark mode
+          // (WCAG 1.4.3). Docus's Material themes go as low as 2.19:1 in light mode.
+          theme: {
+            default: "github-light-high-contrast",
+            light: "github-light-high-contrast",
+            dark: "github-dark-high-contrast",
+          },
+        },
+      },
+    },
+  },
+
   // llms.txt points agents at the MCP server (mcp/) and the agent plugin
   // (plugins/open-components/), then lists the contracts and their schema
   // (public/schemas/contract.json), ahead of the pages Nuxt Content adds.
   llms: {
+    // The summary llmstxt.org puts under the title.
+    description: SITE_DESCRIPTION,
     sections: [
       {
         // The title newer versions of the MCP toolkit give the section they add to
@@ -128,6 +194,15 @@ export default defineNuxtConfig({
     skills: { dir: "plugins/open-components/skills" },
   },
 
+  // robots.txt: everyone may crawl everything, and each AI crawler is named, so
+  // the policy is stated rather than implied. Docus adds the `User-agent: *`
+  // group and the sitemap. No Content-Signal line (contentsignals.org): Lighthouse
+  // reads it as an unknown directive, which fails its robots.txt audit and costs
+  // every page its SEO 100.
+  robots: {
+    groups: AI_CRAWLERS.map((userAgent) => ({ userAgent, allow: "/" })),
+  },
+
   // The site is static, so Docus's MCP server is off: our own, in mcp/, runs at
   // mcp.opencomponents.dev, which the page menu links to (`mcpUrl` above).
   mcp: {
@@ -177,13 +252,15 @@ export default defineNuxtConfig({
 
   routeRules: {
     // The docs open on the introduction. The raw copy of the page that used to
-    // live at /docs keeps working too, since agents may have it bookmarked.
-    "/docs": { redirect: "/docs/getting-started/introduction" },
-    "/raw/docs.md": { redirect: "/raw/docs/getting-started/introduction.md" },
+    // live at /docs keeps working too, since agents may have it bookmarked. Both
+    // are permanent, so search engines pass what they know on to the target.
+    "/docs": { redirect: { to: "/docs/getting-started/introduction", statusCode: 301 } },
+    "/raw/docs.md": { redirect: { to: "/raw/docs/getting-started/introduction.md", statusCode: 301 } },
     // Editors that run in the browser, like vscode.dev, fetch the contract schema
-    // from their own origin.
+    // from their own origin. It's a file for editors, not a page, so it's kept out
+    // of search results.
     "/schemas/**": {
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: { "Access-Control-Allow-Origin": "*", ...NOINDEX },
     },
     // Hashed build assets never change, so cache them forever.
     "/_nuxt/**": {
@@ -244,6 +321,14 @@ export default defineNuxtConfig({
           .split("\n")
           .filter((line) => line && !/\s404$/.test(line));
         await (rules.length ? writeFile(file, rules.join("\n")) : rm(file));
+      });
+      // routeRules can't match a host or a file extension, so CRAWL_HEADERS go
+      // after the preset's rules (it writes _headers in its own compiled hook).
+      nitro.hooks.hook("compiled", async () => {
+        const blocks = CRAWL_HEADERS.map(([path, headers]) =>
+          [path, ...Object.entries(headers).map(([name, value]) => `  ${name}: ${value}`)].join("\n"),
+        );
+        await appendFile(join(nitro.options.output.dir, "_headers"), `\n${blocks.join("\n")}\n`);
       });
     },
   },

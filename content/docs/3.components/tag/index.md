@@ -1,6 +1,8 @@
 ---
 title: Tag
 description: How to build a tag that labels what something is about, that people can remove or follow as a link, with a keyboard and a screen reader, and that agents can check.
+seo:
+  description: "How to build a tag that labels what something is about and that people can remove or follow as a link, with a keyboard and a screen reader."
 navigation:
   title: Overview
 ---
