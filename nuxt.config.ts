@@ -38,19 +38,21 @@ const NOINDEX = { "X-Robots-Tag": "noindex" };
 // can't match: other hosts, and files by their extension. Cloudflare applies
 // every rule that matches a request, and joins an X-Robots-Tag set twice.
 const CRAWL_HEADERS: [string, Record<string, string>][] = [
-  // Only opencomponents.dev is indexed. www serves the same pages until its
-  // redirect is set up in Cloudflare, and the Worker answers on workers.dev too:
-  // the placeholders match its own hosts, like <worker>.<account>.workers.dev,
-  // and its preview URLs, never opencomponents.dev itself. Cloudflare ignores
-  // the scheme, so http:// matches as well.
-  ["https://www.opencomponents.dev/*", NOINDEX],
+  // Only opencomponents.dev is indexed. The Worker answers on other hosts too:
+  // www, until its redirect in Cloudflare answers first, each branch's preview
+  // on a custom domain, like <branch>.opencomponents.dev, and workers.dev, both
+  // its own hosts, like <worker>.<account>.workers.dev, and its previews. A
+  // placeholder stops at a dot, so :preview matches one label in front of the
+  // apex, never opencomponents.dev itself. Cloudflare ignores the scheme, so
+  // http:// matches as well.
+  ["https://:preview.opencomponents.dev/*", NOINDEX],
   ["https://:worker.:account.workers.dev/*", NOINDEX],
   // The markdown copy of a docs page (server/middleware/raw-markdown.ts) points
   // search engines at the page itself.
   ["/raw/docs/*.md", { Link: `<${SITE_URL}/docs/:splat>; rel="canonical"` }],
   // Files for agents, which aren't pages. noindex keeps them out of search
   // results, while agents still read them. The schemas get it from routeRules:
-  // Cloudflare keeps only the last of two rules for one URL.
+  // Cloudflare keeps only the last of two rules with the same pattern.
   ["/llms.txt", NOINDEX],
   ["/llms-full.txt", NOINDEX],
   ["/raw/*.yaml", NOINDEX],
