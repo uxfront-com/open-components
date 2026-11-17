@@ -1,6 +1,8 @@
 ---
 title: Input
 description: How to build a text input that people can label, fill in and fix, that works with every keyboard, autofill and password manager, and that agents can check.
+seo:
+  title: "Accessible Input - Guidelines"
 navigation:
   title: Overview
 ---

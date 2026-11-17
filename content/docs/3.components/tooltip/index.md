@@ -1,6 +1,8 @@
 ---
 title: Tooltip
 description: How to build a tooltip that shows a short hint on hover and keyboard focus, that people can reach, read and dismiss, and that agents can check.
+seo:
+  title: "Accessible Tooltip - Guidelines"
 navigation:
   title: Overview
 ---

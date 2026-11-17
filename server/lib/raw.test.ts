@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { anchors as anchorsOf, heading, scan } from "../../mcp/lib/markdown";
-import { docsPath, isPart, joinPage, readPage, readPages, readSplitAnchors, splitAnchors } from "./raw";
+import { docsPath, isPart, joinPage, rawPage, rawTitle, readPage, readPages, readSplitAnchors, splitAnchors } from "./raw";
 
 const DOCS = "content/docs";
 const COMPONENTS = "3.components";
@@ -39,6 +39,30 @@ describe("docsPath", () => {
     ["3.components/button/2.ux.md", "/docs/components/button/ux"],
   ])("serves %s at %s", (file, path) => {
     expect(docsPath(file)).toBe(path);
+  });
+});
+
+describe("rawTitle", () => {
+  it.each([
+    ["an Overview by its title, whatever its seo.title", "docs/3.components/button/index", "Button", "Accessible Button - Guidelines", "Button"],
+    ["an Overview without a seo.title by its title", "docs/3.components/button/index", "Button", undefined, "Button"],
+    ["a layer page by its seo.title", "docs/3.components/button/2.ux", "User Experience (UX)", "Button - User Experience (UX)", "Button - User Experience (UX)"],
+    ["a page without a seo.title by its title", "docs/1.getting-started/1.introduction", "Introduction", undefined, "Introduction"],
+    ["a page with an empty seo.title by its title", "docs/1.getting-started/1.introduction", "Introduction", "", "Introduction"],
+  ])("heads %s", (_, stem, title, seoTitle, expected) => {
+    expect(rawTitle({ stem, title, seo: { title: seoTitle } })).toBe(expected);
+  });
+
+  it("heads every Overview's copy as the MCP server does, with its title", () => {
+    for (const name of SPLIT) {
+      const file = join(COMPONENTS, name, "index.md");
+      const source = readFileSync(join(DOCS, file), "utf8");
+      const { title, description } = frontmatter(source);
+      const seo = { title: `Accessible ${title} - Guidelines` };
+      const site = rawPage({ title: rawTitle({ stem: `docs/${file.replace(/\.md$/, "")}`, title, seo }), description }, source);
+      expect(site).toBe(rawPage({ title, description }, source));
+      expect(site.split("\n")[0]).toBe(`# ${title}`);
+    }
   });
 });
 

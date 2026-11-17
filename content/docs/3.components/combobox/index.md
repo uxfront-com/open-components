@@ -2,6 +2,7 @@
 title: Combobox
 description: How to build a combobox that filters a list of suggestions as people type, picks one or several, keeps text you allow and works with every form, keyboard and phone.
 seo:
+  title: "Accessible Combobox - Guidelines"
   description: "How to build a combobox that filters suggestions as people type, picks one or several, keeps text you allow and works with every form, keyboard and phone."
 navigation:
   title: Overview

@@ -2,6 +2,7 @@
 title: Radio Group
 description: How to build a radio group that asks one clear question, lets people pick one answer with a pointer or the arrow keys, says what's wrong when they skip it, and that agents can check.
 seo:
+  title: "Accessible Radio Group - Guidelines"
   description: "How to build a radio group that asks one clear question, that lets people pick one answer with a pointer or the arrow keys and that agents can check."
 navigation:
   title: Overview

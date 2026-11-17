@@ -1,6 +1,8 @@
 ---
 title: Spinner
 description: How to build a spinner that shows something is busy, without getting in the way of screen readers, reduced motion or the layout around it.
+seo:
+  title: "Accessible Spinner - Guidelines"
 navigation:
   title: Overview
 ---

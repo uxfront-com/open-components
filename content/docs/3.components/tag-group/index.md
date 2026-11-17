@@ -2,6 +2,7 @@
 title: Tag Group
 description: How to build a group of tags that screen readers name and count, that wraps without crowding touch targets, and that keeps keyboard users in place as tags are removed.
 seo:
+  title: "Accessible Tag Group - Guidelines"
   description: "How to build a group of tags that screen readers name and count, and that keeps keyboard users in place as tags are removed."
 navigation:
   title: Overview

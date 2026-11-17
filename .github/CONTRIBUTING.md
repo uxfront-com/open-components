@@ -72,7 +72,8 @@ The documentation is built with [Docus](https://docus.dev), through [`@uxfront/l
 
 Search results show a title up to about 60 characters and a description up to about 160, and fold pages that share a title into one result. Docus titles a page `<title> - Open Components`, from its `seo.title` or else its `title`, and describes it by its `seo.description` or else its `description`:
 
-- A layer page's `title` is the heading it has on the whole page, like "User Experience (UX)", which every component's UX page shares. So each layer page also has a `seo.title` that names its component in at most 42 characters, like "Checkbox Group: Developer Experience (DX)". Its markdown copy starts with it, and `llms.txt` links the page by it.
+- A layer page's `title` is the heading it has on the whole page, like "User Experience (UX)", which every component's UX page shares. So each layer page also has a `seo.title` that names its component in at most 42 characters, like "Checkbox Group - Developer Experience (DX)". Its markdown copy starts with it, and `llms.txt` links the page by it.
+- An Overview's `title` is only its component's name, like "Button", while people search for "accessible button". So each Overview has a `seo.title` of `Accessible <title> - Guidelines`, like "Accessible Button - Guidelines", in title case like the layer pages' titles. Its markdown copy and its `llms.txt` link keep the component's name (`rawTitle()` in `server/lib/raw.ts`), because the copy is the whole page, which the MCP server serves as the same bytes, headed by `title`, and `get-page` finds the page's sections by that name.
 - Every description runs 70 to 160 characters. Where a page's `description`, which is also its lead, runs longer, give it a shorter `seo.description`. A changelog entry's page reads only `description`, so shorten that instead.
 - `pnpm check-seo` fails on a title or description that's too long, too short or used twice.
 

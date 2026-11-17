@@ -1,6 +1,8 @@
 ---
 title: Card
 description: How to build a card that groups what people need to know about one thing, that keyboard and screen reader users can move through, and that agents can check.
+seo:
+  title: "Accessible Card - Guidelines"
 navigation:
   title: Overview
 ---

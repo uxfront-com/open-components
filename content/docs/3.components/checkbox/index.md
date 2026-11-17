@@ -2,6 +2,7 @@
 title: Checkbox
 description: How to build a checkbox that people can check with a click on its label, that says what it means and when it's mixed, that forms send the way they expect, and that agents can check.
 seo:
+  title: "Accessible Checkbox - Guidelines"
   description: "How to build a checkbox that people can check with a click on its label, that says when it's mixed, that forms send as expected and that agents can check."
 navigation:
   title: Overview
