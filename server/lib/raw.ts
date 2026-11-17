@@ -46,7 +46,7 @@ export function rawPage(page: { title: string; description: string }, source: st
  * "Button - User Experience (UX)", naming its component.
  *
  * An Overview, a split page's index.md, keeps its `title`, like "Button", even
- * with a `seo.title` like "Accessible Button - guidelines". Its copy is the whole
+ * with a `seo.title` like "Accessible Button - Guidelines". Its copy is the whole
  * page, which the MCP server serves as the same bytes and heads with `title`
  * (mcp/lib/standard.ts), and get-page finds the page's sections by that name.
  */

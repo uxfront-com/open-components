@@ -2,7 +2,7 @@
 title: Select
 description: How to build a select that picks one option or several from a list, looks like your brand, works with every form and hands phones their own picker.
 seo:
-  title: "Accessible Select - guidelines"
+  title: "Accessible Select - Guidelines"
 navigation:
   title: Overview
 ---

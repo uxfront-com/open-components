@@ -44,7 +44,7 @@ describe("docsPath", () => {
 
 describe("rawTitle", () => {
   it.each([
-    ["an Overview by its title, whatever its seo.title", "docs/3.components/button/index", "Button", "Accessible Button - guidelines", "Button"],
+    ["an Overview by its title, whatever its seo.title", "docs/3.components/button/index", "Button", "Accessible Button - Guidelines", "Button"],
     ["an Overview without a seo.title by its title", "docs/3.components/button/index", "Button", undefined, "Button"],
     ["a layer page by its seo.title", "docs/3.components/button/2.ux", "User Experience (UX)", "Button - User Experience (UX)", "Button - User Experience (UX)"],
     ["a page without a seo.title by its title", "docs/1.getting-started/1.introduction", "Introduction", undefined, "Introduction"],
@@ -58,7 +58,7 @@ describe("rawTitle", () => {
       const file = join(COMPONENTS, name, "index.md");
       const source = readFileSync(join(DOCS, file), "utf8");
       const { title, description } = frontmatter(source);
-      const seo = { title: `Accessible ${title} - guidelines` };
+      const seo = { title: `Accessible ${title} - Guidelines` };
       const site = rawPage({ title: rawTitle({ stem: `docs/${file.replace(/\.md$/, "")}`, title, seo }), description }, source);
       expect(site).toBe(rawPage({ title, description }, source));
       expect(site.split("\n")[0]).toBe(`# ${title}`);

@@ -2,7 +2,7 @@
 title: Dialog
 description: How to build a modal dialog that takes focus and gives it back, that everyone can close, that developers control and that agents can check.
 seo:
-  title: "Accessible Dialog - guidelines"
+  title: "Accessible Dialog - Guidelines"
 navigation:
   title: Overview
 ---
