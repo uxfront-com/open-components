@@ -29,14 +29,29 @@ export function docsPath(file: string): string {
 
 /**
  * `/raw/<path>.md`: the title and description, then the page without its
- * frontmatter. The heading is the page's `seo.title` where it has one: a layer
- * page's `title`, like "User Experience (UX)", is the heading it has on the
- * whole page, so its copy is headed "Button: User Experience (UX)", naming its
- * component. The whole page keeps each part's `title` (see joinPage).
+ * frontmatter. The title is the copy's heading, from rawTitle().
  */
-export function rawPage(page: { title: string; description: string; seo?: { title?: string } }, source: string): string {
+export function rawPage(page: { title: string; description: string }, source: string): string {
   const body = source.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
-  return `# ${page.seo?.title || page.title}\n\n> ${page.description}\n\n${body}\n`;
+  return `# ${page.title}\n\n> ${page.description}\n\n${body}\n`;
+}
+
+/**
+ * The heading of a docs page's markdown copy, and its link text in llms.txt, from
+ * the page Nuxt Content reads (its `stem` is its file in content/, without the
+ * extension).
+ *
+ * A layer page's `title`, like "User Experience (UX)", is the heading it has on
+ * the whole page, so its copy is headed by its `seo.title`, like
+ * "Button - User Experience (UX)", naming its component.
+ *
+ * An Overview, a split page's index.md, keeps its `title`, like "Button", even
+ * with a `seo.title` like "Accessible Button - guidelines". Its copy is the whole
+ * page, which the MCP server serves as the same bytes and heads with `title`
+ * (mcp/lib/standard.ts), and get-page finds the page's sections by that name.
+ */
+export function rawTitle(page: { stem: string; title: string; seo?: { title?: string } }): string {
+  return basename(page.stem) === "index" ? page.title : page.seo?.title || page.title;
 }
 
 /**

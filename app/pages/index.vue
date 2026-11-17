@@ -48,6 +48,7 @@ useHead({
             "@type": "WebSite",
             "@id": `${siteUrl}/#website`,
             name: "Open Components",
+            alternateName: "OpenComponents",
             url: `${siteUrl}/`,
             description,
             publisher: organization,

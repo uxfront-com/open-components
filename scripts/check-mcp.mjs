@@ -248,8 +248,9 @@ async function checkServer() {
   const ids = (pathname) =>
     once(`ids:${pathname}`, () => new Set([...readFileSync(join("dist", `${pathname}.html`), "utf8").matchAll(/ id="([^"]*)"/g)].map((match) => match[1])));
   // A part's title is the heading it has on the whole page, from its frontmatter.
-  // Its markdown copy is headed by its seo.title instead, like "Button: User
-  // Experience (UX)" (server/lib/raw.ts).
+  // Its markdown copy is headed by its seo.title instead, like "Button - User
+  // Experience (UX)", while an Overview's copy keeps its title, like "Button",
+  // whatever its seo.title (rawTitle in server/lib/raw.ts).
   const title = (part) => once("titles", docsTitles).get(part);
   // Every anchor the server links agents to is on its page, or on one of its parts.
   // A part's own section, like the Button's #user-experience-ux, is the top of the
