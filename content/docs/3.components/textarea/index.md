@@ -2,7 +2,7 @@
 title: Textarea
 description: How to build a textarea that people can label, write in at length and fix, that grows or resizes without cutting anything off, and that agents can check.
 seo:
-  title: "Accessible Textarea - guidelines"
+  title: "Accessible Textarea - Guidelines"
 navigation:
   title: Overview
 ---
