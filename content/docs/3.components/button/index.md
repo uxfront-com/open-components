@@ -1,6 +1,8 @@
 ---
 title: Button
 description: How to build a button that looks right, works for everyone, feels familiar to every developer and can be checked by your agents.
+seo:
+  title: "Accessible Button - guidelines"
 navigation:
   title: Overview
 ---

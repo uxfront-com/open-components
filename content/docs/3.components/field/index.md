@@ -2,6 +2,7 @@
 title: Field
 description: How to build a field that labels, describes and explains the errors of any form control, works for everyone, feels familiar to every developer and can be checked by your agents.
 seo:
+  title: "Accessible Field - guidelines"
   description: "How to build a field that labels, describes and explains the errors of any form control, works for everyone and can be checked by your agents."
 navigation:
   title: Overview
