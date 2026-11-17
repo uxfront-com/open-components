@@ -2,6 +2,7 @@
 title: Popover
 description: How to build a popover that shows more next to what opened it, leaves the rest of the page working, opens and closes the way people expect and can be checked by your agents.
 seo:
+  title: "Accessible Popover - guidelines"
   description: "How to build a popover that shows more next to what opened it, leaves the rest of the page working and can be checked by your agents."
 navigation:
   title: Overview

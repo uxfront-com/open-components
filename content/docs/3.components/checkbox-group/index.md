@@ -2,6 +2,7 @@
 title: Checkbox Group
 description: How to build a group of checkboxes that people can pick any number of options from, that's named by its question, that says when they need to pick one, and that agents can check.
 seo:
+  title: "Accessible Checkbox Group - guidelines"
   description: "How to build a group of checkboxes that's named by its question, that people can pick any number of options from and that agents can check."
 navigation:
   title: Overview

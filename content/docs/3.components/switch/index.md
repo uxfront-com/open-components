@@ -1,6 +1,8 @@
 ---
 title: Switch
 description: How to build a switch that turns a setting on or off right away, that everyone can see, label and flip, and that agents can check.
+seo:
+  title: "Accessible Switch - guidelines"
 navigation:
   title: Overview
 ---
