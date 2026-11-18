@@ -3,7 +3,7 @@ import { hold } from "@uxfront/scene";
 import type { FormationOptions } from "@uxfront/scene";
 import { corridor, plates } from "@uxfront/scene/formations";
 
-import { CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL, SITE_DESCRIPTION } from "~/data/site";
+import { BLOG_URL, CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL, SITE_DESCRIPTION } from "~/data/site";
 import { share, spotlight } from "~/lib/formations";
 
 const description = SITE_DESCRIPTION;
@@ -179,6 +179,7 @@ const ax = [
         <template #actions>
           <NuxtLink class="header-link header-page" :to="DOCS_URL">Documentation</NuxtLink>
           <NuxtLink class="header-link header-page" :to="CHANGELOG_URL">Changelog</NuxtLink>
+          <NuxtLink class="header-link header-page" :to="BLOG_URL">Blog</NuxtLink>
           <a
             class="header-link"
             :href="GITHUB_URL"

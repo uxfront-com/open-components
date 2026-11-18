@@ -4,10 +4,13 @@
 // - every page in the sitemap, and only those, with the head tags every page
 //   needs, unique titles and descriptions, and share images at 1200 × 630;
 // - robots.txt, which names the sitemap and every AI crawler;
-// - llms.txt, which links every docs page, each by a title of its own;
-// - the markdown copies of the docs pages, each headed by its own title;
+// - every blog post's BlogPosting, and no other article node;
+// - llms.txt, which links every docs page and blog post, each docs page by a
+//   title of its own;
+// - the markdown copies of the docs pages and blog posts, each headed by its own
+//   title;
 // - dist/_headers, which keeps other hosts and generated files out of search
-//   results, and never the site's own pages.
+//   results, and never the site's own pages, and points each copy at its page.
 //
 // Prints every rule with its failures, and exits 1 if any failed.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -49,11 +52,13 @@ const RULES = {
   og: "og:title, og:description, og:type, og:image, and og:url as the page's URL",
   ogimage: "every og:image is a 1200 × 630 PNG in dist/",
   twitter: "twitter:card summary_large_image, with a twitter:image",
-  jsonld: "JSON-LD that parses, on schema.org, with no two nodes on a page sharing an @id",
+  jsonld:
+    "JSON-LD that parses, on schema.org, with no two nodes on a page sharing an @id, and one BlogPosting on every blog post, with its headline, description, datePublished, author.name, image and url, and no Article",
   robots: "robots.txt names the sitemap, allows every AI crawler by name and uses only directives Lighthouse knows",
-  llms: "llms.txt has a summary and links every docs page, each by a title of its own",
-  raw: "every docs page has a markdown copy, each headed by its own title",
-  headers: "_headers keeps other hosts and generated files out of search results, and never a page",
+  llms: "llms.txt has a summary and links every docs page, each by a title of its own, and every blog post at /raw/blog/<slug>.md",
+  raw: "every docs page and blog post has a markdown copy, each headed by its own title",
+  headers:
+    "_headers keeps other hosts and generated files out of search results, and never a page, and points every docs page's and blog post's copy at its page as canonical",
 };
 const failures = Object.fromEntries(Object.keys(RULES).map((rule) => [rule, []]));
 const fail = (rule, message) => failures[rule].push(message);
@@ -132,6 +137,7 @@ for (const { loc, lastmod } of entries) {
   // Each entity is described once per page: a second node with the same @id,
   // in the same block or another, is a copy that can drift from the first.
   const ids = new Set();
+  const nodes = [];
   for (const json of jsonld) {
     let data;
     try {
@@ -142,6 +148,7 @@ for (const { loc, lastmod } of entries) {
     }
     if (data?.["@context"] !== "https://schema.org") fail("jsonld", `${loc}: JSON-LD without @context https://schema.org`);
     for (const node of [data, ...(Array.isArray(data?.["@graph"]) ? data["@graph"] : [])]) {
+      nodes.push(node);
       const id = node?.["@id"];
       if (typeof id !== "string") continue;
       if (ids.has(id)) fail("jsonld", `${loc}: two JSON-LD nodes with the @id ${id}`);
@@ -149,7 +156,20 @@ for (const { loc, lastmod } of entries) {
     }
   }
 
-  pages.push({ loc, pathname, title: titles[0], description: descriptions[0], image: one("og:image") });
+  // A blog post describes itself once, as a BlogPosting. Docus's useSeo() would add
+  // an Article too, which app/pages/blog/[slug].vue doesn't call for that reason.
+  if (pathname.startsWith("/blog/")) {
+    const postings = nodes.filter((node) => node?.["@type"] === "BlogPosting");
+    if (postings.length !== 1) fail("jsonld", `${loc}: ${postings.length} BlogPosting nodes`);
+    for (const posting of postings) {
+      const missing = ["headline", "description", "datePublished", "image", "url"].filter((key) => !posting[key]);
+      if (!posting.author?.name) missing.push("author.name");
+      if (missing.length) fail("jsonld", `${loc}: BlogPosting without ${missing.join(", ")}`);
+    }
+    if (nodes.some((node) => node?.["@type"] === "Article")) fail("jsonld", `${loc}: an Article node beside its BlogPosting`);
+  }
+
+  pages.push({ loc, pathname, title: titles[0], ogTitle: one("og:title"), description: descriptions[0], image: one("og:image") });
 }
 
 for (const key of ["title", "description"]) {
@@ -212,11 +232,12 @@ for (const agent of ["*", ...AI_CRAWLERS]) {
 
 // llms.txt (llmstxt.org): a title, a summary, then sections of links.
 const docs = pages.filter((page) => page.pathname.startsWith("/docs/"));
+const posts = pages.filter((page) => page.pathname.startsWith("/blog/"));
 const llms = read("llms.txt");
 const [heading, summary] = llms.split("\n").filter(Boolean);
 if (!heading?.startsWith("# ")) fail("llms", "it doesn't start with a # heading");
 if (!summary?.startsWith("> ")) fail("llms", "no > summary under its heading");
-for (const { pathname } of docs) {
+for (const { pathname } of [...docs, ...posts]) {
   if (!llms.includes(`](${SITE}/raw${pathname}.md)`)) fail("llms", `no link to ${SITE}/raw${pathname}.md`);
 }
 const links = [...(llms.split(/^## Docs$/m)[1]?.split(/^## /m)[0] ?? "").matchAll(/^- \[([^\]]+)\]\(([^)]+)\)/gm)];
@@ -239,6 +260,16 @@ for (const { pathname } of docs) {
 }
 for (const [first, paths] of firstLines) {
   if (paths.length > 1) fail("raw", `${paths.map((path) => `${SITE}/raw${path}.md`).join(", ")} all start with "${first}"`);
+}
+// And one per blog post, headed by the post's title.
+for (const { pathname, ogTitle } of posts) {
+  const file = join(DIST, `raw${pathname}.md`);
+  if (!existsSync(file)) {
+    fail("raw", `no ${SITE}/raw${pathname}.md`);
+    continue;
+  }
+  const first = readFileSync(file, "utf8").split("\n")[0];
+  if (first !== `# ${ogTitle}`) fail("raw", `${SITE}/raw${pathname}.md starts with "${first}", not "# ${ogTitle}"`);
 }
 
 // _headers, as Cloudflare matches it: a rule's URL is a path, or a URL with a
@@ -306,7 +337,7 @@ for (const url of [
 ]) {
   if (!/noindex/i.test(robotsTag(url))) fail("headers", `${url}: no X-Robots-Tag: noindex`);
 }
-for (const { pathname } of docs) {
+for (const { pathname } of [...docs, ...posts]) {
   const url = `${SITE}/raw${pathname}.md`;
   const link = headersFor(url).find(([name]) => name === "link")?.[1];
   if (link !== `<${SITE}${pathname}>; rel="canonical"`) fail("headers", `${url}: Link ${link ?? "missing"}, not its page as canonical`);
@@ -324,5 +355,5 @@ for (const [rule, about] of Object.entries(RULES)) {
   for (const message of list.slice(0, 20)) console.log(`    ${message}`);
   if (list.length > 20) console.log(`    … and ${list.length - 20} more`);
 }
-console.log(`${entries.length} pages in the sitemap, ${docs.length} of them docs pages, ${failed} failures`);
+console.log(`${entries.length} pages in the sitemap, ${docs.length} of them docs pages and ${posts.length} blog ${posts.length === 1 ? "post" : "posts"}, ${failed} failures`);
 process.exit(failed ? 1 : 0);

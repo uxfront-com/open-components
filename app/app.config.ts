@@ -1,5 +1,5 @@
 import { FRAMEWORKS } from "./data/frameworks";
-import { CHANGELOG_URL, GITHUB_URL } from "./data/site";
+import { BLOG_URL, CHANGELOG_URL, GITHUB_URL } from "./data/site";
 
 export default defineAppConfig({
   // The docs' GitHub, "Edit this page" and "Report an issue" links. Docus reads
@@ -21,6 +21,7 @@ export default defineAppConfig({
       // The introduction, rather than /docs, which only redirects to it.
       { label: "Documentation", to: "/docs/getting-started/introduction", activeFor: "/docs" },
       { label: "Changelog", to: CHANGELOG_URL, activeFor: CHANGELOG_URL },
+      { label: "Blog", to: BLOG_URL, activeFor: BLOG_URL },
     ],
   },
   ui: {

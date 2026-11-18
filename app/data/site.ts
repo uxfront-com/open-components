@@ -4,6 +4,8 @@ export const DOCS_URL = "/docs/getting-started/introduction";
 
 export const CHANGELOG_URL = "/changelog";
 
+export const BLOG_URL = "/blog";
+
 export const GITHUB_URL = "https://github.com/uxfront-com/open-components";
 
 export const GITHUB_API_URL = "https://api.github.com/repos/uxfront-com/open-components";

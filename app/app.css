@@ -3,13 +3,15 @@
 
 /* Docus has Tailwind scan content/ and its own layer, not this app: add the
    live examples the docs pages render, in components/content/, the header
-   overrides in components/app/, the page menu's in components/docs/ and the
-   changelog. */
+   overrides in components/app/, the page menu's in components/docs/, the
+   changelog and the blog. */
 @source "./components/content";
 @source "./components/app";
 @source "./components/docs";
 @source "./components/changelog";
 @source "./pages/changelog";
+@source "./components/blog";
+@source "./pages/blog";
 /* And the theme's own classes in app.config.ts, like the link cards'. */
 @source "./app.config.ts";
 
