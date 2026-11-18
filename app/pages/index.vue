@@ -12,6 +12,7 @@ useUxHead({
   title: "Open Components - The standard for perfect UI components",
   description,
   siteName: "Open Components",
+  logo: "/apple-touch-icon.png",
   sameAs: [GITHUB_URL],
   // The picture a shared link shows: the hero, in public/share.png.
   // CONTRIBUTING.md ("Keeping 100s as the site grows") says how to remake it.
@@ -23,10 +24,9 @@ useUxHead({
   },
 });
 
-// What the site is, for search engines and AI search: the organisation, the
-// website and the standard's source code with its two licences, linked by @id.
-// useUxHead adds an Organization of its own without an @id, which validators
-// accept beside this one.
+// What the site is, for search engines and AI search: the website and the
+// standard's source code with its two licences. The organisation that publishes
+// them is the Organization useUxHead renders, and they point at it by its @id.
 const { siteUrl } = useRuntimeConfig().public;
 const organization = { "@id": `${siteUrl}/#organization` };
 useHead({
@@ -36,14 +36,6 @@ useHead({
       innerHTML: JSON.stringify({
         "@context": "https://schema.org",
         "@graph": [
-          {
-            "@type": "Organization",
-            ...organization,
-            name: "Open Components",
-            url: `${siteUrl}/`,
-            logo: `${siteUrl}/apple-touch-icon.png`,
-            sameAs: [GITHUB_URL],
-          },
           {
             "@type": "WebSite",
             "@id": `${siteUrl}/#website`,
