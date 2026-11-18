@@ -49,7 +49,7 @@ const RULES = {
   og: "og:title, og:description, og:type, og:image, and og:url as the page's URL",
   ogimage: "every og:image is a 1200 × 630 PNG in dist/",
   twitter: "twitter:card summary_large_image, with a twitter:image",
-  jsonld: "JSON-LD that parses, on schema.org",
+  jsonld: "JSON-LD that parses, on schema.org, with no two nodes on a page sharing an @id",
   robots: "robots.txt names the sitemap, allows every AI crawler by name and uses only directives Lighthouse knows",
   llms: "llms.txt has a summary and links every docs page, each by a title of its own",
   raw: "every docs page has a markdown copy, each headed by its own title",
@@ -129,11 +129,23 @@ for (const { loc, lastmod } of entries) {
 
   const jsonld = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(([, json]) => json);
   if (!jsonld.length) fail("jsonld", `${loc}: no JSON-LD`);
+  // Each entity is described once per page: a second node with the same @id,
+  // in the same block or another, is a copy that can drift from the first.
+  const ids = new Set();
   for (const json of jsonld) {
+    let data;
     try {
-      if (JSON.parse(json)["@context"] !== "https://schema.org") fail("jsonld", `${loc}: JSON-LD without @context https://schema.org`);
+      data = JSON.parse(json);
     } catch {
       fail("jsonld", `${loc}: JSON-LD that doesn't parse`);
+      continue;
+    }
+    if (data?.["@context"] !== "https://schema.org") fail("jsonld", `${loc}: JSON-LD without @context https://schema.org`);
+    for (const node of [data, ...(Array.isArray(data?.["@graph"]) ? data["@graph"] : [])]) {
+      const id = node?.["@id"];
+      if (typeof id !== "string") continue;
+      if (ids.has(id)) fail("jsonld", `${loc}: two JSON-LD nodes with the @id ${id}`);
+      ids.add(id);
     }
   }
 
