@@ -86,6 +86,8 @@ Two things stay in one piece, though (`tokens/groups`):
 - **A variation stays in its name.** The label on the primary fill is `--color--primary-contrast`, rather than `--color--primary--contrast`, which would read as a `contrast` token in a group called `primary`.
 - **A CSS property stays whole.** `font-size` is a single name, so the button's text is sized with `--button--font-size`, rather than `--button--font--size`, and the same goes for `border-radius` and `line-height`.
 
+The page covers parts, states, variations and CSS properties under [Groups](/docs/foundations/design-tokens#groups).
+
 ## Name the theme's colours the same way
 
 Every component reads its colours from the same theme tokens, so a single theme styles them all (`tokens/shared-theme`). There are three tokens per colour, plus one focus colour:
