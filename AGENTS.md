@@ -35,6 +35,7 @@ Building needs Node 22.13 or later. Which checks to run depends on what you chan
 | -------------------------------------------- | -------------------------------------------------------------------------------- |
 | `content/docs/`                              | The standard. Numbered files and folders set the sidebar order                   |
 | `content/changelog/`                         | One entry per release of something readers will notice                           |
+| `content/blog/`                              | The blog's posts, which aren't part of the standard or the MCP server            |
 | `app/reference/<component>/`                 | The tested Vue 3 reference implementations, which every page shows as code       |
 | `app/components/content/<component>/`        | The live examples, anatomy and playground, which render the reference            |
 | `app/data/frameworks.ts`                     | The frameworks, their order and their `::framework-switcher` slot names          |
