@@ -1,5 +1,5 @@
 import { FRAMEWORKS } from "./data/frameworks";
-import { CHANGELOG_URL, GITHUB_URL } from "./data/site";
+import { BLOG_URL, CHANGELOG_URL, GITHUB_URL } from "./data/site";
 
 export default defineAppConfig({
   // The docs' GitHub, "Edit this page" and "Report an issue" links. Docus reads
@@ -18,9 +18,10 @@ export default defineAppConfig({
     // The docs header's links, beside its buttons from 768px up and at the top of
     // its menu below that, each highlighted on its page and the pages below it.
     headerLinks: [
+      { label: "Blog", to: BLOG_URL, activeFor: BLOG_URL },
+      { label: "Changelog", to: CHANGELOG_URL, activeFor: CHANGELOG_URL },
       // The introduction, rather than /docs, which only redirects to it.
       { label: "Documentation", to: "/docs/getting-started/introduction", activeFor: "/docs" },
-      { label: "Changelog", to: CHANGELOG_URL, activeFor: CHANGELOG_URL },
     ],
   },
   ui: {

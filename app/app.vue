@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// This app.vue replaces the Docus one, so docs pages and the changelog mount the
-// Docus shell (header, sidebar, search) themselves. The homepage brings its own,
+// This app.vue replaces the Docus one, so docs pages, the changelog and the blog
+// mount the Docus shell (header, sidebar, search) themselves. The homepage brings its own,
 // and doesn't load this one.
 const DocusApp = defineAsyncComponent(() => import("docus/app/app.vue"));
 
 const route = useRoute();
 const usesDocus = computed(() =>
-  ["/docs", "/changelog"].some((base) => route.path === base || route.path.startsWith(`${base}/`)),
+  ["/docs", "/changelog", "/blog"].some((base) => route.path === base || route.path.startsWith(`${base}/`)),
 );
 
 useHead({

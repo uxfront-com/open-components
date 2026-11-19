@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { appendFile, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Features } from "lightningcss";
@@ -50,6 +50,8 @@ const CRAWL_HEADERS: [string, Record<string, string>][] = [
   // The markdown copy of a docs page (server/middleware/raw-markdown.ts) points
   // search engines at the page itself.
   ["/raw/docs/*.md", { Link: `<${SITE_URL}/docs/:splat>; rel="canonical"` }],
+  // And so does a blog post's.
+  ["/raw/blog/*.md", { Link: `<${SITE_URL}/blog/:splat>; rel="canonical"` }],
   // Files for agents, which aren't pages. noindex keeps them out of search
   // results, while agents still read them. The schemas get it from routeRules:
   // Cloudflare keeps only the last of two rules with the same pattern.
@@ -68,6 +70,12 @@ const contracts = readPages("content/docs").flatMap(({ file, source }) => {
     path: `/raw${docsPath(file)}.yaml`,
   };
 });
+
+// The markdown copy of every blog post, which server/middleware/raw-markdown.ts
+// serves at /raw/blog/<file name>.md, from content/blog/.
+const blogCopies = readdirSync("content/blog")
+  .filter((file) => file.endsWith(".md"))
+  .map((file) => `/raw/blog/${file}`);
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -262,14 +270,17 @@ export default defineNuxtConfig({
     prerender: {
       crawlLinks: true,
       // /docs only redirects, so crawling the docs starts from the introduction, and
-      // the changelog's entries are crawled from /changelog. The crawler only follows
-      // links without an extension or to .json, so the contracts are listed too.
+      // the changelog's entries are crawled from /changelog, and the blog's posts from
+      // /blog. The crawler only follows links without an extension or to .json, so
+      // the contracts and the posts' markdown copies are listed too.
       routes: [
         "/",
         "/docs",
         "/docs/getting-started/introduction",
         "/changelog",
+        "/blog",
         ...contracts.map(({ path }) => path),
+        ...blogCopies,
       ],
       failOnError: true,
     },

@@ -21,7 +21,7 @@ const HOMEPAGE = "app/pages/index.vue";
  * `modifiedAt` sets its `<lastmod>`. Without one, a page and the homepage date
  * from the last commit that changed their source file. Then the changelog, which
  * is last modified with its newest entry, and each entry, on the day it was
- * published.
+ * published, and the blog the same way, with its posts.
  *
  * Nitro keeps the first handler for a route, and it scans the app's server/
  * before the layers'. Docus still adds the route to the prerendered ones.
@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
   const { siteUrl } = useRuntimeConfig(event).public;
   const pages = (await queryCollection(event, "docs" as never).all()) as DocsPage[];
   const entries = await queryCollection(event, "changelog").order("date", "DESC").all();
+  const posts = await queryCollection(event, "blog").order("date", "DESC").all();
 
   const changed = lastModified(["content/docs", HOMEPAGE]);
 
@@ -43,6 +44,8 @@ export default defineEventHandler(async (event) => {
       })),
     { loc: "/changelog", lastmod: entries[0]?.date },
     ...entries.map((entry) => ({ loc: entry.path, lastmod: entry.date })),
+    { loc: "/blog", lastmod: posts[0]?.date },
+    ...posts.map((post) => ({ loc: post.path, lastmod: post.date })),
   ];
 
   setHeader(event, "Content-Type", "application/xml");
