@@ -177,9 +177,9 @@ const ax = [
           </a>
         </template>
         <template #actions>
-          <NuxtLink class="header-link header-page" :to="DOCS_URL">Documentation</NuxtLink>
-          <NuxtLink class="header-link header-page" :to="CHANGELOG_URL">Changelog</NuxtLink>
           <NuxtLink class="header-link header-page" :to="BLOG_URL">Blog</NuxtLink>
+          <NuxtLink class="header-link header-page" :to="CHANGELOG_URL">Changelog</NuxtLink>
+          <NuxtLink class="header-link header-page" :to="DOCS_URL">Documentation</NuxtLink>
           <a
             class="header-link"
             :href="GITHUB_URL"
