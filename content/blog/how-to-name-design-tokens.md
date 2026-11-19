@@ -19,11 +19,17 @@ counterExamples:
   - --tooltip--font--size
 ---
 
-You name a design token by its path: the groups it belongs to, then its own name, with a double dash between the groups and a single dash between the words inside each one, as in `--button--icon--size`. The double dash marks where one group ends and the next begins, so that name can only be read as `button › icon › size`.
+I've spent a lot of the past few years thinking about how to name design tokens, and I've tried many different approaches. The one I've settled on is to treat a design token as a path to a design property, like a button's text colour or your brand colour. A path says what the token sets and what it belongs to, so you can tell both from the name alone.
+
+In code, you'd usually write a path with dots, and `button.text.color` reads clearly in any programming language. CSS doesn't allow a dot in a variable name unless you escape it, so I use a double dash instead, which brings the same level of clarity: `--button--text--color`. We call this convention token paths, and our [Design Tokens](/docs/foundations/design-tokens) page defines it.
+
+## Token paths
+
+You name a design token by its path: first the groups it belongs to, then its own name, with a double dash between the groups and a single dash between the words inside each one, as in `--button--icon--size`. The double dash marks where one group ends and the next begins, so that name can only be read as `button › icon › size`
 
 A token's name is all that people, tools and agents have to go on when they read your styles, and it's easy to pick one that doesn't tell them enough. Think of a `--blue-2` that doesn't say what it's for, a `--color-primary-text` that could be the `primary-text` colour or the `text` of `color-primary`, or a dark mode that means editing every component, because each one has its colours written into it.
 
-We call this convention token paths, and our [Design Tokens](/docs/foundations/design-tokens) page defines it. Let's take a small stylesheet with all three problems, a theme and a tooltip, and rename it a step at a time:
+Let's take a small stylesheet with all three problems, a theme and a tooltip, and rename it a step at a time:
 
 ```css
 :root {
