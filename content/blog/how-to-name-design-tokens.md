@@ -1,6 +1,6 @@
 ---
 title: How to name design tokens
-description: "How to name design tokens so people, tools and agents read them the same way: token paths, step by step, with worked examples."
+description: "How I name design tokens so people, tools and agents read them the same way, using the token paths convention, step by step and with worked examples."
 date: 2026-11-18
 author:
   name: Alex Grozav
@@ -21,11 +21,11 @@ counterExamples:
 
 I've spent a lot of the past few years thinking about how to name design tokens, and I've tried many different approaches. The one I've settled on is to treat a design token as a path to a design property, like a button's text colour or your brand colour. A path says what the token sets and what it belongs to, so you can tell both from the name alone.
 
-In code, you'd usually write a path with dots, and `button.text.color` reads clearly in any programming language. CSS doesn't allow a dot in a variable name unless you escape it, so I use a double dash instead, which brings the same level of clarity: `--button--text--color`. We call this convention token paths, and our [Design Tokens](/docs/foundations/design-tokens) page defines it.
+In code, you'd usually write a path with dots, and `button.text.color` reads clearly in any programming language. CSS doesn't allow a dot in a variable name unless you escape it, so I use a double dash instead, which brings the same level of clarity: `--button--text--color`. I call this convention token paths, and the Open Components [Design Tokens](/docs/foundations/design-tokens) page defines it.
 
 ## Token paths
 
-You name a design token by its path: first the groups it belongs to, then its own name, with a double dash between the groups and a single dash between the words inside each one, as in `--button--icon--size`. The double dash marks where one group ends and the next begins, so that name can only be read as `button › icon › size`
+You name a design token by its path: first the groups it belongs to, then its own name, with a double dash between the groups and a single dash between the words inside each one, as in `--button--icon--size`. The double dash marks where one group ends and the next begins, so that name can only be read as `button › icon › size`.
 
 A token's name is all that people, tools and agents have to go on when they read your styles, and it's easy to pick one that doesn't tell them enough. Think of a `--blue-2` that doesn't say what it's for, a `--color-primary-text` that could be the `primary-text` colour or the `text` of `color-primary`, or a dark mode that means editing every component, because each one has its colours written into it.
 
@@ -115,7 +115,7 @@ Keep in mind that `-contrast` is a variation of the colour, so it stays in the c
 
 ## Give the arrow a group of its own
 
-Finally, let's look at the arrow. It's a part of the tooltip, rather than the tooltip as a whole, so it gets a group of its own: `--tooltip--arrow-size` becomes `--tooltip--arrow--size`. We give a part or a state its own group even when it has a single token, since the group is then there from the start, and adding `--tooltip--arrow--color` later never means renaming the first one.
+Finally, let's look at the arrow. It's a part of the tooltip, rather than the tooltip as a whole, so it gets a group of its own: `--tooltip--arrow-size` becomes `--tooltip--arrow--size`. I give a part or a state its own group even when it has a single token, since the group is then there from the start, and adding `--tooltip--arrow--color` later never means renaming the first one.
 
 A CSS property stays in one piece, though. `font-size` is a single name, so the tooltip's text is sized with `--tooltip--font-size`, rather than `--tooltip--font--size`, and the same goes for `border-radius`.
 
