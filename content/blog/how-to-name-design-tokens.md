@@ -7,164 +7,141 @@ author:
 counterExamples:
   - --blue-2
   - --color-primary-text
-  - --color--indigo-600
   - --font-size-sm
-  - --color--primary--contrast
-  - --button--font--size
-  - --button-icon-size
   - --tooltip-background
   - --tooltip-color
   - --tooltip-border-radius
   - --tooltip-font-size
   - --tooltip-arrow-size
+  - --color--blue-2
+  - --color--primary--contrast
+  - --tooltip--arrow-size
+  - --tooltip--font--size
 ---
 
-You name a design token by its path: the groups it belongs to, then its own name, with a double dash between the groups and a single dash between the words inside each one, as in `--button--icon--size`. A token's name is all that people, tools and agents have to go on, so a name that can only be read one way is a name they'll all read the same way.
+You name a design token by its path: the groups it belongs to, then its own name, with a double dash between the groups and a single dash between the words inside each one, as in `--button--icon--size`. The double dash marks where one group ends and the next begins, so that name can only be read as `button › icon › size`.
 
-Think of a `--blue-2` that doesn't say what it's for, a `--color-primary-text` that could be the `primary-text` colour or the `text` of `color-primary`, or a rebrand that means editing every component, because each one reads `--color--indigo-600` straight from the palette. Open Components calls its convention token paths, and the [Design Tokens](/docs/foundations/design-tokens) page defines it. This post walks you through it in six steps, each with the reason behind it, then renames a few names you may recognise and names one component from start to finish.
+A token's name is all that people, tools and agents have to go on when they read your styles, and it's easy to pick one that doesn't tell them enough. Think of a `--blue-2` that doesn't say what it's for, a `--color-primary-text` that could be the `primary-text` colour or the `text` of `color-primary`, or a dark mode that means editing every component, because each one has its colours written into it.
 
-## Start with the scope
-
-Let's start with the first group, which says what a token belongs to. It's either a category, like `color`, `spacing`, `font-size` or `border-radius`, or a component, like `button`. The last part is the token's own name, like `primary`, `sm` or `height`, and most tokens only need those two levels:
+We call this convention token paths, and our [Design Tokens](/docs/foundations/design-tokens) page defines it. Let's take a small stylesheet with all three problems, a theme and a tooltip, and rename it a step at a time:
 
 ```css
 :root {
-  --color--primary: …;  /* color › primary */
-  --font-size--sm: …;   /* font-size › sm */
+  --blue-2: #4f46e5;
+  --color-primary-text: #4338ca;
+  --font-size-sm: 0.875rem;
 }
 
-.button {
-  --button--height: 2.25rem; /* button › height */
-}
-```
-
-Since the scope comes first, every token of the button starts with the same prefix, which is what lets you find them all at once, as you'll see in a moment. The page covers this under [Groups](/docs/foundations/design-tokens#groups).
-
-## Name it after what it's for
-
-Next, name a token after what it's for, rather than what it looks like. `--color--primary` still makes sense after a rebrand and in dark mode, while `--color--indigo-600` stops making sense the day your primary colour isn't indigo any more (`tokens/semantic-names`).
-
-Tokens come in up to three tiers, and each tier reads from the one before it:
-
-| Tier      | What it holds                 | For example                           | Read by        |
-| --------- | ----------------------------- | ------------------------------------- | -------------- |
-| Palette   | Every value you have          | `--color--indigo-600`, `--spacing--4` | The theme      |
-| Theme     | What each value is for        | `--color--primary`, `--color--focus`  | Components     |
-| Component | One component's own decisions | `--button--height`, `--button--fill`  | That component |
-
-So `--color--indigo-600` is a fine name for a palette token. It's wrong as the name of what a colour is for, and wrong wherever a component reads it, since components read theme tokens and never palette tokens or raw colours (`tokens/theme-only`). That way a new brand or a dark mode is a new set of theme values, and no component has to change.
-
-The palette is optional, and our reference tokens skip it. There's more under [Semantic names](/docs/foundations/design-tokens#semantic-names).
-
-## Join groups with a double dash
-
-Now let's look at the separators. Groups are joined by a double dash, and the words inside a group or a name by a single dash, all in lowercase letters and digits (`tokens/token-paths`):
-
-```css
-:root {
-  --color--primary-contrast: …; /* color › primary-contrast */
-  --font-size--sm: …;           /* font-size › sm */
-}
-```
-
-The double dash is what makes a name read one way only. With single dashes, `--font-size-sm` could be `font.size-sm`, `font-size.sm` or `font.size.sm`, and a tool has no way to tell which. `--font-size--sm` can only be `font-size.sm`, so tools and agents can turn any name back into its path.
-
-It also makes a component's tokens easy to find. A search for the button's prefix finds every one of its variables and nothing else, since a button group's variables start with `button-group` instead:
-
-```sh
-git grep -e '--button--'
-```
-
-And since Tailwind CSS names its theme variables with single dashes, a token path can never have the same name as one of them, so your tokens and Tailwind's can share a page. The page explains all three reasons under [Why a double dash](/docs/foundations/design-tokens#why-a-double-dash).
-
-## Give a part or a state its own group
-
-When a token belongs to a part or a state of a component, rather than to the component as a whole, give that part or state a group of its own, even for a single token. The button sizes its icons with `--button--icon--size`, and a link's hover state would have `--link--hover--color`. Since the group is there from the first token, adding a second one later, like `--button--icon--color`, never means renaming the first.
-
-Two things stay in one piece, though (`tokens/groups`):
-
-- **A variation stays in its name.** The label on the primary fill is `--color--primary-contrast`, rather than `--color--primary--contrast`, which would read as a `contrast` token in a group called `primary`.
-- **A CSS property stays whole.** `font-size` is a single name, so the button's text is sized with `--button--font-size`, rather than `--button--font--size`, and the same goes for `border-radius` and `line-height`.
-
-The page covers parts, states, variations and CSS properties under [Groups](/docs/foundations/design-tokens#groups).
-
-## Name the theme's colours the same way
-
-Every component reads its colours from the same theme tokens, so a single theme styles them all (`tokens/shared-theme`). There are three tokens per colour, plus one focus colour:
-
-| Token                       | What it's for                                         |
-| --------------------------- | ----------------------------------------------------- |
-| `--color--{color}`          | The colour itself, for fills and tints                |
-| `--color--{color}-contrast` | Text and icons on top of the fill                     |
-| `--color--{color}-text`     | Text and icons in that colour, straight on the page   |
-| `--color--focus`            | The focus ring, which is the same for every component |
-
-`{color}` is one of `primary`, `secondary`, `neutral`, `success`, `info`, `warning` and `error`, the same colours as the Button's `color` prop. So a primary button reads `--color--primary`, `--color--primary-contrast` and `--color--primary-text`. Each pairing has to stay readable in light and dark mode, and [Theme tokens](/docs/foundations/design-tokens#theme-tokens) gives the contrast each one needs (`tokens/contrast`).
-
-## Name a component's variables after it
-
-Finally, a component names its own variables after itself, as `--{component}--{name}`, or `--{component}--{part}--{name}` for one of its parts, and sets them on its root (`tokens/component-scope`):
-
-```css
-.button {
-  --button--height: 2.25rem;
-  --button--icon--size: 1rem;
-  --button--fill: var(--color--neutral);
-}
-.button[data-color="primary"] {
-  --button--fill: var(--color--primary);
-}
-```
-
-Starting with the component's name makes it clear who owns them, so `--button--fill` can never be mistaken for a theme token. Setting them on the root, rather than on `:root`, keeps them with the component: each size or colour changes them with a single selector, and nothing leaks into the rest of the page. To tune a component, set its variables from a class of yours, as [Component variables](/docs/foundations/design-tokens#component-variables) shows.
-
-## Worked examples
-
-Let's put the six steps to work, starting with single names and ending with a whole component.
-
-### Names to rename
-
-Here are some names you might find in a stylesheet today, each with the rule it breaks and the name it should have:
-
-- **`--blue-2`** has no group, and says what it looks like rather than what it's for (`tokens/token-paths`, `tokens/semantic-names`). Name it after what it's used for, so if it's your brand colour, it's `--color--primary`, with the path `color › primary`.
-- **`--color-primary-text`** can be read two ways, since it only has single dashes (`tokens/token-paths`). As the primary colour's text, it's `--color--primary-text`, with the path `color › primary-text`.
-- **`--button-icon-size`** has no groups either (`tokens/token-paths`). The icon is a part of the button, so it's `--button--icon--size`, with the path `button › icon › size`.
-- **`--color--primary--contrast`** gives a variation a group of its own, so it reads as a `contrast` token in a group called `primary` (`tokens/groups`). It's `--color--primary-contrast`, with the path `color › primary-contrast`.
-- **`--button--font--size`** splits a CSS property in two (`tokens/groups`). It's `--button--font-size`, with the path `button › font-size`.
-
-Keep in mind that the last two are token paths as far as the syntax goes, so a linter passes them. Only a review catches them, which is why `tokens/groups` has Review as its check.
-
-### One component, end to end
-
-Say you have a tooltip with these variables:
-
-```css
 .tooltip {
   --tooltip-background: #18181b;
   --tooltip-color: #fff;
   --tooltip-border-radius: 6px;
-  --tooltip-font-size: 14px;
+  --tooltip-font-size: var(--font-size-sm);
   --tooltip-arrow-size: 8px;
 }
 ```
 
-None of them has a path, since they only use single dashes (`tokens/token-paths`). The scope is the component, so every name starts with `tooltip` and a double dash. `background`, `color`, `border-radius` and `font-size` are CSS properties, so each stays whole, while the arrow is a part, so it gets a group of its own. The colours come from the theme rather than raw values (`tokens/theme-only`), and everything else keeps its value:
+It works, but you have to guess what most of these names mean. Each step below fixes one thing, and every value stays as it is.
+
+## Give every name a path
+
+Let's start with the groups. Every name begins with its scope, which is either a category, like `color` or `font-size`, or a component, like `tooltip`. Then comes the token's own name, with a double dash between the two and single dashes between the words inside each:
 
 ```css
+:root {
+  --color--blue-2: #4f46e5;
+  --color--primary-text: #4338ca;
+  --font-size--sm: 0.875rem;
+}
+
+.tooltip {
+  --tooltip--background: #18181b;
+  --tooltip--color: #fff;
+  --tooltip--border-radius: 6px;
+  --tooltip--font-size: var(--font-size--sm);
+  --tooltip--arrow-size: 8px;
+}
+```
+
+The double dash is what makes a name read one way only. With single dashes, `--font-size-sm` could be `font.size-sm`, `font-size.sm` or `font.size.sm`, and a tool has no way to tell which. `--font-size--sm` can only be `font-size.sm`, so tools and agents can turn any name back into its path. Note that the tooltip's `var()` changes along with the name it reads.
+
+It also makes a component's variables easy to find. With single dashes, a search for a button's variables would find a button group's too, since `button-group` starts with the same letters. With the double dash, a search for the tooltip's prefix finds every one of its variables and nothing else:
+
+```sh
+git grep -e '--tooltip--'
+```
+
+And since Tailwind CSS names its theme variables with single dashes, none of your names can clash with one of its own. The Design Tokens page goes into all three reasons under [Why a double dash](/docs/foundations/design-tokens#why-a-double-dash).
+
+## Say what each colour is for
+
+Now that `--blue-2` has a path, it's easier to see what's still wrong with it. `--color--blue-2` says what the colour looks like, when what you need to know is what it's for. Say it's your brand colour, the one your main actions use: then it's `--color--primary`.
+
+That name still makes sense after a rebrand and in dark mode, while `--color--blue-2` stops making sense the day your brand isn't blue. Feel free to keep a palette of names like `--color--blue-2` behind your theme, as long as only the theme reads them. [Semantic names](/docs/foundations/design-tokens#semantic-names) explains how the palette, the theme and a component's own tokens each read from the one before.
+
+## Take the tooltip's colours from the theme
+
+Next, let's look at the tooltip's colours. It writes them as raw values, `#18181b` and `#fff`, so a dark mode or a new brand means finding and editing them here, and in every other component that does the same. A component reads its colours from the theme instead, never from raw values or a palette, so a single theme styles them all.
+
+The theme gives each colour three tokens. `--color--{color}` is the fill, and `--color--{color}-contrast` is for text and icons on top of it. `--color--{color}-text` is for text in that colour, straight on the page.
+
+That's because one colour can't always be readable on both sides: a bright yellow `warning` fill needs dark text on top of it, while warning text on a white page needs a much darker shade than the fill. So the theme gets a `neutral` colour for the tooltip, and the primary colour gets the contrast it was missing:
+
+```css
+:root {
+  --color--primary: #4f46e5;
+  --color--primary-contrast: #fff;
+  --color--primary-text: #4338ca;
+  --color--neutral: #18181b;
+  --color--neutral-contrast: #fff;
+  --color--neutral-text: #3f3f46;
+  --font-size--sm: 0.875rem;
+}
+
+.tooltip {
+  --tooltip--background: var(--color--neutral);
+  --tooltip--color: var(--color--neutral-contrast);
+  /* … */
+}
+```
+
+Keep in mind that `-contrast` is a variation of the colour, so it stays in the colour's name. `--color--primary--contrast` would read as a `contrast` token in a group called `primary`. Each `-contrast` needs a contrast of 4.5:1 against its colour, and each `-text` 4.5:1 against the page, in light and dark mode alike ([WCAG 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)). To keep this example short, it only has light values, which pass, and [Theme tokens](/docs/foundations/design-tokens#theme-tokens) shows how a single token holds both modes with `light-dark()`.
+
+## Give the arrow a group of its own
+
+Finally, let's look at the arrow. It's a part of the tooltip, rather than the tooltip as a whole, so it gets a group of its own: `--tooltip--arrow-size` becomes `--tooltip--arrow--size`. We give a part or a state its own group even when it has a single token, since the group is then there from the start, and adding `--tooltip--arrow--color` later never means renaming the first one.
+
+A CSS property stays in one piece, though. `font-size` is a single name, so the tooltip's text is sized with `--tooltip--font-size`, rather than `--tooltip--font--size`, and the same goes for `border-radius`.
+
+The tooltip already did one thing right: it sets its variables on its own root, `.tooltip`, rather than on `:root`. That keeps them with the component, so each size or colour can change them with a single selector, and nothing leaks into the rest of the page. And since every name starts with `tooltip`, `--tooltip--background` can never be mistaken for a theme token. [Component variables](/docs/foundations/design-tokens#component-variables) has more on how a component names its own.
+
+## The stylesheet, renamed
+
+Here's the whole stylesheet after the four steps, with every value as it was:
+
+```css
+:root {
+  --color--primary: #4f46e5;
+  --color--primary-contrast: #fff;
+  --color--primary-text: #4338ca;
+  --color--neutral: #18181b;
+  --color--neutral-contrast: #fff;
+  --color--neutral-text: #3f3f46;
+  --font-size--sm: 0.875rem;
+}
+
 .tooltip {
   --tooltip--background: var(--color--neutral);
   --tooltip--color: var(--color--neutral-contrast);
   --tooltip--border-radius: 6px;
-  --tooltip--font-size: 14px;
+  --tooltip--font-size: var(--font-size--sm);
   --tooltip--arrow--size: 8px;
 }
 ```
 
-Now the tooltip follows every theme on its own, and a search for its prefix finds all five of its variables.
+Every name now has one reading, says what it's for and belongs to the theme or the tooltip. A new brand or a dark mode is a new set of theme values, and the tooltip doesn't have to change.
 
-### The same path everywhere
-
-A token's path stays the same wherever your tokens live, so moving between your design files, your token files and your CSS only means swapping the separator. Here's the tooltip's arrow in each:
+Since a name is a path, it stays the same wherever your tokens live, and moving between your design files, your token files and your CSS only means swapping the separator. Here's the tooltip's arrow in each:
 
 | Where                | How it's written         |
 | -------------------- | ------------------------ |
@@ -173,13 +150,13 @@ A token's path stays the same wherever your tokens live, so moving between your 
 | Figma variables      | `tooltip/arrow/size`     |
 | Styleframe           | `tooltip.arrow.size`     |
 
-## Check your names
+## Keep your names that way
 
-Once your tokens are renamed, you can keep them that way. Stylelint's `custom-property-pattern` rule, with the pattern from the page's [Lint](/docs/foundations/design-tokens#lint) section, flags every custom property that isn't a token path, in declarations and `var()` references alike. It flags other libraries' variables too, like Tailwind's, so it's best to run it on your theme and your components' styles.
+A linter can catch most of this for you. Stylelint's `custom-property-pattern` rule, with the pattern from the [Lint](/docs/foundations/design-tokens#lint) section, flags every custom property that isn't a token path, in declarations and `var()` references alike. It would have flagged every name in the first stylesheet. It flags other libraries' variables too, like Tailwind's, so it's best to run it on your theme and your components' styles.
 
-The rest, like whether a name says what it's for, takes a review, and the page's [Prompts](/docs/foundations/design-tokens#prompts) hand that review to your agent. Point it at the page's Markdown copy, [`/raw/docs/foundations/design-tokens.md`](/raw/docs/foundations/design-tokens.md){external=""}, and it reports pass or fail for each rule in the checklist, with the rule ID and the evidence from your code. The other prompt renames your variables to token paths, along with every `var()` that reads them.
+What a linter can't tell is whether a name says what it's for, or whether a group is in the right place. `--color--blue-2`, `--tooltip--arrow-size` and `--tooltip--font--size` are all token paths as far as the pattern goes, so it passes them. For those, the page's [Prompts](/docs/foundations/design-tokens#prompts) hand the review to your agent, which checks your styles against each rule in the page's checklist and reports what it finds, with the evidence from your code.
 
-Every rule in this post comes from the [Design Tokens](/docs/foundations/design-tokens) page, which has the whole checklist, the contract agents read and answers to questions like how to move from single-dash names. It's the page to keep open while you rename.
+The Design Tokens page is where every rule here comes from, with the contract agents read and answers to questions like how to move from single-dash names. Its Markdown copy, [`/raw/docs/foundations/design-tokens.md`](/raw/docs/foundations/design-tokens.md){external=""}, is the one to point your agent at.
 
 ## Sources
 
@@ -187,3 +164,4 @@ Every rule in this post comes from the [Design Tokens](/docs/foundations/design-
 - [Design Tokens Format Module](https://www.designtokens.org/tr/2025.10/format/), for the DTCG way of writing a path
 - [Stylelint: custom-property-pattern](https://stylelint.io/user-guide/rules/custom-property-pattern/), for the lint rule
 - [Tailwind CSS: Theme variables](https://tailwindcss.com/docs/theme), for its single-dash names
+- [Understanding WCAG 2.2: Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), for the 4.5:1 contrast
