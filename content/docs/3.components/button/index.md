@@ -31,7 +31,7 @@ How agents read, build and check a button, from its accessibility tree to its co
 
 ## At a glance
 
-The examples on this page run on the Button from [Inkline](https://inkline.io), a UI library built to this standard, in the framework you pick, so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
+The examples on this page run on the Button from [Inkline](https://inkline.io), a UI library built to follow this standard, in the framework you pick, so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
 
 ::inkline-example{example="button/ButtonPlayground" title="Button playground" controls :height="691"}
 ::

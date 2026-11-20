@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   INKLINE_PREVIEW_ORIGIN,
   type EmbedTheme,
@@ -15,9 +16,11 @@ import { FRAMEWORKS } from "~/data/frameworks";
  * A live example from Inkline, whose components follow this standard, embedded
  * from its deployed preview above the code that renders it. It shows the
  * example in the framework picked in the Framework select, follows the docs'
- * colour mode and takes the height of its content. Like the reference examples,
- * it passes the page's markdown on as the `code` slot, so nest the
- * `::framework-switcher` with as many colons as the example:
+ * colour mode and takes the height of its content. The page's markdown inside
+ * it, a `::framework-switcher` with the code in every framework, is its default
+ * slot, shown under the frame. Nest the switcher with as many colons as the
+ * example, since remark-mdc only gives `#react` and the other slots to a
+ * nested component written that way:
  *
  * ```md
  * ::inkline-example{example="button/ButtonVariants" title="Button variants"}
@@ -113,7 +116,7 @@ const frameHeight = computed(() => `${reported.value ?? props.height}px`);
   <div class="my-5">
     <div
       class="inkline-example not-prose overflow-hidden rounded-md border border-muted"
-      :class="{ 'rounded-b-none border-b-0': $slots.code }"
+      :class="{ 'rounded-b-none border-b-0': $slots.default }"
     >
       <iframe
         v-if="src"
@@ -127,10 +130,10 @@ const frameHeight = computed(() => `${reported.value ?? props.height}px`);
     </div>
 
     <div
-      v-if="$slots.code"
+      v-if="$slots.default"
       class="[&>div>pre]:rounded-t-none [&>div]:my-0 [&>p]:my-0 [&>p]:border-x [&>p]:border-muted [&>p]:px-4 [&>p]:py-2"
     >
-      <slot name="code" />
+      <slot />
     </div>
   </div>
 </template>
