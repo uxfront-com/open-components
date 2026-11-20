@@ -104,7 +104,7 @@ How it shares the app with the homepage:
 - `server/middleware/raw-markdown.ts` serves `/raw/<path>.md` from the page's source file. Nuxt Content's own route rebuilds it from the parsed page and writes tables as unescaped HTML, which agents, and Docus's "Copy page", then read.
 - `server/middleware/raw-contract.ts` serves `/raw/<path>.yaml`, the page's contract: the YAML block under its `### Described` heading, with every row of its `## Checklist` tables in place of the `rules:` link (`server/lib/contract.ts`). The tables are read by their header row, so keep the column names (Rule, Level, Scope, Requirement, Basis and Check), and name a table's heading after its layer, as in `### UX rules`. Basis says where a rule comes from, as in `WCAG 1.4.3, 1.4.11 (AA)`, `HTML`, `APG` or `Open Components`, with `beyond` for a rule that asks for more than the criteria it names; `pnpm test` fails on a rule without one. `nuxt.config.ts` lists the contracts to prerender, and in `llms.txt`.
 - `public/schemas/contract.json` is the JSON Schema every contract follows, published at `/schemas/contract.json` and named on each contract's first line for editors that use the YAML language server. `pnpm test` validates every contract against it (`server/lib/contract.test.ts`, also in CI), so when a Described block gains a field, or a checklist a new level or column, add it to the schema in the same change.
-- Live examples are Vue components in `app/components/content/<component>/` (like `button/examples/ButtonVariantsExample.vue`), which `app/app.css` adds to Tailwind's sources. They render the reference implementations in `app/reference/`, which the component pages also show as code: when you change one, update the other, and `pnpm check-reference` (run in CI) confirms they match. That includes each component's tests, like `app/reference/button/Button.test.ts`, which `pnpm test` runs on [Vitest](https://vitest.dev) (also in CI).
+- Live examples are Vue components in `app/components/content/<component>/` (like `card/examples/CardContentExample.vue`), which `app/app.css` adds to Tailwind's sources. They render the reference implementations in `app/reference/`, which the component pages also show as code: when you change one, update the other, and `pnpm check-reference` (run in CI) confirms they match. The Button's examples, apart from its link example, embed Inkline's Button from its deployed preview with `::inkline-example` (`app/components/content/InklineExample.vue`), so they show no reference code. That includes each component's tests, like `app/reference/button/Button.test.ts`, which `pnpm test` runs on [Vitest](https://vitest.dev) (also in CI).
 - Name the CSS variables in the reference implementations as token paths, with a double dash between groups and single dashes inside a name, like `--color--primary-contrast` or `--button--icon--size`. The [Design Tokens](../content/docs/2.foundations/1.design-tokens.md) page describes the convention, and has a Stylelint rule that checks it.
 
 Docus ships its sources uncompiled, and they don't type-check against this app's dependencies. `pnpm check-types` runs `vue-tsc` and fails on any error outside them.
@@ -134,16 +134,16 @@ The switcher and the select come from `@uxfront/layer-docs`, which also bundles 
 A live example takes the switcher as its code. Nest the switcher with as many colons as the example: remark-mdc only gives `#react` and the other slots to a nested component written that way, and with `:::framework-switcher` they'd go to the example instead.
 
 ````md
-::button-variants-example
+::card-content-example
 ::framework-switcher
 #react
 ```tsx
-<Button color="primary">Solid</Button>
+<Card heading="Difference Engine">…</Card>
 ```
 
 #vue
 ```vue
-<Button color="primary">Solid</Button>
+<Card heading="Difference Engine">…</Card>
 ```
 ::
 ::

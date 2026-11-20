@@ -31,9 +31,9 @@ How agents read, build and check a button, from its accessibility tree to its co
 
 ## At a glance
 
-Every example on this page runs on our [reference implementation](/docs/components/button#reference-implementation), which does its part of every rule in the [checklist](/docs/components/button#checklist), so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
+The examples on this page run on the Button from [Inkline](https://inkline.io), a UI library built to this standard, in the framework you pick, so feel free to try things out as you read. The code under each example comes in React, Vue, Svelte, Angular, Solid, Astro and Vanilla, written for a Button with the same API in each. Pick yours from the Framework select above the sidebar. Vanilla is plain HTML and JavaScript, so it writes out the markup from the [DOM contract](/docs/components/button/ax#deterministic).
 
-::button-playground
+::inkline-example{example="button/ButtonPlayground" title="Button playground" controls :height="691"}
 ::
 
 | Aspect   | Button                                                                                       |
@@ -66,7 +66,7 @@ You'll find the rules for each layer on its page:
 
 ## Reference implementation
 
-Our Vue 3 reference implementation does its part of every rule on this page, and powers every example on it. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It shows the [Spinner](/docs/components/spinner#reference-implementation) while it's loading, so copy that too. Every component that announces something to screen readers shares `announce.ts`, so you only need one copy of it, and `tokens.css` goes in your theme.
+Our Vue 3 reference implementation does its part of every rule on this page, and draws its anatomy and its link example. Feel free to copy it into your design system and change how it looks, but try to keep how it behaves. It shows the [Spinner](/docs/components/spinner#reference-implementation) while it's loading, so copy that too. Every component that announces something to screen readers shares `announce.ts`, so you only need one copy of it, and `tokens.css` goes in your theme.
 
 The tests are in `Button.test.ts`. To run them, you'll need [Vitest](https://vitest.dev), set to `environment: "jsdom"` and `globals: true`, along with `@testing-library/vue`, `@testing-library/user-event` and `@testing-library/jest-dom`.
 
