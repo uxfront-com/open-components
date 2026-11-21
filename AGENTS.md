@@ -38,7 +38,7 @@ Building needs Node 22.13 or later. Which checks to run depends on what you chan
 | `content/changelog/`                         | One entry per release of something readers will notice                           |
 | `content/blog/`                              | The blog's posts, which aren't part of the standard or the MCP server            |
 | `app/reference/<component>/`                 | The tested Vue 3 reference implementations, which every page shows as code       |
-| `app/components/content/<component>/`        | The live examples, anatomy and playground, which render the reference            |
+| `app/components/content/<component>/`        | The live examples, anatomy and playground, which render the reference, or for the Button, embed Inkline's |
 | `app/data/frameworks.ts`                     | The frameworks, their order and their `::framework-switcher` slot names          |
 | `server/lib/contract.ts`, `public/schemas/contract.json` | How a page's contract is built, and the JSON Schema it follows       |
 | `mcp/`                                       | The MCP server, a Nuxt app and Cloudflare Worker of its own                      |
@@ -149,7 +149,7 @@ What it lets people do. Why it's often wrong. Think of <three concrete failures>
 This page walks you through building one the right way. We'll look at: <UI, UX, DX and AX, one line each>
 <The reference implementation, the checklist and the Framework select>
 
-::button-playground
+::<component>-playground
 ::
 
 ## At a glance                  (an Aspect table: element, role, name, keyboard, states, …)

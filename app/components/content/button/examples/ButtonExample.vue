@@ -2,25 +2,26 @@
 import "~/reference/button/tokens.css";
 
 /**
- * The frame around each live example on the Button page: the example, drawn with
+ * The frame around the Button page's link example, the one live example there
+ * that Inkline's Button can't show yet: the example, drawn with
  * the reference implementation, above the code that renders it. Each example is
- * its own component, like ButtonVariantsExample, that passes the page's markdown
+ * its own component, like ButtonLinkExample, that passes the page's markdown
  * on as the `code` slot: a `::framework-switcher` with the code in every framework,
  * which shows the reader's pick. Nest it with as many colons as the example, since
  * remark-mdc only gives `#react` and the other slots to a nested component written
  * that way:
  *
  * ```md
- * ::button-variants-example
+ * ::button-link-example
  * ::framework-switcher
  * #react
  * ```tsx
- * <Button variant="solid">Solid</Button>
+ * <Button href="/docs">Read the introduction</Button>
  * ```
  *
  * #vue
  * ```vue
- * <Button variant="solid">Solid</Button>
+ * <Button href="/docs">Read the introduction</Button>
  * ```
  * ::
  * ::
