@@ -6,12 +6,14 @@ import type theme from "#build/ui/content/content-navigation";
  * One level of DocsNavigation.vue, with the markup and classes of Nuxt UI's
  * UContentNavigation, so it looks the same. Its groups come in two kinds:
  *
- * - A group without a page of its own, like a top-level section, has a label and
- *   stays open.
- * - A group with a page of its own, like the Button's folder, whose index.md is
- *   its Overview, has a label that opens and closes the group without
- *   navigating. You reach its pages from the group, which lists its Overview
- *   first.
+ * - A top-level section, like Getting started, has a label and stays open. So
+ *   does the Components section, though it has a page of its own, the components
+ *   hub (content/docs/3.components/index.md), since closing it would hide every
+ *   component on any page outside it. Its hub is a link, the first in the group.
+ * - A group below a section with a page of its own, like the Button's folder,
+ *   whose index.md is its Overview, has a label that opens and closes the group
+ *   without navigating. You reach its pages from the group, which lists its
+ *   Overview first.
  *   It opens on any of its pages and closes once you leave them, and in between
  *   the label decides. The sidebar stays mounted as you move between pages, so
  *   the route sets it, rather than the state it mounted with.
@@ -30,8 +32,10 @@ const route = useRoute();
 const appConfig = useAppConfig();
 const id = useId();
 
-// Whether a group has a page of its own: a child at the group's own path.
-const ownPage = (item: ContentNavigationItem) => item.children?.some((child) => child.path === item.path);
+// Whether a group opens and closes: one below the top-level sections with a page
+// of its own, a child at the group's own path.
+const toggles = (item: ContentNavigationItem) =>
+  props.level > 0 && !!item.children?.some((child) => child.path === item.path);
 const inside = (item: ContentNavigationItem, path: string): boolean =>
   item.path === path || !!item.children?.some((child) => inside(child, path));
 
@@ -39,7 +43,7 @@ const open = ref<Record<string, boolean>>({});
 watch(
   () => route.path,
   (path) => {
-    for (const item of props.navigation) if (ownPage(item)) open.value[item.path] = inside(item, path);
+    for (const item of props.navigation) if (toggles(item)) open.value[item.path] = inside(item, path);
   },
   { immediate: true },
 );
@@ -51,11 +55,11 @@ watch(
       <li
         v-if="item.children?.length"
         data-slot="itemWithChildren"
-        :data-state="!ownPage(item) || open[item.path] ? 'open' : 'closed'"
+        :data-state="!toggles(item) || open[item.path] ? 'open' : 'closed'"
         :class="ui.itemWithChildren({ level: level > 0 })"
       >
         <button
-          v-if="ownPage(item)"
+          v-if="toggles(item)"
           type="button"
           data-slot="link"
           :data-state="open[item.path] ? 'open' : 'closed'"
@@ -76,7 +80,7 @@ watch(
           <span :class="ui.linkTitle()">{{ item.title }}</span>
         </div>
 
-        <div v-show="!ownPage(item) || open[item.path]" :id="`${id}-${index}`" data-slot="content" :class="ui.content()">
+        <div v-show="!toggles(item) || open[item.path]" :id="`${id}-${index}`" data-slot="content" :class="ui.content()">
           <DocsNavigationList
             :navigation="item.children"
             :ui

@@ -8,7 +8,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { slug } from "github-slugger";
@@ -63,11 +63,31 @@ function docsTitles() {
     readdirSync("content/docs", { recursive: true, encoding: "utf8" })
       .filter((file) => file.endsWith(".md"))
       .map((file) => {
-        const path = `/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
+        const path = docsPath(file);
         const frontmatter = readFileSync(join("content/docs", file), "utf8").match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
         return [path, parse(frontmatter)?.title];
       }),
   );
+}
+
+// The parts of each split page, by the page's path, from content/docs: the files
+// beside an index.md, as isPart in server/lib/raw.ts reads them.
+// content/docs/3.components/button/2.ux.md is a part of /docs/components/button.
+function docsParts() {
+  const parts = new Map();
+  for (const file of readdirSync("content/docs", { recursive: true, encoding: "utf8" })) {
+    const folder = dirname(file);
+    if (!file.endsWith(".md") || basename(file) === "index.md" || !existsSync(join("content/docs", folder, "index.md"))) continue;
+    const whole = docsPath(join(folder, "index.md"));
+    parts.set(whole, [...(parts.get(whole) ?? []), docsPath(file)]);
+  }
+  return parts;
+}
+
+// The path a file in content/docs is served at, as docsPath in server/lib/raw.ts
+// gives it: 3.components/button/2.ux.md is /docs/components/button/ux.
+function docsPath(file) {
+  return `/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
 }
 
 // Serves the Worker on a free port, the way `npx wrangler dev -c mcp/wrangler.jsonc` does.
@@ -236,8 +256,12 @@ async function checkServer() {
     .filter((file) => file.endsWith(".md"))
     .map((file) => `/docs/${file.replace(/\.md$/, "")}`);
   // A page split into parts, like the Button's, has a page per part under its path,
-  // /docs/components/button/ux, while the server reads it as one page.
-  const partsOf = (pathname) => pages.filter((other) => other.startsWith(`${pathname}/`));
+  // /docs/components/button/ux, while the server reads it as one page. Its parts are
+  // the files beside its index.md, as isPart in server/lib/raw.ts reads them, not
+  // every page under its path: the components hub, /docs/components, has the
+  // component pages under its path but no parts of its own.
+  const split = docsParts();
+  const partsOf = (pathname) => split.get(pathname) ?? [];
   const wholeOf = (pathname) => pages.find((other) => partsOf(other).includes(pathname)) ?? pathname;
   // Each page's IDs and each part's title are read once. Reading and searching the
   // pages again for every rule kept the event loop busy for seconds, long enough for

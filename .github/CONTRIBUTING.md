@@ -91,6 +91,12 @@ Each component also has an accessibility checklist, like `/docs/accessibility/bu
 
 The sidebar and the header's menu show a split page as a group whose label opens and closes it without navigating, so readers go to a page from the group. The group lists the Overview first, under the `navigation.title` of `index.md`, "Overview", then its layers. The group opens on any of its pages and closes once you leave them. Docus renders both with Nuxt UI's `UContentNavigation`, which keeps every group open, so `app/components/docs/DocsAsideLeftBody.vue` replaces Docus's sidebar, and `app/components/app/AppHeaderBody.vue` the menu's navigation, with `DocsNavigation.vue` and `DocsNavigationList.vue`, which keep Nuxt UI's theme for it. Keep them in step with Docus's and Nuxt UI's.
 
+The top-level sections stay open, the Components section included, though it has a page of its own: the components hub, `3.components/index.md`, served at `/docs/components`. The sidebar lists it first, as "Overview", then the components by name (`sortNavigation()` in `app/lib/navigation.ts`).
+
+The hub shows each component as a card, with a drawing of it, its name linking its Overview, a sentence on what it's for and a footer linking its UI, UX, DX and AX pages. The cards are `::components-hub` and `:::components-hub-card{preview="<component>"}` blocks, from `app/components/content/components-hub/`, where `ComponentsHubPreview.vue` draws the previews. Every link stays in the card's markdown, written by hand, since agents read the page's markdown and get a component's content but not its props.
+
+So a new component needs a card and a preview, and `pnpm test` fails until it has both (`server/lib/components-hub.test.ts` and `ComponentsHubCard.test.ts`). No other `.md` file may sit directly in `3.components/`, since it would become a part of the hub, as the files beside a split page's `index.md` do.
+
 How it shares the app with the homepage:
 
 - `app/app.vue` replaces Docus's own, so it renders the Docus shell (header, sidebar, search), loaded lazily from `docus/app/app.vue`, on `/docs`, `/changelog` and below, and the bare page everywhere else. `app/error.vue` still renders `UxErrorPage`, docs included.
