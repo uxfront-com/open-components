@@ -11,15 +11,19 @@ const COMPONENTS = "/docs/components";
  * Nuxt Content orders pages by file path, which puts a page split into a folder,
  * like `checkbox/`, after a page whose name starts with the folder's, like
  * `checkbox-group.md`, since `-` comes before `/`. The other sections, and the
- * parts of a split page, are numbered, so they keep Nuxt Content's order. It
- * returns a new tree, since the one it's given is Docus's.
+ * parts of a split page, are numbered, so they keep Nuxt Content's order. The
+ * section's own page, the components hub (content/docs/3.components/index.md),
+ * comes first whatever its title, so renaming it in the sidebar can't move it in
+ * among the components. It returns a new tree, since the one it's given is Docus's.
  */
 export function sortNavigation(navigation: ContentNavigationItem[]): ContentNavigationItem[] {
   return navigation.map((item) => {
     if (!item.children) return item;
+    const hubFirst = (a: ContentNavigationItem, b: ContentNavigationItem) =>
+      Number(b.path === COMPONENTS) - Number(a.path === COMPONENTS);
     const children =
       item.path === COMPONENTS
-        ? [...item.children].sort((a, b) => a.title.localeCompare(b.title, "en"))
+        ? [...item.children].sort((a, b) => hubFirst(a, b) || a.title.localeCompare(b.title, "en"))
         : sortNavigation(item.children);
     return { ...item, children };
   });

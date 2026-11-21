@@ -8,6 +8,7 @@ import { docsPath, isPart, joinPage, rawPage, rawTitle, readPage, readPages, rea
 
 const DOCS = "content/docs";
 const COMPONENTS = "3.components";
+const CHECKLISTS = "4.accessibility";
 // Every component page split into parts, like the Button's: a folder with an index.md.
 const SPLIT = readdirSync(join(DOCS, COMPONENTS), { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && existsSync(join(DOCS, COMPONENTS, entry.name, "index.md")))
@@ -165,7 +166,10 @@ describe.each(SPLIT)("The %s page, split into parts,", (name) => {
     ]);
     expect(parts.every((file) => isPart(DOCS, `${folder}/${file}`))).toBe(true);
     expect(isPart(DOCS, `${folder}/index.md`)).toBe(false);
-    expect(isPart(DOCS, "3.components/card.md")).toBe(false);
+    // A page in a folder without an index.md, like an accessibility checklist, is a
+    // page of its own. 3.components/ has one, the components hub, so a page there
+    // would be one of its parts (components-hub.test.ts keeps it empty).
+    expect(isPart(DOCS, `${CHECKLISTS}/${name}-checklist.md`)).toBe(false);
   });
 
   it("has the outline every component page has, in its order", () => {
