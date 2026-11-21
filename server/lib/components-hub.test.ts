@@ -2,20 +2,34 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { FRAMEWORKS } from "../../app/data/frameworks";
+import { agentMarkdown } from "../../mcp/lib/agent-markdown";
 import { brokenLinks, COMPONENTS } from "./checklists";
 import { docsPath, readPages } from "./raw";
 
 // The components hub, content/docs/3.components/index.md, served at /docs/components,
 // is written by hand, so its list is in the markdown that agents read through
-// /raw/docs/components.md, llms-full.txt and the MCP server. These tests fail when
-// a component ships without its line on the hub, or when the hub links to a page
-// that isn't there.
+// /raw/docs/components.md, llms-full.txt and the MCP server. Its cards keep every
+// link in their content, since agents only get a component's content, not its
+// props. These tests fail when a component ships without its card on the hub, when
+// a card's links don't reach agents, or when the hub links to a page that isn't there.
 const DOCS = "content/docs";
 const HUB = join(COMPONENTS, "index.md");
 const hub = readFileSync(join(DOCS, HUB), "utf8");
+const SITE = "https://opencomponents.dev";
 
-// Every docs page the hub links to, by its path on the site, without its anchor.
-const linked = new Set([...hub.matchAll(/\]\((\/docs\/[^)#\s]*)/g)].map((match) => match[1]!));
+// The hub as the MCP server gives it to agents, with the site's links made absolute.
+const markdown = agentMarkdown(hub.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ""), {
+  site: SITE,
+  path: docsPath(HUB),
+  frameworks: FRAMEWORKS.map((framework) => framework.value),
+});
+
+// Every docs page the hub links to, as agents get it, by its path on the site,
+// without its anchor.
+const linked = new Set(
+  [...markdown.matchAll(/\]\(https:\/\/opencomponents\.dev(\/docs\/[^)#\s]*)/g)].map((match) => match[1]!),
+);
 
 // Each component's folder, with the pages the hub links to: its Overview, then
 // every page beside it, like its four layers.
@@ -55,7 +69,21 @@ describe("the components hub", () => {
     expect(paths.filter((path) => !linked.has(path)).map((path) => `${name}: ${path}`)).toEqual([]);
   });
 
+  // A card's name, its sentence and its layers reach agents in that order, as one
+  // entry, whatever the site does with them.
+  it.each(components)("gives agents the %s's card as its name, its sentence and its layers", (name) => {
+    const url = `${SITE}/docs/components/${name}`;
+    const layers = ["UI", "UX", "DX", "AX"].map((layer) => `- [${layer}](${url}/${layer.toLowerCase()})`).join("\n");
+    const card = new RegExp(`^\\[([^\\]]+)\\]\\(${escape(url)}\\)\\n\\nThe \\1 [^\\n]+\\.\\n\\n${escape(layers)}$`, "m");
+    expect(markdown).toMatch(card);
+  });
+
   it("links only to docs pages, and sections, that exist", () => {
     expect(brokenLinks(hub, docsPages())).toEqual([]);
   });
 });
+
+// A string as it reads, inside a regular expression.
+function escape(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+}
