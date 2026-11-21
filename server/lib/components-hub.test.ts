@@ -30,13 +30,15 @@ const components = readdirSync(join(DOCS, COMPONENTS), { withFileTypes: true })
   });
 
 // Every docs page's source by its path on the site, with a split page's parts
-// under their own paths, as brokenLinks() reads them.
-const pages = new Map(
-  readPages(DOCS).flatMap(({ file, source, parts }) => [
-    [docsPath(file), source] as const,
-    ...parts.map((part) => [docsPath(part), readFileSync(join(DOCS, part), "utf8")] as const),
-  ]),
-);
+// under their own paths, as brokenLinks() reads them. It's read inside the tests,
+// so a page that can't be read fails them rather than the whole file.
+const docsPages = () =>
+  new Map(
+    readPages(DOCS).flatMap(({ file, source, parts }) => [
+      [docsPath(file), source] as const,
+      ...parts.map((part) => [docsPath(part), readFileSync(join(DOCS, part), "utf8")] as const),
+    ]),
+  );
 
 describe("the components hub", () => {
   it("is the Components section's own page, at /docs/components", () => {
@@ -44,11 +46,16 @@ describe("the components hub", () => {
     expect(components.length).toBeGreaterThan(0);
   });
 
+  it("has no page beside it, which would become one of its parts", () => {
+    const beside = readdirSync(join(DOCS, COMPONENTS)).filter((file) => file.endsWith(".md") && file !== "index.md");
+    expect(beside).toEqual([]);
+  });
+
   it.each(components)("links the %s's Overview and each of its pages", (name, paths) => {
     expect(paths.filter((path) => !linked.has(path)).map((path) => `${name}: ${path}`)).toEqual([]);
   });
 
   it("links only to docs pages, and sections, that exist", () => {
-    expect(brokenLinks(hub, pages)).toEqual([]);
+    expect(brokenLinks(hub, docsPages())).toEqual([]);
   });
 });
