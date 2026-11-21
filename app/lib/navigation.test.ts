@@ -52,6 +52,19 @@ const docs = (checkboxGroup: ContentNavigationItem) => [
   ),
 ];
 
+// The docs with the components hub, the Components section's own page
+// (content/docs/3.components/index.md), which Nuxt Content lists first, by file path,
+// under whatever title its sidebar shows.
+const withHub = (title: string) =>
+  docs(page("/docs/components/checkbox-group", "Checkbox Group")).map((root) => ({
+    ...root,
+    children: root.children?.map((child) =>
+      child.path === "/docs/components"
+        ? { ...child, page: undefined, children: [page("/docs/components", title), ...(child.children ?? [])] }
+        : child,
+    ),
+  }));
+
 const titles = (items: ContentNavigationItem[] = []) => items.map(({ title }) => title);
 const at = (navigation: ContentNavigationItem[], path: string): ContentNavigationItem | undefined =>
   navigation.reduce<ContentNavigationItem | undefined>(
@@ -86,6 +99,22 @@ describe("sortNavigation", () => {
       "Agentic Experience",
     ]);
   });
+
+  it.each(["All components", "Zebra"])(
+    "lists the components hub first, titled %s, then the components by name",
+    (title) => {
+      const navigation = sortNavigation(withHub(title));
+
+      expect(titles(at(navigation, "/docs/components")?.children)).toEqual([
+        title,
+        "Button",
+        "Card",
+        "Checkbox",
+        "Checkbox Group",
+        "Dialog",
+      ]);
+    },
+  );
 
   it("leaves the navigation it's given as it was", () => {
     const navigation = docs(page("/docs/components/checkbox-group", "Checkbox Group"));
@@ -123,5 +152,14 @@ describe("findSurround", () => {
       "/docs/components/button",
     ]);
     expect(paths("/docs/components/dialog")).toEqual(["/docs/components/checkbox-group", null]);
+  });
+
+  it("goes from the Design Tokens to the components hub, and from the hub to the Button's Overview", () => {
+    const hub = sortNavigation(withHub("All components"));
+    const around = (path: string) => findSurround(hub, path).map((item) => item?.path ?? null);
+
+    expect(around("/docs/components")).toEqual(["/docs/foundations/design-tokens", "/docs/components/button"]);
+    expect(around("/docs/foundations/design-tokens")).toEqual(["/docs/getting-started/roadmap", "/docs/components"]);
+    expect(around("/docs/components/button")).toEqual(["/docs/components", "/docs/components/button/ui"]);
   });
 });
