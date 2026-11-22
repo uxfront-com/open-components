@@ -14,11 +14,6 @@ concurrency:
   # Supersede outdated PR runs, but let every push to main finish.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-env:
-  # The oldest Node the build supports (Nuxt Content needs node:sqlite, see the
-  # README), and the major Cloudflare's Workers Builds image ships.
-  NODE_VERSION: 22
-
 jobs:
   check-types:
     name: Type-check
@@ -32,7 +27,7 @@ jobs:
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
           cache: pnpm
       # Also runs `nuxt prepare` for the site and the MCP server (postinstall), which
       # writes the .nuxt tsconfigs.
@@ -52,7 +47,7 @@ jobs:
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # The reference implementations' tests, which the component pages show as code,
@@ -70,7 +65,7 @@ jobs:
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Fails on any page that doesn't prerender (`failOnError` in nuxt.config.ts).
@@ -103,7 +98,7 @@ jobs:
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
