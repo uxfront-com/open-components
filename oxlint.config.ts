@@ -9,7 +9,6 @@ export default defineConfig({
   rules: {
     // Baseline for 0.2.0: the rules it adds that fail here, each fixed in its own commit.
     "typescript/no-non-null-assertion": "off",
-    "quality/no-unknown-returns": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on
     // purpose. Setting an option drops oxlint's defaults, so the `^_` patterns restate them.
@@ -30,6 +29,9 @@ export default defineConfig({
       files: ["app/reference/**"],
       rules: {
         "@nkzw/no-instanceof": "off",
+        // A slot's content is whatever the page passes, and the component only renders it
+        // without reading it, so defineSlots gives each slot an `unknown` return type.
+        "quality/no-unknown-returns": "off",
         // A reference component warns in the console when it's used in a way that breaks a
         // rule, like a Button with no accessible name, and its tests check those warnings.
         "no-console": "off",
@@ -44,6 +46,14 @@ export default defineConfig({
         // A test's helpers sit in the describe block that uses them, next to the tests
         // they serve, and a test runs once, so there's nothing to save by moving them out.
         "unicorn/consistent-function-scoping": "off",
+      },
+    },
+    {
+      // These tests break a contract one way at a time, for the schema to reject, so what
+      // each change returns is deliberately not a Contract.
+      files: ["server/lib/contract.test.ts"],
+      rules: {
+        "quality/no-unknown-returns": "off",
       },
     },
     {
