@@ -17,7 +17,7 @@ pnpm test             # Vitest: reference tests, contracts, MCP server, agent pl
 pnpm build            # nuxt generate → dist
 pnpm build:mcp        # nuxt build mcp → mcp/.output
 pnpm check-mcp        # after both builds: every tool, resource and prompt against dist
-pnpm check-seo        # after pnpm build: the sitemap's pages, robots.txt, llms.txt and the noindex headers
+pnpm check-seo        # after pnpm build: the sitemap's pages, robots.txt, llms.txt and the noindex headers (site-checks.config.mjs)
 pnpm lighthouse       # after pnpm build: fails below 95 in any category
 ```
 
