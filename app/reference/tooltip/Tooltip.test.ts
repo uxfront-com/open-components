@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSSRApp, h, nextTick } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Tooltip from "./Tooltip.vue";
-import type { TooltipProps } from "./Tooltip.vue";
+import type { TooltipProps, TooltipTrigger } from "./Tooltip.vue";
 
 // A trigger with a name of its own, like an icon-only Button's visually hidden label.
 function tooltip(props: TooltipProps & Record<string, unknown>, name = "Settings") {
@@ -76,16 +76,16 @@ describe("Tooltip", () => {
 
   // An id can hold characters a CSS name can't, like "form.email:1", which would drop the anchor.
   it("names its anchor from a generated ID, whatever id you pass", async () => {
-    let bound: Record<string, any> = {};
+    let bound: Partial<TooltipTrigger> = {};
     render(
       h(Tooltip, { label: "Visible to everyone", id: "form.email:1" }, {
-        default: ({ trigger }: { trigger: Record<string, any> }) => ((bound = trigger), h("button", trigger, "Settings")),
+        default: ({ trigger }: { trigger: TooltipTrigger }) => ((bound = trigger), h("button", trigger, "Settings")),
       }),
     );
     await nextTick();
 
     expect(bound["aria-describedby"]).toBe("form.email:1");
-    expect(bound.style["anchor-name"]).toMatch(/^--tooltip-v-[\w-]+$/);
+    expect(bound.style?.["anchor-name"]).toMatch(/^--tooltip-v-[\w-]+$/);
   });
 
   it("leaves generated IDs out of the server's markup, so hydration can't leave the trigger pointing at nothing", async () => {

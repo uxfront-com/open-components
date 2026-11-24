@@ -12,7 +12,6 @@ export default defineConfig({
     "quality/no-unknown-returns": "off",
     "unicorn/consistent-function-scoping": "off",
     "quality/no-known-value-widening": "off",
-    "quality/no-unsafe-dictionary-type": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on
     // purpose. Setting an option drops oxlint's defaults, so the `^_` patterns restate them.
@@ -36,6 +35,14 @@ export default defineConfig({
         // A reference component warns in the console when it's used in a way that breaks a
         // rule, like a Button with no accessible name, and its tests check those warnings.
         "no-console": "off",
+      },
+    },
+    {
+      // Tests pass a component any attributes, the way a page can, which Vue's h() takes
+      // as Record<string, unknown> too, and read parsed JSON before checking what it holds.
+      files: ["**/*.test.ts"],
+      rules: {
+        "quality/no-unsafe-dictionary-type": "off",
       },
     },
     {

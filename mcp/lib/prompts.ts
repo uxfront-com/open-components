@@ -134,6 +134,6 @@ export function codeToReview(value: string): string {
 }
 
 /** A tool call, the way the prompts suggest one. */
-export function call(tool: string, args: Record<string, unknown>): string {
+export function call(tool: string, args: Record<string, string | Array<string>>): string {
   return `${tool} ${JSON.stringify(args)}`;
 }

@@ -22,7 +22,7 @@ const props = withDefaults(
   defineProps<{
     navigation: Array<ContentNavigationItem>;
     // The classes DocsNavigation.vue builds from Nuxt UI's theme.
-    ui: Record<keyof typeof theme.slots, (variants?: Record<string, unknown>) => string>;
+    ui: Record<keyof typeof theme.slots, (variants?: { active?: boolean; level?: boolean; disabled?: boolean }) => string>;
     level?: number;
   }>(),
   { level: 0 },

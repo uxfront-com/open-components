@@ -26,7 +26,7 @@ const ui = computed(
       variant: variants.value.variant ?? "link",
       highlight: variants.value.highlight ?? true,
       highlightColor: variants.value.highlightColor || variants.value.color,
-    } as never) as unknown as Record<keyof typeof theme.slots, (variants?: Record<string, unknown>) => string>,
+    } as never) as unknown as Record<keyof typeof theme.slots, (variants?: { active?: boolean; level?: boolean; disabled?: boolean }) => string>,
 );
 </script>
 
