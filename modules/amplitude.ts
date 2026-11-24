@@ -16,6 +16,15 @@ export interface ModuleOptions {
   sessionReplaySampleRate: number;
 }
 
+/** The Browser SDK's init options, as the module sets them. */
+interface InitOptions {
+  serverZone: ModuleOptions["serverZone"];
+  autocapture: {
+    pageViews: { trackHistoryChanges: "all" | "pathOnly" };
+    elementInteractions: boolean;
+  };
+}
+
 /**
  * Amplitude Analytics and Session Replay, kept off the main thread where they can be.
  *
@@ -52,7 +61,7 @@ export default defineNuxtModule<ModuleOptions>({
       mainWindowAccessors: replay ? ["amplitudeSessionReplay"] : [],
     });
 
-    const options = {
+    const options: InitOptions = {
       serverZone,
       autocapture: {
         // Hash changes are the homepage's chapter links, not new pages.
@@ -102,7 +111,7 @@ export default defineNuxtModule<ModuleOptions>({
  */
 const workerScript = (
   apiKey: string,
-  options: object,
+  options: InitOptions,
   replay: boolean,
 ) => `(function (apiKey, options, replay) {
   // Partytown's fallback, for browsers it can't run in, runs this on the main

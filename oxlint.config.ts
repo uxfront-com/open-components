@@ -24,7 +24,6 @@ export default defineConfig({
     "quality/no-chained-type-assertions": "off",
     "@nkzw/no-instanceof": "off",
     "quality/no-conditional-empty-object-spread": "off",
-    "quality/no-object-parameters": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on
     // purpose. Setting an option drops oxlint's defaults, so the `^_` patterns restate them.
