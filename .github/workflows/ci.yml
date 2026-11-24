@@ -122,8 +122,11 @@ jobs:
           name: dist
           path: dist
       # Serves dist and fails below 95 in any category (lighthouserc.json), using
-      # the runner's Chrome.
+      # the runner's Chrome. pnpm 11 installs before it runs a script when
+      # node_modules is missing. This job needs none, so it skips that.
       - run: pnpm lighthouse
+        env:
+          pnpm_config_verify_deps_before_run: "false"
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
