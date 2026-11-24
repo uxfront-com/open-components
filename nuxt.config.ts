@@ -213,6 +213,8 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { lang: "en" },
       meta: [
+        // The HTML standard asks for `charset="utf-8"` exactly, so the rule's `utf8` would be invalid.
+        // oxlint-disable-next-line unicorn/text-encoding-identifier-case
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
       ],

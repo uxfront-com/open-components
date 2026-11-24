@@ -27,7 +27,6 @@ export default defineConfig({
     "quality/no-chained-type-assertions": "off",
     "@nkzw/no-instanceof": "off",
     "quality/no-conditional-empty-object-spread": "off",
-    "unicorn/text-encoding-identifier-case": "off",
     "quality/no-object-parameters": "off",
     "import-x/no-namespace": "off",
     "preserve-caught-error": "off",
