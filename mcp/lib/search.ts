@@ -166,7 +166,7 @@ function prose(markdown: string, standard: Standard): string {
       text
         .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
         .split(/(`[^`]*`)/)
-        .map((part, i) => (i % 2 ? part.replaceAll("\\|", "|") : part.replace(/(?<!\\)\||[*_]{1,2}|^\s*(#{1,6}|>)\s/g, " ")))
+        .map((part, i) => (i % 2 ? part.replaceAll(String.raw`\|`, "|") : part.replace(/(?<!\\)\||[*_]{1,2}|^\s*(#{1,6}|>)\s/g, " ")))
         .join("")
         .replace(/\s+/g, " ")
         .trim(),

@@ -183,7 +183,7 @@ function initialFocus(el: HTMLElement) {
 }
 
 // The buttons that point at it with `popovertarget`.
-const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, "\\$&")}"]`);
+const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, String.raw`\$&`)}"]`);
 
 // The trigger is the button the browser says opened it, where it says so, or else the
 // first one that points at it. TypeScript doesn't know `source` yet.

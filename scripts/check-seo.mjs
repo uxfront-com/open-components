@@ -286,7 +286,7 @@ const rules = read("_headers")
     });
     return { pattern, headers };
   });
-const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const segment = (text, delimiters) =>
   text
     .split(/(\*|:[A-Za-z]\w*)/)

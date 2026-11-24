@@ -51,7 +51,7 @@ function checklist(markdown: string): string[] {
     const cells = line
       .slice(1, line.lastIndexOf("|"))
       .split(/(?<!\\)\|/)
-      .map((cell) => cell.trim().replaceAll("\\|", "|"));
+      .map((cell) => cell.trim().replaceAll(String.raw`\|`, "|"));
     if (!columns) {
       columns = cells.map((cell) => cell.toLowerCase());
       continue;

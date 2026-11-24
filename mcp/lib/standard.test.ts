@@ -405,7 +405,7 @@ describe("buildStandard's problems", () => {
           "## Use `&nbsp;` here",
           "## The **bold** heading",
           "## snake_case names",
-          "## Escaped \\_under\\_",
+          String.raw`## Escaped \_under\_`,
         ),
       },
       [],

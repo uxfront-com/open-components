@@ -188,7 +188,7 @@ export function checklistPage(component: { title: string; path: string }, layers
             : "None",
           row.basis,
         ]
-          .map((cell) => cell.replaceAll("|", "\\|"))
+          .map((cell) => cell.replaceAll("|", String.raw`\|`))
           .join(" | "),
       ).map((row) => `| ${row} |`),
       "",

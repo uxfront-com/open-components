@@ -48,7 +48,7 @@ export function cells(row: string): string[] {
     .trim()
     .replace(/^\||\|$/g, "")
     .split(/(?<!\\)\|/)
-    .map((cell) => cell.trim().replaceAll("\\|", "|"));
+    .map((cell) => cell.trim().replaceAll(String.raw`\|`, "|"));
 }
 
 /**
