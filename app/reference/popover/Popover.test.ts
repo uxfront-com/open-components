@@ -97,7 +97,9 @@ beforeAll(() => {
 // Escape stand-ins show or hide the popover in a microtask, which may not have run yet when
 // this starts, so it waits a task at a time until no `toggle` is left.
 async function toggled() {
-  do await new Promise((resolve) => setTimeout(resolve));
+  do await new Promise((resolve) => {
+    setTimeout(resolve);
+  });
   while (pendingToggle.size);
 }
 
@@ -749,7 +751,9 @@ describe("Popover", () => {
     await openFrom(user);
     expect(popover()).toHaveAttribute("data-state", "open");
     expect(popover().querySelector('[data-slot="arrow"]')).toBeNull();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
+    });
     expect(popover()).not.toHaveAttribute("data-side");
   });
 

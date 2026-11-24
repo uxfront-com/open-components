@@ -20,7 +20,6 @@ export default defineConfig({
     "unicorn/prefer-number-properties": "off",
     "quality/no-unsafe-dictionary-type": "off",
     "quality/no-array-filter-map": "off",
-    "no-promise-executor-return": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on
     // purpose. Setting an option drops oxlint's defaults, so the `^_` patterns restate them.

@@ -111,7 +111,9 @@ async function serve() {
     if (child.exitCode !== null) break;
     // Any response will do: `/` redirects to the site.
     if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) return { url, process: child, log: () => log };
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 500);
+    });
   }
   child.kill();
   throw new Error(`wrangler dev didn't start:\n${log}`);

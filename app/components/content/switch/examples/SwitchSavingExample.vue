@@ -7,7 +7,12 @@ const status = ref("");
 const error = ref("");
 
 // Stands in for the request that saves the setting.
-const api = { save: (_settings: { darkMode: boolean }) => new Promise((resolve) => setTimeout(resolve, 600)) };
+const api = {
+  save: (_settings: { darkMode: boolean }) =>
+    new Promise((resolve) => {
+      setTimeout(resolve, 600);
+    }),
+};
 
 async function change(value: boolean) {
   // The switch moves at once, and the status says when the change is saved.
