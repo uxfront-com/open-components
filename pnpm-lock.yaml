@@ -73,8 +73,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1(oxfmt@0.79.0)
       '@uxfront/oxlint-config':
-        specifier: ^0.1.1
-        version: 0.1.1(oxlint@1.94.0)
+        specifier: ^0.2.0
+        version: 0.2.0(eslint@10.11.0(jiti@2.7.0))(oxlint@1.94.0)
       '@vitejs/plugin-vue':
         specifier: ^6.0.9
         version: 6.0.9(vite@8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.43(typescript@6.0.3))
@@ -369,6 +369,21 @@ packages:
   '@cloudflare/kv-asset-handler@0.5.0':
     resolution: {integrity: sha512-jxQYkj8dSIzc0cD6cMMNdOc1UVjqSqu8BZdor5s8cGjW2I8BjODt/kWPVdY+u9zj3ms75Q5qaZgnxUad83+eAg==}
     engines: {node: '>=22.0.0'}
+
+  '@cloudflare/oxlint-config@0.2.0':
+    resolution: {integrity: sha512-HENc8yIzCuIPvUyQbX47UKv2kgA26iZt1XRsrlQXayJG6cWmBNlnHXfPy7oNCghqWpTBcbFRdGwsHd1Ahe3zhw==}
+    engines: {node: ^22.18.0 || >=24.0.0}
+    peerDependencies:
+      oxlint: ^1.94.0
+      tsrs: '>=7.1.0-beta.tsrs2'
+      vite-plus: '>=1.7.0'
+    peerDependenciesMeta:
+      oxlint:
+        optional: true
+      tsrs:
+        optional: true
+      vite-plus:
+        optional: true
 
   '@cloudflare/unenv-preset@2.16.2':
     resolution: {integrity: sha512-JBP1+Z7ZSNG/d4mRP+y8VC5dka3tZVMLEZRvS+rzQ4DGV1EoxRFQckcJTTkXbHSQiTj0DtNI01Zwb/V2fX0mvQ==}
@@ -1661,6 +1676,31 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
+
+  '@nkzw/eslint-plugin@3.0.0':
+    resolution: {integrity: sha512-J6Ms/OzUxx7BNBggCKOqFWbESgAJYjvXvekCjjpxVJA2fBv5xOsC5P+2WDYqQUMCvDOU3GxBgG/jrmbqf+/wQA==}
+    peerDependencies:
+      eslint: '>= 9'
+    peerDependenciesMeta:
+      eslint:
+        optional: true
+
+  '@nkzw/oxlint-config@4.1.0':
+    resolution: {integrity: sha512-uFJxSqD8LPGe+uYVh+EC9BwndUGr3h7+aHQhKcdUANNSV4c1vvRoOqqHUTlML5RnHtvABtapW1ZyY4gkz6sKOA==}
+    peerDependencies:
+      eslint-plugin-perfectionist: ^5.14.0
+      oxlint: '>=1.94.0'
+      tsrs: '>=0.25.0-ts7.1.0-beta || ^7.1.0-beta.tsrs2'
+      vite-plus: '>=1.7.0'
+    peerDependenciesMeta:
+      eslint-plugin-perfectionist:
+        optional: true
+      oxlint:
+        optional: true
+      tsrs:
+        optional: true
+      vite-plus:
+        optional: true
 
   '@noble/hashes@2.4.0':
     resolution: {integrity: sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==}
@@ -3694,10 +3734,10 @@ packages:
     peerDependencies:
       oxfmt: '>=0.70.0 <1'
 
-  '@uxfront/oxlint-config@0.1.1':
-    resolution: {integrity: sha512-Cs5EdissO5MmD5ebnFJ5A/TAhDZRjspwWSbWmElgOYB/05uhEGyRbz+z5bYCZ3Ethbi5CdKUlqOch3w/9xS80A==}
+  '@uxfront/oxlint-config@0.2.0':
+    resolution: {integrity: sha512-GvMe1wC06+J3rdsYWwzb6lwMhrP3FEV89syI+xpvxexuJWXRosR4BMuUydcq1b8/GvC1n8WygUfrC/H6Aacfvw==}
     peerDependencies:
-      oxlint: ^1.45.0
+      oxlint: ^1.94.0
 
   '@uxfront/scene@0.5.1':
     resolution: {integrity: sha512-SCbqe1f/8TQ5+dcEC8cvxw0sSF1kPojdKop1rTme7FCrjuOAOukhdLbJVrQBi5QB1N+sHMCa1Y+Sl8+GE8ZkvQ==}
@@ -4815,6 +4855,10 @@ packages:
     resolution: {integrity: sha512-2NlIDTwUWJN0mRPQOdtQBzbUHvdGY2P1VXSyU83Q3xKxM7WHX2Ql8dKq782Q9TgQUNOLEzEYu9bzLNj1q88I5w==}
     engines: {node: '>=6.0'}
     hasBin: true
+
+  eslint-plugin-no-only-tests@3.4.0:
+    resolution: {integrity: sha512-4S3/9Nb7A2tiMcpzEQE9bQSlpeOz6WJkgryBuou/SA8W2x2c8Zf4j0NvTKBjv6qNhF9T79tmkecm/0CHqV0UGg==}
+    engines: {node: '>=5.0.0'}
 
   eslint-scope@9.1.2:
     resolution: {integrity: sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==}
@@ -8514,6 +8558,15 @@ snapshots:
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
+  '@cloudflare/oxlint-config@0.2.0(eslint@10.11.0(jiti@2.7.0))(oxlint@1.94.0)':
+    dependencies:
+      '@nkzw/oxlint-config': 4.1.0(eslint@10.11.0(jiti@2.7.0))(oxlint@1.94.0)
+    optionalDependencies:
+      oxlint: 1.94.0
+    transitivePeerDependencies:
+      - eslint
+      - eslint-plugin-perfectionist
+
   '@cloudflare/unenv-preset@2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261001.1)':
     dependencies:
       unenv: 2.0.0-rc.24
@@ -9433,6 +9486,19 @@ snapshots:
       '@emnapi/runtime': 1.11.2
       '@tybys/wasm-util': 0.10.4
     optional: true
+
+  '@nkzw/eslint-plugin@3.0.0(eslint@10.11.0(jiti@2.7.0))':
+    optionalDependencies:
+      eslint: 10.11.0(jiti@2.7.0)
+
+  '@nkzw/oxlint-config@4.1.0(eslint@10.11.0(jiti@2.7.0))(oxlint@1.94.0)':
+    dependencies:
+      '@nkzw/eslint-plugin': 3.0.0(eslint@10.11.0(jiti@2.7.0))
+      eslint-plugin-no-only-tests: 3.4.0
+    optionalDependencies:
+      oxlint: 1.94.0
+    transitivePeerDependencies:
+      - eslint
 
   '@noble/hashes@2.4.0': {}
 
@@ -11790,9 +11856,15 @@ snapshots:
     dependencies:
       oxfmt: 0.79.0
 
-  '@uxfront/oxlint-config@0.1.1(oxlint@1.94.0)':
+  '@uxfront/oxlint-config@0.2.0(eslint@10.11.0(jiti@2.7.0))(oxlint@1.94.0)':
     dependencies:
+      '@cloudflare/oxlint-config': 0.2.0(eslint@10.11.0(jiti@2.7.0))(oxlint@1.94.0)
       oxlint: 1.94.0
+    transitivePeerDependencies:
+      - eslint
+      - eslint-plugin-perfectionist
+      - tsrs
+      - vite-plus
 
   '@uxfront/scene@0.5.1': {}
 
@@ -13149,6 +13221,8 @@ snapshots:
       esutils: 2.0.3
     optionalDependencies:
       source-map: 0.6.1
+
+  eslint-plugin-no-only-tests@3.4.0: {}
 
   eslint-scope@9.1.2:
     dependencies:
