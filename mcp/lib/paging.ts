@@ -19,5 +19,9 @@ export function paginate<T>(
     return { error: `Only ${items.length} match, so there's nothing from offset ${offset}. Start at 0 and follow nextOffset.` };
   }
   const end = offset + limit;
-  return { total: items.length, items: items.slice(offset, end), ...(end < items.length ? { nextOffset: end } : {}) };
+  const page: { total: number; items: T[]; nextOffset?: number } = { total: items.length, items: items.slice(offset, end) };
+  if (end < items.length) {
+    page.nextOffset = end;
+  }
+  return page;
 }

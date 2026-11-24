@@ -97,13 +97,18 @@ A component meets the standard when it meets every must rule. Each should rule i
     );
     const page = paginate(found, { offset, limit });
     if ("error" in page) throw createError({ statusCode: 400, message: page.error });
-    return {
-      structuredContent: {
-        total: page.total,
-        rules: page.items,
-        ...(unknown.length ? { unknown } : {}),
-        ...(page.nextOffset !== undefined ? { nextOffset: page.nextOffset } : {}),
-      },
-    };
+    const structuredContent: {
+      total: number;
+      rules: typeof page.items;
+      unknown?: typeof unknown;
+      nextOffset?: number;
+    } = { total: page.total, rules: page.items };
+    if (unknown.length) {
+      structuredContent.unknown = unknown;
+    }
+    if (page.nextOffset !== undefined) {
+      structuredContent.nextOffset = page.nextOffset;
+    }
+    return { structuredContent };
   },
 });
