@@ -178,6 +178,12 @@ function focusList(element: HTMLElement) {
 // labels of the tags that went are only in the copy.
 let previousTags = [...tags];
 
+// A candidate that can't take focus, like a disabled button, gives way to the next.
+const focused = (target: HTMLElement | null) => {
+  target?.focus();
+  return !!target && document.activeElement === target;
+};
+
 // Runs before the list re-renders, while the removed tags are still in the DOM, to see
 // where focus is. Once they've gone, focus moves to the next remove button, then to
 // fallbackFocus, then to the previous remove button, and with no tags left, to the empty
@@ -215,11 +221,6 @@ watch(
         const prior = previous.slice(0, anchor).filter((value) => next.includes(value)).reverse();
         const find = (values: Array<string>) =>
           values.map((value) => removeButton(items[next.indexOf(value)])).find(Boolean) ?? null;
-        // A candidate that can't take focus, like a disabled button, gives way to the next.
-        const focused = (target: HTMLElement | null) => {
-          target?.focus();
-          return !!target && document.activeElement === target;
-        };
         if (!focused(find(after)) && !focused(resolve(fallbackFocus)) && !focused(find(prior))) {
           if (list.value) {
             focusList(list.value);

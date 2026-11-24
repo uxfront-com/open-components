@@ -13,6 +13,10 @@ interface RulesReply {
   nextOffset?: number;
 }
 
+// An empty list filters nothing, as with get-page's sections: some clients
+// send every optional field.
+const some = <T>(list?: Array<T>) => (list?.length ? list : undefined);
+
 export default defineMcpTool({
   description: `Lists checklist rules as records, filtered by component, ID, scope, layer, level or check. Each rule has a stable ID to cite in reviews and commits, its level (must or should), its scope, its requirement, how to check it (like a unit test, a review or axe's button-name rule) and a link to it.
 
@@ -76,9 +80,6 @@ A component meets the standard when it meets every must rule. Each should rule i
   },
   handler: async ({ component, automated, offset, limit, ...lists }) => {
     const { rules } = await useStandard();
-    // An empty list filters nothing, as with get-page's sections: some clients
-    // send every optional field.
-    const some = <T>(list?: Array<T>) => (list?.length ? list : undefined);
     const [ids, scope, layer, level, check] = [some(lists.ids), some(lists.scope), some(lists.layer), some(lists.level), some(lists.check)];
 
     // Suggestions for the first few IDs no rule has, which is all a typo needs.

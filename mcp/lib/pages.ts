@@ -50,6 +50,25 @@ export interface FoundSections {
   missing: Array<string>;
 }
 
+// A heading's anchor, from its text.
+const slug = (text: string) => anchors()(text);
+
+// Every way a heading can be named loosely: its text without "(DX)", and "DX".
+const loose = (text: string) => {
+  const short = text.replace(/\s*\(([^)]*)\)$/, "");
+  const abbreviation = text.match(/\(([^)]*)\)$/)?.[1];
+  return [short, ...(abbreviation ? [abbreviation] : [])].map(plain);
+};
+const plain = (text: string) =>
+  slug(text.toLowerCase().replaceAll("colour", "color"))
+    .split("-")
+    .map((word) => (word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word))
+    .join("-");
+const strict = (heading: { text: string; anchor?: string }, name: string) =>
+  heading.anchor === name || heading.text.toLowerCase() === name || slug(heading.text) === slug(name);
+const sloppy = (heading: { text: string; anchor?: string }, name: string) =>
+  strict(heading, name) || loose(heading.text).includes(plain(name));
+
 /**
  * The headings a list of section names point at, and the names it can't find. A
  * name can be a heading's text or its anchor, in any case and with or without
@@ -63,22 +82,6 @@ export interface FoundSections {
 export function findSections(page: Page, names: Array<string>): FoundSections {
   const found: Array<Heading> = [];
   const missing: Array<string> = [];
-  const slug = (text: string) => anchors()(text);
-  // Every way a heading can be named loosely: its text without "(DX)", and "DX".
-  const loose = (text: string) => {
-    const short = text.replace(/\s*\(([^)]*)\)$/, "");
-    const abbreviation = text.match(/\(([^)]*)\)$/)?.[1];
-    return [short, ...(abbreviation ? [abbreviation] : [])].map(plain);
-  };
-  const plain = (text: string) =>
-    slug(text.toLowerCase().replaceAll("colour", "color"))
-      .split("-")
-      .map((word) => (word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word))
-      .join("-");
-  const strict = (heading: { text: string; anchor?: string }, name: string) =>
-    heading.anchor === name || heading.text.toLowerCase() === name || slug(heading.text) === slug(name);
-  const sloppy = (heading: { text: string; anchor?: string }, name: string) =>
-    strict(heading, name) || loose(heading.text).includes(plain(name));
 
   for (const name of names) {
     const parts = name

@@ -54,6 +54,9 @@ function element(tag: string, attributes: Array<string | false | undefined>, chi
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 
+// "One option disabled" turns off the Express option.
+const isDisabled = (option: string) => oneDisabled.value && option === "express";
+
 // The group with only the props that differ from the defaults, and its radios, the way
 // you'd write them in each framework, or for Vanilla, the markup from the DOM contract.
 const code = computed(() => {
@@ -65,7 +68,6 @@ const code = computed(() => {
     disabled.value && "disabled",
     required.value && "required",
   ];
-  const isDisabled = (option: string) => oneDisabled.value && option === "express";
 
   if (fw === "vanilla") {
     const describedBy = [hint.value && "delivery-hint", invalid.value && "delivery-error"].filter(Boolean).join(" ");

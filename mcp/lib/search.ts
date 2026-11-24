@@ -50,6 +50,19 @@ export function terms(text: string): Array<string> {
     .map((term) => (term.length > 3 && term.endsWith("s") && !term.endsWith("ss") ? term.slice(0, -1) : term));
 }
 
+// How often a document has a term, counting words it starts at less than an exact match.
+const frequency = (document: Document, term: string) => {
+  let total = 0;
+  for (const [word, count] of document.terms) {
+    if (word === term) {
+      total += count;
+    } else if (term.length >= 3 && word.startsWith(term)) {
+      total += count * 0.7;
+    }
+  }
+  return total;
+};
+
 /**
  * Searches every section of every page and every rule, ranked with BM25 over
  * their words, where a term also matches the words it starts (`focus` finds
@@ -122,18 +135,6 @@ export function createSearch(standard: Standard) {
         (!options.component || document.component === options.component) &&
         (!options.type || document.result.type === options.type),
     );
-    // How often a document has a term, counting words it starts at less than an exact match.
-    const frequency = (document: Document, term: string) => {
-      let total = 0;
-      for (const [word, count] of document.terms) {
-        if (word === term) {
-          total += count;
-        } else if (term.length >= 3 && word.startsWith(term)) {
-          total += count * 0.7;
-        }
-      }
-      return total;
-    };
 
     // How rare each term is across the standard, so a rare term counts for more.
     const idf = new Map(

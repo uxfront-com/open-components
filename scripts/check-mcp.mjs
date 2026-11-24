@@ -194,6 +194,9 @@ async function checkRoutes() {
   check(crossOrigin.headers.get("x-robots-tag") === "noindex", "/mcp responses don't have X-Robots-Tag: noindex");
 }
 
+// The tools a text names, like get-page.
+const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
+
 async function checkServer() {
   const client = new Client({ name: "check-mcp", version: "1.0.0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`)));
@@ -231,7 +234,6 @@ async function checkServer() {
       check(!isError, `${tool.name} ${JSON.stringify(example)}, one of its examples, failed: ${text.slice(0, 200)}`);
     }
   }
-  const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
   for (const [where, text] of [["The instructions", instructions], ...tools.map((tool) => [tool.name, tool.description ?? ""])]) {
     for (const name of named(text)) {
       check(TOOLS.includes(name), `${where} name a tool that doesn't exist: ${name}`);

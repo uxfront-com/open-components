@@ -10,10 +10,12 @@ const PAGES = "content/docs";
 const pages = (await readdir(PAGES, { recursive: true })).filter((path) => path.endsWith(".md"));
 const problems = [];
 
+// A path's part without the number that orders it in the sidebar.
+const unnumbered = (name) => name.replace(/^\d+\./, "");
+
 for (const component of await readdir(REFERENCE)) {
   // The page is named after the component, card.md, or it's split into a folder
   // named after it, button/, with the code on one of its parts.
-  const unnumbered = (name) => name.replace(/^\d+\./, "");
   const files = pages.filter((path) => {
     const parts = path.split("/").map(unnumbered);
     return parts.at(-1) === `${component}.md` || parts.at(-2) === component;
