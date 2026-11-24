@@ -13,7 +13,7 @@ export function useStandard(): Promise<Standard> {
     .getItemRaw("standard.json")
     .then((data) => {
       if (!data) throw new Error("The standard isn't bundled: modules/standard.ts writes it when the server is built.");
-      return (typeof data === "string" ? JSON.parse(data) : data instanceof Uint8Array ? JSON.parse(new TextDecoder().decode(data)) : data) as Standard;
+      return (typeof data === "string" ? JSON.parse(data) : ArrayBuffer.isView(data) ? JSON.parse(new TextDecoder().decode(data)) : data) as Standard;
     });
   standard.catch(() => (standard = undefined));
   return standard;

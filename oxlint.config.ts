@@ -21,7 +21,6 @@ export default defineConfig({
     "quality/no-unsafe-dictionary-type": "off",
     "quality/no-array-filter-map": "off",
     "no-promise-executor-return": "off",
-    "@nkzw/no-instanceof": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on
     // purpose. Setting an option drops oxlint's defaults, so the `^_` patterns restate them.
@@ -36,6 +35,14 @@ export default defineConfig({
     ],
   },
   overrides: [
+    {
+      // The reference implementations are browser code, where `instanceof` is how you tell
+      // an element's kind, like an HTMLInputElement among a form's controls, and narrow it.
+      files: ["app/reference/**"],
+      rules: {
+        "@nkzw/no-instanceof": "off",
+      },
+    },
     {
       // It renders the sidebar in place of Nuxt UI's UContentNavigation and keeps its code
       // in step with the original (AGENTS.md, "Things that change together"), whose theme
