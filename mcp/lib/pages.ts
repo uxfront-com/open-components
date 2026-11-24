@@ -44,6 +44,12 @@ export function findPage(standard: Standard, name: string): Page | undefined {
   );
 }
 
+/** The sections a page has under the names asked for, and the names it has none for. */
+export interface FoundSections {
+  found: Array<Heading>;
+  missing: Array<string>;
+}
+
 /**
  * The headings a list of section names point at, and the names it can't find. A
  * name can be a heading's text or its anchor, in any case and with or without
@@ -54,7 +60,7 @@ export function findPage(standard: Standard, name: string): Page | undefined {
  * it, like "DX", in US spelling, like "Colors", or singular, like "Toggle button".
  * The page's own title names its introduction, before its first heading.
  */
-export function findSections(page: Page, names: Array<string>): { found: Array<Heading>; missing: Array<string> } {
+export function findSections(page: Page, names: Array<string>): FoundSections {
   const found: Array<Heading> = [];
   const missing: Array<string> = [];
   const slug = (text: string) => anchors()(text);

@@ -68,7 +68,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -76,7 +76,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
@@ -206,14 +206,14 @@ const code = computed(() => {
       ],
     );
   } else {
-    const bound: Record<string, Array<string | false>> = {
+    const bound = new Map<string, Array<string | false>>(Object.entries({
       react: ["open={open}", "onClose={() => setOpen(false)}"],
       vue: [':open="open"', '@close="open = false"'],
       svelte: ["{open}", "onclose={() => (open = false)}"],
       angular: ['[open]="open()"', '(closeRequest)="open.set(false)"'],
       solid: ["open={open()}", "onClose={() => setOpen(false)}"],
       astro: [],
-    };
+    }));
     const props = [
       fw === "angular" && "appDialog",
       `id="${id}"`,
@@ -222,19 +222,19 @@ const code = computed(() => {
       // Angular's Dialog is on the <dialog>, which keeps a `title` attribute as a tooltip.
       `${fw === "angular" ? "dialogTitle" : "title"}="${title}"`,
       described.value && `description="${description}"`,
-      ...bound[fw]!,
+      ...bound.get(fw)!,
     ];
     if (jsx) {
       const fragment = ["<>", ...actionsBlock.map((line) => `  ${line}`), "</>"];
       dialog = element("Dialog", [...props, ["actions={", ...fragment.map((line) => `  ${line}`), "}"].join("\n")], body);
     } else {
-      const wrappers: Record<string, [string, string]> = {
+      const wrappers = new Map<string, [string, string]>(Object.entries({
         vue: ["<template #actions>", "</template>"],
         svelte: ["{#snippet actions()}", "{/snippet}"],
         angular: ["<div actions>", "</div>"],
         astro: ['<Fragment slot="actions">', "</Fragment>"],
-      };
-      const [start, end] = wrappers[fw]!;
+      }));
+      const [start, end] = wrappers.get(fw)!;
       dialog = element(fw === "angular" ? "dialog" : "Dialog", props, [
         ...body,
         start,
@@ -314,7 +314,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

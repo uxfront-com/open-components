@@ -34,7 +34,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -42,7 +42,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
@@ -179,7 +179,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

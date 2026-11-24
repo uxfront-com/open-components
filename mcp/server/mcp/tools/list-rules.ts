@@ -3,6 +3,15 @@ import { z } from "zod";
 import { PAGE_SIZE, paginate } from "../../../lib/paging";
 import { CHECK_KINDS, LAYERS, LEVELS, SCOPES } from "../../../lib/rules";
 import { suggest } from "../../../lib/suggest";
+import type { Rule } from "../../../lib/types";
+
+/** What list-rules replies with: a page of rules, and the IDs asked for that no rule has. */
+interface RulesReply {
+  total: number;
+  rules: Array<Rule>;
+  unknown?: Array<{ id: string; suggestions: Array<string> }>;
+  nextOffset?: number;
+}
 
 export default defineMcpTool({
   description: `Lists checklist rules as records, filtered by component, ID, scope, layer, level or check. Each rule has a stable ID to cite in reviews and commits, its level (must or should), its scope, its requirement, how to check it (like a unit test, a review or axe's button-name rule) and a link to it.
@@ -99,12 +108,7 @@ A component meets the standard when it meets every must rule. Each should rule i
     if ("error" in page) {
       throw createError({ statusCode: 400, message: page.error });
     }
-    const structuredContent: {
-      total: number;
-      rules: typeof page.items;
-      unknown?: typeof unknown;
-      nextOffset?: number;
-    } = { total: page.total, rules: page.items };
+    const structuredContent: RulesReply = { total: page.total, rules: page.items };
     if (unknown.length) {
       structuredContent.unknown = unknown;
     }

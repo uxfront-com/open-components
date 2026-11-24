@@ -35,7 +35,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -43,7 +43,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
@@ -113,18 +113,18 @@ const code = computed(() => {
   }
 
   // The value is bound where the framework holds it, and left to the form where it doesn't.
-  const binding: Record<string, Array<string>> = {
+  const binding = new Map<string, Array<string>>(Object.entries({
     react: ["options={emails}", "value={picked}", "onValueChange={setPicked}"],
     vue: [':options="emails"', 'v-model:value="picked"'],
     svelte: ["options={emails}", "bind:value={picked}"],
     angular: ['[options]="emails"', '[(value)]="picked"'],
     solid: ["options={emails}", "value={picked()}", "onValueChange={setPicked}"],
     astro: ["options={emails}", `value={${JSON.stringify(picked.value)}}`],
-  };
+  }));
   const attributes = [
     fw === "angular" && "appCheckboxGroup",
     'name="emails"',
-    ...binding[fw]!,
+    ...binding.get(fw)!,
     size.value !== "md" && `size="${size.value}"`,
     orientation.value !== "vertical" && `orientation="${orientation.value}"`,
     selectAll.value && `${fw === "vue" ? "select-all" : "selectAll"}="${allLabel}"`,
@@ -175,7 +175,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

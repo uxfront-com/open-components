@@ -35,7 +35,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -43,7 +43,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 // A <textarea> is never self-closing in HTML, so `paired` closes it with a tag.
@@ -76,7 +76,7 @@ const code = computed(() => {
     fw === "vue" ? `:${kebab}="${n}"` : fw === "angular" ? `[${name}]="${n}"` : `${name}={${n}}`;
   const flag = (name: string, kebab: string) => (fw === "vue" ? kebab : name);
 
-  const binding: Record<string, Array<string>> = {
+  const binding = new Map<string, Array<string>>(Object.entries({
     react: ["value={value}", "onChange={(event) => setValue(event.target.value)}"],
     vue: ['v-model="value"'],
     svelte: ["bind:value"],
@@ -84,14 +84,14 @@ const code = computed(() => {
     solid: ["value={value()}", "onInput={(event) => setValue(event.currentTarget.value)}"],
     astro: ['name="message"'],
     vanilla: ['name="message"'],
-  };
+  }));
   // The <textarea>'s own attributes, which every framework but Vanilla and Angular
   // passes through the Textarea.
   const control = [
     fw === "vanilla" && 'data-slot="control"',
     (fw === "vanilla" || fw === "angular") && `rows="${rows.value}"`,
     'id="message"',
-    ...binding[fw]!,
+    ...binding.get(fw)!,
     disabled.value && "disabled",
     readonly.value && (jsx ? "readOnly" : "readonly"),
     invalid.value && 'aria-invalid="true"',
@@ -194,7 +194,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

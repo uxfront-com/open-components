@@ -148,7 +148,7 @@ describe("citedCriteria", () => {
   });
 
   it("names a criterion by its WCAG 2.2 name", () => {
-    expect(citedCriteria("WCAG 1.4.3 (AA)")[0]).toEqual({ number: "1.4.3", ...WCAG["1.4.3"] });
+    expect(citedCriteria("WCAG 1.4.3 (AA)")[0]).toEqual({ number: "1.4.3", ...WCAG.get("1.4.3") });
   });
 
   it.each([

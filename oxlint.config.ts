@@ -11,7 +11,6 @@ export default defineConfig({
     "typescript/no-non-null-assertion": "off",
     "quality/no-unknown-returns": "off",
     "unicorn/consistent-function-scoping": "off",
-    "quality/no-known-value-widening": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on
     // purpose. Setting an option drops oxlint's defaults, so the `^_` patterns restate them.

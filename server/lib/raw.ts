@@ -194,8 +194,15 @@ export function splitAnchors(parts: Array<{ path: string; source: string }>): Re
 const RULES = / Checklist$/;
 const wholeRules = (text: string) => text.replace(RULES, " rules");
 
-// A part's title, the section it goes before and its body, from its source.
-function readPart(source: string): { title: string; before: string; body: string } {
+// A part's title, the section it goes before and its body.
+interface Part {
+  title: string;
+  before: string;
+  body: string;
+}
+
+// A part, from its source.
+function readPart(source: string): Part {
   // Read the way Nuxt Content reads it, which builds past a YAML slip.
   const { title, before } = (parseDocument(source.match(FRONTMATTER)?.[1] ?? "").toJSON() ?? {}) as { title?: unknown; before?: unknown };
   if (typeof title !== "string" || typeof before !== "string") {

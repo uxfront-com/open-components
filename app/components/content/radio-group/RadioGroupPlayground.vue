@@ -36,7 +36,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -44,7 +44,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
@@ -116,14 +116,14 @@ const code = computed(() => {
   // The value is bound where the framework holds it. Astro has no state on the client,
   // so it checks the radio it starts with, and its radios take the group's name, size
   // and required state.
-  const binding: Record<string, Array<string>> = {
+  const binding = new Map<string, Array<string>>(Object.entries({
     react: ["value={delivery}", "onChange={(event) => setDelivery(event.target.value)}"],
     vue: ['v-model="delivery"'],
     svelte: ["bind:value={delivery}"],
     angular: ['[(ngModel)]="delivery"'],
     solid: ["value={delivery()}", "onChange={(event) => setDelivery(event.target.value)}"],
     astro: [],
-  };
+  }));
   const group = [
     fw === "angular" && "appRadioGroup",
     name,
@@ -131,7 +131,7 @@ const code = computed(() => {
     hint.value && `hint="${HINT}"`,
     ...states,
     invalid.value && `error="${ERROR}"`,
-    ...binding[fw]!,
+    ...binding.get(fw)!,
   ];
   const radios = options.map((option) => {
     const attributes = [
@@ -195,7 +195,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

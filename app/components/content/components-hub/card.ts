@@ -16,7 +16,14 @@ export interface Link {
  * holds rather than what it is: a link is a node with an `href`, and the list is
  * the last node, the one that holds the layers' links.
  */
-export function layout(nodes: Array<VNode>): { name: Link; sentence: Array<VNode>; layers: Array<Link> } {
+/** A card's parts: the component's name, its sentence and the links to its layers. */
+export interface CardLayout {
+  name: Link;
+  sentence: Array<VNode>;
+  layers: Array<Link>;
+}
+
+export function layout(nodes: Array<VNode>): CardLayout {
   const blocks = nodes.filter((node) => node.type !== Comment && !(node.type === Text && !String(node.children).trim()));
   const name = links(blocks.slice(0, 1))[0];
   if (!name) {

@@ -38,13 +38,13 @@ export function plural(title: string): string {
 
 // The frameworks whose examples are written for one major version, which the
 // pages' prompts name, as in "our Vue 3 design system".
-const VERSIONS: Record<string, string> = { vue: "Vue 3", svelte: "Svelte 5" };
+const VERSIONS = new Map(Object.entries({ vue: "Vue 3", svelte: "Svelte 5" }));
 
 const raw = (standard: Standard, path: string, extension: "md" | "yaml") => `${standard.site}/raw${path}.${extension}`;
 
 /** A framework as the prompts name it, like "Vue 3", from its value or its name. */
 export function frameworkName(standard: Standard, framework: string): string | undefined {
-  return VERSIONS[framework] ?? standard.frameworks.find((candidate) => candidate.value === framework)?.label;
+  return VERSIONS.get(framework) ?? standard.frameworks.find((candidate) => candidate.value === framework)?.label;
 }
 
 /**

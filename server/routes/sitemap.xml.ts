@@ -64,14 +64,14 @@ export default defineEventHandler(async (event) => {
   ].join("\n");
 });
 
-const XML_ENTITIES: Record<string, string> = {
+const XML_ENTITIES = new Map<string, string>(Object.entries({
   "&": "&amp;",
   "<": "&lt;",
   ">": "&gt;",
   '"': "&quot;",
   "'": "&apos;",
-};
+}));
 
 function escapeXml(value: string) {
-  return value.replaceAll(/[&<>"']/g, (char) => XML_ENTITIES[char]!);
+  return value.replaceAll(/[&<>"']/g, (char) => XML_ENTITIES.get(char)!);
 }

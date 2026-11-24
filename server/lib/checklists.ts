@@ -81,7 +81,7 @@ export function citedCriteria(basis: string): Array<Criterion & { number: string
         continue;
       }
       for (const number of pending) {
-        const criterion = WCAG[number];
+        const criterion = WCAG.get(number);
         if (!criterion) {
           throw new Error(`The Basis "${basis}" cites WCAG ${number}, which isn't a WCAG 2.2 success criterion`);
         }

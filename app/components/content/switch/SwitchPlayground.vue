@@ -24,7 +24,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -32,7 +32,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
@@ -54,7 +54,7 @@ function element(tag: string, attributes: Array<string | false | undefined>, chi
 const code = computed(() => {
   const fw = framework.value;
   // Bound where the framework holds the state, and written out where it doesn't.
-  const binding: Record<string, Array<string>> = {
+  const binding = new Map<string, Array<string>>(Object.entries({
     react: ["checked={on}", "onChange={(event) => setOn(event.target.checked)}"],
     vue: ['v-model:checked="on"'],
     svelte: ["bind:checked={on}"],
@@ -62,14 +62,14 @@ const code = computed(() => {
     solid: ["checked={on()}", "onChange={(event) => setOn(event.currentTarget.checked)}"],
     astro: ['name="wifi"', checked.value ? "checked" : ""],
     vanilla: ['name="wifi"', checked.value ? "checked" : ""],
-  };
+  }));
   const native = fw === "angular" || fw === "vanilla";
   const control = [
     fw === "vanilla" && 'data-slot="control"',
     native && 'type="checkbox"',
     native && 'role="switch"',
     'id="wifi"',
-    ...binding[fw]!,
+    ...binding.get(fw)!,
     !native && size.value !== "md" && `size="${size.value}"`,
     disabled.value && "disabled",
     // A checkbox has no readonly of its own: the Switch takes a prop, Angular's on its <span>,
@@ -142,7 +142,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

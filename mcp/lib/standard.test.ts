@@ -257,7 +257,7 @@ describe("buildStandard's problems", () => {
   const build = (changes: Record<string, string | undefined> = {}) => {
     const root = mkdtempSync(join(tmpdir(), "open-components-standard-"));
     roots.push(root);
-    const files: Record<string, string | undefined> = {
+    const files = {
       "public/schemas/contract.json": "{}",
       "content/docs/1.getting-started/.navigation.yml": "title: Getting Started\n",
       "content/docs/1.getting-started/1.roadmap.md": roadmap(WIDGET, GIZMO),

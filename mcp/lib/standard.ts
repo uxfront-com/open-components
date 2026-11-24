@@ -22,10 +22,13 @@ const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
  * build, which would hold back the site too. `pnpm test` fails on any of them
  * (standard.test.ts).
  */
-export function buildStandard(options: { root: string; site: string; frameworks: Array<Framework> }): {
+/** The standard, and what in the content it couldn't read. */
+export interface BuiltStandard {
   standard: Standard;
   problems: Array<string>;
-} {
+}
+
+export function buildStandard(options: { root: string; site: string; frameworks: Array<Framework> }): BuiltStandard {
   const { root, site, frameworks } = options;
   const problems: Array<string> = [];
   const docs = join(root, "content/docs");
@@ -209,7 +212,7 @@ function toRule(data: Record<string, string>, page: Page, site: string, problems
   };
 }
 
-const LANGUAGES: Record<string, string> = { ".vue": "vue", ".ts": "ts", ".tsx": "tsx", ".js": "js", ".css": "css" };
+const LANGUAGES = new Map(Object.entries({ ".vue": "vue", ".ts": "ts", ".tsx": "tsx", ".js": "js", ".css": "css" }));
 
 // The reference implementations in app/reference/<component>/, each in the order
 // its page shows the files, with what the page says about them.
@@ -237,7 +240,7 @@ function readReferences(root: string, pages: Array<Page>, site: string, problems
       .sort((a, b) => order(a) - order(b) || a.localeCompare(b))
       .map((name) => ({
         name,
-        lang: LANGUAGES[extname(name)] ?? extname(name).slice(1),
+        lang: LANGUAGES.get(extname(name)) ?? extname(name).slice(1),
         content: readFileSync(join(dir, component, name), "utf8"),
       }));
     const code = lines.findIndex((line) => line.startsWith("```"));

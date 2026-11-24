@@ -28,7 +28,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -36,20 +36,20 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // The Select with only the props that differ from the defaults, the way you'd write them in
 // each framework, or for Vanilla, the first lines of its DOM contract.
 const code = computed(() => {
   const fw = framework.value;
-  const off: Record<string, string> = {
+  const off = new Map<string, string>(Object.entries({
     react: "nativeOnTouch={false}",
     vue: ':native-on-touch="false"',
     svelte: "nativeOnTouch={false}",
     angular: '[nativeOnTouch]="false"',
     solid: "nativeOnTouch={false}",
     astro: "nativeOnTouch={false}",
-  };
+  }));
   if (fw === "vanilla") {
     return [
       `<div class="select" data-size="${size.value}" data-state="closed"${nativeOnTouch.value && !readonly.value ? " data-native" : ""}>`,
@@ -67,7 +67,7 @@ const code = computed(() => {
     multiple.value && "multiple",
     disabled.value && "disabled",
     readonly.value && "readonly",
-    !nativeOnTouch.value && off[fw],
+    !nativeOnTouch.value && off.get(fw),
   ].filter(Boolean);
   if (fw === "angular") {
     return `<div appSelect ${props.join(" ")}>\n  <select id="playground-country" name="country"></select>\n</div>`;
@@ -109,7 +109,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>
