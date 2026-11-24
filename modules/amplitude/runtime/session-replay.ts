@@ -1,9 +1,12 @@
-import type * as SessionReplaySdk from "@amplitude/session-replay-browser";
-import type { SessionReplayOptions } from "@amplitude/session-replay-browser";
+import type { init, SessionReplayOptions, setSessionId } from "@amplitude/session-replay-browser";
 
 import { requestIdleCallback } from "#imports";
 
-type SessionReplay = typeof SessionReplaySdk;
+// The parts of the SDK this file calls, once its module has loaded.
+interface SessionReplay {
+  init: typeof init;
+  setSessionId: typeof setSessionId;
+}
 
 /**
  * Records sessions with Session Replay's standalone SDK. The Browser SDK runs
