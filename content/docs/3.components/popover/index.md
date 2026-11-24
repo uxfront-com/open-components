@@ -372,11 +372,11 @@ function place() {
   const el = popover.value;
   if (!el || !trigger) return;
   // Its margin is the gap, which `left` and `top` place it outside of.
-  const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+  const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
   const a = trigger.getBoundingClientRect();
   // Its exact size, without the scale it grows in from, which getBoundingClientRect() would include.
-  const width = parseFloat(getComputedStyle(el).width);
-  const height = parseFloat(getComputedStyle(el).height);
+  const width = Number.parseFloat(getComputedStyle(el).width);
+  const height = Number.parseFloat(getComputedStyle(el).height);
   const { clientWidth, clientHeight } = document.documentElement;
   const rtl = getComputedStyle(trigger).direction === "rtl";
   const sides = { top: "top", bottom: "bottom", start: rtl ? "right" : "left", end: rtl ? "left" : "right" } as const;
@@ -414,9 +414,9 @@ function aim() {
   side.value = p.right <= a.left ? "left" : p.left >= a.right ? "right" : p.bottom <= a.top ? "top" : "bottom";
   const across = side.value === "top" || side.value === "bottom";
   const box = getComputedStyle(el);
-  const length = parseFloat(across ? box.width : box.height);
+  const length = Number.parseFloat(across ? box.width : box.height);
   const centre = across ? a.left + a.width / 2 - (x - length / 2) : a.top + a.height / 2 - (y - length / 2);
-  const clear = parseFloat(box.borderTopLeftRadius) + parseFloat(getComputedStyle(part).width) / Math.SQRT2;
+  const clear = Number.parseFloat(box.borderTopLeftRadius) + Number.parseFloat(getComputedStyle(part).width) / Math.SQRT2;
   const offset = clear * 2 < length ? Math.max(clear, Math.min(centre, length - clear)) : length / 2;
   part.style.left = across ? `${offset - el.clientLeft}px` : "";
   part.style.top = across ? "" : `${offset - el.clientTop}px`;
@@ -1395,7 +1395,7 @@ describe("Popover", () => {
     screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 300, 10, 30);
     popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
-    expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
+    expect(Number.parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
   });
 
   it("points its arrow from the side it opened on when the screen's edge pushes it off the trigger's centre", async () => {
@@ -1449,7 +1449,7 @@ describe("Popover", () => {
     expect(anchor).toMatch(/^--popover-/);
     expect(popover().style.getPropertyValue("position-anchor")).toBe(anchor);
     // Its start is the trigger's right in right-to-left text: past its right edge, at 500.
-    expect(parseFloat(popover().style.left)).toBe(500);
+    expect(Number.parseFloat(popover().style.left)).toBe(500);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -1472,7 +1472,7 @@ describe("Popover", () => {
     await openFrom(user);
     await nextTick();
     // Its end is the trigger's left: 200px wide, before its left edge at 400.
-    expect(parseFloat(popover().style.left)).toBe(200);
+    expect(Number.parseFloat(popover().style.left)).toBe(200);
     unmount();
 
     page();
@@ -1481,7 +1481,7 @@ describe("Popover", () => {
     size();
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(640);
+    expect(Number.parseFloat(popover().style.top)).toBe(640);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -1499,7 +1499,7 @@ describe("Popover", () => {
 
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(336);
+    expect(Number.parseFloat(popover().style.top)).toBe(336);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();

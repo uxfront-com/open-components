@@ -725,7 +725,7 @@ describe("Popover", () => {
     screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 300, 10, 30);
     popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
-    expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
+    expect(Number.parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
   });
 
   it("points its arrow from the side it opened on when the screen's edge pushes it off the trigger's centre", async () => {
@@ -779,7 +779,7 @@ describe("Popover", () => {
     expect(anchor).toMatch(/^--popover-/);
     expect(popover().style.getPropertyValue("position-anchor")).toBe(anchor);
     // Its start is the trigger's right in right-to-left text: past its right edge, at 500.
-    expect(parseFloat(popover().style.left)).toBe(500);
+    expect(Number.parseFloat(popover().style.left)).toBe(500);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -802,7 +802,7 @@ describe("Popover", () => {
     await openFrom(user);
     await nextTick();
     // Its end is the trigger's left: 200px wide, before its left edge at 400.
-    expect(parseFloat(popover().style.left)).toBe(200);
+    expect(Number.parseFloat(popover().style.left)).toBe(200);
     unmount();
 
     page();
@@ -811,7 +811,7 @@ describe("Popover", () => {
     size();
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(640);
+    expect(Number.parseFloat(popover().style.top)).toBe(640);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -829,7 +829,7 @@ describe("Popover", () => {
 
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(336);
+    expect(Number.parseFloat(popover().style.top)).toBe(336);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();

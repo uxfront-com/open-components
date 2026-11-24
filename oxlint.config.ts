@@ -17,7 +17,6 @@ export default defineConfig({
     "quality/no-known-value-widening": "off",
     "no-console": "off",
     "import/consistent-type-specifier-style": "off",
-    "unicorn/prefer-number-properties": "off",
     "quality/no-unsafe-dictionary-type": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on

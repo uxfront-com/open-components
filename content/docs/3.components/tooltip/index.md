@@ -281,11 +281,11 @@ function place() {
   const el = tooltip.value;
   if (!el || !anchor) return;
   // Its margin is the gap, which `left` and `top` place it outside of.
-  const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+  const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
   const a = anchor.getBoundingClientRect();
   // Its exact size, without the scale it grows in from, which getBoundingClientRect() would include.
-  const width = parseFloat(getComputedStyle(el).width);
-  const height = parseFloat(getComputedStyle(el).height);
+  const width = Number.parseFloat(getComputedStyle(el).width);
+  const height = Number.parseFloat(getComputedStyle(el).height);
   const { clientWidth, clientHeight } = document.documentElement;
   const rtl = getComputedStyle(anchor).direction === "rtl";
   const sides = { top: "top", bottom: "bottom", start: rtl ? "right" : "left", end: rtl ? "left" : "right" } as const;
@@ -318,11 +318,11 @@ function aim() {
   side.value = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
   const across = side.value === "top" || side.value === "bottom";
   const box = getComputedStyle(el);
-  const length = parseFloat(across ? box.width : box.height);
+  const length = Number.parseFloat(across ? box.width : box.height);
   const centre = across ? a.left + a.width / 2 - (x - length / 2) : a.top + a.height / 2 - (y - length / 2);
   // Its centre stays a corner's radius and half its own diagonal from each end, so none of it
   // overlaps the curve, measured, like the centre, from the outside of the border.
-  const clear = parseFloat(box.borderTopLeftRadius) + parseFloat(getComputedStyle(part).width) / Math.SQRT2;
+  const clear = Number.parseFloat(box.borderTopLeftRadius) + Number.parseFloat(getComputedStyle(part).width) / Math.SQRT2;
   const at = clear * 2 < length ? Math.max(clear, Math.min(centre, length - clear)) : length / 2;
   // Its left and top start inside the border.
   part.style.left = across ? `${at - el.clientLeft}px` : "";

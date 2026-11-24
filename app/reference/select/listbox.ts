@@ -114,7 +114,7 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
     }
     const a = field.getBoundingClientRect();
     // Its margin is the gap, on the block sides only, which `top` places it outside of.
-    const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+    const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
     const { clientWidth, clientHeight } = document.documentElement;
     // The part of the page people can see: all of it, or what the keyboard leaves.
     const view = keyboard ? window.visualViewport! : undefined;
