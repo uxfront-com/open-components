@@ -107,7 +107,7 @@ describe("The standard", () => {
     // Inline code is an example, as it is in a code block.
     const prose = scan(page.markdown)
       .filter((line) => !line.code)
-      .map((line) => line.text.replace(/`[^`]*`/g, "``"));
+      .map((line) => line.text.replaceAll(/`[^`]*`/g, "``"));
     expect(prose.filter((line) => LEFTOVERS.some((pattern) => pattern.test(line)))).toEqual([]);
   });
 
@@ -115,8 +115,12 @@ describe("The standard", () => {
   it.each(pages)("%s's framework switchers are marked in pairs", (_, page) => {
     let open = false;
     for (const { text, code } of scan(page.markdown)) {
-      if (code) continue;
-      if (text.startsWith("<!-- framework: ")) expect(open).toBe(true);
+      if (code) {
+        continue;
+      }
+      if (text.startsWith("<!-- framework: ")) {
+        expect(open).toBe(true);
+      }
       if (text === SWITCHER || text === SWITCHER_END) {
         expect(open).toBe(text === SWITCHER_END);
         open = !open;
@@ -159,7 +163,7 @@ describe("The standard", () => {
   it("has a contract for every component the Roadmap ticks, and only for those", () => {
     const roadmap = sources.get("/docs/getting-started/roadmap")!;
     const ticked = [...roadmap.matchAll(/^\| :roadmap-check\{shipped\} (?:\[([^\]]+)\]\([^)]*\)|([^|]+?))\s*\|/gm)].map(([, linked, plain]) =>
-      (linked ?? plain)!.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      (linked ?? plain)!.trim().toLowerCase().replaceAll(/[^a-z0-9]+/g, "-"),
     );
     const shipped = standard.pages.filter((page) => page.path.startsWith("/docs/components/") && page.contract).map((page) => page.key);
     expect(ticked.sort()).toEqual(shipped.sort());
@@ -176,14 +180,18 @@ describe("The standard", () => {
     const rows = roadmap.match(/^\| :roadmap-check/gm) ?? [];
     const listed = standard.components.filter((component) => component.kind === "component");
     expect(listed).toHaveLength(rows.length);
-    for (const component of listed) expect(component.group).toEqual(expect.any(String));
+    for (const component of listed) {
+      expect(component.group).toEqual(expect.any(String));
+    }
   });
 
   it.each(readdirSync("app/reference"))("serves app/reference/%s as it is, in the order its page shows it", (component) => {
     const reference = standard.references.find((candidate) => candidate.component === component)!;
     const dir = join("app/reference", component);
     expect(reference.files.map((file) => file.name).sort()).toEqual(readdirSync(dir).sort());
-    for (const file of reference.files) expect(file.content).toBe(readFileSync(join(dir, file.name), "utf8"));
+    for (const file of reference.files) {
+      expect(file.content).toBe(readFileSync(join(dir, file.name), "utf8"));
+    }
 
     const source = sources.get(standard.pages.find((page) => page.key === component)!.path)!;
     const start = source.indexOf("\n## Reference implementation\n");
@@ -197,11 +205,11 @@ describe("The standard", () => {
 // A repository of its own, which follows the conventions, for a change at a time
 // that breaks one: the build reports it as a problem, rather than failing.
 describe("buildStandard's problems", () => {
-  const roots: string[] = [];
+  const roots: Array<string> = [];
   afterAll(() => roots.forEach((root) => rmSync(root, { recursive: true, force: true })));
 
   const RULE = "| `widget/name` | Must | Component | It has a name | Review |";
-  const component = (name: string, options: { rows?: string[]; table?: string; contract?: string; reference?: boolean } = {}) => {
+  const component = (name: string, options: { rows?: Array<string>; table?: string; contract?: string; reference?: boolean } = {}) => {
     const { rows = [RULE], table = "### UI rules", contract = `component: ${name}`, reference = true } = options;
     return [
       "---",
@@ -227,7 +235,7 @@ describe("buildStandard's problems", () => {
       ...(reference ? ["## Reference implementation", "", "It's in Vue.", "", `\`\`\`vue [${name}.vue]`, "<template />", "```"] : []),
     ].join("\n");
   };
-  const roadmap = (...rows: string[]) =>
+  const roadmap = (...rows: Array<string>) =>
     [
       "---",
       "title: Roadmap",
@@ -244,12 +252,12 @@ describe("buildStandard's problems", () => {
     ].join("\n");
   const WIDGET = "| :roadmap-check{shipped} [Widget](/docs/components/widget) | Doing things |";
   const GIZMO = "| :roadmap-check Gizmo | Doing more |";
-  const guide = (...lines: string[]) => ["---", "title: Guide", "description: How to.", "---", "", ...lines].join("\n");
+  const guide = (...lines: Array<string>) => ["---", "title: Guide", "description: How to.", "---", "", ...lines].join("\n");
 
   const build = (changes: Record<string, string | undefined> = {}) => {
     const root = mkdtempSync(join(tmpdir(), "open-components-standard-"));
     roots.push(root);
-    const files: Record<string, string | undefined> = {
+    const files = {
       "public/schemas/contract.json": "{}",
       "content/docs/1.getting-started/.navigation.yml": "title: Getting Started\n",
       "content/docs/1.getting-started/1.roadmap.md": roadmap(WIDGET, GIZMO),
@@ -258,7 +266,9 @@ describe("buildStandard's problems", () => {
       ...changes,
     };
     for (const [file, content] of Object.entries(files)) {
-      if (content === undefined) continue;
+      if (content === undefined) {
+        continue;
+      }
       mkdirSync(dirname(join(root, file)), { recursive: true });
       writeFileSync(join(root, file), content);
     }
@@ -302,7 +312,7 @@ describe("buildStandard's problems", () => {
     ]);
   });
 
-  it.each<[string, Record<string, string | undefined>, (string | RegExp)[]]>([
+  it.each<[string, Record<string, string | undefined>, Array<string | RegExp>]>([
     [
       "an unknown check",
       { "content/docs/2.components/1.widget.md": component("Widget", { rows: [RULE.replace("Review", "Vibes")] }) },
@@ -405,7 +415,7 @@ describe("buildStandard's problems", () => {
           "## Use `&nbsp;` here",
           "## The **bold** heading",
           "## snake_case names",
-          "## Escaped \\_under\\_",
+          String.raw`## Escaped \_under\_`,
         ),
       },
       [],

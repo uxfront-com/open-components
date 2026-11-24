@@ -37,7 +37,7 @@ const NOINDEX = { "X-Robots-Tag": "noindex" };
 // Rules dist/_headers gets after the ones routeRules writes, for what routeRules
 // can't match: other hosts, and files by their extension. Cloudflare applies
 // every rule that matches a request, and joins an X-Robots-Tag set twice.
-const CRAWL_HEADERS: [string, Record<string, string>][] = [
+const CRAWL_HEADERS: Array<[string, Record<string, string>]> = [
   // Only opencomponents.dev is indexed. The Worker answers on other hosts too:
   // www, until its redirect in Cloudflare answers first, each branch's preview
   // on a custom domain, like <branch>.opencomponents.dev, and workers.dev, both
@@ -64,7 +64,9 @@ const CRAWL_HEADERS: [string, Record<string, string>][] = [
 // /raw/<path>.yaml: every component page, split into a folder like
 // 3.components/button/, has one, like /raw/docs/components/button.yaml.
 const contracts = readPages("content/docs").flatMap(({ file, source }) => {
-  if (!buildContract(source)) return [];
+  if (!buildContract(source)) {
+    return [];
+  }
   return {
     title: source.match(/^title: (.+)$/m)?.[1] ?? file,
     path: `/raw${docsPath(file)}.yaml`,
@@ -213,6 +215,8 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { lang: "en" },
       meta: [
+        // The HTML standard asks for `charset="utf-8"` exactly, so the rule's `utf8` would be invalid.
+        // oxlint-disable-next-line unicorn/text-encoding-identifier-case
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
       ],
@@ -312,7 +316,9 @@ export default defineNuxtConfig({
     "nitro:init"(nitro) {
       nitro.hooks.hook("compiled", async () => {
         const file = join(nitro.options.output.dir, "_redirects");
-        if (!existsSync(file)) return;
+        if (!existsSync(file)) {
+          return;
+        }
         const rules = (await readFile(file, "utf8"))
           .split("\n")
           .filter((line) => line && !/\s404$/.test(line));

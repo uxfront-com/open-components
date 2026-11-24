@@ -26,8 +26,8 @@ const value = ref("");
 const shown = ref(false);
 
 const sizes = ["xs", "sm", "md", "lg", "xl"];
-const types: Type[] = ["text", "email", "password", "search", "tel", "url"];
-const contents: Content[] = ["none", "leading icon", "prefix and suffix", "action"];
+const types: Array<Type> = ["text", "email", "password", "search", "tel", "url"];
+const contents: Array<Content> = ["none", "leading icon", "prefix and suffix", "action"];
 
 // What each type asks for: its label (a search is named by its Search button instead),
 // its autocomplete, and an error message that says how to fix it.
@@ -60,16 +60,22 @@ const actionSizes = { xs: "xs", sm: "xs", md: "xs", lg: "sm", xl: "md" } as cons
 const actionSize = computed(() => actionSizes[size.value]);
 // The action: Show password in a password input, and Clear in any other it can change.
 const action = computed(() => {
-  if (content.value !== "action") return;
-  if (type.value === "password") return "show password";
-  if (!disabled.value && !readonly.value) return "clear";
+  if (content.value !== "action") {
+    return;
+  }
+  if (type.value === "password") {
+    return "show password";
+  }
+  if (!disabled.value && !readonly.value) {
+    return "clear";
+  }
 });
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -77,18 +83,20 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const close = children.length ? ">" : "/>";
   const open =
     line.length > 88 || attrs.some((attribute) => attribute.includes("\n"))
       ? [`<${tag}`, ...attrs.flatMap((attribute) => attribute.split("\n").map((part) => `  ${part}`)), close]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 
@@ -144,14 +152,14 @@ const code = computed(() => {
         [slot("leading", icon, true), `<span data-slot="label">${name}</span>`],
       );
     }
-    const pressed: Record<string, string> = {
+    const pressed = new Map<string, string>(Object.entries({
       react: "aria-pressed={shown}",
       vue: ':aria-pressed="shown"',
       svelte: "aria-pressed={shown}",
       angular: '[attr.aria-pressed]="shown()"',
       solid: "aria-pressed={shown()}",
       astro: 'aria-pressed="false"',
-    };
+    }));
     const click: Record<string, string> = toggles
       ? {
           react: "onClick={() => setShown(!shown)}",
@@ -179,7 +187,7 @@ const code = computed(() => {
         `size="${actionSize.value}"`,
         fw === "vue" ? "icon-only" : "iconOnly",
         toggles && `aria-controls="${id}"`,
-        toggles && pressed[fw],
+        toggles && pressed.get(fw),
         disabled.value && "disabled",
         click[fw],
         jsx && `leading={<${icon} />}`,
@@ -200,7 +208,7 @@ const code = computed(() => {
           : `type={${typeNow.replaceAll("'", '"')}}`
       : (type.value !== "text" || fw === "vanilla") && `type="${type.value}"`;
   // The value is bound where the framework holds it, and left to the form where it doesn't.
-  const binding: Record<string, string[]> = {
+  const binding = new Map<string, Array<string>>(Object.entries({
     react: ["value={value}", "onChange={(event) => setValue(event.target.value)}"],
     vue: ['v-model="value"'],
     svelte: ["bind:value"],
@@ -208,14 +216,14 @@ const code = computed(() => {
     solid: ["value={value()}", "onInput={(event) => setValue(event.currentTarget.value)}"],
     astro: [`name="${search ? "q" : id}"`],
     vanilla: [`name="${search ? "q" : id}"`],
-  };
+  }));
   const early = fw === "vue" || fw === "svelte" || scripted;
   const control = [
     fw === "vanilla" && 'data-slot="control"',
     fw === "vanilla" && typeAttribute,
     fw === "vanilla" && disabled.value && "disabled",
     search ? `aria-label="${label}"` : `id="${id}"`,
-    ...(early ? binding[fw]! : []),
+    ...(early ? (binding.get(fw) ?? []) : []),
     fw !== "vanilla" && typeAttribute,
     fw !== "vanilla" && fw !== "angular" && size.value !== "md" && `size="${size.value}"`,
     autocomplete && `${fw === "react" ? "autoComplete" : "autocomplete"}="${autocomplete}"`,
@@ -223,13 +231,13 @@ const code = computed(() => {
     readonly.value && (jsx ? "readOnly" : "readonly"),
     invalid.value && 'aria-invalid="true"',
     invalid.value && `aria-describedby="${id}-error"`,
-    ...(early ? [] : binding[fw]!),
+    ...(early ? [] : (binding.get(fw) ?? [])),
   ];
 
   const icon = content.value === "leading icon";
   const affixes = content.value === "prefix and suffix";
   const button = action.value ? actionButton() : [];
-  let input: string[];
+  let input: Array<string>;
   if (jsx) {
     input = element("Input", [
       ...control,
@@ -243,12 +251,12 @@ const code = computed(() => {
     const trailing = affixes ? [slot("trailing", "USD")] : [];
     // Vue and Svelte wrap the Button in the slot, Angular and Astro mark it, and
     // Vanilla writes out the part.
-    const wrappers: Record<string, [string, string]> = {
+    const wrappers = new Map<string, [string, string]>(Object.entries({
       vue: ["<template #actions>", "</template>"],
       svelte: ["{#snippet actions()}", "{/snippet}"],
       vanilla: ['<span data-slot="actions">', "</span>"],
-    };
-    const wrapper = wrappers[fw];
+    }));
+    const wrapper = wrappers.get(fw);
     const actions = !action.value
       ? []
       : wrapper
@@ -353,7 +361,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

@@ -96,7 +96,9 @@ describe("createSearch", () => {
   it("points sections at headings that exist", () => {
     for (const result of everything.filter((result) => result.type === "section")) {
       const page = standard.pages.find((candidate) => candidate.path === result.path)!;
-      if (result.anchor) expect(page.headings.map((heading) => heading.anchor)).toContain(result.anchor);
+      if (result.anchor) {
+        expect(page.headings.map((heading) => heading.anchor)).toContain(result.anchor);
+      }
       expect(result.url).toBe(`https://opencomponents.dev${result.path}${result.anchor ? `#${result.anchor}` : ""}`);
     }
   });
@@ -119,7 +121,7 @@ describe("createSearch", () => {
     for (const { excerpt } of everything) {
       expect(excerpt.length).toBeGreaterThan(0);
       expect(excerpt.length).toBeLessThanOrEqual(240);
-      expect(excerpt).not.toContain("\\|");
+      expect(excerpt).not.toContain(String.raw`\|`);
       expect(excerpt).not.toContain("<!--");
       expect(excerpt).not.toContain("```");
       expect(excerpt).not.toMatch(/\s{2}|\| ?-{3}/);

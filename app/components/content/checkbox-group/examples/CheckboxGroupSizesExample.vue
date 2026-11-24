@@ -3,7 +3,7 @@ import CheckboxGroup from "~/reference/checkbox-group/CheckboxGroup.vue";
 import type { CheckboxGroupProps } from "~/reference/checkbox-group/CheckboxGroup.vue";
 
 /** `::checkbox-group-sizes-example`: a group at each size. */
-const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies CheckboxGroupProps["size"][];
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies Array<CheckboxGroupProps["size"]>;
 const emails = [
   { value: "news", label: "Product news" },
   { value: "tips", label: "Tips and guides" },

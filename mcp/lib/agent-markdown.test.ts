@@ -4,7 +4,7 @@ import { agentMarkdown } from "./agent-markdown";
 import { SWITCHER, SWITCHER_END, slot } from "./frameworks";
 
 const page = { site: "https://opencomponents.dev", path: "/docs/components/button", frameworks: ["react", "vue", "vanilla"] };
-const agent = (...lines: string[]) => agentMarkdown(lines.join("\n"), page);
+const agent = (...lines: Array<string>) => agentMarkdown(lines.join("\n"), page);
 
 describe("agentMarkdown", () => {
   it("marks a framework switcher and its slots", () => {

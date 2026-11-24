@@ -23,9 +23,9 @@ const content = ref<Content>("form");
 const described = ref(true);
 const open = ref(false);
 
-const roles: Role[] = ["dialog", "alertdialog"];
+const roles: Array<Role> = ["dialog", "alertdialog"];
 const sizes = ["sm", "md", "lg"];
-const contents: Content[] = ["form", "message"];
+const contents: Array<Content> = ["form", "message"];
 
 // What each kind of dialog asks: a confirmation is an alert dialog, with its least
 // destructive action first, and the rest are dialogs with a form or a message.
@@ -61,14 +61,14 @@ const scenarios = {
 
 type Action = { label: string; value: string; variant?: "outline"; color?: "primary" | "error" };
 const scenario = computed(() => scenarios[role.value === "alertdialog" ? "confirmation" : content.value]);
-const actions = computed<readonly Action[]>(() => scenario.value.actions);
+const actions = computed<ReadonlyArray<Action>>(() => scenario.value.actions);
 const form = computed(() => role.value === "dialog" && content.value === "form");
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -76,18 +76,20 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const close = children.length ? ">" : "/>";
   const open =
     line.length > 88 || attrs.some((attribute) => attribute.includes("\n"))
       ? [`<${tag}`, ...attrs.flatMap((attribute) => attribute.split("\n").map((part) => `  ${part}`)), close]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 
@@ -110,7 +112,7 @@ const code = computed(() => {
       svelte: `(open = ${value})`,
       angular: `open.set(${value})`,
       solid: `setOpen(${value})`,
-    })[fw]!;
+    })[fw] ?? "";
   const onClick = (value: boolean) =>
     ({
       react: `onClick={() => ${set(value)}}`,
@@ -120,7 +122,7 @@ const code = computed(() => {
       solid: `onClick={() => ${set(value)}}`,
     })[fw];
 
-  function button(label: string, attrs: (string | false | undefined)[], variant = "solid", color = "neutral") {
+  function button(label: string, attrs: Array<string | false | undefined>, variant = "solid", color = "neutral") {
     if (fw === "vanilla") {
       return element(
         "button",
@@ -167,7 +169,7 @@ const code = computed(() => {
       ? ["<p>Turn it on under Settings, or keep following your system's.</p>"]
       : [];
 
-  let dialog: string[];
+  let dialog: Array<string>;
   if (fw === "vanilla") {
     const close = element(
       "button",
@@ -204,14 +206,14 @@ const code = computed(() => {
       ],
     );
   } else {
-    const bound: Record<string, (string | false)[]> = {
+    const bound = new Map<string, Array<string | false>>(Object.entries({
       react: ["open={open}", "onClose={() => setOpen(false)}"],
       vue: [':open="open"', '@close="open = false"'],
       svelte: ["{open}", "onclose={() => (open = false)}"],
       angular: ['[open]="open()"', '(closeRequest)="open.set(false)"'],
       solid: ["open={open()}", "onClose={() => setOpen(false)}"],
       astro: [],
-    };
+    }));
     const props = [
       fw === "angular" && "appDialog",
       `id="${id}"`,
@@ -220,19 +222,19 @@ const code = computed(() => {
       // Angular's Dialog is on the <dialog>, which keeps a `title` attribute as a tooltip.
       `${fw === "angular" ? "dialogTitle" : "title"}="${title}"`,
       described.value && `description="${description}"`,
-      ...bound[fw]!,
+      ...(bound.get(fw) ?? []),
     ];
     if (jsx) {
       const fragment = ["<>", ...actionsBlock.map((line) => `  ${line}`), "</>"];
       dialog = element("Dialog", [...props, ["actions={", ...fragment.map((line) => `  ${line}`), "}"].join("\n")], body);
     } else {
-      const wrappers: Record<string, [string, string]> = {
+      const wrappers = new Map<string, [string, string]>(Object.entries({
         vue: ["<template #actions>", "</template>"],
         svelte: ["{#snippet actions()}", "{/snippet}"],
         angular: ["<div actions>", "</div>"],
         astro: ['<Fragment slot="actions">', "</Fragment>"],
-      };
-      const [start, end] = wrappers[fw]!;
+      }));
+      const [start, end] = wrappers.get(fw) ?? ["", ""];
       dialog = element(fw === "angular" ? "dialog" : "Dialog", props, [
         ...body,
         start,
@@ -312,7 +314,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

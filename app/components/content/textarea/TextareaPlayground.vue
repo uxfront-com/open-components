@@ -25,7 +25,7 @@ const value = ref("");
 
 const sizes = ["xs", "sm", "md", "lg", "xl"];
 const rowCounts = [1, 2, 3, 4, 5, 6];
-const heights: Height[] = ["resizable", "auto-grow"];
+const heights: Array<Height> = ["resizable", "auto-grow"];
 
 const LIMIT = 200;
 const MAX_ROWS = 8;
@@ -35,7 +35,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -43,12 +43,12 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 // A <textarea> is never self-closing in HTML, so `paired` closes it with a tag.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = [], paired = false) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = [], paired = false) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const close = children.length || paired ? ">" : "/>";
   const end = paired && !children.length ? `</${tag}>` : "";
@@ -56,7 +56,9 @@ function element(tag: string, attributes: (string | false | undefined)[], childr
     line.length > 88
       ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), close + end]
       : [`${line}${children.length || paired ? ">" : " />"}${end}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 
@@ -74,7 +76,7 @@ const code = computed(() => {
     fw === "vue" ? `:${kebab}="${n}"` : fw === "angular" ? `[${name}]="${n}"` : `${name}={${n}}`;
   const flag = (name: string, kebab: string) => (fw === "vue" ? kebab : name);
 
-  const binding: Record<string, string[]> = {
+  const binding = new Map<string, Array<string>>(Object.entries({
     react: ["value={value}", "onChange={(event) => setValue(event.target.value)}"],
     vue: ['v-model="value"'],
     svelte: ["bind:value"],
@@ -82,14 +84,14 @@ const code = computed(() => {
     solid: ["value={value()}", "onInput={(event) => setValue(event.currentTarget.value)}"],
     astro: ['name="message"'],
     vanilla: ['name="message"'],
-  };
+  }));
   // The <textarea>'s own attributes, which every framework but Vanilla and Angular
   // passes through the Textarea.
   const control = [
     fw === "vanilla" && 'data-slot="control"',
     (fw === "vanilla" || fw === "angular") && `rows="${rows.value}"`,
     'id="message"',
-    ...binding[fw]!,
+    ...(binding.get(fw) ?? []),
     disabled.value && "disabled",
     readonly.value && (jsx ? "readOnly" : "readonly"),
     invalid.value && 'aria-invalid="true"',
@@ -106,7 +108,7 @@ const code = computed(() => {
     counted.value && number("limit", "limit", LIMIT),
   ];
 
-  let textarea: string[];
+  let textarea: Array<string>;
   if (fw === "vanilla") {
     // The markup the server renders, before anyone has written in it, so the count is the whole limit.
     const count = `${LIMIT} characters left`;
@@ -192,7 +194,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { FRAMEWORKS } from "../../app/data/frameworks";
 import { SWITCHER, SWITCHER_END } from "./frameworks";
 import { tokens } from "./markdown";
-import { count, findPage, findSections, outline, PAGE_LIMIT, pageText, sectionText } from "./pages";
+import { count, findPage, findSections, outline, PAGE_LIMIT, pageByKey, pageText, sectionText } from "./pages";
 import { buildStandard } from "./standard";
 import type { Heading, Page } from "./types";
 
@@ -11,6 +11,16 @@ import type { Heading, Page } from "./types";
 const { standard } = buildStandard({ root: process.cwd(), site: "https://opencomponents.dev", frameworks: FRAMEWORKS });
 const page = (key: string) => standard.pages.find((candidate) => candidate.key === key)!;
 const button = page("button");
+
+describe("pageByKey", () => {
+  it("finds the page a component's key comes from", () => {
+    expect(pageByKey(standard, "button")).toBe(button);
+  });
+
+  it("throws on a key no page has, since the standard only gives out its own", () => {
+    expect(() => pageByKey(standard, "no-such-page")).toThrow('The standard has no page with the key "no-such-page"');
+  });
+});
 
 describe("findPage", () => {
   it.each([
@@ -68,7 +78,7 @@ describe("The Button's introduction", () => {
 });
 
 describe("findSections", () => {
-  const find = (...names: string[]) => {
+  const find = (...names: Array<string>) => {
     const { found, missing } = findSections(button, names);
     return { found: found.map((heading) => heading.text), missing };
   };
@@ -152,7 +162,9 @@ describe("sectionText and pageText", () => {
 
   it("keeps every framework's examples, under their names", () => {
     const text = sectionText(standard, button, loading);
-    for (const { label } of FRAMEWORKS) expect(text).toContain(`\n**${label}**\n`);
+    for (const { label } of FRAMEWORKS) {
+      expect(text).toContain(`\n**${label}**\n`);
+    }
   });
 
   it.each(standard.pages.map((page) => [page.key, page]))("renders %s's switchers", (_, page) => {
@@ -186,7 +198,7 @@ describe("outline", () => {
     heading(2, "Token paths", 910),
     heading(3, "Groups", 364),
     heading(2, "Component variables", 970, 580),
-    heading(4, "Deep", 8_700),
+    heading(4, "Deep", 8700),
   ];
 
   it("lists the headings, indented from the top level, with their length", () => {
@@ -225,7 +237,7 @@ describe("count", () => {
     [994, "990"],
     [1000, "1k"],
     [1049, "1k"],
-    [8_700, "8.7k"],
+    [8700, "8.7k"],
     [20_000, "20k"],
     [35_213, "35.2k"],
   ])("rounds %d to %s", (value, expected) => {

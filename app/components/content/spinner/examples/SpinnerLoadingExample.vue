@@ -10,7 +10,9 @@ const status = ref("");
 async function check() {
   checking.value = true;
   status.value = "Checking for updates";
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => {
+    setTimeout(resolve, 2000);
+  });
   checking.value = false;
   status.value = "You're up to date";
 }

@@ -6,14 +6,15 @@ export type { SelectGroup, SelectItem, SelectOption, SelectSeparator } from "./l
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import { type SelectItem, type SelectOption, usePlacement, useListbox } from "./listbox";
+import { usePlacement, useListbox } from "./listbox";
+import type { SelectItem, SelectOption } from "./listbox";
 import SelectPanel from "./SelectPanel.vue";
 import SelectTags from "./SelectTags.vue";
 import "./select.css";
 
 export interface SelectProps {
   /** What people pick from. A prop rather than child components, since both renderings need the same list. */
-  options: SelectItem[];
+  options: Array<SelectItem>;
   /** Picks any number of values, each shown as a tag, so the value is an array. */
   multiple?: boolean;
   /** Text shown while nothing is picked. It's never a value, so nothing submits. */
@@ -58,13 +59,13 @@ const {
  * The value, which `v-model` binds: a string, or an array of them with `multiple`. Without
  * it, the Select keeps its own, starting from the `value` attribute, and its form submits it.
  */
-const model = defineModel<string | string[]>();
+const model = defineModel<string | Array<string>>();
 
 defineSlots<{
   /** An icon before the value. It stays in both renderings. */
   leading?: () => unknown;
   /** How the picked value reads in the field. The native rendering draws its own text instead. */
-  value?: (props: { selected: SelectOption[] }) => unknown;
+  value?: (props: { selected: Array<SelectOption> }) => unknown;
   /** The chevron, which turns as the panel opens. It stays in both renderings. */
   arrow?: () => unknown;
   /** How an option reads in the panel. The check mark stays beside it. */
@@ -88,12 +89,12 @@ const attrs = useAttrs();
 // variables. What a form reads goes on the <select>, and so do `change` and `input`, since
 // it fires both in each rendering. Everything else goes on whichever control is active:
 // `id`, ARIA and the other listeners. Attrs aren't reactive, so these run on every render.
-const FORM_ATTRS = ["name", "form", "autocomplete", "onChange", "onInput"];
+const FORM_ATTRS = new Set(["name", "form", "autocomplete", "onChange", "onInput"]);
 const pick = (test: (key: string) => boolean) => Object.fromEntries(Object.entries(attrs).filter(([key]) => test(key)));
 const onRoot = (key: string) => key === "class" || key === "style";
 const rootAttrs = () => pick(onRoot);
-const formAttrs = () => pick((key) => FORM_ATTRS.includes(key));
-const activeAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.includes(key) && key !== "value");
+const formAttrs = () => pick((key) => FORM_ATTRS.has(key));
+const activeAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.has(key) && key !== "value");
 
 const root = useTemplateRef<HTMLElement>("root");
 const select = useTemplateRef<HTMLSelectElement>("select");
@@ -125,11 +126,13 @@ const { sections, flat, panelId, optionId, groupId, isEnabled, step, firstEnable
 });
 
 // Without `v-model`, the value starts from the `value` attribute.
-const initial = attrs.value as string | string[] | undefined;
+const initial = attrs.value as string | Array<string> | undefined;
 const current = computed(() => model.value ?? initial);
-const values = computed<string[]>(() => {
+const values = computed<Array<string>>(() => {
   const value = current.value;
-  if (multiple) return value === undefined ? [] : [value].flat();
+  if (multiple) {
+    return value === undefined ? [] : [value].flat();
+  }
   const one = Array.isArray(value) ? value[0] : value;
   return one !== undefined && flat.value.some((option) => option.value === one) ? [one] : [];
 });
@@ -153,14 +156,18 @@ const summary = computed(() =>
 const first = [...values.value];
 function setDefaults() {
   const el = select.value;
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   const list = Array.from(el.options);
-  const picked = list.map((option) => option.selected);
+  const picked = list.map((option) => [option, option.selected] as const);
   list.forEach((option, index) => {
     const placeholding = !multiple && index === 0;
     option.defaultSelected = placeholding ? !first.length : first.includes(option.value);
   });
-  list.forEach((option, index) => (option.selected = picked[index]!));
+  for (const [option, selected] of picked) {
+    option.selected = selected;
+  }
 }
 onUpdated(setDefaults);
 
@@ -177,12 +184,14 @@ function readSelect() {
 // read the new value in both renderings.
 function onNativeChange() {
   const next = readSelect();
-  if ([next].flat().join() !== values.value.join()) model.value = next;
+  if ([next].flat().join() !== values.value.join()) {
+    model.value = next;
+  }
 }
 
 // A selection in the panel changes the <select> too, once it has rendered, then fires the
 // events it would fire itself, so form-level listeners and form libraries hear it.
-function commit(next: string | string[]) {
+function commit(next: string | Array<string>) {
   model.value = next;
   nextTick(() => {
     select.value?.dispatchEvent(new Event("input", { bubbles: true }));
@@ -191,14 +200,18 @@ function commit(next: string | string[]) {
 }
 
 function pickOption(option: SelectOption) {
-  if (option.disabled) return;
+  if (option.disabled) {
+    return;
+  }
   if (multiple) {
     const next = isPicked(option) ? values.value.filter((value) => value !== option.value) : [...values.value, option.value];
     commit(flat.value.filter((item) => next.includes(item.value)).map((item) => item.value));
     return;
   }
   hide();
-  if (values.value[0] !== option.value) commit(option.value);
+  if (values.value[0] !== option.value) {
+    commit(option.value);
+  }
 }
 
 // The next tag's remove button takes focus, or the control when there's no tag after
@@ -207,11 +220,15 @@ async function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
   commit(selected.value.filter((item) => item !== option).map((item) => item.value));
   announce(removedLabel(option.label));
-  if (moveFocus && !(await tags.value?.focusAt(index))) control.value?.focus();
+  if (moveFocus && !(await tags.value?.focusAt(index))) {
+    control.value?.focus();
+  }
 }
 
 function show(to?: number) {
-  if (open.value || disabled || readonly || native.value) return;
+  if (open.value || disabled || readonly || native.value) {
+    return;
+  }
   const picked = flat.value.findIndex(isPicked);
   active.value = to ?? (picked >= 0 ? picked : firstEnabled());
   // The panel carries the control's name, which is the Field's <label>, or an aria-label.
@@ -224,11 +241,15 @@ function show(to?: number) {
 }
 
 function hide() {
-  if (open.value) panel.value?.hidePopover?.();
+  if (open.value) {
+    panel.value?.hidePopover?.();
+  }
 }
 
 function scrollToActive() {
-  if (open.value) panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  if (open.value) {
+    panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  }
 }
 watch(active, scrollToActive, { flush: "post" });
 
@@ -258,7 +279,7 @@ function typeahead(key: string) {
   const start = active.value + (search.length === 1 ? 1 : 0);
   for (let offset = 0; offset < count; offset++) {
     const index = (start + offset) % count;
-    if (isEnabled(index) && flat.value[index]!.label.toLowerCase().startsWith(search)) {
+    if (isEnabled(index) && flat.value[index]?.label.toLowerCase().startsWith(search)) {
       active.value = index;
       return;
     }
@@ -268,14 +289,19 @@ function typeahead(key: string) {
 // APG's keyboard model for a select-only combobox. DOM focus stays on the control the
 // whole time, and aria-activedescendant says which option is highlighted.
 function onKeydown(event: KeyboardEvent) {
-  if (readonly) return;
+  if (readonly) {
+    return;
+  }
   const { key } = event;
   const space = key === " ";
 
   if (!open.value) {
     if (key === "Backspace" && multiple && selected.value.length) {
       event.preventDefault();
-      remove(selected.value.at(-1)!, false);
+      const last = selected.value.at(-1);
+      if (last) {
+        remove(last, false);
+      }
     } else if (key === "ArrowDown" || key === "Enter" || space) {
       event.preventDefault();
       show();
@@ -289,9 +315,13 @@ function onKeydown(event: KeyboardEvent) {
       event.preventDefault();
       show();
       // With nothing picked, the first option is only a default, and a letter can land on it.
-      if (!selected.value.length) active.value = -1;
+      if (!selected.value.length) {
+        active.value = -1;
+      }
       typeahead(key);
-      if (active.value < 0) active.value = firstEnabled();
+      if (active.value < 0) {
+        active.value = firstEnabled();
+      }
     }
     return;
   }
@@ -307,7 +337,9 @@ function onKeydown(event: KeyboardEvent) {
   } else if (key === "ArrowUp" && event.altKey) {
     event.preventDefault();
     // Several values close and keep what people toggled, as Tab does.
-    if (option && !multiple) pickOption(option);
+    if (option && !multiple) {
+      pickOption(option);
+    }
     hide();
   } else if (key === "ArrowUp") {
     event.preventDefault();
@@ -323,11 +355,15 @@ function onKeydown(event: KeyboardEvent) {
     active.value = jump(key === "PageDown" ? 1 : -1);
   } else if (key === "Enter" || space) {
     event.preventDefault();
-    if (option) pickOption(option);
+    if (option) {
+      pickOption(option);
+    }
   } else if (key === "Tab") {
     // Not cancelled, so focus goes on. A single value takes the highlighted option, as
     // APG says, while several values keep what people toggled.
-    if (option && !multiple) pickOption(option);
+    if (option && !multiple) {
+      pickOption(option);
+    }
     hide();
   } else if (key === "Escape") {
     // It goes no further, so a Dialog or a Popover around the Select stays open.
@@ -345,7 +381,9 @@ function onKeydown(event: KeyboardEvent) {
 // `detail` can't tell the two apart, since a screen reader's activation has 0 as well.
 let fromLabel = false;
 function onDocumentClick(event: MouseEvent) {
-  if (event.target === control.value) return;
+  if (event.target === control.value) {
+    return;
+  }
   const label = (event.target as Element).closest?.("label");
   fromLabel = !!label && label.control === control.value;
 }
@@ -365,15 +403,20 @@ function onClick() {
     pressedWhileOpen = false;
     return;
   }
-  if (open.value) hide();
-  else show();
+  if (open.value) {
+    hide();
+  } else {
+    show();
+  }
 }
 
 // If the browser focuses the hidden <select> to report a problem, focus moves to the
 // control right away, in this handler: Chromium hides its validation bubble on any later
 // change of focus, so a deferred move would block the submit with no message.
 function onSelectFocus() {
-  if (!native.value) control.value?.focus();
+  if (!native.value) {
+    control.value?.focus();
+  }
 }
 
 // A form's reset puts back each option's default selectedness without a change event, so
@@ -414,8 +457,12 @@ onMounted(() => {
     nextTick(() => {
       const el = native.value ? select.value : control.value;
       const named = el?.labels?.length || el?.hasAttribute("aria-label") || el?.hasAttribute("aria-labelledby");
-      if (el && !named) console.warn("[Select] has no accessible name: give it a <label for>, or put it in a Field.", el);
-      if (el && !baseId()) console.warn("[Select] has no id or name: give it one, so the control can point at its options.", el);
+      if (el && !named) {
+        console.warn("[Select] has no accessible name: give it a <label for>, or put it in a Field.", el);
+      }
+      if (el && !baseId()) {
+        console.warn("[Select] has no id or name: give it one, so the control can point at its options.", el);
+      }
     });
   }
 });

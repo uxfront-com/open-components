@@ -4,8 +4,8 @@ import Select from "~/reference/select/Select.vue";
 import { labels } from "~/data/select-options";
 
 /** `::select-icons-example`: an icon per option, shown in the panel, in the field and in each tag. */
-const one = ref<string | string[]>("feature");
-const several = ref<string | string[]>(["bug", "docs"]);
+const one = ref<string | Array<string>>("feature");
+const several = ref<string | Array<string>>(["bug", "docs"]);
 </script>
 
 <template>

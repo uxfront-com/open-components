@@ -10,7 +10,9 @@
  */
 export function buildContract(markdown: string): string | undefined {
   const contract = section(markdown, "### Described")?.match(/^```yaml\n([\s\S]*?)^```$/m)?.[1];
-  if (!contract) return;
+  if (!contract) {
+    return;
+  }
   const rules = checklist(markdown);
   return rules.length ? contract.replace(/^rules: .*$/m, () => ["rules:", ...rules].join("\n")) : contract;
 }
@@ -21,15 +23,21 @@ function section(markdown: string, heading: string): string | undefined {
   const level = heading.indexOf(" ");
   const lines = markdown.split("\n");
   const start = lines.indexOf(heading);
-  if (start === -1) return;
+  if (start === -1) {
+    return;
+  }
 
   let code = false;
   let end = start + 1;
   for (; end < lines.length; end++) {
     const line = lines[end] ?? "";
-    if (line.startsWith("```")) code = !code;
+    if (line.startsWith("```")) {
+      code = !code;
+    }
     const hashes = line.match(/^(#+) /)?.[1]?.length;
-    if (!code && hashes && hashes <= level) break;
+    if (!code && hashes && hashes <= level) {
+      break;
+    }
   }
   return lines.slice(start + 1, end).join("\n");
 }
@@ -37,10 +45,10 @@ function section(markdown: string, heading: string): string | undefined {
 // Every rule in the checklist's tables, as YAML list items. The tables are read by
 // their header row, so a column like Scope or Basis only shows up on pages that have
 // it, and a heading like "### UX rules" gives the rules below it their layer.
-function checklist(markdown: string): string[] {
-  const items: string[] = [];
+function checklist(markdown: string): Array<string> {
+  const items: Array<string> = [];
   let layer: string | undefined;
-  let columns: string[] | undefined;
+  let columns: Array<string> | undefined;
 
   for (const line of section(markdown, "## Checklist")?.split("\n") ?? []) {
     layer = line.match(/^### (\w+) rules$/)?.[1] ?? layer;
@@ -51,14 +59,17 @@ function checklist(markdown: string): string[] {
     const cells = line
       .slice(1, line.lastIndexOf("|"))
       .split(/(?<!\\)\|/)
-      .map((cell) => cell.trim().replaceAll("\\|", "|"));
+      .map((cell) => cell.trim().replaceAll(String.raw`\|`, "|"));
     if (!columns) {
       columns = cells.map((cell) => cell.toLowerCase());
       continue;
     }
-    if (cells.every((cell) => /^:?-+:?$/.test(cell))) continue;
+    if (cells.every((cell) => /^:?-+:?$/.test(cell))) {
+      continue;
+    }
 
-    const cell = (column: string) => cells[columns!.indexOf(column)];
+    const header = columns;
+    const cell = (column: string) => cells[header.indexOf(column)];
     const scope = cell("scope");
     const basis = cell("basis");
     items.push(

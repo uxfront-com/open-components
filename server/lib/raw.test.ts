@@ -15,7 +15,7 @@ const SPLIT = readdirSync(join(DOCS, COMPONENTS), { withFileTypes: true })
   .map((entry) => entry.name);
 
 // A part's source, with the frontmatter joinPage reads.
-const part = (title: string, before: string, ...lines: string[]) =>
+const part = (title: string, before: string, ...lines: Array<string>) =>
   ["---", `title: ${title}`, "description: A part.", `before: ${before}`, "---", "", ...lines, ""].join("\n");
 // The headings of a page outside its code, as `## Text`.
 const outline = (markdown: string) =>
@@ -198,7 +198,9 @@ describe.each(SPLIT)("The %s page, split into parts,", (name) => {
   });
 
   it("reads each part as itself", () => {
-    for (const file of parts) expect(readPage(DOCS, `${folder}/${file}`)).toBe(read(file));
+    for (const file of parts) {
+      expect(readPage(DOCS, `${folder}/${file}`)).toBe(read(file));
+    }
   });
 
   it("names its folder in the sidebar, with an icon", () => {
@@ -243,7 +245,9 @@ describe.each(SPLIT)("The %s page, split into parts,", (name) => {
     for (const [anchor, target] of Object.entries(anchors)) {
       const [path, hash] = target.split("#");
       expect(parts.map((file) => docsPath(`${folder}/${file}`))).toContain(path);
-      if (hash) expect(hash).toBe(anchor.replace(/-rules$/, "-checklist"));
+      if (hash) {
+        expect(hash).toBe(anchor.replace(/-rules$/, "-checklist"));
+      }
     }
     const slug = anchorsOf();
     for (const line of outline(index).filter((line) => line.startsWith("## "))) {

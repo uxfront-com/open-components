@@ -5,7 +5,7 @@ interface Window {
    * Partytown's worker, and only `track()` is forwarded there. Undefined
    * when the site is built without an API key.
    */
-  amplitude?: { track: (eventType: string, eventProperties?: Record<string, unknown>) => void };
+  amplitude?: { track: (eventType: string, eventProperties?: Record<string, string | number | boolean>) => void };
   /** Called from the worker with the IDs the Browser SDK tracks the visit under. */
   amplitudeSessionReplay?: (deviceId: string, sessionId: number) => void;
   /** Forwarded to the worker: asks it for those IDs, now and whenever they change. */

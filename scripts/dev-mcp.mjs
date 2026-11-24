@@ -11,4 +11,6 @@ const nuxt = spawn("nuxt", ["dev", "mcp", "--port", String(MCP_DEV_PORT), ...pro
 });
 nuxt.on("exit", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
 // Stops with this script, as when Conductor stops its run script.
-for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => nuxt.kill(signal));
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+  process.on(signal, () => nuxt.kill(signal));
+}

@@ -13,7 +13,7 @@ import { sortNavigation } from "~/lib/navigation";
  * opens and closes the group (see DocsNavigationList.vue). It lists the component pages by name, as the links
  * to the previous and next pages do (app/lib/navigation.ts).
  */
-const props = defineProps<{ navigation: ContentNavigationItem[] }>();
+const props = defineProps<{ navigation: Array<ContentNavigationItem> }>();
 const navigation = computed(() => sortNavigation(props.navigation));
 
 const appConfig = useAppConfig();
@@ -26,7 +26,7 @@ const ui = computed(
       variant: variants.value.variant ?? "link",
       highlight: variants.value.highlight ?? true,
       highlightColor: variants.value.highlightColor || variants.value.color,
-    } as never) as unknown as Record<keyof typeof theme.slots, (variants?: Record<string, unknown>) => string>,
+    } as never) as unknown as Record<keyof typeof theme.slots, (variants?: { active?: boolean; level?: boolean; disabled?: boolean }) => string>,
 );
 </script>
 

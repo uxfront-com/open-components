@@ -20,13 +20,17 @@ const PROMPTS = ["adopt-token-paths", "build-component", "review-component", "re
 // What some MCP clients pass on of a tool's result before cutting it short, like
 // Gemini CLI's 40,000 characters (Codex's is 48,000 bytes, and Claude Code's
 // 25,000 tokens).
-const MAX_RESULT = 40000;
+const MAX_RESULT = 40_000;
 
 const problems = [];
 const check = (ok, problem) => ok || problems.push(problem);
+// The tools a text names, like get-page.
+const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
 
 const url = process.argv.includes("--url") ? process.argv[process.argv.indexOf("--url") + 1] : undefined;
-if (!existsSync("dist/raw/docs")) throw new Error("dist is missing: run `pnpm build` first.");
+if (!existsSync("dist/raw/docs")) {
+  throw new Error("dist is missing: run `pnpm build` first.");
+}
 // The site's security headers, which dist/_headers gives every static file.
 const HEADERS = Object.fromEntries(
   (readFileSync("dist/_headers", "utf8").split(/^(?=\S)/m).find((block) => block.startsWith("/*\n")) ?? "")
@@ -44,7 +48,9 @@ try {
   await checkServer();
 } catch (error) {
   // Why the Worker stopped answering, if it did, is only in wrangler dev's own output.
-  if (wrangler) console.error(`wrangler dev's output:\n${wrangler.log()}`);
+  if (wrangler) {
+    console.error(`wrangler dev's output:\n${wrangler.log()}`);
+  }
   throw error;
 } finally {
   wrangler?.process.kill();
@@ -77,7 +83,9 @@ function docsParts() {
   const parts = new Map();
   for (const file of readdirSync("content/docs", { recursive: true, encoding: "utf8" })) {
     const folder = dirname(file);
-    if (!file.endsWith(".md") || basename(file) === "index.md" || !existsSync(join("content/docs", folder, "index.md"))) continue;
+    if (!file.endsWith(".md") || basename(file) === "index.md" || !existsSync(join("content/docs", folder, "index.md"))) {
+      continue;
+    }
     const whole = docsPath(join(folder, "index.md"));
     parts.set(whole, [...(parts.get(whole) ?? []), docsPath(file)]);
   }
@@ -87,12 +95,14 @@ function docsParts() {
 // The path a file in content/docs is served at, as docsPath in server/lib/raw.ts
 // gives it: 3.components/button/2.ux.md is /docs/components/button/ux.
 function docsPath(file) {
-  return `/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
+  return `/docs/${file.replace(/\.md$/, "").replaceAll(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
 }
 
 // Serves the Worker on a free port, the way `npx wrangler dev -c mcp/wrangler.jsonc` does.
 async function serve() {
-  if (!existsSync("mcp/.output/server/index.mjs")) throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
+  if (!existsSync("mcp/.output/server/index.mjs")) {
+    throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
+  }
   const port = await new Promise((resolve) => {
     const server = createServer().listen(0, "127.0.0.1", () => {
       const { port } = server.address();
@@ -108,10 +118,16 @@ async function serve() {
   child.stderr.on("data", (data) => (log += data));
   const url = `http://127.0.0.1:${port}`;
   for (let attempt = 0; attempt < 120; attempt++) {
-    if (child.exitCode !== null) break;
+    if (child.exitCode !== null) {
+      break;
+    }
     // Any response will do: `/` redirects to the site.
-    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) return { url, process: child, log: () => log };
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) {
+      return { url, process: child, log: () => log };
+    }
+    await new Promise((resolve) => {
+      setTimeout(resolve, 500);
+    });
   }
   child.kill();
   throw new Error(`wrangler dev didn't start:\n${log}`);
@@ -202,8 +218,12 @@ async function checkServer() {
     ["prompt", prompts, PROMPTS],
   ]) {
     const names = served.map(({ name }) => name);
-    for (const name of names) check(expected.includes(name), `The server has a ${kind}, ${name}, that check-mcp doesn't list`);
-    for (const name of expected) check(names.includes(name), `The server has no ${kind} named ${name}`);
+    for (const name of names) {
+      check(expected.includes(name), `The server has a ${kind}, ${name}, that check-mcp doesn't list`);
+    }
+    for (const name of expected) {
+      check(names.includes(name), `The server has no ${kind} named ${name}`);
+    }
   }
   // Every tool works with each of the examples it gives agents.
   for (const tool of tools) {
@@ -213,9 +233,10 @@ async function checkServer() {
       check(!isError, `${tool.name} ${JSON.stringify(example)}, one of its examples, failed: ${text.slice(0, 200)}`);
     }
   }
-  const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
   for (const [where, text] of [["The instructions", instructions], ...tools.map((tool) => [tool.name, tool.description ?? ""])]) {
-    for (const name of named(text)) check(TOOLS.includes(name), `${where} name a tool that doesn't exist: ${name}`);
+    for (const name of named(text)) {
+      check(TOOLS.includes(name), `${where} name a tool that doesn't exist: ${name}`);
+    }
   }
 
   // What the standard covers. Arguments are optional when every one of them is.
@@ -382,7 +403,7 @@ async function checkServer() {
     ["build-component for a component that doesn't exist", () => client.getPrompt({ name: "build-component", arguments: { component: "nope" } })],
   ]) {
     const error = await request().then(() => undefined, (error) => error);
-    check(error?.code === -32602, `${what} returned ${error ? `error ${error.code}` : "no error"}, not -32602`);
+    check(error?.code === -32_602, `${what} returned ${error ? `error ${error.code}` : "no error"}, not -32602`);
   }
 
   // Resources: the same bytes as the files the site publishes at their URIs.
@@ -415,7 +436,9 @@ async function checkServer() {
     const { messages } = await client.getPrompt({ name: prompt.name, arguments: filled[prompt.name] });
     const text = messages.map((message) => message.content.text).join("\n");
     check(text.includes(SITE), `The ${prompt.name} prompt doesn't link to the standard`);
-    for (const name of named(text)) check(TOOLS.includes(name), `The ${prompt.name} prompt names a tool that doesn't exist: ${name}`);
+    for (const name of named(text)) {
+      check(TOOLS.includes(name), `The ${prompt.name} prompt names a tool that doesn't exist: ${name}`);
+    }
   }
 
   await client.close();

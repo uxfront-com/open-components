@@ -16,7 +16,7 @@ import { execFileSync } from "node:child_process";
  * clone every file dates from the one commit there is, which
  * scripts/fetch-history.mjs prevents before `pnpm build`.
  */
-export function lastModified(paths: string[], cwd?: string): Map<string, string> {
+export function lastModified(paths: Array<string>, cwd?: string): Map<string, string> {
   // %ct is the committer's time in seconds since the epoch, which has no zone.
   const log = execFileSync("git", ["log", "--format=%x00%ct", "--name-only", "--", ...paths], { cwd, encoding: "utf8" });
   const dates = new Map<string, string>();
@@ -24,7 +24,11 @@ export function lastModified(paths: string[], cwd?: string): Map<string, string>
   for (const commit of log.split("\0").slice(1)) {
     const [seconds, ...files] = commit.trim().split("\n");
     const date = new Date(Number(seconds) * 1000).toISOString().slice(0, 10);
-    for (const file of files) if (file && !dates.has(file)) dates.set(file, date);
+    for (const file of files) {
+      if (file && !dates.has(file)) {
+        dates.set(file, date);
+      }
+    }
   }
   return dates;
 }

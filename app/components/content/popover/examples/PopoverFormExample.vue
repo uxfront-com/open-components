@@ -6,10 +6,12 @@ import Popover from "~/reference/popover/Popover.vue";
 /** `::popover-form-example`: a short form in a popover, which closes it once it's sent. */
 const open = ref(false);
 const name = ref("");
-const labels = ref<string[]>([]);
+const labels = ref<Array<string>>([]);
 
 function create() {
-  if (name.value.trim()) labels.value.push(name.value.trim());
+  if (name.value.trim()) {
+    labels.value.push(name.value.trim());
+  }
   name.value = "";
   open.value = false;
 }

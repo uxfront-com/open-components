@@ -23,13 +23,13 @@ const readonly = ref(false);
 // Removing it here only counts, so the tag stays to play with.
 const removed = ref(0);
 
-const sizes: Size[] = ["xs", "sm", "md", "lg", "xl"];
+const sizes: Array<Size> = ["xs", "sm", "md", "lg", "xl"];
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -37,7 +37,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // The Tag with only the props that differ from the defaults, the way you'd write them in
 // each framework, or for Vanilla, its DOM contract.
@@ -77,12 +77,16 @@ const code = computed(() => {
     angular: '<lucide-icon leading name="bug" />',
     solid: "leading={<BugIcon />}",
     astro: '<BugIcon slot="leading" />',
-  }[fw]!;
+  }[fw] ?? "";
   if (fw === "angular") {
     return `<span appTag ${props.join(" ")}>${icon.value ? `\n  ${leading}\n` : ""}</span>`;
   }
-  if (icon.value && (fw === "react" || fw === "solid")) props.push(leading);
-  if (icon.value && fw !== "react" && fw !== "solid") return `<Tag ${props.join(" ")}>\n  ${leading}\n</Tag>`;
+  if (icon.value && (fw === "react" || fw === "solid")) {
+    props.push(leading);
+  }
+  if (icon.value && fw !== "react" && fw !== "solid") {
+    return `<Tag ${props.join(" ")}>\n  ${leading}\n</Tag>`;
+  }
   return `<Tag ${props.join(" ")} />`;
 });
 </script>
@@ -119,7 +123,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

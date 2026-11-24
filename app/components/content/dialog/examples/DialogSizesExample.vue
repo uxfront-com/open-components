@@ -4,7 +4,7 @@ import Dialog from "~/reference/dialog/Dialog.vue";
 import type { DialogProps } from "~/reference/dialog/Dialog.vue";
 
 /** `::dialog-sizes-example`: a Button that opens a dialog at each size. */
-const sizes = ["sm", "md", "lg"] as const satisfies DialogProps["size"][];
+const sizes = ["sm", "md", "lg"] as const satisfies Array<DialogProps["size"]>;
 const open = ref<DialogProps["size"]>();
 </script>
 

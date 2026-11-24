@@ -25,11 +25,11 @@ import { collapse, heading, scan } from "./markdown";
  * `nuxt build mcp` warns about and `pnpm test` fails on, and the page goes
  * without agent markdown.
  */
-export function agentMarkdown(body: string, page: { site: string; path: string; frameworks: string[] }): string {
-  const lines: string[] = [];
+export function agentMarkdown(body: string, page: { site: string; path: string; frameworks: Array<string> }): string {
+  const lines: Array<string> = [];
   // The components the line is in: a component's content is indented as far as
   // its opening line, like an `:::accordion-item` inside an `::accordion`.
-  const open: { name: string; indent: number }[] = [];
+  const open: Array<{ name: string; indent: number }> = [];
 
   for (const { text, code } of scan(body)) {
     const indent = open.at(-1)?.indent ?? 0;
@@ -41,17 +41,26 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
 
     const start = text.match(/^(\s*):{2,}([a-z][\w-]*)\s*(\{.*\})?\s*$/);
     if (start) {
-      const [, space, name, props] = start;
-      open.push({ name: name!, indent: space!.length });
-      if (name === "framework-switcher") lines.push(SWITCHER);
+      // The indent and the name take part in every match, so their defaults never apply.
+      const [, space = "", name = "", props] = start;
+      open.push({ name, indent: space.length });
+      if (name === "framework-switcher") {
+        lines.push(SWITCHER);
+      }
       const label = prop(props, "label");
-      if ((name === "accordion-item" || name === "tabs-item") && label) lines.push(`**${label}**`, "");
+      if ((name === "accordion-item" || name === "tabs-item") && label) {
+        lines.push(`**${label}**`, "");
+      }
       const [title, to] = name === "card" ? [prop(props, "title"), prop(props, "to")] : [];
-      if (title) lines.push(to ? `[**${title}**](${to.startsWith("/") ? page.site : ""}${to})` : `**${title}**`, "");
+      if (title) {
+        lines.push(to ? `[**${title}**](${to.startsWith("/") ? page.site : ""}${to})` : `**${title}**`, "");
+      }
       continue;
     }
     if (/^\s*:{2,}\s*$/.test(text)) {
-      if (open.pop()?.name === "framework-switcher") lines.push(SWITCHER_END);
+      if (open.pop()?.name === "framework-switcher") {
+        lines.push(SWITCHER_END);
+      }
       continue;
     }
     if (open.some((component) => component.name === "framework-switcher") && heading(line)) {
@@ -68,14 +77,16 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
 
     lines.push(
       line
-        .replace(/:roadmap-check\{shipped\}/g, "[x]")
-        .replace(/:roadmap-check\b/g, "[ ]")
-        .replace(/(\]\([^)\s]*\))\{external(?:=""|='')?\}/g, "$1")
-        .replace(/\]\(#/g, `](${page.site}${page.path}#`)
-        .replace(/\]\(\//g, `](${page.site}/`),
+        .replaceAll(":roadmap-check{shipped}", "[x]")
+        .replaceAll(/:roadmap-check\b/g, "[ ]")
+        .replaceAll(/(\]\([^)\s]*\))\{external(?:=""|='')?\}/g, "$1")
+        .replaceAll("](#", `](${page.site}${page.path}#`)
+        .replaceAll("](/", `](${page.site}/`),
     );
   }
-  if (open.length) throw new Error(`${page.path}: ::${open.at(-1)!.name} is never closed`);
+  if (open.length) {
+    throw new Error(`${page.path}: ::${open.at(-1)?.name} is never closed`);
+  }
   return collapse(lines.join("\n"));
 }
 

@@ -23,13 +23,13 @@ const creatable = ref(false);
 const disabled = ref(false);
 const readonly = ref(false);
 
-const sizes: Size[] = ["xs", "sm", "md", "lg", "xl"];
+const sizes: Array<Size> = ["xs", "sm", "md", "lg", "xl"];
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -37,7 +37,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // The Combobox with only the props that differ from the defaults, the way you'd write them
 // in each framework, or for Vanilla, the first lines of its DOM contract.
@@ -107,7 +107,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   INKLINE_PREVIEW_ORIGIN,
-  type EmbedTheme,
   embedTheme,
   inklineEmbedUrl,
   inklineTarget,
@@ -10,6 +9,7 @@ import {
   themeMessage,
   themeOnReady,
 } from "~/lib/inkline-embed";
+import type { EmbedTheme } from "~/lib/inkline-embed";
 import { FRAMEWORKS } from "~/data/frameworks";
 
 /**
@@ -75,7 +75,9 @@ function post(value: EmbedTheme) {
 watch(
   [target, mounted],
   () => {
-    if (!mounted.value) return;
+    if (!mounted.value) {
+      return;
+    }
     urlTheme.value = theme.value;
     ready.value = false;
     src.value = inklineEmbedUrl({
@@ -89,18 +91,26 @@ watch(
 );
 
 watch(theme, (value) => {
-  if (ready.value) post(value);
+  if (ready.value) {
+    post(value);
+  }
 });
 
 function onMessage(event: MessageEvent) {
   const height = readResizeMessage(event, frame.value?.contentWindow);
-  if (height === undefined) return;
+  if (height === undefined) {
+    return;
+  }
   reported.value = height;
-  if (ready.value) return;
+  if (ready.value) {
+    return;
+  }
   ready.value = true;
   // A lazy frame that loaded after the mode changed missed the message.
   const missed = themeOnReady(urlTheme.value, theme.value);
-  if (missed) post(missed);
+  if (missed) {
+    post(missed);
+  }
 }
 
 onMounted(() => {

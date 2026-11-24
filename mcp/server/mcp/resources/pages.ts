@@ -28,7 +28,9 @@ export default defineMcpResource({
   handler: async (uri: URL, { path }: Variables) => {
     const standard = await useStandard();
     const page = standard.pages.find((candidate) => candidate.path === `/docs/${path}`);
-    if (!page) throw new McpError(ErrorCode.InvalidParams, `There's no page at ${uri.href}`, { uri: uri.href });
+    if (!page) {
+      throw new McpError(ErrorCode.InvalidParams, `There's no page at ${uri.href}`, { uri: uri.href });
+    }
     return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: page.raw }] };
   },
 });

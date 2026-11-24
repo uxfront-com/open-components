@@ -85,5 +85,5 @@ describe("the components hub", () => {
 
 // A string as it reads, inside a regular expression.
 function escape(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+  return text.replaceAll(/[.*+?^${}()|[\]\\/]/g, String.raw`\$&`);
 }

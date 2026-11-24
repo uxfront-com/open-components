@@ -11,7 +11,9 @@ const terms = useTemplateRef("terms");
 function update(value: boolean) {
   agreed.value = value;
   // Checking the box fixes the error, so it clears right away.
-  if (value) error.value = "";
+  if (value) {
+    error.value = "";
+  }
 }
 
 async function createAccount() {

@@ -30,7 +30,9 @@ const group = inject(RadioGroupKey, undefined);
 // A bound group only gets that value on its next render, so until it's mounted the
 // radio checks itself, which is what the server renders and hydration matches.
 const starting = ref(checked && group?.value === undefined);
-if (starting.value) group?.select(value);
+if (starting.value) {
+  group?.select(value);
+}
 
 const attrs = useAttrs();
 // Classes and styles go on the root, which lays out the row, so a class can set its

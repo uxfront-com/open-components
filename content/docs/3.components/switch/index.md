@@ -109,7 +109,9 @@ function onChange(event: Event) {
 // read-only switch as it is, without a change event. It still takes focus, and its form
 // still sends it, unlike a disabled one.
 function onClick(event: MouseEvent) {
-  if (readonly) event.preventDefault();
+  if (readonly) {
+    event.preventDefault();
+  }
 }
 
 // A ref to the Switch gets you the <input>, through `input`.
@@ -350,7 +352,8 @@ onMounted(() => {
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import Switch from "./Switch.vue";
 
 const label = (id: string, text: string) => h("label", { for: id }, text);

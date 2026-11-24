@@ -20,9 +20,9 @@ import type theme from "#build/ui/content/content-navigation";
  */
 const props = withDefaults(
   defineProps<{
-    navigation: ContentNavigationItem[];
+    navigation: Array<ContentNavigationItem>;
     // The classes DocsNavigation.vue builds from Nuxt UI's theme.
-    ui: Record<keyof typeof theme.slots, (variants?: Record<string, unknown>) => string>;
+    ui: Record<keyof typeof theme.slots, (variants?: { active?: boolean; level?: boolean; disabled?: boolean }) => string>;
     level?: number;
   }>(),
   { level: 0 },
@@ -43,7 +43,11 @@ const open = ref<Record<string, boolean>>({});
 watch(
   () => route.path,
   (path) => {
-    for (const item of props.navigation) if (toggles(item)) open.value[item.path] = inside(item, path);
+    for (const item of props.navigation) {
+      if (toggles(item)) {
+        open.value[item.path] = inside(item, path);
+      }
+    }
   },
   { immediate: true },
 );

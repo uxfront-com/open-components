@@ -1,5 +1,6 @@
 import { renderFrameworks } from "./frameworks";
 import { scan } from "./markdown";
+import { pageByKey } from "./pages";
 import type { Standard } from "./types";
 
 export interface SearchResult {
@@ -39,16 +40,29 @@ const STOPWORDS = new Set(
  * A text's terms: lowercased words, without stopwords, and without a plural's
  * `s`. A contraction stays one word, so `don't` is `dont` rather than `don` and `t`.
  */
-export function terms(text: string): string[] {
+export function terms(text: string): Array<string> {
   return text
     .toLowerCase()
     .replaceAll("’", "'")
-    .replace(/'s\b/g, "")
+    .replaceAll(/'s\b/g, "")
     .replaceAll("'", "")
     .split(/[^a-z0-9]+/)
     .filter((term) => term && !STOPWORDS.has(term))
     .map((term) => (term.length > 3 && term.endsWith("s") && !term.endsWith("ss") ? term.slice(0, -1) : term));
 }
+
+// How often a document has a term, counting words it starts at less than an exact match.
+const frequency = (document: Document, term: string) => {
+  let total = 0;
+  for (const [word, count] of document.terms) {
+    if (word === term) {
+      total += count;
+    } else if (term.length >= 3 && word.startsWith(term)) {
+      total += count * 0.7;
+    }
+  }
+  return total;
+};
 
 /**
  * Searches every section of every page and every rule, ranked with BM25 over
@@ -56,12 +70,16 @@ export function terms(text: string): string[] {
  * `focused`), and results that match more of the query's terms come first.
  */
 export function createSearch(standard: Standard) {
-  const documents: Document[] = [];
+  const documents: Array<Document> = [];
   // `text` is what an excerpt quotes, and `more` is searched without being quoted.
   const add = (component: string, result: SearchResult, title: string, text: string, more = "", weight = 1) => {
     const counts = new Map<string, number>();
-    for (const term of terms(title)) counts.set(term, (counts.get(term) ?? 0) + 3);
-    for (const term of terms(`${text} ${more}`)) counts.set(term, (counts.get(term) ?? 0) + 1);
+    for (const term of terms(title)) {
+      counts.set(term, (counts.get(term) ?? 0) + 3);
+    }
+    for (const term of terms(`${text} ${more}`)) {
+      counts.set(term, (counts.get(term) ?? 0) + 1);
+    }
     const length = [...counts.values()].reduce((a, b) => a + b, 0);
     documents.push({ result, component, terms: counts, weight, length, text });
   };
@@ -79,7 +97,9 @@ export function createSearch(standard: Standard) {
     for (const { start, end, heading } of sections) {
       const own = lines.slice(start + 1, end).filter((line) => heading?.text !== "Checklist" || !line.startsWith("|"));
       const text = prose(own.join("\n"), standard);
-      if (!text) continue;
+      if (!text) {
+        continue;
+      }
       const result: SearchResult = {
         type: "section",
         title: heading?.text ?? page.title,
@@ -95,7 +115,7 @@ export function createSearch(standard: Standard) {
     }
   }
   for (const rule of standard.rules) {
-    const page = standard.pages.find((candidate) => candidate.key === rule.component)!;
+    const page = pageByKey(standard, rule.component);
     add(rule.component, {
       type: "rule",
       title: rule.id,
@@ -105,7 +125,7 @@ export function createSearch(standard: Standard) {
       url: rule.url,
       excerpt: "",
       rule: { id: rule.id, level: rule.level, ...(rule.scope && { scope: rule.scope }) },
-    }, rule.id.split("/").pop()!, rule.requirement, rule.check);
+    }, rule.id.split("/").at(-1) ?? rule.id, rule.requirement, rule.check);
   }
   const average = documents.reduce((sum, document) => sum + document.length, 0) / documents.length;
 
@@ -116,15 +136,6 @@ export function createSearch(standard: Standard) {
         (!options.component || document.component === options.component) &&
         (!options.type || document.result.type === options.type),
     );
-    // How often a document has a term, counting words it starts at less than an exact match.
-    const frequency = (document: Document, term: string) => {
-      let total = 0;
-      for (const [word, count] of document.terms) {
-        if (word === term) total += count;
-        else if (term.length >= 3 && word.startsWith(term)) total += count * 0.7;
-      }
-      return total;
-    };
 
     // How rare each term is across the standard, so a rare term counts for more.
     const idf = new Map(
@@ -139,8 +150,11 @@ export function createSearch(standard: Standard) {
       let matched = 0;
       for (const term of wanted) {
         const tf = frequency(document, term);
-        if (!tf) continue;
-        score += (idf.get(term)! * tf * 2.2) / (tf + 1.2 * (0.25 + (0.75 * document.length) / average));
+        if (!tf) {
+          continue;
+        }
+        // Every wanted term has its idf, so the fallback never applies.
+        score += ((idf.get(term) ?? 0) * tf * 2.2) / (tf + 1.2 * (0.25 + (0.75 * document.length) / average));
         matched++;
       }
       return matched ? [{ document, score: score * document.weight * (matched / wanted.length) ** 2 }] : [];
@@ -164,11 +178,11 @@ function prose(markdown: string, standard: Standard): string {
     .filter(({ text, code }) => !code && !/^\s*\|?\s*:?-{3,}/.test(text))
     .map(({ text }) =>
       text
-        .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replaceAll(/\[([^\]]*)\]\([^)]*\)/g, "$1")
         .split(/(`[^`]*`)/)
-        .map((part, i) => (i % 2 ? part.replaceAll("\\|", "|") : part.replace(/(?<!\\)\||[*_]{1,2}|^\s*(#{1,6}|>)\s/g, " ")))
+        .map((part, i) => (i % 2 ? part.replaceAll(String.raw`\|`, "|") : part.replaceAll(/(?<!\\)\||[*_]{1,2}|^\s*(#{1,6}|>)\s/g, " ")))
         .join("")
-        .replace(/\s+/g, " ")
+        .replaceAll(/\s+/g, " ")
         .trim(),
     )
     .filter(Boolean)
@@ -176,10 +190,12 @@ function prose(markdown: string, standard: Standard): string {
 }
 
 // About 200 characters around the first of the query's terms in a text.
-function excerpt(text: string, wanted: string[]): string {
+function excerpt(text: string, wanted: Array<string>): string {
   const lower = text.toLowerCase();
-  const at = Math.min(...wanted.map((term) => lower.indexOf(term)).filter((index) => index >= 0), Infinity);
-  if (text.length <= 220) return text;
+  const at = Math.min(...wanted.values().map((term) => lower.indexOf(term)).filter((index) => index >= 0), Infinity);
+  if (text.length <= 220) {
+    return text;
+  }
   const start = at === Infinity ? 0 : Math.max(0, text.lastIndexOf(" ", Math.max(0, at - 60)) + 1);
   const end = text.indexOf(" ", Math.min(text.length, start + 200));
   return `${start > 0 ? "…" : ""}${text.slice(start, end === -1 ? undefined : end)}${end === -1 ? "" : "…"}`;

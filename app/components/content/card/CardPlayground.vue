@@ -34,7 +34,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -42,17 +42,19 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open =
     line.length > 88 || attrs.some((attribute) => attribute.includes("\n"))
       ? [`<${tag}`, ...attrs.flatMap((attribute) => attribute.split("\n").map((part) => `  ${part}`)), children.length ? ">" : "/>"]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 
@@ -64,7 +66,7 @@ const code = computed(() => {
   const jsx = fw === "react" || fw === "solid";
   const body = `<p>${BODY}</p>`;
   // The Button among the actions, which Angular puts on the native element, and Vanilla writes out.
-  const button = (attributes: string[] = []) => {
+  const button = (attributes: Array<string> = []) => {
     if (fw === "vanilla") {
       return '<button class="button" type="button" data-variant="outline" data-color="neutral" data-size="sm"><span data-slot="label">Save</span></button>';
     }
@@ -72,7 +74,7 @@ const code = computed(() => {
     return `<${tag} ${[...attributes, 'size="sm"', 'variant="outline"'].join(" ")}>Save</${tag}>`;
   };
 
-  let card: string[];
+  let card: Array<string>;
   if (fw === "vanilla") {
     const title = link.value ? `<a data-slot="link" href="${HREF}">${HEADING}</a>` : HEADING;
     card = element(as.value, ['class="card"'], [
@@ -177,7 +179,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

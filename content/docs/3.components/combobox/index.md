@@ -85,14 +85,15 @@ The tests are in `Combobox.test.ts`. To run them, you'll need [Vitest](https://v
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import { isGroup, isSeparator, type SelectItem, type SelectOption, toSections, usePlacement, useListbox } from "../select/listbox";
+import { isGroup, isSeparator, toSections, usePlacement, useListbox } from "../select/listbox";
+import type { SelectItem, SelectOption } from "../select/listbox";
 import SelectPanel from "../select/SelectPanel.vue";
 import SelectTags from "../select/SelectTags.vue";
 import "../select/select.css";
 
 export interface ComboboxProps {
   /** What people pick from, the same list a Select takes: options, groups and separators. */
-  options: SelectItem[];
+  options: Array<SelectItem>;
   /** Picks any number of values, each shown as a tag, so the value is an array. */
   multiple?: boolean;
   /** Text shown in the empty field. It's never a value, so nothing submits. */
@@ -155,7 +156,7 @@ const {
  * The value, which `v-model` binds: a string, or an array of them with `multiple`. It's an
  * option's `value`, or text people typed where `allowCustomValue` or `creatable` lets them.
  */
-const model = defineModel<string | string[]>();
+const model = defineModel<string | Array<string>>();
 
 const emit = defineEmits<{
   /** People picked the create option. Add the text to `options` to keep it in the list. */
@@ -188,12 +189,12 @@ const attrs = useAttrs();
 // variables. What a form reads goes on the <select>, and so do `change` and `input`, since
 // it fires them when the value changes, rather than on every key. Everything else goes on
 // the text field: `id`, `autocomplete`, ARIA and the other listeners.
-const FORM_ATTRS = ["name", "form", "onChange", "onInput"];
+const FORM_ATTRS = new Set(["name", "form", "onChange", "onInput"]);
 const pick = (test: (key: string) => boolean) => Object.fromEntries(Object.entries(attrs).filter(([key]) => test(key)));
 const onRoot = (key: string) => key === "class" || key === "style";
 const rootAttrs = () => pick(onRoot);
-const formAttrs = () => pick((key) => FORM_ATTRS.includes(key));
-const controlAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.includes(key) && key !== "value");
+const formAttrs = () => pick((key) => FORM_ATTRS.has(key));
+const controlAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.has(key) && key !== "value");
 
 const root = useTemplateRef<HTMLElement>("root");
 const select = useTemplateRef<HTMLSelectElement>("select");
@@ -207,7 +208,7 @@ const tags = useTemplateRef<InstanceType<typeof SelectTags>>("tags");
 // Greek and Cyrillic alphabets. Other marks stay, since in scripts like Devanagari and Thai
 // they're vowels, and dropping them would let "कताब" find and pick "किताब", another word.
 const ACCENTS = /[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]/g;
-const fold = (text: string) => text.normalize("NFD").replace(ACCENTS, "").toLocaleLowerCase();
+const fold = (text: string) => text.normalize("NFD").replaceAll(ACCENTS, "").toLocaleLowerCase();
 const matches = (option: SelectOption, text: string) => (filter ? filter(option, text) : fold(option.label).includes(fold(text)));
 
 const everything = computed(() => toSections(options).flatMap((section) => section.options));
@@ -221,9 +222,9 @@ const byLabel = (text: string) =>
 // Values that aren't options, which people typed and kept, are only values where a prop
 // lets people type them.
 const keepsText = computed(() => creatable || (allowCustomValue && !multiple));
-const initial = attrs.value as string | string[] | undefined;
+const initial = attrs.value as string | Array<string> | undefined;
 const current = computed(() => model.value ?? initial);
-const values = computed<string[]>(() => {
+const values = computed<Array<string>>(() => {
   const value = current.value;
   const list = (multiple ? (value === undefined ? [] : [value].flat()) : [Array.isArray(value) ? value[0] : value]).filter(
     (item): item is string => item !== undefined && item !== "",
@@ -232,7 +233,7 @@ const values = computed<string[]>(() => {
 });
 // In the list's order, which is the order the <select> submits, then the typed values in the
 // order people added them, each read as its own text.
-const selected = computed<SelectOption[]>(() => [
+const selected = computed<Array<SelectOption>>(() => [
   ...everything.value.filter((option) => values.value.includes(option.value)),
   ...values.value.filter((value) => !byValue.value.has(value)).map((value) => ({ value, label: value })),
 ]);
@@ -256,19 +257,31 @@ const query = computed(() => (text.value !== display.value ? text.value.trim() :
 
 // What the panel shows: the options that match, in their groups, with a separator only
 // between two things it separates.
-const shown = computed<SelectItem[]>(() => {
+const shown = computed<Array<SelectItem>>(() => {
   const q = query.value;
-  if (!q) return options;
-  const result: SelectItem[] = [];
+  if (!q) {
+    return options;
+  }
+  const result: Array<SelectItem> = [];
   for (const item of options) {
     if (isSeparator(item)) {
-      if (result.length && !isSeparator(result.at(-1)!)) result.push(item);
+      const last = result.at(-1);
+      if (last && !isSeparator(last)) {
+        result.push(item);
+      }
     } else if (isGroup(item)) {
       const found = item.options.filter((option) => matches(option, q));
-      if (found.length) result.push({ label: item.label, options: found });
-    } else if (matches(item, q)) result.push(item);
+      if (found.length) {
+        result.push({ label: item.label, options: found });
+      }
+    } else if (matches(item, q)) {
+      result.push(item);
+    }
   }
-  if (result.length && isSeparator(result.at(-1)!)) result.pop();
+  const last = result.at(-1);
+  if (last && isSeparator(last)) {
+    result.pop();
+  }
   return result;
 });
 
@@ -303,8 +316,12 @@ const create = computed(
     },
 );
 const activeId = computed(() => {
-  if (!open.value) return undefined;
-  if (onCreate()) return create.value ? create.value.id : undefined;
+  if (!open.value) {
+    return undefined;
+  }
+  if (onCreate()) {
+    return create.value ? create.value.id : undefined;
+  }
   const option = flat.value[active.value];
   return option ? optionId(option) : undefined;
 });
@@ -314,14 +331,17 @@ const activeId = computed(() => {
 const firstIndex = () => (firstEnabled() >= 0 ? firstEnabled() : creating.value ? createIndex() : -1);
 const lastIndex = () => (creating.value ? createIndex() : lastEnabled() < flat.value.length ? lastEnabled() : -1);
 function move(by: 1 | -1) {
-  if (active.value < 0) active.value = by === 1 ? firstIndex() : lastIndex();
-  else if (by === 1 && !onCreate()) {
+  if (active.value < 0) {
+    active.value = by === 1 ? firstIndex() : lastIndex();
+  } else if (by === 1 && !onCreate()) {
     const next = step(active.value, 1);
     active.value = next === active.value && creating.value ? createIndex() : next;
   } else if (by === -1) {
     const from = onCreate() ? flat.value.length : active.value;
     const next = step(from, -1);
-    if (next !== from) active.value = next;
+    if (next !== from) {
+      active.value = next;
+    }
   }
 }
 
@@ -334,14 +354,18 @@ const first = [...values.value];
 const extra = computed(() => [...new Set([...first, ...values.value])].filter((value) => !byValue.value.has(value)));
 function setDefaults() {
   const el = select.value;
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   const list = Array.from(el.options);
-  const picked = list.map((option) => option.selected);
+  const picked = list.map((option) => [option, option.selected] as const);
   list.forEach((option, index) => {
     const placeholding = !multiple && index === 0;
     option.defaultSelected = placeholding ? !first.length : first.includes(option.value);
   });
-  list.forEach((option, index) => (option.selected = picked[index]!));
+  for (const [option, selected] of picked) {
+    option.selected = selected;
+  }
 }
 onUpdated(setDefaults);
 
@@ -354,7 +378,7 @@ function readSelect() {
 
 // A change of the value changes the <select> once it has rendered, then fires the events
 // it would fire itself, so form-level listeners and form libraries hear it.
-function commit(next: string | string[]) {
+function commit(next: string | Array<string>) {
   model.value = next;
   nextTick(() => {
     select.value?.dispatchEvent(new Event("input", { bubbles: true }));
@@ -363,14 +387,18 @@ function commit(next: string | string[]) {
 }
 // Whether the value changed, from what was decided here, since a bound value only changes
 // once your framework renders it again.
-function setValue(next: string[]) {
-  if (next.join() === values.value.join()) return false;
+function setValue(next: Array<string>) {
+  if (next.join() === values.value.join()) {
+    return false;
+  }
   commit(multiple ? next : (next[0] ?? ""));
   return true;
 }
 
 function pickOption(option: SelectOption) {
-  if (option.disabled) return;
+  if (option.disabled) {
+    return;
+  }
   if (multiple) {
     setValue(isPicked(option) ? values.value.filter((value) => value !== option.value) : [...values.value, option.value]);
     // The text clears for the next search, and the highlight stays on the option people toggled.
@@ -385,7 +413,9 @@ function pickOption(option: SelectOption) {
 
 function pickCreate() {
   const value = creating.value;
-  if (!value) return;
+  if (!value) {
+    return;
+  }
   emit("create", value);
   if (multiple) {
     setValue([...values.value, value]);
@@ -418,11 +448,16 @@ function commitText() {
   const option = typed ? byLabel(typed) : undefined;
   let next = values.value;
   let shown = display.value;
-  if (!typed) [next, shown] = [[], ""];
-  else if (option) [next, shown] = [[option.value], option.label];
+  if (!typed) {
+    [next, shown] = [[], ""];
+  } else if (option) {
+    [next, shown] = [[option.value], option.label];
+  }
   // Text that's an option's value, but not its label, would submit as that option, so it
   // isn't kept, and goes back like any other text.
-  else if (allowCustomValue && !byValue.value.has(typed)) [next, shown] = [[typed], typed];
+  else if (allowCustomValue && !byValue.value.has(typed)) {
+    [next, shown] = [[typed], typed];
+  }
   text.value = shown;
   return setValue(next);
 }
@@ -431,11 +466,15 @@ async function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
   setValue(values.value.filter((value) => value !== option.value));
   announce(removedLabel(option.label));
-  if (moveFocus && !(await tags.value?.focusAt(index))) control.value?.focus();
+  if (moveFocus && !(await tags.value?.focusAt(index))) {
+    control.value?.focus();
+  }
 }
 
 function show(to = -1) {
-  if (open.value || disabled || readonly) return;
+  if (open.value || disabled || readonly) {
+    return;
+  }
   active.value = to;
   panelName.value = (attrs["aria-label"] as string | undefined) ?? control.value?.labels?.[0]?.textContent ?? undefined;
   panel.value?.showPopover?.();
@@ -446,11 +485,15 @@ function show(to = -1) {
 }
 function hide() {
   clearTimeout(countTimer);
-  if (open.value) panel.value?.hidePopover?.();
+  if (open.value) {
+    panel.value?.hidePopover?.();
+  }
 }
 
 function scrollToActive() {
-  if (open.value) panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  if (open.value) {
+    panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  }
 }
 watch(active, scrollToActive, { flush: "post" });
 
@@ -466,7 +509,9 @@ let countTimer: ReturnType<typeof setTimeout> | undefined;
 function announceCount() {
   clearTimeout(countTimer);
   countTimer = setTimeout(() => {
-    if (!open.value) return;
+    if (!open.value) {
+      return;
+    }
     const count = flat.value.length;
     announce(count ? resultsLabel(count) : creating.value ? createLabel(creating.value) : emptyLabel);
   }, COUNT_PAUSE);
@@ -475,7 +520,9 @@ function announceCount() {
 function onInput(event: Event) {
   text.value = (event.target as HTMLInputElement).value;
   // Autofill types too, without focus, and leaves the panel closed.
-  if (document.activeElement !== control.value) return;
+  if (document.activeElement !== control.value) {
+    return;
+  }
   // Nothing is highlighted while people type, so Enter keeps what they typed. That's the
   // APG's list autocomplete with manual selection.
   active.value = -1;
@@ -485,24 +532,32 @@ function onInput(event: Event) {
 
 // Autofill's change, which comes without focus, settles at once.
 function onChange() {
-  if (document.activeElement !== control.value) commitText();
+  if (document.activeElement !== control.value) {
+    commitText();
+  }
 }
 
 // The fields that keep Enter from submitting a form without a submit button, once there's more than one.
-const BLOCKING = ["text", "search", "url", "tel", "email", "password", "date", "month", "week", "time", "datetime-local", "number"];
+const BLOCKING = new Set(["text", "search", "url", "tel", "email", "password", "date", "month", "week", "time", "datetime-local", "number"]);
 
 // What `Enter` does once the value has to change first. Submitting waits for the <select>
 // to render the new value, then goes through the form's default button, as it would have.
 async function submitAfter() {
   const form = select.value?.form;
   await nextTick();
-  if (!form) return;
+  if (!form) {
+    return;
+  }
   const submitter = Array.from(form.elements).find((el): el is HTMLButtonElement => (el as HTMLButtonElement).type === "submit");
-  if (submitter?.disabled) return;
+  if (submitter?.disabled) {
+    return;
+  }
   // Without a submit button, Enter only submits a form with one text field, as the HTML
   // Standard's implicit submission says.
-  const fields = Array.from(form.elements).filter((el) => el instanceof HTMLInputElement && BLOCKING.includes(el.type));
-  if (!submitter && fields.length > 1) return;
+  const fields = Array.from(form.elements).filter((el) => el instanceof HTMLInputElement && BLOCKING.has(el.type));
+  if (!submitter && fields.length > 1) {
+    return;
+  }
   form.requestSubmit(submitter);
 }
 
@@ -511,19 +566,29 @@ async function submitAfter() {
 // Space, Home, End and the side arrows edit the text, as in any text field.
 function onKeydown(event: KeyboardEvent) {
   // Safari ends a composition with an Enter whose keyCode is 229 and isComposing false.
-  if (readonly || event.isComposing || event.keyCode === 229) return;
+  if (readonly || event.isComposing || event.keyCode === 229) {
+    return;
+  }
   const { key } = event;
 
   if (key === "ArrowDown") {
     event.preventDefault();
-    if (!open.value) show(event.altKey ? -1 : firstIndex());
-    else move(1);
+    if (!open.value) {
+      show(event.altKey ? -1 : firstIndex());
+    } else {
+      move(1);
+    }
   } else if (key === "ArrowUp") {
     event.preventDefault();
     if (!open.value) {
-      if (!event.altKey) show(lastIndex());
-    } else if (event.altKey) hide();
-    else move(-1);
+      if (!event.altKey) {
+        show(lastIndex());
+      }
+    } else if (event.altKey) {
+      hide();
+    } else {
+      move(-1);
+    }
   } else if ((key === "PageDown" || key === "PageUp") && open.value && !onCreate()) {
     event.preventDefault();
     active.value = jump(key === "PageDown" ? 1 : -1);
@@ -532,9 +597,11 @@ function onKeydown(event: KeyboardEvent) {
       // People were choosing, so Enter picks rather than submitting.
       event.preventDefault();
       const option = flat.value[active.value];
-      if (onCreate()) pickCreate();
-      else if (option) pickOption(option);
-      else {
+      if (onCreate()) {
+        pickCreate();
+      } else if (option) {
+        pickOption(option);
+      } else {
         commitText();
         hide();
       }
@@ -548,23 +615,35 @@ function onKeydown(event: KeyboardEvent) {
     // Not cancelled, so focus goes on. A single value takes the highlighted option, as the
     // APG says, and with several, what people toggled stays.
     const option = flat.value[active.value];
-    if (open.value && !multiple && onCreate()) pickCreate();
-    else if (open.value && !multiple && option) pickOption(option);
-    else commitText();
+    if (open.value && !multiple && onCreate()) {
+      pickCreate();
+    } else if (open.value && !multiple && option) {
+      pickOption(option);
+    } else {
+      commitText();
+    }
     hide();
   } else if (key === "Escape") {
     // The first press closes the panel and keeps the text, the second clears it, and both
     // go no further, so a Dialog around the Combobox stays open. With nothing to clear, it does.
-    if (open.value) hide();
-    else if (text.value) {
+    if (open.value) {
+      hide();
+    } else if (text.value) {
       text.value = "";
-      if (!multiple) setValue([]);
-    } else return;
+      if (!multiple) {
+        setValue([]);
+      }
+    } else {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
   } else if (key === "Backspace" && multiple && !text.value && selected.value.length) {
     event.preventDefault();
-    remove(selected.value.at(-1)!, false);
+    const last = selected.value.at(-1);
+    if (last) {
+      remove(last, false);
+    }
   }
 }
 
@@ -576,22 +655,31 @@ function onBlur() {
 // The panel is a manual popover, since a press in the text, outside the panel, mustn't
 // close it. A press outside the field does, as light dismiss would.
 function onDocumentPointerdown(event: PointerEvent) {
-  if (open.value && !root.value?.contains(event.target as Node)) hide();
+  if (open.value && !root.value?.contains(event.target as Node)) {
+    hide();
+  }
 }
 
 // The toggle doesn't take focus, which stays in the text, as in the APG's example.
 function onToggle() {
-  if (disabled || readonly) return;
+  if (disabled || readonly) {
+    return;
+  }
   control.value?.focus();
-  if (open.value) hide();
-  else show();
+  if (open.value) {
+    hide();
+  } else {
+    show();
+  }
 }
 
 // A press on the field around the text, like between the tags or on the icon, puts the
 // caret in it, as the Input does. It's on mousedown, so the text keeps focus, with no blur.
 function onRootMousedown(event: MouseEvent) {
   const target = event.target as Element;
-  if (target.closest("input, button, select")) return;
+  if (target.closest("input, button, select")) {
+    return;
+  }
   event.preventDefault();
   control.value?.focus();
 }
@@ -629,9 +717,15 @@ onMounted(() => {
   if (import.meta.env.DEV) {
     const el = control.value;
     const named = el?.labels?.length || el?.hasAttribute("aria-label") || el?.hasAttribute("aria-labelledby");
-    if (el && !named) console.warn("[Combobox] has no accessible name: give it a <label for>, or put it in a Field.", el);
-    if (el && !baseId()) console.warn("[Combobox] has no id or name: give it one, so the text field can point at its options.", el);
-    if (multiple && allowCustomValue) console.warn("[Combobox] ignores allowCustomValue with multiple: use creatable to add new values.", el);
+    if (el && !named) {
+      console.warn("[Combobox] has no accessible name: give it a <label for>, or put it in a Field.", el);
+    }
+    if (el && !baseId()) {
+      console.warn("[Combobox] has no id or name: give it one, so the text field can point at its options.", el);
+    }
+    if (multiple && allowCustomValue) {
+      console.warn("[Combobox] ignores allowCustomValue with multiple: use creatable to add new values.", el);
+    }
   }
 });
 
@@ -886,7 +980,8 @@ import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
 import Select from "../select/Select.vue";
 import type { SelectItem } from "../select/listbox";
-import Combobox, { type ComboboxProps } from "./Combobox.vue";
+import Combobox from "./Combobox.vue";
+import type { ComboboxProps } from "./Combobox.vue";
 
 // jsdom has no Popover API or scrollIntoView, so these stand in for them: showing and
 // hiding with `beforetoggle`. The Combobox's panel is a manual popover, which the browser
@@ -896,30 +991,41 @@ const shown = new Set<HTMLElement>();
 
 function toggle(el: HTMLElement, newState: "open" | "closed") {
   el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState: newState === "open" ? "closed" : "open" }));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+  if (newState === "open") {
+    shown.add(el);
+  } else {
+    shown.delete(el);
+  }
   el.style.display = newState === "open" ? "block" : "none";
 }
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
   Element.prototype.scrollIntoView = vi.fn();
   // jsdom has no requestSubmit, so this does what a browser does: validate, then submit.
   HTMLFormElement.prototype.requestSubmit = function (this: HTMLFormElement) {
-    if (this.reportValidity()) this.dispatchEvent(new Event("submit", { cancelable: true }));
+    if (this.reportValidity()) {
+      this.dispatchEvent(new Event("submit", { cancelable: true }));
+    }
   };
 });
 
@@ -934,14 +1040,14 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const countries: SelectItem[] = [
+const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany", disabled: true },
   { value: "es", label: "Spain" },
   { value: "ch", label: "Zürich" },
   { value: "nz", label: "New Zealand" },
 ];
-const places: SelectItem[] = [
+const places: Array<SelectItem> = [
   { label: "Europe", options: [{ value: "fr", label: "France" }, { value: "es", label: "Spain" }] },
   { separator: true },
   { label: "Oceania", options: [{ value: "nz", label: "New Zealand" }] },
@@ -1232,6 +1338,15 @@ describe("Combobox", () => {
       expect(listbox().querySelector('[data-slot="separator"]')).toBeNull();
     });
 
+    it("drops a separator that no match comes after", async () => {
+      const user = userEvent.setup();
+      await page({ options: places });
+      await user.click(input());
+      await user.type(input(), "spa");
+      expect(options()).toEqual(["Spain"]);
+      expect(listbox().querySelector('[data-slot="separator"]')).toBeNull();
+    });
+
     it("shows every option when it opens on a picked value, rather than only the one it shows", async () => {
       const user = userEvent.setup();
       await page({ value: "es" });
@@ -1253,7 +1368,7 @@ describe("Combobox", () => {
 
     // In Devanagari, a vowel sign is a combining mark, and a letter of its own: "कताब" isn't
     // "किताब" (a book) without one, so neither lists nor picks it.
-    const books: SelectItem[] = [
+    const books: Array<SelectItem> = [
       { value: "kitab", label: "किताब" },
       { value: "kalam", label: "कलम" },
     ];
@@ -1360,7 +1475,7 @@ describe("Combobox", () => {
 
     it("keeps the picked option when people leave without changing its text, even when another has the same label", async () => {
       const user = userEvent.setup();
-      const others: SelectItem[] = [
+      const others: Array<SelectItem> = [
         { label: "Europe", options: [{ value: "eu-other", label: "Other" }] },
         { label: "Asia", options: [{ value: "as-other", label: "Other" }] },
       ];
@@ -1405,7 +1520,7 @@ describe("Combobox", () => {
 
     it("reverts unmatched text with Enter on a closed panel, before the form submits", async () => {
       const user = userEvent.setup();
-      const values: unknown[] = [];
+      const values: Array<unknown> = [];
       const { submit } = await page({ value: "fr" });
       submit.mockImplementation((event: Event) => {
         event.preventDefault();
@@ -1431,7 +1546,7 @@ describe("Combobox", () => {
 
     it("submits the new value with Enter on a closed panel, once the value has changed", async () => {
       const user = userEvent.setup();
-      const values: unknown[] = [];
+      const values: Array<unknown> = [];
       const { submit } = await page({ allowCustomValue: true });
       submit.mockImplementation((event: Event) => {
         event.preventDefault();
@@ -1449,8 +1564,8 @@ describe("Combobox", () => {
       ["another option's label", {}, "es", "France", ["fr"]],
     ])("submits the new value with Enter on a closed panel when its value is bound, after %s", async (_, props, start, typed, expected) => {
       const user = userEvent.setup();
-      const value = ref<string | string[] | undefined>(start);
-      const values: unknown[] = [];
+      const value = ref<string | Array<string> | undefined>(start);
+      const values: Array<unknown> = [];
       const submit = vi.fn((event: Event) => {
         event.preventDefault();
         values.push(new FormData(event.target as HTMLFormElement).getAll("country"));
@@ -1465,7 +1580,7 @@ describe("Combobox", () => {
                 options: countries,
                 ...props,
                 modelValue: value.value,
-                "onUpdate:modelValue": (next?: string | string[]) => (value.value = next),
+                "onUpdate:modelValue": (next?: string | Array<string>) => (value.value = next),
               }),
             ),
             h("button", { type: "submit" }, "Save"),
@@ -1624,6 +1739,33 @@ describe("Combobox", () => {
       expect(submitted()).toEqual(["fr"]);
     });
 
+    it("keeps a value picked once its defaults are set, where a new selected attribute selects an untouched option", async () => {
+      const user = userEvent.setup();
+      await page();
+      // A browser selects an option whose selectedness was never set when it gains the
+      // `selected` attribute, like the placeholder once the Combobox sets its defaults.
+      // jsdom marks them all as set.
+      const defaultSelected = Object.getOwnPropertyDescriptor(HTMLOptionElement.prototype, "defaultSelected")!;
+      Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", {
+        ...defaultSelected,
+        set(this: HTMLOptionElement, value: boolean) {
+          const gaining = value && !this.hasAttribute("selected");
+          defaultSelected.set!.call(this, value);
+          if (gaining) {
+            this.selected = true;
+          }
+        },
+      });
+      try {
+        await user.click(input());
+        await user.click(option("Spain"));
+        await nextTick();
+        expect(submitted()).toEqual(["es"]);
+      } finally {
+        Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", defaultSelected);
+      }
+    });
+
     it("resets to a first value that was typed, with allowCustomValue", async () => {
       const user = userEvent.setup();
       await page({ value: "Lyon", allowCustomValue: true });
@@ -1676,11 +1818,11 @@ describe("Combobox", () => {
   describe("the API", () => {
     it("binds its value with v-model, and updates its text when the value changes", async () => {
       const user = userEvent.setup();
-      const value = ref<string | string[]>("fr");
+      const value = ref<string | Array<string>>("fr");
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
-            h(Combobox, { id: "country", options: countries, modelValue: value.value, "onUpdate:modelValue": (next?: string | string[]) => (value.value = next ?? "") }),
+            h(Combobox, { id: "country", options: countries, modelValue: value.value, "onUpdate:modelValue": (next?: string | Array<string>) => (value.value = next ?? "") }),
           ),
       });
       await nextTick();
@@ -1694,7 +1836,7 @@ describe("Combobox", () => {
 
     it("fires the select's input and change events when the value changes, not on every key", async () => {
       const user = userEvent.setup();
-      const fired: string[] = [];
+      const fired: Array<string> = [];
       await page({ onChange: () => fired.push("change"), onInput: () => fired.push("input") });
       await user.click(input());
       await user.type(input(), "sp");
@@ -1837,9 +1979,11 @@ describe("Combobox", () => {
 
   describe("the on-screen keyboard", () => {
     const viewport = (height: number, offsetTop = 0) => {
-      const target = new EventTarget();
-      vi.stubGlobal("visualViewport", Object.assign(target, { height, offsetTop, width: 390 }));
+      const target = Object.assign(new EventTarget(), { height, offsetTop, width: 390 });
+      vi.stubGlobal("visualViewport", target);
       vi.spyOn(window, "innerHeight", "get").mockReturnValue(844);
+      // The stub, so a test can resize it the way the on-screen keyboard does.
+      return target;
     };
     afterEach(() => {
       vi.restoreAllMocks();
@@ -1885,11 +2029,11 @@ describe("Combobox", () => {
     });
 
     it("fits the panel when the keyboard comes up after it opened", async () => {
-      viewport(844);
+      const visual = viewport(844);
       const panel = await openOn({ top: 300, bottom: 336 }, 256);
       expect(panel).not.toHaveAttribute("data-fit");
-      (window.visualViewport as unknown as { height: number }).height = 400;
-      window.visualViewport!.dispatchEvent(new Event("resize"));
+      visual.height = 400;
+      visual.dispatchEvent(new Event("resize"));
       expect(panel).toHaveAttribute("data-fit", "visual");
       expect(panel.style.top).toBe(`${300 - 8 - 256}px`);
     });
@@ -1908,10 +2052,10 @@ describe("Combobox", () => {
     });
 
     it("goes back to anchor positioning once the keyboard closes", async () => {
-      viewport(400);
+      const visual = viewport(400);
       const panel = await openOn({ top: 300, bottom: 336 }, 256);
-      (window.visualViewport as unknown as { height: number }).height = 844;
-      window.visualViewport!.dispatchEvent(new Event("resize"));
+      visual.height = 844;
+      visual.dispatchEvent(new Event("resize"));
       expect(panel).not.toHaveAttribute("data-fit");
       expect(panel.style.top).toBe("");
     });
@@ -1928,7 +2072,7 @@ describe("Combobox", () => {
       const app = createSSRApp({ render: markup });
       app.mount(host);
       await nextTick();
-      expect(warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes("Hydration"))).toEqual([]);
+      expect(warn.mock.calls.filter((call: Array<unknown>) => String(call[0]).includes("Hydration"))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       expect(host.querySelector("input")).toHaveValue("New Zealand");
       app.unmount();

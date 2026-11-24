@@ -1,8 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
-import { h, nextTick, ref, type VNodeChild } from "vue";
-import Dialog, { type DialogProps } from "./Dialog.vue";
+import { h, nextTick, ref } from "vue";
+import type { VNodeChild } from "vue";
+import Dialog from "./Dialog.vue";
+import type { DialogProps } from "./Dialog.vue";
 
 // jsdom has <dialog> and its `open`, but not showModal() or close(), so these stand in
 // for them. They can't put the dialog in the top layer, make the rest of the page inert
@@ -12,7 +14,9 @@ beforeAll(() => {
     this.open = true;
   });
   HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   });
@@ -41,7 +45,9 @@ const button = (text: string, attrs = {}) => h("button", { type: "button", ...at
 function page(props: Partial<DialogProps> & Record<string, unknown> = {}, slots: Record<string, () => VNodeChild> = {}, { closes = true } = {}) {
   const open = ref(false);
   const onClose = vi.fn(() => {
-    if (closes) open.value = false;
+    if (closes) {
+      open.value = false;
+    }
   });
   const result = render({
     render: () => [
@@ -279,7 +285,9 @@ describe("Dialog", () => {
   function keepsOpen() {
     const open = ref(false);
     const onClose = vi.fn((reason: string) => {
-      if (reason === "closed") open.value = false;
+      if (reason === "closed") {
+        open.value = false;
+      }
     });
     render({
       render: () => [
@@ -366,7 +374,9 @@ describe("Dialog", () => {
     // The page sends the form itself, from a listener further up, once the dialog has
     // seen the submit, and leaves the Cancel button to the dialog.
     const onSubmit = vi.fn((event: SubmitEvent) => {
-      if (event.submitter?.getAttribute("formmethod") !== "dialog") event.preventDefault();
+      if (event.submitter?.getAttribute("formmethod") !== "dialog") {
+        event.preventDefault();
+      }
     });
     document.addEventListener("submit", onSubmit);
     onTestFinished(() => document.removeEventListener("submit", onSubmit));
@@ -427,9 +437,12 @@ describe("Dialog", () => {
     const fallback = render(Dialog, { props: { id: "rename", title: "Rename file" } });
     expect(fallback.container.querySelector("dialog")).toHaveAttribute("data-size", "md");
     // The close button is a Button, with parts of its own.
-    const parts = [...dialog.querySelectorAll("[data-slot]")]
+    const parts = dialog
+      .querySelectorAll("[data-slot]")
+      .values()
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))
-      .map((part) => part.getAttribute("data-slot"));
+      .map((part) => part.getAttribute("data-slot"))
+      .toArray();
     expect(parts).toEqual(["header", "title", "close", "description", "body", "actions"]);
   });
 

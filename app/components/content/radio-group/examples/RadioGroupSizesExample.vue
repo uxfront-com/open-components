@@ -4,7 +4,7 @@ import RadioGroup from "~/reference/radio-group/RadioGroup.vue";
 import type { RadioGroupProps } from "~/reference/radio-group/RadioGroup.vue";
 
 /** `::radio-group-sizes-example`: the same group at each size. */
-const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies RadioGroupProps["size"][];
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies Array<RadioGroupProps["size"]>;
 </script>
 
 <template>

@@ -15,7 +15,7 @@ import "~/reference/button/tokens.css";
  */
 type Size = NonNullable<TagGroupProps["size"]>;
 
-const ALL: TagGroupItem[] = [
+const ALL: Array<TagGroupItem> = [
   { value: "bug", label: "Bug" },
   { value: "docs", label: "Docs" },
   { value: "accessibility", label: "Accessibility" },
@@ -29,14 +29,14 @@ const readonly = ref(false);
 const labels = ref([...ALL]);
 const reset = useTemplateRef<{ $el: HTMLElement }>("reset");
 
-const sizes: Size[] = ["xs", "sm", "md", "lg", "xl"];
+const sizes: Array<Size> = ["xs", "sm", "md", "lg", "xl"];
 const tags = computed(() => labels.value.map((tag) => (link.value ? { ...tag, href: `#labels-${tag.value}` } : tag)));
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -44,7 +44,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // The Tag Group with only the props that differ from the defaults, the way you'd write them
 // in each framework, or for Vanilla, its DOM contract with the first tag.
@@ -94,7 +94,9 @@ const code = computed(() => {
     removable.value && onRemove,
   ].filter(Boolean);
   const links = link.value ? "\n\n<!-- Each tag in labels has an href, like { value: \"bug\", label: \"Bug\", href: \"/labels/bug\" }. -->" : "";
-  if (fw === "angular") return `<div appTagGroup ${props.join(" ")}></div>${links}`;
+  if (fw === "angular") {
+    return `<div appTagGroup ${props.join(" ")}></div>${links}`;
+  }
   const comment = (text: string) => (fw === "react" || fw === "solid" ? `\n\n{/* ${text} */}` : `\n\n<!-- ${text} -->`);
   return `<TagGroup ${props.join(" ")} />${link.value ? comment('Each tag in labels has an href, like { value: "bug", label: "Bug", href: "/labels/bug" }.') : ""}`;
 });
@@ -129,7 +131,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

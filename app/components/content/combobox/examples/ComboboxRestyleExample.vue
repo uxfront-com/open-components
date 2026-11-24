@@ -15,12 +15,12 @@ const { part } = defineProps<{
   part?: "field" | "panel" | "option" | "tag" | "toggle" | "group-label" | "separator" | "empty";
 }>();
 
-const country = ref<string | string[]>("fr");
-const countries = ref<string | string[]>(["fr", "es"]);
+const country = ref<string | Array<string>>("fr");
+const countries = ref<string | Array<string>>(["fr", "es"]);
 
 const grouped = computed(() => part === "group-label" || part === "separator");
 const several = computed(() => part === "tag");
-const value = ref<string | string[]>(several.value ? ["fr", "es"] : part === "empty" ? "" : "fr");
+const value = ref<string | Array<string>>(several.value ? ["fr", "es"] : part === "empty" ? "" : "fr");
 </script>
 
 <template>

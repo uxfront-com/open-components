@@ -6,13 +6,13 @@ import { findSurround, sortNavigation } from "./navigation";
 // A page, and a folder split into an Overview and its parts, as Nuxt Content's
 // navigation lists them.
 const page = (path: string, title: string): ContentNavigationItem => ({ path, title, stem: path });
-const folder = (path: string, title: string, ...parts: ContentNavigationItem[]): ContentNavigationItem => ({
+const folder = (path: string, title: string, ...parts: Array<ContentNavigationItem>): ContentNavigationItem => ({
   path,
   title,
   stem: path,
   children: [page(path, "Overview"), ...parts],
 });
-const section = (path: string, title: string, ...children: ContentNavigationItem[]): ContentNavigationItem => ({
+const section = (path: string, title: string, ...children: Array<ContentNavigationItem>): ContentNavigationItem => ({
   path,
   title,
   stem: path,
@@ -65,8 +65,8 @@ const withHub = (title: string) =>
     ),
   }));
 
-const titles = (items: ContentNavigationItem[] = []) => items.map(({ title }) => title);
-const at = (navigation: ContentNavigationItem[], path: string): ContentNavigationItem | undefined =>
+const titles = (items: Array<ContentNavigationItem> = []) => items.map(({ title }) => title);
+const at = (navigation: Array<ContentNavigationItem>, path: string): ContentNavigationItem | undefined =>
   navigation.reduce<ContentNavigationItem | undefined>(
     (found, item) => found ?? (item.path === path && item.children ? item : at(item.children ?? [], path)),
     undefined,

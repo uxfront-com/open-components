@@ -24,7 +24,9 @@ const mcp = json("mcp.json");
 const ajv = new Ajv2020({ allErrors: true });
 const SCHEMAS = "https://agent-plugins.org/schemas/";
 function errors(document: { $schema: string }) {
-  if (!document.$schema?.startsWith(SCHEMAS)) return [`${document.$schema} isn't an Agent Plugins schema`];
+  if (!document.$schema?.startsWith(SCHEMAS)) {
+    return [`${document.$schema} isn't an Agent Plugins schema`];
+  }
   const validate = ajv.getSchema(document.$schema) ?? ajv.compile(JSON.parse(readFileSync(join("plugins/schemas", document.$schema.slice(SCHEMAS.length)), "utf8")));
   validate(document);
   return validate.errors ?? [];
@@ -34,7 +36,7 @@ function errors(document: { $schema: string }) {
 // clients install it under, and its URL in nuxt.config.ts.
 const SERVER_NAME = readFileSync("mcp/nuxt.config.ts", "utf8").match(/^\s+name: "(.+)",$/m)?.[1];
 const SERVER_URL = readFileSync("nuxt.config.ts", "utf8").match(/^const MCP_URL = "(.+)";$/m)?.[1];
-const TOOLS = readdirSync("mcp/server/mcp/tools").map((file) => file.replace(/\.ts$/, ""));
+const TOOLS = new Set(readdirSync("mcp/server/mcp/tools").map((file) => file.replace(/\.ts$/, "")));
 const PROMPTS = readdirSync("mcp/server/mcp/prompts").map((file) => file.replace(/\.ts$/, ""));
 
 // Every skill, as a client discovers them: each child of skills/ with a SKILL.md.
@@ -155,7 +157,7 @@ describe("The skills", () => {
   it.each(each)("%s only calls the MCP server's tools", (_, { body }) => {
     const named = spans(body).flatMap((span) => span.match(/^((?:get|list|search)-[a-z-]+)(?: \{.*\})?$/)?.[1] ?? []);
     expect(named.length).toBeGreaterThan(0);
-    expect(named.filter((tool) => !TOOLS.includes(tool))).toEqual([]);
+    expect(named.filter((tool) => !TOOLS.has(tool))).toEqual([]);
   });
 
   // A call with a placeholder, like `<component>`, is checked on every shipped component's page.
@@ -166,9 +168,13 @@ describe("The skills", () => {
       const pages = placeholder(name) ? shipped.map((component) => component.key) : name ? [name] : [];
       return pages.flatMap((key) => {
         const page = standard.pages.find((candidate) => candidate.key === key);
-        if (!page) return [`${tool}: no page ${key}`];
-        if (args.component && !placeholder(args.component) && !standard.components.some((component) => component.key === key)) return [`${tool}: no component ${key}`];
-        const sections = ((args.sections ?? []) as string[]).filter((section) => !placeholder(section));
+        if (!page) {
+          return [`${tool}: no page ${key}`];
+        }
+        if (args.component && !placeholder(args.component) && !standard.components.some((component) => component.key === key)) {
+          return [`${tool}: no component ${key}`];
+        }
+        const sections = ((args.sections ?? []) as Array<string>).filter((section) => !placeholder(section));
         return sections
           .filter((section) => !page.headings.some((heading) => heading.text === section))
           .map((section) => `${tool}: no section "${section}" on ${key}`);

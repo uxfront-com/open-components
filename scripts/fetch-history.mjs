@@ -18,7 +18,9 @@ if (shallow()) {
     reason = `\n${error.message}`;
   }
   // The site still builds, with every page dated by the latest commit.
-  if (shallow()) console.warn(`fetch-history: the clone is still shallow, so the sitemap dates every page by the latest commit.${reason}`);
+  if (shallow()) {
+    console.warn(`fetch-history: the clone is still shallow, so the sitemap dates every page by the latest commit.${reason}`);
+  }
 } else {
   console.log("fetch-history: the clone has its full history.");
 }

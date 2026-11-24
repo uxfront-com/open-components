@@ -11,18 +11,21 @@ const { standard } = buildStandard({ root: process.cwd(), site: "https://opencom
 const component = (key: string) => standard.components.find((candidate) => candidate.key === key)!;
 
 // The pages wrap their prompts at about 90 characters, and the server doesn't.
-const normalise = (text: string) => text.replace(/\s+/g, " ").trim();
+const normalise = (text: string) => text.replaceAll(/\s+/g, " ").trim();
 
 // The code blocks in a section, each with the framework slot it's in, if any.
-function blocks(page: Page, heading: Heading): { framework?: string; text: string }[] {
-  const found: { framework?: string; text: string }[] = [];
+function blocks(page: Page, heading: Heading): Array<{ framework?: string; text: string }> {
+  const found: Array<{ framework?: string; text: string }> = [];
   let framework: string | undefined;
-  let block: string[] | undefined;
+  let block: Array<string> | undefined;
   // The blank line at the end closes a block that ends the section.
   for (const { text, code } of scan([...page.markdown.split("\n").slice(heading.start, heading.end), ""].join("\n"))) {
     if (code) {
-      if (block) block.push(text);
-      else block = [];
+      if (block) {
+        block.push(text);
+      } else {
+        block = [];
+      }
       continue;
     }
     if (block) {
@@ -50,7 +53,9 @@ describe("The prompts", () => {
   it("are on the pages they're checked against", () => {
     const keys = sections.map(({ page }) => page.key);
     expect(keys).toEqual(expect.arrayContaining(["design-tokens", "button"]));
-    for (const { page } of sections) expect(page.key === "design-tokens" || page.contract?.kind === "component", page.path).toBe(true);
+    for (const { page } of sections) {
+      expect(page.key === "design-tokens" || page.contract?.kind === "component", page.path).toBe(true);
+    }
   });
 
   describe.each(sections.filter(({ page }) => page.contract?.kind === "component").map(({ page, blocks }) => [page.key, blocks] as const))(
@@ -61,7 +66,9 @@ describe("The prompts", () => {
 
       it("build the component in each framework the page has one for", () => {
         expect(builds.length).toBeGreaterThan(0);
-        for (const { framework, text } of builds) expect(normalise(buildText(standard, component(key), framework))).toBe(text);
+        for (const { framework, text } of builds) {
+          expect(normalise(buildText(standard, component(key), framework))).toBe(text);
+        }
       });
 
       it("review the component", () => {

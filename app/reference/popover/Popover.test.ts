@@ -1,10 +1,12 @@
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type VNodeChild } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { VNodeChild } from "vue";
 import Dialog from "../dialog/Dialog.vue";
 import Tooltip from "../tooltip/Tooltip.vue";
-import Popover, { type PopoverProps } from "./Popover.vue";
+import Popover from "./Popover.vue";
+import type { PopoverProps } from "./Popover.vue";
 
 // jsdom has no Popover API, so these stand in for the parts the Popover relies on: showing
 // and hiding with `beforetoggle` and `toggle`, giving focus back to whatever had it before,
@@ -32,15 +34,20 @@ function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | 
     // where a click doesn't focus the button.
     const before = previous.get(el);
     if (focusPrevious && el.contains(document.activeElement)) {
-      if (before instanceof HTMLElement && before !== document.body) before.focus();
-      else (document.activeElement as HTMLElement).blur();
+      if (before instanceof HTMLElement && before !== document.body) {
+        before.focus();
+      } else {
+        (document.activeElement as HTMLElement).blur();
+      }
     }
   }
   // jsdom hides every popover, as browsers hide a closed one, but can't match :popover-open,
   // which shows an open one, so this stands in for it.
   el.style.display = newState === "open" ? "flex" : "";
   const fire = (old: string) => el.dispatchEvent(Object.assign(new Event("toggle"), { newState, oldState: old, source }));
-  if (!deferToggle) return fire(oldState);
+  if (!deferToggle) {
+    return fire(oldState);
+  }
   const pending = pendingToggle.get(el);
   clearTimeout(pending?.timer);
   const old = pending?.oldState ?? oldState;
@@ -55,16 +62,22 @@ function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | 
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
@@ -72,11 +85,15 @@ beforeAll(() => {
   document.addEventListener("click", (event) => {
     const invoker = (event.target as Element).closest<HTMLElement>("[popovertarget]");
     const target = invoker && document.getElementById(invoker.getAttribute("popovertarget")!);
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     queueMicrotask(() => (shown.has(target) ? toggle(target, "closed", invoker) : toggle(target, "open", invoker)));
   });
   window.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || event.defaultPrevented) return;
+    if (event.key !== "Escape" || event.defaultPrevented) {
+      return;
+    }
     queueMicrotask(() => [...shown].at(-1)?.hidePopover());
   });
   let down: EventTarget | null = null;
@@ -97,15 +114,20 @@ beforeAll(() => {
 // Escape stand-ins show or hide the popover in a microtask, which may not have run yet when
 // this starts, so it waits a task at a time until no `toggle` is left.
 async function toggled() {
-  do await new Promise((resolve) => setTimeout(resolve));
-  while (pendingToggle.size);
+  do {
+    await new Promise((resolve) => {
+      setTimeout(resolve);
+    });
+  } while (pendingToggle.size);
 }
 
 afterEach(() => {
   shown.clear();
   deferToggle = false;
   // A `toggle` still on its way would reach a popover the next test can't see.
-  for (const { timer } of pendingToggle.values()) clearTimeout(timer);
+  for (const { timer } of pendingToggle.values()) {
+    clearTimeout(timer);
+  }
   pendingToggle.clear();
 });
 
@@ -553,6 +575,27 @@ describe("Popover", () => {
     expect(screen.getByRole("button", { name: "Filters" })).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("gives focus back to its trigger when it unmounts while it's open, with the toggle a task late", async () => {
+    const shownPopover = ref(true);
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters" }),
+        shownPopover.value ? h(Popover, { id: "filters", title: "Filters" }, () => field("open-only", "Open issues only")) : null,
+      ],
+    });
+    deferToggle = true;
+    const trigger = screen.getByRole("button", { name: "Filters" });
+    // As in Safari, where a click doesn't focus the button.
+    trigger.click();
+    await toggled();
+    expect(screen.getByRole("textbox", { name: "Open issues only" })).toHaveFocus();
+
+    shownPopover.value = false;
+    await nextTick();
+    await toggled();
+    expect(trigger).toHaveFocus();
+  });
+
   it("opens again when your code closes it and opens it again before the browser says it closed", async () => {
     deferToggle = true;
     const open = ref(false);
@@ -670,9 +713,12 @@ describe("Popover", () => {
     const fallback = render(Popover, { props: { id: "hint", title: "Hint" } });
     expect(fallback.container.querySelector(".popover")).toHaveAttribute("data-placement", "bottom");
     // The close button is a Button, with parts of its own.
-    const parts = [...el.querySelectorAll("[data-slot]")]
+    const parts = el
+      .querySelectorAll("[data-slot]")
+      .values()
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))
-      .map((part) => part.getAttribute("data-slot"));
+      .map((part) => part.getAttribute("data-slot"))
+      .toArray();
     expect(parts).toEqual(["header", "title", "close", "body", "arrow"]);
   });
 
@@ -681,7 +727,7 @@ describe("Popover", () => {
     const first = render(Popover, options).container.innerHTML;
     const { container, rerender } = render(Popover, options);
     // The anchor's name is generated once it mounts, so it's left out of the comparison.
-    const strip = (html: string) => html.replace(/ style="[^"]*"/g, "");
+    const strip = (html: string) => html.replaceAll(/ style="[^"]*"/g, "");
     expect(strip(container.innerHTML)).toBe(strip(first));
     expect(first).not.toMatch(/id="(?!filters)/);
 
@@ -720,7 +766,7 @@ describe("Popover", () => {
     screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 300, 10, 30);
     popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
-    expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
+    expect(Number.parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
   });
 
   it("points its arrow from the side it opened on when the screen's edge pushes it off the trigger's centre", async () => {
@@ -749,7 +795,9 @@ describe("Popover", () => {
     await openFrom(user);
     expect(popover()).toHaveAttribute("data-state", "open");
     expect(popover().querySelector('[data-slot="arrow"]')).toBeNull();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
+    });
     expect(popover()).not.toHaveAttribute("data-side");
   });
 
@@ -772,7 +820,7 @@ describe("Popover", () => {
     expect(anchor).toMatch(/^--popover-/);
     expect(popover().style.getPropertyValue("position-anchor")).toBe(anchor);
     // Its start is the trigger's right in right-to-left text: past its right edge, at 500.
-    expect(parseFloat(popover().style.left)).toBe(500);
+    expect(Number.parseFloat(popover().style.left)).toBe(500);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -795,7 +843,7 @@ describe("Popover", () => {
     await openFrom(user);
     await nextTick();
     // Its end is the trigger's left: 200px wide, before its left edge at 400.
-    expect(parseFloat(popover().style.left)).toBe(200);
+    expect(Number.parseFloat(popover().style.left)).toBe(200);
     unmount();
 
     page();
@@ -804,7 +852,7 @@ describe("Popover", () => {
     size();
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(640);
+    expect(Number.parseFloat(popover().style.top)).toBe(640);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -822,7 +870,7 @@ describe("Popover", () => {
 
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(336);
+    expect(Number.parseFloat(popover().style.top)).toBe(336);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();

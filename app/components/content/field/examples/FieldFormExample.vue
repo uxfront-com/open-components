@@ -18,8 +18,12 @@ const fields = { name: useTemplateRef("name"), email: useTemplateRef("email"), c
 const checks: Record<Name, (value: string) => string> = {
   name: (value) => (value.trim() ? "" : "Enter your full name"),
   email: (value) => {
-    if (!value) return "Enter your email address";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter an email address in the correct format, like name@example.com";
+    if (!value) {
+      return "Enter your email address";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return "Enter an email address in the correct format, like name@example.com";
+    }
     return "";
   },
   company: () => "",
@@ -27,23 +31,30 @@ const checks: Record<Name, (value: string) => string> = {
 
 // Only checks what people have typed, so tabbing past a field doesn't flag it.
 function leave(name: Name) {
-  if (values[name]) errors[name] = checks[name](values[name]);
+  if (values[name]) {
+    errors[name] = checks[name](values[name]);
+  }
 }
 
 function update(name: Name, value = "") {
   values[name] = value;
   // Once an error shows, check again as people type, so it clears as soon as it's fixed.
-  if (errors[name]) errors[name] = checks[name](value);
+  if (errors[name]) {
+    errors[name] = checks[name](value);
+  }
 }
 
 async function submit() {
-  for (const name of Object.keys(checks) as Name[]) errors[name] = checks[name](values[name]);
-  const invalid = (Object.keys(checks) as Name[]).filter((name) => errors[name]);
-  if (invalid.length) {
+  for (const name of Object.keys(checks) as Array<Name>) {
+    errors[name] = checks[name](values[name]);
+  }
+  const invalid = (Object.keys(checks) as Array<Name>).filter((name) => errors[name]);
+  const [first] = invalid;
+  if (first) {
     status.value = `Couldn't create your account. ${invalid.length === 1 ? "There's 1 error" : `There are ${invalid.length} errors`} to fix.`;
     // Focus once the errors are in the page, so screen readers read the first one with its field.
     await nextTick();
-    fields[invalid[0]!].value?.input?.focus();
+    fields[first].value?.input?.focus();
     return;
   }
   status.value = "Your account is ready";

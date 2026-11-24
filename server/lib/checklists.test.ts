@@ -15,7 +15,7 @@ const frontmatter = (source: string) => parse(source.match(/^---\r?\n([\s\S]*?)\
 
 // A layer page's source, with a rules table of the given rows, each
 // [rule, level, requirement, basis].
-const layer = (name: string, rows: string[][], ...before: string[]) =>
+const layer = (name: string, rows: Array<Array<string>>, ...before: Array<string>) =>
   [
     "---",
     "title: A layer",
@@ -100,7 +100,7 @@ describe("The accessibility checklists", () => {
     // The contracts read the same tables on their own, Basis included.
     const expected = standard.pages
       .filter((page) => page.contract?.kind === "component")
-      .flatMap((page) => (parse(page.contract!.yaml).rules as { id: string; basis: string }[]).filter((rule) => picked(rule.basis)))
+      .flatMap((page) => (parse(page.contract!.yaml).rules as Array<{ id: string; basis: string }>).filter((rule) => picked(rule.basis)))
       .map((rule) => rule.id);
     expect(expected.length).toBeGreaterThan(0);
     expect([...listed].sort()).toEqual([...expected].sort());
@@ -148,7 +148,7 @@ describe("citedCriteria", () => {
   });
 
   it("names a criterion by its WCAG 2.2 name", () => {
-    expect(citedCriteria("WCAG 1.4.3 (AA)")[0]).toEqual({ number: "1.4.3", ...WCAG["1.4.3"] });
+    expect(citedCriteria("WCAG 1.4.3 (AA)")[0]).toEqual({ number: "1.4.3", ...WCAG.get("1.4.3") });
   });
 
   it.each([
@@ -218,6 +218,13 @@ describe("layerRows", () => {
   it("names a column the table is missing", () => {
     const source = "## UX Checklist\n\n| Rule | Level | Requirement |\n| - | - | - |\n| `widget/one` | Must | It has a name |\n";
     expect(() => layerRows(FILE, source)).toThrow(/has no Basis column/);
+  });
+
+  it("names the file of a row with fewer cells than the header", () => {
+    const source = "## UX Checklist\n\n| Rule | Level | Requirement | Basis |\n| - | - | - | - |\n| `widget/one` | Must |\n";
+    expect(() => layerRows(FILE, source)).toThrow(
+      "3.components/widget/2.ux.md: a row of the UX Checklist table has no Basis cell",
+    );
   });
 });
 

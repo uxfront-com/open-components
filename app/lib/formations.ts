@@ -18,7 +18,9 @@ const PRIVATE = /\$([A-Za-z][A-Za-z0-9_]*)/g;
  */
 export function spotlight(formation: Formation, plate: number): Formation {
   const anchor = formation.anchors[plate];
-  if (!anchor) throw new Error(`Formation "${formation.key}" has no anchor for plate ${plate}.`);
+  if (!anchor) {
+    throw new Error(`Formation "${formation.key}" has no anchor for plate ${plate}.`);
+  }
   const at: Vec3 = [0, 0, 0];
   anchor.place({ stage: 0, local: 1, approach: 1, presence: 1, time: 0 }, at);
   return wrapMain(
@@ -47,13 +49,13 @@ export function share(formation: Formation, source: Formation): Formation {
       throw new Error(`Formation "${formation.key}" updates its uniforms every frame.`);
     }
     const names = new Set<string>();
-    const body = glsl.replace(UNIFORM, (_, name: string) => {
+    const body = glsl.replaceAll(UNIFORM, (_, name: string) => {
       names.add(name);
       return "";
     });
     return {
       ...shader,
-      glsl: body.replace(PRIVATE, (match, name: string) =>
+      glsl: body.replaceAll(PRIVATE, (match, name: string) =>
         names.has(name) ? `${source.key}_${name}` : match,
       ),
     };

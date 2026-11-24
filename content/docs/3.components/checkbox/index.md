@@ -116,7 +116,9 @@ const input = useTemplateRef<HTMLInputElement>("input");
 // A cancelled click puts back the checked and indeterminate states, and fires no
 // change, whether it came from the box, its label or Space.
 function onClick(event: MouseEvent) {
-  if (readonly) event.preventDefault();
+  if (readonly) {
+    event.preventDefault();
+  }
 }
 
 // Bound before your own listeners, so a `change` listener of yours already sees the new state.
@@ -135,7 +137,9 @@ async function onChange(event: Event) {
 // once it has rendered, which also keeps it out of the server's markup.
 watchEffect(
   () => {
-    if (input.value) input.value.indeterminate = indeterminate.value;
+    if (input.value) {
+      input.value.indeterminate = indeterminate.value;
+    }
   },
   { flush: "post" },
 );
@@ -381,7 +385,8 @@ onMounted(() => {
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import Checkbox from "./Checkbox.vue";
 
 const terms = () => "I agree to the terms";
@@ -505,7 +510,7 @@ describe("Checkbox", () => {
   it("binds checked with v-model, or keeps its own state without it, starting from checked", async () => {
     const user = userEvent.setup();
     const agreed = ref(false);
-    const seen: boolean[] = [];
+    const seen: Array<boolean> = [];
     render({
       render: () => [
         h(

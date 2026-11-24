@@ -19,7 +19,8 @@ import { join } from "node:path";
 import { parse } from "yaml";
 import { anchors, cells, heading, scan } from "../../mcp/lib/markdown";
 import { docsPath } from "./raw";
-import { type Criterion, understandingUrl, WCAG, type WcagLevel } from "./wcag";
+import { understandingUrl, WCAG } from "./wcag";
+import type { Criterion, WcagLevel } from "./wcag";
 
 /** Where the checklists live in content/docs/, and where the components do. */
 export const CHECKLISTS = "4.accessibility";
@@ -39,7 +40,7 @@ export interface ChecklistRow {
   requirement: string;
   basis: string;
   /** The WCAG 2.2 criteria its Basis cites, in the order it cites them. */
-  criteria: (Criterion & { number: string })[];
+  criteria: Array<Criterion & { number: string }>;
   /** Its rules table on its layer page, like /docs/components/button/ui#ui-checklist. */
   link: string;
 }
@@ -47,7 +48,7 @@ export interface ChecklistRow {
 export interface ChecklistLayer {
   /** The layer's short name, like UI. */
   name: string;
-  rows: ChecklistRow[];
+  rows: Array<ChecklistRow>;
 }
 
 /** Whether a rule with this Basis goes on the accessibility checklist. */
@@ -63,29 +64,41 @@ export function picked(basis: string): boolean {
  * criterion's, or a run with no level, so a slip in a new rule fails `pnpm test`
  * rather than reaching the page.
  */
-export function citedCriteria(basis: string): (Criterion & { number: string })[] {
-  const found: (Criterion & { number: string })[] = [];
+export function citedCriteria(basis: string): Array<Criterion & { number: string }> {
+  const found: Array<Criterion & { number: string }> = [];
   for (const match of basis.matchAll(/\bWCAG\s+/g)) {
     let rest = basis.slice(match.index + match[0].length);
-    let pending: string[] = [];
+    let pending: Array<string> = [];
     for (;;) {
       const next = rest.match(/^(\d+\.\d+\.\d+)(?:\s+\((A{1,3})\))?(?:,\s*|\s*$)/);
-      if (!next) break;
-      pending.push(next[1]!);
+      if (!next) {
+        break;
+      }
+      // The number takes part in every match, so the default never applies.
+      const [, number = ""] = next;
+      pending.push(number);
       rest = rest.slice(next[0].length);
       const level = next[2] as WcagLevel | undefined;
-      if (!level) continue;
+      if (!level) {
+        continue;
+      }
       for (const number of pending) {
-        const criterion = WCAG[number];
-        if (!criterion) throw new Error(`The Basis "${basis}" cites WCAG ${number}, which isn't a WCAG 2.2 success criterion`);
+        const criterion = WCAG.get(number);
+        if (!criterion) {
+          throw new Error(`The Basis "${basis}" cites WCAG ${number}, which isn't a WCAG 2.2 success criterion`);
+        }
         if (criterion.level !== level) {
           throw new Error(`The Basis "${basis}" gives WCAG ${number} level ${level}, but it's at level ${criterion.level} in WCAG 2.2`);
         }
-        if (!found.some((other) => other.number === number)) found.push({ number, ...criterion });
+        if (!found.some((other) => other.number === number)) {
+          found.push({ number, ...criterion });
+        }
       }
       pending = [];
     }
-    if (pending.length) throw new Error(`The Basis "${basis}" cites WCAG ${pending.join(", ")} without a level, like (A)`);
+    if (pending.length) {
+      throw new Error(`The Basis "${basis}" cites WCAG ${pending.join(", ")} without a level, like (A)`);
+    }
   }
   return found;
 }
@@ -100,42 +113,69 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
   const lines = scan(source.replace(FRONTMATTER, ""));
   const slug = anchors();
   let layer: { name: string; anchor: string; columns?: Record<(typeof COLUMNS)[number], number> } | undefined;
-  const rows: ChecklistRow[] = [];
+  const rows: Array<ChecklistRow> = [];
   for (const { text, code } of lines) {
-    if (code) continue;
+    if (code) {
+      continue;
+    }
     const match = heading(text);
     if (match) {
       // Every heading gets its anchor, in order, as the site gives them.
       const anchor = slug(match.text);
-      if (match.level !== 2) continue;
-      if (layer) break;
+      if (match.level !== 2) {
+        continue;
+      }
+      if (layer) {
+        break;
+      }
       const rules = match.text.match(RULES);
-      if (rules) layer = { name: rules[1]!, anchor };
+      if (rules) {
+        // The layer's name takes part in every match, so the default never applies.
+        const [, name = ""] = rules;
+        layer = { name, anchor };
+      }
       continue;
     }
-    if (!layer || !text.startsWith("|")) continue;
+    if (!layer || !text.startsWith("|")) {
+      continue;
+    }
     const row = cells(text);
     if (!layer.columns) {
       const columns = Object.fromEntries(COLUMNS.map((name) => [name, row.indexOf(name)]));
       const missing = COLUMNS.filter((name) => columns[name] === -1);
-      if (missing.length) throw new Error(`${file}: the ${layer.name} Checklist table has no ${missing.join(", ")} column`);
+      if (missing.length) {
+        throw new Error(`${file}: the ${layer.name} Checklist table has no ${missing.join(", ")} column`);
+      }
       layer.columns = columns as Record<(typeof COLUMNS)[number], number>;
       continue;
     }
     // The line under the header row.
-    if (row.every((cell) => /^:?-+:?$/.test(cell))) continue;
-    const basis = row[layer.columns.Basis]!;
-    if (!picked(basis)) continue;
+    if (row.every((cell) => /^:?-+:?$/.test(cell))) {
+      continue;
+    }
+    const { name, columns } = layer;
+    // A row with fewer cells than the header is a broken table, not one with empty cells.
+    const cellOf = (column: (typeof COLUMNS)[number]) => {
+      const value = row[columns[column]];
+      if (value === undefined) {
+        throw new Error(`${file}: a row of the ${name} Checklist table has no ${column} cell`);
+      }
+      return value;
+    };
+    const basis = cellOf("Basis");
+    if (!picked(basis)) {
+      continue;
+    }
     let criteria: ChecklistRow["criteria"];
     try {
       criteria = citedCriteria(basis);
     } catch (error) {
-      throw new Error(`${file}: ${(error as Error).message}`);
+      throw new Error(`${file}: ${(error as Error).message}`, { cause: error });
     }
     rows.push({
-      rule: row[layer.columns.Rule]!.replaceAll("`", ""),
-      level: row[layer.columns.Level]!,
-      requirement: row[layer.columns.Requirement]!,
+      rule: cellOf("Rule").replaceAll("`", ""),
+      level: cellOf("Level"),
+      requirement: cellOf("Requirement"),
       basis,
       criteria,
       link: `${docsPath(file)}#${layer.anchor}`,
@@ -149,7 +189,7 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
  * the path of its Overview, like /docs/components/checkbox-group, and its layers'
  * rows, in layer order.
  */
-export function checklistPage(component: { title: string; path: string }, layers: ChecklistLayer[]): string {
+export function checklistPage(component: { title: string; path: string }, layers: Array<ChecklistLayer>): string {
   const { title, path } = component;
   const rows = layers.flatMap((layer) => layer.rows);
   const cites = (pattern: RegExp) => rows.some((row) => pattern.test(row.basis));
@@ -188,7 +228,7 @@ export function checklistPage(component: { title: string; path: string }, layers
             : "None",
           row.basis,
         ]
-          .map((cell) => cell.replaceAll("|", "\\|"))
+          .map((cell) => cell.replaceAll("|", String.raw`\|`))
           .join(" | "),
       ).map((row) => `| ${row} |`),
       "",
@@ -215,7 +255,9 @@ export function readChecklists(docs: string): Map<string, string> {
     const dir = join(COMPONENTS, folder);
     const index = readFileSync(join(docs, dir, "index.md"), "utf8");
     const { title } = (parse(index.match(FRONTMATTER)?.[1] ?? "") ?? {}) as { title?: unknown };
-    if (typeof title !== "string") throw new Error(`${dir}/index.md has no title`);
+    if (typeof title !== "string") {
+      throw new Error(`${dir}/index.md has no title`);
+    }
     const layers = readdirSync(join(docs, dir))
       .filter((name) => /^\d+\..+\.md$/.test(name))
       .sort((a, b) => a.localeCompare(b, "en", { numeric: true }))
@@ -230,24 +272,29 @@ export function readChecklists(docs: string): Map<string, string> {
  * section it doesn't have. `pages` holds every docs page's source by its path on
  * the site, a split page's parts each under their own, as the site serves them.
  */
-export function brokenLinks(markdown: string, pages: Map<string, string>): string[] {
-  const broken: string[] = [];
+export function brokenLinks(markdown: string, pages: Map<string, string>): Array<string> {
+  const broken: Array<string> = [];
   for (const { text, code } of scan(markdown.replace(FRONTMATTER, ""))) {
-    if (code) continue;
-    for (const [, path, anchor] of text.matchAll(/\]\((\/docs\/[^)#\s]*)(?:#([^)\s]+))?\)/g)) {
-      const source = pages.get(path!);
+    if (code) {
+      continue;
+    }
+    // The path takes part in every match, so its default never applies.
+    for (const [, path = "", anchor] of text.matchAll(/\]\((\/docs\/[^)#\s]*)(?:#([^)\s]+))?\)/g)) {
+      const source = pages.get(path);
       if (source === undefined) {
         broken.push(`${path}${anchor ? `#${anchor}` : ""}`);
         continue;
       }
-      if (anchor && !headingAnchors(source).includes(anchor)) broken.push(`${path}#${anchor}`);
+      if (anchor && !headingAnchors(source).includes(anchor)) {
+        broken.push(`${path}#${anchor}`);
+      }
     }
   }
   return broken;
 }
 
 // Every heading's anchor on a page, as the site gives them.
-function headingAnchors(source: string): string[] {
+function headingAnchors(source: string): Array<string> {
   const slug = anchors();
   return scan(source.replace(FRONTMATTER, "")).flatMap(({ text, code }) => {
     const match = !code && heading(text);

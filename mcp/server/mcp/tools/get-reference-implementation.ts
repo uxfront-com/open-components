@@ -1,5 +1,6 @@
 import names from "#standard/names";
 import { z } from "zod";
+import { pageByKey } from "../../../lib/pages";
 
 export default defineMcpTool({
   description: `Returns a shipped component's reference implementation: a Vue 3 component that meets every rule in its checklist, the tests that prove it, the helpers it shares with other components and its theme tokens. The live examples on the site run on this code.
@@ -33,7 +34,7 @@ WHEN NOT TO USE: for the requirements, use get-contract. For how the component i
       });
     }
 
-    const page = standard.pages.find((candidate) => candidate.key === component)!;
+    const page = pageByKey(standard, component);
     const shown = reference.files.filter((file) => !wanted || wanted.includes(file.name.toLowerCase()));
     return [
       `# ${page.title}: reference implementation (${reference.framework === "vue" ? "Vue 3" : reference.framework})`,

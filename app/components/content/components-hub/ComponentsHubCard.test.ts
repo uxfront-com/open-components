@@ -58,7 +58,7 @@ describe("ComponentsHubCard", () => {
   it("links each layer, named by its label and then its component, after the heading", () => {
     renderCard();
     const links = screen.getAllByRole("link");
-    expect(links.map((link) => link.textContent?.replace(/\s+/g, " ").trim())).toEqual([
+    expect(links.map((link) => link.textContent?.replaceAll(/\s+/g, " ").trim())).toEqual([
       "Button",
       "UI of the Button",
       "UX of the Button",

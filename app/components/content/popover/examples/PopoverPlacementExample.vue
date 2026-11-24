@@ -9,7 +9,7 @@ const placements = [
   { placement: "bottom", name: "Bottom", text: "It opens below the button." },
   { placement: "start", name: "Start", text: "It opens before the button." },
   { placement: "end", name: "End", text: "It opens after the button." },
-] as const satisfies { placement: PopoverProps["placement"]; name: string; text: string }[];
+] as const satisfies Array<{ placement: PopoverProps["placement"]; name: string; text: string }>;
 </script>
 
 <template>

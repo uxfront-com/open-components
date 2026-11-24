@@ -8,7 +8,7 @@ import type { TagGroupItem } from "~/reference/tag-group/TagGroup.vue";
  * buttons are pressed. The group moves focus to the next remove button, or to Reset, which
  * it's given as fallbackFocus, and announces what went.
  */
-const ALL: TagGroupItem[] = [
+const ALL: Array<TagGroupItem> = [
   { value: "open", label: "Open" },
   { value: "bug", label: "Bug" },
   { value: "assigned", label: "Assigned to me" },

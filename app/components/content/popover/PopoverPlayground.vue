@@ -21,8 +21,8 @@ const placement = ref<Placement>("bottom");
 const arrow = ref(true);
 const content = ref<Content>("filters");
 
-const placements: Placement[] = ["top", "bottom", "start", "end"];
-const contents: Content[] = ["filters", "hint"];
+const placements: Array<Placement> = ["top", "bottom", "start", "end"];
+const contents: Array<Content> = ["filters", "hint"];
 
 // A few options to pick from, or a hint with a link, the two things popovers most often hold.
 const scenarios = {
@@ -36,7 +36,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -44,11 +44,11 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open = line.length > 88 ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), ">"] : [`${line}>`];
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
@@ -78,7 +78,7 @@ const code = computed(() => {
       ? [comment("…a Checkbox for each filter")]
       : ["<p>Press <kbd>?</kbd> anywhere to see them all. <a href=\"/shortcuts\">Every shortcut</a></p>"];
 
-  let popover: string[];
+  let popover: Array<string>;
   if (fw === "vanilla") {
     const close = element(
       "button",
@@ -112,7 +112,7 @@ const code = computed(() => {
       placement.value !== "bottom" && `placement="${placement.value}"`,
       // The arrow is on by default, so it's only written out to turn it off.
       !arrow.value &&
-        ({ react: "arrow={false}", vue: ':arrow="false"', svelte: "arrow={false}", angular: '[arrow]="false"', solid: "arrow={false}", astro: "arrow={false}" } as Record<string, string>)[fw],
+        new Map(Object.entries({ react: "arrow={false}", vue: ':arrow="false"', svelte: "arrow={false}", angular: '[arrow]="false"', solid: "arrow={false}", astro: "arrow={false}" })).get(fw),
     ];
     popover = element(fw === "angular" ? "div" : "Popover", props, body);
   }
@@ -149,7 +149,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

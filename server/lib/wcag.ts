@@ -20,7 +20,7 @@ export interface Criterion {
   slug: string;
 }
 
-export const WCAG: Readonly<Record<string, Criterion>> = {
+export const WCAG: ReadonlyMap<string, Criterion> = new Map(Object.entries({
   "1.1.1": { name: "Non-text Content", level: "A", slug: "non-text-content" },
   "1.2.1": { name: "Audio-only and Video-only (Prerecorded)", level: "A", slug: "audio-only-and-video-only-prerecorded" },
   "1.2.2": { name: "Captions (Prerecorded)", level: "A", slug: "captions-prerecorded" },
@@ -111,7 +111,7 @@ export const WCAG: Readonly<Record<string, Criterion>> = {
   "3.3.9": { name: "Accessible Authentication (Enhanced)", level: "AAA", slug: "accessible-authentication-enhanced" },
   "4.1.2": { name: "Name, Role, Value", level: "A", slug: "name-role-value" },
   "4.1.3": { name: "Status Messages", level: "AA", slug: "status-messages" },
-};
+}));
 
 /** The Understanding WCAG 2.2 page for a criterion, by its slug. */
 export function understandingUrl(criterion: Criterion): string {

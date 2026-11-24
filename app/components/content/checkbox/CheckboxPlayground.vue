@@ -29,7 +29,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -37,18 +37,20 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const close = children.length ? ">" : "/>";
   const open =
     line.length > 88
       ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), close]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   // A short child stays on the line, as in <Checkbox>I agree to the terms</Checkbox>.
   if (open.length === 1 && children.length === 1 && `${open[0]}${children[0]}</${tag}>`.length <= 88) {
     return [`${open[0]}${children[0]}</${tag}>`];
@@ -65,15 +67,15 @@ const code = computed(() => {
   const scripted = fw === "astro" || fw === "vanilla";
 
   // The checked state is bound where the framework holds it, and left to the form where it doesn't.
-  const binding: Record<string, string[]> = {
+  const binding = new Map<string, Array<string>>(Object.entries({
     react: ["checked={checked}", "onChange={(event) => setChecked(event.target.checked)}"],
     vue: ['v-model:checked="checked"'],
     svelte: ["bind:checked"],
     angular: ['[(ngModel)]="checked"'],
     solid: ["checked={checked()}", "onChange={(event) => setChecked(event.currentTarget.checked)}"],
-    astro: ['name="terms"', checked.value && "checked"].filter((attribute) => !!attribute) as string[],
-    vanilla: ['name="terms"', checked.value && "checked"].filter((attribute) => !!attribute) as string[],
-  };
+    astro: ['name="terms"', checked.value && "checked"].filter((attribute) => !!attribute) as Array<string>,
+    vanilla: ['name="terms"', checked.value && "checked"].filter((attribute) => !!attribute) as Array<string>,
+  }));
   // Angular binds the property on the <input>, and Astro and Vanilla set it from a script.
   const mixed = indeterminate.value && !scripted && (fw === "angular" ? '[indeterminate]="true"' : "indeterminate");
   const attributes = [
@@ -81,7 +83,7 @@ const code = computed(() => {
     fw === "vanilla" && 'type="checkbox"',
     fw === "angular" && 'type="checkbox"',
     scripted && indeterminate.value && 'id="terms"',
-    ...binding[fw]!,
+    ...(binding.get(fw) ?? []),
     fw !== "vanilla" && fw !== "angular" && size.value !== "md" && `size="${size.value}"`,
     mixed,
     disabled.value && "disabled",
@@ -93,7 +95,7 @@ const code = computed(() => {
     invalid.value && 'aria-describedby="terms-error"',
   ];
 
-  let checkbox: string[];
+  let checkbox: Array<string>;
   if (fw === "angular" || fw === "vanilla") {
     // The <label> is the root, with the <input> written out inside it.
     const indicator = '<svg data-slot="indicator" viewBox="0 0 16 16" aria-hidden="true">…</svg>';
@@ -160,7 +162,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

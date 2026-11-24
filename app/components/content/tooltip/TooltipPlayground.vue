@@ -21,8 +21,8 @@ const placement = ref<Placement>("top");
 const delay = ref("500");
 const arrow = ref(true);
 
-const types: Type[] = ["label", "description"];
-const placements: Placement[] = ["top", "bottom", "start", "end"];
+const types: Array<Type> = ["label", "description"];
+const placements: Array<Placement> = ["top", "bottom", "start", "end"];
 const delays = ["300", "500", "700", "1000"];
 
 // A label shows an icon-only button's hidden name, and a description adds a hint to a named one.
@@ -34,7 +34,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -42,7 +42,7 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
 // The Tooltip with only the props that differ from the defaults, around its trigger,
 // the way you'd write them in each framework, or for Vanilla, the markup from the
@@ -56,7 +56,7 @@ const code = computed(() => {
     delay.value !== "500" && (fw === "vue" ? `:delay="${delay.value}"` : `delay={${delay.value}}`),
     placement.value !== "top" && `placement="${placement.value}"`,
     !arrow.value && (fw === "vue" ? ':arrow="false"' : "arrow={false}"),
-  ].filter(Boolean) as string[];
+  ].filter(Boolean) as Array<string>;
 
   switch (fw) {
     case "react":
@@ -169,7 +169,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

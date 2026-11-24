@@ -4,7 +4,7 @@ import { countWords, readingTime } from "./reading-time";
 
 // A paragraph of `count` words, as Nuxt Content's minimark stores it.
 const paragraph = (count: number) => ["p", {}, Array.from({ length: count }, () => "word").join(" ")];
-const minimark = (...value: unknown[]) => ({ type: "minimark", value });
+const minimark = (...value: Array<unknown>) => ({ type: "minimark", value });
 
 describe("countWords", () => {
   it("counts the words of every element, code and inline code included", () => {

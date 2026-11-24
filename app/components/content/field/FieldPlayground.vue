@@ -28,7 +28,7 @@ const required = ref(true);
 const disabled = ref(false);
 const invalid = ref(false);
 
-const controls: { label: string; value: Control }[] = [
+const controls: Array<{ label: string; value: Control }> = [
   { label: "Input", value: "Input" },
   { label: "Textarea", value: "Textarea" },
   { label: "Checkbox", value: "Checkbox" },
@@ -59,7 +59,7 @@ const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");
 
 // Highlighted the way the page's own examples for each framework are.
-const LANGUAGES: Record<string, string> = {
+const LANGUAGES = new Map<string, string>(Object.entries({
   react: "tsx",
   vue: "vue",
   svelte: "svelte",
@@ -67,13 +67,13 @@ const LANGUAGES: Record<string, string> = {
   solid: "tsx",
   astro: "astro",
   vanilla: "html",
-};
+}));
 
-const indent = (lines: string[], by = 2) => lines.map((line) => (line ? `${" ".repeat(by)}${line}` : line));
+const indent = (lines: Array<string>, by = 2) => lines.map((line) => (line ? `${" ".repeat(by)}${line}` : line));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children?: string[]) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children?: Array<string>) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open =
     line.length > 88 ? [`<${tag}`, ...indent(attrs), children ? ">" : "/>"] : [`${line}${children ? ">" : " />"}`];
@@ -180,7 +180,7 @@ function vanilla() {
     disabled.value && "disabled",
   ];
   const kind = { Input: "text", Textarea: "text", Checkbox: "checkbox", Switch: "switch", CheckboxGroup: "checkbox-group" }[control.value];
-  let markup: string[];
+  let markup: Array<string>;
   switch (control.value) {
     case "Input":
       markup = element("div", ['class="input"', `data-size="${s}"`], element("input", ['data-slot="control"', 'type="email"', ...wired]));
@@ -227,7 +227,9 @@ function vanilla() {
 // way you'd write it in each framework, or for Vanilla, the markup from the DOM contract.
 const code = computed(() => {
   const fw = framework.value;
-  if (fw === "vanilla") return vanilla().join("\n");
+  if (fw === "vanilla") {
+    return vanilla().join("\n");
+  }
   const { id, label, hint, error } = copy.value;
   const radios = control.value === "RadioGroup";
   const props = [
@@ -239,11 +241,15 @@ const code = computed(() => {
     required.value && takesRequired.value && "required",
     disabled.value && "disabled",
   ];
-  if (fw === "angular") return element("div", ["appField", ...props.slice(1)], angular()).join("\n");
-  let body: string[];
-  if (fw === "react" || fw === "vue") body = component(fw, false);
-  else if (fw === "svelte") body = ["{#snippet children(control)}", ...indent(component(fw, true)), "{/snippet}"];
-  else {
+  if (fw === "angular") {
+    return element("div", ["appField", ...props.slice(1)], angular()).join("\n");
+  }
+  let body: Array<string>;
+  if (fw === "react" || fw === "vue") {
+    body = component(fw, false);
+  } else if (fw === "svelte") {
+    body = ["{#snippet children(control)}", ...indent(component(fw, true)), "{/snippet}"];
+  } else {
     const inner = component(fw, true);
     body = inner.length === 1 ? [`{(control) => ${inner[0]}}`] : ["{(control) => (", ...indent(inner), ")}"];
   }
@@ -294,7 +300,7 @@ const code = computed(() => {
 
     <ProsePre
       :code="code"
-      :language="LANGUAGES[framework]"
+      :language="LANGUAGES.get(framework)"
       :ui="{ root: 'my-0' }"
       class="rounded-none border-0 border-t border-muted"
     >{{ code }}</ProsePre>

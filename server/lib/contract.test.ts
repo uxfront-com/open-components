@@ -19,7 +19,7 @@ function errors(contract: unknown) {
 }
 
 // Every contract the docs publish at /raw/<path>.yaml, by page.
-const contracts = readPages("content/docs").flatMap(({ file, source }): [string, any][] => {
+const contracts = readPages("content/docs").flatMap(({ file, source }): Array<[string, any]> => {
   const contract = buildContract(source);
   return contract ? [[file, parse(contract)]] : [];
 });

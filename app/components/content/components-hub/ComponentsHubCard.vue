@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { type VNode, useSlots } from "vue";
+import { useSlots } from "vue";
+import type { VNode } from "vue";
 import { layout } from "./card";
 
 /**
@@ -32,7 +33,7 @@ defineProps<{
 const slots = useSlots();
 
 // Renders what the markdown had inside the sentence's paragraph, like inline code.
-const Nodes = (props: { nodes: VNode[] }) => props.nodes;
+const Nodes = (props: { nodes: Array<VNode> }) => props.nodes;
 </script>
 
 <template>

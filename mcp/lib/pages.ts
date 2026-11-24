@@ -15,7 +15,20 @@ export const PAGE_LIMIT = 8000;
  * instead: under what MCP clients pass on whole by default, like Gemini CLI's
  * 40,000 characters and Codex's 48,000 bytes. Longer replies get cut short.
  */
-export const REPLY_LIMIT = 36000;
+export const REPLY_LIMIT = 36_000;
+
+/**
+ * The page with a key the standard gave out itself, like a component's or a rule's.
+ * Each of those comes from a page, so a missing one means the standard was built
+ * wrong: an error, rather than a page an agent asked for that isn't there.
+ */
+export function pageByKey(standard: Standard, key: string): Page {
+  const page = standard.pages.find((candidate) => candidate.key === key);
+  if (!page) {
+    throw new Error(`The standard has no page with the key "${key}"`);
+  }
+  return page;
+}
 
 /**
  * Finds a page from what an agent might call it: its path (`/docs/components/button`),
@@ -44,6 +57,31 @@ export function findPage(standard: Standard, name: string): Page | undefined {
   );
 }
 
+/** The sections a page has under the names asked for, and the names it has none for. */
+export interface FoundSections {
+  found: Array<Heading>;
+  missing: Array<string>;
+}
+
+// A heading's anchor, from its text.
+const slug = (text: string) => anchors()(text);
+
+// Every way a heading can be named loosely: its text without "(DX)", and "DX".
+const loose = (text: string) => {
+  const short = text.replace(/\s*\(([^)]*)\)$/, "");
+  const abbreviation = text.match(/\(([^)]*)\)$/)?.[1];
+  return [short, ...(abbreviation ? [abbreviation] : [])].map(plain);
+};
+const plain = (text: string) =>
+  slug(text.toLowerCase().replaceAll("colour", "color"))
+    .split("-")
+    .map((word) => (word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word))
+    .join("-");
+const strict = (heading: { text: string; anchor?: string }, name: string) =>
+  heading.anchor === name || heading.text.toLowerCase() === name || slug(heading.text) === slug(name);
+const sloppy = (heading: { text: string; anchor?: string }, name: string) =>
+  strict(heading, name) || loose(heading.text).includes(plain(name));
+
 /**
  * The headings a list of section names point at, and the names it can't find. A
  * name can be a heading's text or its anchor, in any case and with or without
@@ -54,25 +92,9 @@ export function findPage(standard: Standard, name: string): Page | undefined {
  * it, like "DX", in US spelling, like "Colors", or singular, like "Toggle button".
  * The page's own title names its introduction, before its first heading.
  */
-export function findSections(page: Page, names: string[]): { found: Heading[]; missing: string[] } {
-  const found: Heading[] = [];
-  const missing: string[] = [];
-  const slug = (text: string) => anchors()(text);
-  // Every way a heading can be named loosely: its text without "(DX)", and "DX".
-  const loose = (text: string) => {
-    const short = text.replace(/\s*\(([^)]*)\)$/, "");
-    const abbreviation = text.match(/\(([^)]*)\)$/)?.[1];
-    return [short, ...(abbreviation ? [abbreviation] : [])].map(plain);
-  };
-  const plain = (text: string) =>
-    slug(text.toLowerCase().replaceAll("colour", "color"))
-      .split("-")
-      .map((word) => (word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word))
-      .join("-");
-  const strict = (heading: { text: string; anchor?: string }, name: string) =>
-    heading.anchor === name || heading.text.toLowerCase() === name || slug(heading.text) === slug(name);
-  const sloppy = (heading: { text: string; anchor?: string }, name: string) =>
-    strict(heading, name) || loose(heading.text).includes(plain(name));
+export function findSections(page: Page, names: Array<string>): FoundSections {
+  const found: Array<Heading> = [];
+  const missing: Array<string> = [];
 
   for (const name of names) {
     const parts = name
@@ -81,7 +103,9 @@ export function findSections(page: Page, names: string[]): { found: Heading[]; m
       .map((part) => part.trim().replace(/\s*\(#[^)]*\)$/, "").replace(/^#/, "").replaceAll("`", "").toLowerCase())
       .filter(Boolean);
     // A trail from search-docs starts with the page's title, which isn't a heading.
-    if (parts.length > 1 && parts[0] === page.title.toLowerCase()) parts.shift();
+    if (parts.length > 1 && parts[0] === page.title.toLowerCase()) {
+      parts.shift();
+    }
     const last = parts.pop() ?? "";
     const within = (candidate: Heading, matches: typeof strict) =>
       matches(candidate, last) && parts.every((part) => candidate.trail.some((parent) => matches({ text: parent }, part)));
@@ -89,8 +113,11 @@ export function findSections(page: Page, names: string[]): { found: Heading[]; m
       page.headings.find((candidate) => within(candidate, strict)) ??
       page.headings.find((candidate) => within(candidate, sloppy)) ??
       (!parts.length && last === page.title.toLowerCase() ? introduction(page) : undefined);
-    if (heading) found.push(heading);
-    else missing.push(name);
+    if (heading) {
+      found.push(heading);
+    } else {
+      missing.push(name);
+    }
   }
   // In page order, without the ones inside another section asked for.
   const sections = [...new Set(found)].sort((a, b) => a.start - b.start);

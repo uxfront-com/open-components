@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import Textarea from "./Textarea.vue";
 
 const label = (id: string, text: string) => h("label", { for: id }, text);

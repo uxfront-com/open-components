@@ -4,8 +4,8 @@ import Field from "~/reference/field/Field.vue";
 import { labels } from "~/data/select-options";
 
 /** `::combobox-icons-example`: an icon per option, shown in the panel, beside the picked option's label and in each tag. */
-const one = ref<string | string[]>("feature");
-const several = ref<string | string[]>(["bug", "docs"]);
+const one = ref<string | Array<string>>("feature");
+const several = ref<string | Array<string>>(["bug", "docs"]);
 </script>
 
 <template>

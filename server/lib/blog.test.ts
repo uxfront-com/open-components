@@ -10,7 +10,7 @@ const tokens = tokenRules(readFileSync("content/docs/2.foundations/1.design-toke
 const BLOG = "content/blog";
 
 // A post with the frontmatter the blog collection takes, and the body given.
-const post = (body: string, counterExamples: string[] = []) =>
+const post = (body: string, counterExamples: Array<string> = []) =>
   [
     "---",
     "title: A post",

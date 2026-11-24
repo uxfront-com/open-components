@@ -168,7 +168,9 @@ const anchored = () => globalThis.CSS?.supports?.("position-area: top") ?? false
 function show() {
   clearTimeout(opening);
   clearTimeout(closing);
-  if (state.value === "open") return;
+  if (state.value === "open") {
+    return;
+  }
   closeOpen?.();
   closeOpen = hide;
   state.value = "open";
@@ -185,13 +187,17 @@ function show() {
   }
   // The arrow follows it on every frame while it's open: the browser moves an anchored tooltip
   // after a scroll handler runs, and a flip or a layout shift can move it with no scroll at all.
-  if (arrow) nextTick(follow);
+  if (arrow) {
+    nextTick(follow);
+  }
 }
 
 // It stops once the tooltip has closed, since show() queues it for the next tick, and a tooltip
 // that opens and closes in the same task, like with focus() and then blur(), is closed by then.
 function follow() {
-  if (state.value !== "open") return;
+  if (state.value !== "open") {
+    return;
+  }
   aim();
   frame = requestAnimationFrame(follow);
 }
@@ -199,13 +205,17 @@ function follow() {
 function hide() {
   clearTimeout(opening);
   clearTimeout(closing);
-  if (state.value === "closed") return;
+  if (state.value === "closed") {
+    return;
+  }
   state.value = "closed";
   tooltip.value?.hidePopover?.();
   document.removeEventListener("keydown", onKeydown, true);
   removeEventListener("scroll", update, { capture: true });
   removeEventListener("resize", update);
-  if (frame !== undefined) cancelAnimationFrame(frame);
+  if (frame !== undefined) {
+    cancelAnimationFrame(frame);
+  }
   frame = undefined;
   if (closeOpen === hide) {
     closeOpen = undefined;
@@ -218,12 +228,16 @@ function hide() {
 function closeSoon() {
   clearTimeout(closing);
   closing = setTimeout(() => {
-    if (!hovered && !focused) hide();
+    if (!hovered && !focused) {
+      hide();
+    }
   }, GRACE);
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape") return;
+  if (event.key !== "Escape") {
+    return;
+  }
   // Escape closes the tooltip and goes no further, so a dialog or popover around it stays
   // open. It's only listened for while a tooltip is open, so otherwise it's theirs.
   event.stopPropagation();
@@ -238,54 +252,74 @@ const trigger = computed<TooltipTrigger>(() => ({
   style: anchorName.value ? { "anchor-name": anchorName.value } : {},
   onPointerenter(event) {
     // A tap never opens it: touch screens have no hover, and nothing would close it.
-    if (event.pointerType === "touch") return;
+    if (event.pointerType === "touch") {
+      return;
+    }
     anchor = event.currentTarget as HTMLElement;
     hovered = true;
     clearTimeout(closing);
-    if (state.value === "open") return;
-    if (closeOpen || warm) return show();
+    if (state.value === "open") {
+      return;
+    }
+    if (closeOpen || warm) {
+      return show();
+    }
     clearTimeout(opening);
     opening = setTimeout(show, delay);
   },
   onPointerleave(event) {
-    if (event.pointerType === "touch") return;
+    if (event.pointerType === "touch") {
+      return;
+    }
     hovered = false;
     clearTimeout(opening);
     closeSoon();
   },
   onPointerdown(event) {
     touched = event.pointerType === "touch";
-    if (touched) document.addEventListener("keydown", untouch, { capture: true, once: true });
+    if (touched) {
+      document.addEventListener("keydown", untouch, { capture: true, once: true });
+    }
   },
   onFocus(event) {
     focused = true;
     anchor = event.currentTarget as HTMLElement;
     // A tap focuses the trigger too, which shouldn't open it any more than the tap does.
-    if (!touched) show();
+    if (!touched) {
+      show();
+    }
   },
   onBlur() {
     focused = false;
     touched = false;
-    if (!hovered) hide();
+    if (!hovered) {
+      hide();
+    }
   },
 }));
 
 function update() {
-  if (!anchored()) place();
-  if (arrow) aim();
+  if (!anchored()) {
+    place();
+  }
+  if (arrow) {
+    aim();
+  }
 }
 
 // Without anchor positioning: the chosen side of the trigger, or the other side when it
 // doesn't fit, centred on the trigger and kept inside the viewport.
 function place() {
   const el = tooltip.value;
-  if (!el || !anchor) return;
+  if (!el || !anchor) {
+    return;
+  }
   // Its margin is the gap, which `left` and `top` place it outside of.
-  const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+  const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
   const a = anchor.getBoundingClientRect();
   // Its exact size, without the scale it grows in from, which getBoundingClientRect() would include.
-  const width = parseFloat(getComputedStyle(el).width);
-  const height = parseFloat(getComputedStyle(el).height);
+  const width = Number.parseFloat(getComputedStyle(el).width);
+  const height = Number.parseFloat(getComputedStyle(el).height);
   const { clientWidth, clientHeight } = document.documentElement;
   const rtl = getComputedStyle(anchor).direction === "rtl";
   const sides = { top: "top", bottom: "bottom", start: rtl ? "right" : "left", end: rtl ? "left" : "right" } as const;
@@ -297,7 +331,9 @@ function place() {
     right: a.right + gap + width <= clientWidth,
   };
   let side: keyof typeof opposite = sides[placement];
-  if (!fits[side] && fits[opposite[side]]) side = opposite[side];
+  if (!fits[side] && fits[opposite[side]]) {
+    side = opposite[side];
+  }
   const across = side === "top" || side === "bottom";
   const x = across ? a.left + (a.width - width) / 2 : side === "left" ? a.left - gap - width : a.right + gap;
   const y = across ? (side === "top" ? a.top - gap - height : a.bottom + gap) : a.top + (a.height - height) / 2;
@@ -310,7 +346,9 @@ function place() {
 function aim() {
   const el = tooltip.value;
   const part = arrowPart.value;
-  if (!el || !part || !anchor) return;
+  if (!el || !part || !anchor) {
+    return;
+  }
   const a = anchor.getBoundingClientRect();
   const t = el.getBoundingClientRect();
   const x = t.left + t.width / 2;
@@ -318,11 +356,11 @@ function aim() {
   side.value = y < a.top ? "top" : y > a.bottom ? "bottom" : x < a.left ? "left" : "right";
   const across = side.value === "top" || side.value === "bottom";
   const box = getComputedStyle(el);
-  const length = parseFloat(across ? box.width : box.height);
+  const length = Number.parseFloat(across ? box.width : box.height);
   const centre = across ? a.left + a.width / 2 - (x - length / 2) : a.top + a.height / 2 - (y - length / 2);
   // Its centre stays a corner's radius and half its own diagonal from each end, so none of it
   // overlaps the curve, measured, like the centre, from the outside of the border.
-  const clear = parseFloat(box.borderTopLeftRadius) + parseFloat(getComputedStyle(part).width) / Math.SQRT2;
+  const clear = Number.parseFloat(box.borderTopLeftRadius) + Number.parseFloat(getComputedStyle(part).width) / Math.SQRT2;
   const at = clear * 2 < length ? Math.max(clear, Math.min(centre, length - clear)) : length / 2;
   // Its left and top start inside the border.
   part.style.left = across ? `${at - el.clientLeft}px` : "";
@@ -502,7 +540,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSSRApp, h, nextTick } from "vue";
 import { renderToString } from "vue/server-renderer";
-import Tooltip, { type TooltipProps } from "./Tooltip.vue";
+import Tooltip from "./Tooltip.vue";
+import type { TooltipProps, TooltipTrigger } from "./Tooltip.vue";
 
 // A trigger with a name of its own, like an icon-only Button's visually hidden label.
 function tooltip(props: TooltipProps & Record<string, unknown>, name = "Settings") {
@@ -574,16 +613,16 @@ describe("Tooltip", () => {
 
   // An id can hold characters a CSS name can't, like "form.email:1", which would drop the anchor.
   it("names its anchor from a generated ID, whatever id you pass", async () => {
-    let bound: Record<string, any> = {};
+    let bound: Partial<TooltipTrigger> = {};
     render(
       h(Tooltip, { label: "Visible to everyone", id: "form.email:1" }, {
-        default: ({ trigger }: { trigger: Record<string, any> }) => ((bound = trigger), h("button", trigger, "Settings")),
+        default: ({ trigger }: { trigger: TooltipTrigger }) => ((bound = trigger), h("button", trigger, "Settings")),
       }),
     );
     await nextTick();
 
     expect(bound["aria-describedby"]).toBe("form.email:1");
-    expect(bound.style["anchor-name"]).toMatch(/^--tooltip-v-[\w-]+$/);
+    expect(bound.style?.["anchor-name"]).toMatch(/^--tooltip-v-[\w-]+$/);
   });
 
   it("leaves generated IDs out of the server's markup, so hydration can't leave the trigger pointing at nothing", async () => {

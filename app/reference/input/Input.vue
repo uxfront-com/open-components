@@ -47,7 +47,9 @@ function onInput(event: Event) {
 function onMousedown(event: MouseEvent) {
   const target = event.target as Element;
   // The input itself, and the buttons in `actions`, do what they always do.
-  if (target.closest("input, button, a[href], select, textarea, [tabindex]")) return;
+  if (target.closest("input, button, a[href], select, textarea, [tabindex]")) {
+    return;
+  }
   event.preventDefault();
   input.value?.focus();
 }

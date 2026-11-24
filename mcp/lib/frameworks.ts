@@ -13,11 +13,11 @@ const SLOT = /^<!-- framework: (\S+) -->$/;
  * under its name, or only `framework`'s. Where an example doesn't come in it,
  * that example shows the first framework it has, with a note, as the site does.
  */
-export function renderFrameworks(markdown: string, frameworks: Framework[], framework?: string): string {
+export function renderFrameworks(markdown: string, frameworks: Array<Framework>, framework?: string): string {
   const label = (value: string) => frameworks.find((f) => f.value === value)?.label ?? value;
-  const lines: string[] = [];
-  let slots: Map<string, string[]> | undefined;
-  let current: string[] | undefined;
+  const lines: Array<string> = [];
+  let slots: Map<string, Array<string>> | undefined;
+  let current: Array<string> | undefined;
 
   for (const line of markdown.split("\n")) {
     if (line === SWITCHER) {
@@ -29,15 +29,22 @@ export function renderFrameworks(markdown: string, frameworks: Framework[], fram
         if (shown && shown !== framework) {
           lines.push(`_This example doesn't come in ${label(framework)}, so here it is in ${label(shown)}._`, "");
         }
-        lines.push(...trim(slots.get(shown!) ?? []));
+        lines.push(...trim(shown === undefined ? [] : (slots.get(shown) ?? [])));
       } else {
-        for (const [value, code] of slots) lines.push(`**${label(value)}**`, "", ...trim(code), "");
+        for (const [value, code] of slots) {
+          lines.push(`**${label(value)}**`, "", ...trim(code), "");
+        }
       }
       slots = undefined;
     } else if (slots) {
       const match = line.match(SLOT);
-      if (match) slots.set(match[1]!, (current = []));
-      else current?.push(line);
+      if (match) {
+        // The slot's name takes part in every match, so the default never applies.
+        const [, name = ""] = match;
+        slots.set(name, (current = []));
+      } else {
+        current?.push(line);
+      }
     } else {
       lines.push(line);
     }
@@ -46,10 +53,14 @@ export function renderFrameworks(markdown: string, frameworks: Framework[], fram
 }
 
 // Drops the blank lines around a slot's code.
-function trim(lines: string[]): string[] {
+function trim(lines: Array<string>): Array<string> {
   let start = 0;
   let end = lines.length;
-  while (start < end && !lines[start]!.trim()) start++;
-  while (end > start && !lines[end - 1]!.trim()) end--;
+  while (start < end && !lines[start]?.trim()) {
+    start++;
+  }
+  while (end > start && !lines[end - 1]?.trim()) {
+    end--;
+  }
   return lines.slice(start, end);
 }

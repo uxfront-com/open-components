@@ -6,20 +6,20 @@ declare module "#standard/names" {
     /** The site's origin. */
     site: string;
     /** Every docs page. */
-    pages: [string, ...string[]];
+    pages: [string, ...Array<string>];
     /** Every component on the Roadmap, and every page with a contract. */
-    components: [string, ...string[]];
+    components: [string, ...Array<string>];
     /** The components among them, shipped or planned, rather than foundations like Design Tokens. */
-    buildable: [string, ...string[]];
+    buildable: [string, ...Array<string>];
     /** The components and foundations with a contract. */
-    contracts: [string, ...string[]];
+    contracts: [string, ...Array<string>];
     /** The components with rules that the code using them meets. */
-    usage: [string, ...string[]];
+    usage: [string, ...Array<string>];
     /** The components with a reference implementation. */
-    references: [string, ...string[]];
-    frameworks: [string, ...string[]];
+    references: [string, ...Array<string>];
+    frameworks: [string, ...Array<string>];
     /** Their names, in the same order, like React. */
-    frameworkLabels: [string, ...string[]];
+    frameworkLabels: [string, ...Array<string>];
   };
   export default names;
 }

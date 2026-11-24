@@ -3,7 +3,7 @@ import Checkbox from "~/reference/checkbox/Checkbox.vue";
 import type { CheckboxProps } from "~/reference/checkbox/Checkbox.vue";
 
 /** `::checkbox-sizes-example`: a checkbox at each size. */
-const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies CheckboxProps["size"][];
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies Array<CheckboxProps["size"]>;
 </script>
 
 <template>

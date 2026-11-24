@@ -28,7 +28,7 @@ const HOMEPAGE = "app/pages/index.vue";
  */
 export default defineEventHandler(async (event) => {
   const { siteUrl } = useRuntimeConfig(event).public;
-  const pages = (await queryCollection(event, "docs" as never).all()) as DocsPage[];
+  const pages = (await queryCollection(event, "docs" as never).all()) as Array<DocsPage>;
   const entries = await queryCollection(event, "changelog").order("date", "DESC").all();
   const posts = await queryCollection(event, "blog").order("date", "DESC").all();
 
@@ -64,14 +64,14 @@ export default defineEventHandler(async (event) => {
   ].join("\n");
 });
 
-const XML_ENTITIES: Record<string, string> = {
+const XML_ENTITIES = new Map<string, string>(Object.entries({
   "&": "&amp;",
   "<": "&lt;",
   ">": "&gt;",
   '"': "&quot;",
   "'": "&apos;",
-};
+}));
 
 function escapeXml(value: string) {
-  return value.replace(/[&<>"']/g, (char) => XML_ENTITIES[char]!);
+  return value.replaceAll(/[&<>"']/g, (char) => XML_ENTITIES.get(char) ?? char);
 }

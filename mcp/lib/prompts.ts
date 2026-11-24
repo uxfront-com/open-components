@@ -1,3 +1,4 @@
+import { pageByKey } from "./pages";
 import type { Component, Standard } from "./types";
 
 /**
@@ -12,7 +13,7 @@ import type { Component, Standard } from "./types";
 export function findComponent(standard: Standard, name: string): Component | undefined {
   const wanted = name.trim().toLowerCase();
   return standard.components.find(
-    (component) => component.key === wanted.replace(/[\s_]+/g, "-") || component.title.toLowerCase() === wanted,
+    (component) => component.key === wanted.replaceAll(/[\s_]+/g, "-") || component.title.toLowerCase() === wanted,
   );
 }
 
@@ -24,21 +25,27 @@ function article(title: string): string {
 /** A component's or a convention's name in a sentence, like "buttons" or "radio groups". */
 export function plural(title: string): string {
   const name = title.toLowerCase();
-  if (name.endsWith("s")) return name;
-  if (/(x|ch|sh)$/.test(name)) return `${name}es`;
-  if (/[^aeiou]y$/.test(name)) return `${name.slice(0, -1)}ies`;
+  if (name.endsWith("s")) {
+    return name;
+  }
+  if (/(x|ch|sh)$/.test(name)) {
+    return `${name}es`;
+  }
+  if (/[^aeiou]y$/.test(name)) {
+    return `${name.slice(0, -1)}ies`;
+  }
   return `${name}s`;
 }
 
 // The frameworks whose examples are written for one major version, which the
 // pages' prompts name, as in "our Vue 3 design system".
-const VERSIONS: Record<string, string> = { vue: "Vue 3", svelte: "Svelte 5" };
+const VERSIONS = new Map(Object.entries({ vue: "Vue 3", svelte: "Svelte 5" }));
 
 const raw = (standard: Standard, path: string, extension: "md" | "yaml") => `${standard.site}/raw${path}.${extension}`;
 
 /** A framework as the prompts name it, like "Vue 3", from its value or its name. */
 export function frameworkName(standard: Standard, framework: string): string | undefined {
-  return VERSIONS[framework] ?? standard.frameworks.find((candidate) => candidate.value === framework)?.label;
+  return VERSIONS.get(framework) ?? standard.frameworks.find((candidate) => candidate.value === framework)?.label;
 }
 
 /**
@@ -80,7 +87,7 @@ export function buildText(standard: Standard, component: Component, framework?: 
 
 /** Reviewing a component against its contract, or code against a convention like the token paths. */
 export function reviewText(standard: Standard, component: Component): string {
-  const page = standard.pages.find((candidate) => candidate.key === component.key)!;
+  const page = pageByKey(standard, component.key);
   if (page.contract?.kind === "convention") {
     const what = component.key === "design-tokens" ? "our theme and component styles" : "our code";
     const standardName = component.key === "design-tokens" ? "tokens" : component.title;
@@ -97,7 +104,7 @@ export function reviewText(standard: Standard, component: Component): string {
 
 /** Reviewing how a screen uses a component, against the rules the screen meets. */
 export function reviewUsageText(standard: Standard, component: Component, screen: string): string {
-  const page = standard.pages.find((candidate) => candidate.key === component.key)!;
+  const page = pageByKey(standard, component.key);
   return [
     `Review how ${screen} uses its ${plural(component.title)} against the Open Components ${component.title} contract: ${raw(standard, page.path, "yaml")}`,
     `For each rule with a usage or both scope, report pass or fail with the rule ID and the evidence from our code. Then fix the failures.`,
@@ -106,7 +113,7 @@ export function reviewUsageText(standard: Standard, component: Component, screen
 
 /** Moving a codebase's CSS variables over to token paths, as the Design Tokens page puts it. */
 export function adoptTokenPathsText(standard: Standard): string {
-  const page = standard.pages.find((candidate) => candidate.key === "design-tokens")!;
+  const page = pageByKey(standard, "design-tokens");
   return [
     `Rename our CSS variables to follow the Open Components token paths: ${raw(standard, page.path, "md")}`,
     `List our token groups first, then rename every variable along with every var() that reads it, keeping the values as they are. Then add the Stylelint rule from the page, and fix anything it reports.`,
@@ -119,13 +126,15 @@ export function adoptTokenPathsText(standard: Standard): string {
  */
 export function codeToReview(value: string): string {
   const code = value.trim();
-  if (!code.includes("\n") && code.length <= 300) return `The code to review: ${code}`;
+  if (!code.includes("\n") && code.length <= 300) {
+    return `The code to review: ${code}`;
+  }
   // A fence longer than any run of backticks in the code.
   const fence = "`".repeat(Math.max(3, ...(code.match(/`+/g) ?? []).map((run) => run.length + 1)));
   return `The code to review:\n\n${fence}\n${code}\n${fence}`;
 }
 
 /** A tool call, the way the prompts suggest one. */
-export function call(tool: string, args: Record<string, unknown>): string {
+export function call(tool: string, args: Record<string, string | Array<string>>): string {
   return `${tool} ${JSON.stringify(args)}`;
 }

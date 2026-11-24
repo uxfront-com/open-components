@@ -1,5 +1,6 @@
 <script lang="ts">
-import { Comment, Fragment, Text, cloneVNode, defineComponent, h, isVNode, onMounted, type PropType, type SlotsType, type VNode } from "vue";
+import { Comment, Fragment, Text, cloneVNode, defineComponent, h, isVNode, onMounted } from "vue";
+import type { PropType, SlotsType, VNode } from "vue";
 import Checkbox from "../checkbox/Checkbox.vue";
 import CheckboxGroup from "../checkbox-group/CheckboxGroup.vue";
 import RadioGroup from "../radio-group/RadioGroup.vue";
@@ -37,19 +38,31 @@ export interface FieldProps {
 export type FieldControl = "text" | "checkbox" | "switch" | "checkbox-group" | "radio-group";
 
 /** The one control in the default slot, leaving out comments and blank text. */
-function controls(nodes: VNode[] = []): VNode[] {
+function controls(nodes: Array<VNode> = []): Array<VNode> {
   return nodes.flatMap((node) => {
-    if (node.type === Fragment && Array.isArray(node.children)) return controls(node.children.filter(isVNode));
-    if (node.type === Comment || (node.type === Text && !String(node.children).trim())) return [];
+    if (node.type === Fragment && Array.isArray(node.children)) {
+      return controls(node.children.filter(isVNode));
+    }
+    if (node.type === Comment || (node.type === Text && !String(node.children).trim())) {
+      return [];
+    }
     return [node];
   });
 }
 
 function kindOf(control: VNode): FieldControl {
-  if (control.type === Checkbox) return "checkbox";
-  if (control.type === Switch) return "switch";
-  if (control.type === CheckboxGroup) return "checkbox-group";
-  if (control.type === RadioGroup) return "radio-group";
+  if (control.type === Checkbox) {
+    return "checkbox";
+  }
+  if (control.type === Switch) {
+    return "switch";
+  }
+  if (control.type === CheckboxGroup) {
+    return "checkbox-group";
+  }
+  if (control.type === RadioGroup) {
+    return "radio-group";
+  }
   return "text";
 }
 
@@ -70,15 +83,17 @@ export default defineComponent({
   },
   slots: Object as SlotsType<{
     /** One control: an Input, a Textarea, a Checkbox, a Switch, a Checkbox Group, a Radio Group, a Select, a Combobox or a native text control. */
-    default?: () => VNode[];
+    default?: () => Array<VNode>;
   }>,
   setup(props, { slots }) {
     // What the last render found in the slot, which the development checks read once it
     // has mounted, since calling the slot outside a render wouldn't track what it reads.
-    let found: VNode[] = [];
+    let found: Array<VNode> = [];
 
     onMounted(() => {
-      if (!import.meta.env.DEV) return;
+      if (!import.meta.env.DEV) {
+        return;
+      }
       const control = found[0];
       if (found.length !== 1 || !control) {
         console.warn(`[Field] needs exactly one control, and has ${found.length}: give each control a Field of its own.`);
@@ -100,7 +115,9 @@ export default defineComponent({
     return () => {
       found = controls(slots.default?.());
       const control = found[0];
-      if (!control) return null;
+      if (!control) {
+        return null;
+      }
       const kind = kindOf(control);
       const own = control.props ?? {};
       const size = props.size ?? own.size ?? "md";

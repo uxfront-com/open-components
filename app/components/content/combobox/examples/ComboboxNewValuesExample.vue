@@ -11,8 +11,8 @@ import { nations, topics } from "~/data/select-options";
  */
 const { mode } = defineProps<{ mode: "custom" | "creatable" }>();
 
-const list = ref<SelectItem[]>([...topics]);
-const value = ref<string | string[]>(mode === "creatable" ? ["accessibility"] : "");
+const list = ref<Array<SelectItem>>([...topics]);
+const value = ref<string | Array<string>>(mode === "creatable" ? ["accessibility"] : "");
 
 // What a page does with `create`: it adds the new value to the list, so people find it again.
 function add(text: string) {

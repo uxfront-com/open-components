@@ -36,7 +36,9 @@ export default defineMcpResource({
   handler: async (uri: URL, { path }: Variables) => {
     const standard = await useStandard();
     const page = standard.pages.find((candidate) => candidate.path === `/docs/${path}`);
-    if (!page?.contract) throw new McpError(ErrorCode.InvalidParams, `There's no contract at ${uri.href}`, { uri: uri.href });
+    if (!page?.contract) {
+      throw new McpError(ErrorCode.InvalidParams, `There's no contract at ${uri.href}`, { uri: uri.href });
+    }
     return { contents: [{ uri: uri.href, mimeType: "application/yaml", text: page.contract.yaml }] };
   },
 });

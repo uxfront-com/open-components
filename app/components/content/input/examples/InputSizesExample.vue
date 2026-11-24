@@ -4,7 +4,7 @@ import Input from "~/reference/input/Input.vue";
 import type { InputProps } from "~/reference/input/Input.vue";
 
 /** `::input-sizes-example`: a search input at each size, beside a Button of the same size. */
-const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies InputProps["size"][];
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies Array<InputProps["size"]>;
 </script>
 
 <template>
