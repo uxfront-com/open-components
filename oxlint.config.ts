@@ -22,10 +22,10 @@ export default defineConfig({
   },
   overrides: [
     {
-      // The reference implementations are browser code, where `instanceof` is how you tell
-      // an element's kind, like an HTMLInputElement among a form's controls, and narrow it.
       files: ["app/reference/**"],
       rules: {
+        // The reference implementations are browser code, where `instanceof` is how you tell
+        // an element's kind, like an HTMLInputElement among a form's controls, and narrow it.
         "@nkzw/no-instanceof": "off",
         // A slot's content is whatever the page passes, and the component only renders it
         // without reading it, so defineSlots gives each slot an `unknown` return type.
@@ -36,10 +36,10 @@ export default defineConfig({
       },
     },
     {
-      // Tests pass a component any attributes, the way a page can, which Vue's h() takes
-      // as Record<string, unknown> too, and read parsed JSON before checking what it holds.
       files: ["**/*.test.ts"],
       rules: {
+        // Tests pass a component any attributes, the way a page can, which Vue's h() takes
+        // as Record<string, unknown> too, and read parsed JSON before checking what it holds.
         "quality/no-unsafe-dictionary-type": "off",
         // A test's helpers sit in the describe block that uses them, next to the tests
         // they serve, and a test runs once, so there's nothing to save by moving them out.
@@ -47,26 +47,26 @@ export default defineConfig({
       },
     },
     {
-      // These tests break a contract one way at a time, for the schema to reject, so what
-      // each change returns is deliberately not a Contract.
       files: ["server/lib/contract.test.ts"],
       rules: {
+        // These tests break a contract one way at a time, for the schema to reject, so what
+        // each change returns is deliberately not a Contract.
         "quality/no-unknown-returns": "off",
       },
     },
     {
-      // Command-line scripts, whose output is their report.
       files: ["scripts/**"],
       rules: {
+        // Command-line scripts, whose output is their report.
         "no-console": "off",
       },
     },
     {
-      // It renders the sidebar in place of Nuxt UI's UContentNavigation and keeps its code
-      // in step with the original (AGENTS.md, "Things that change together"), whose theme
-      // line spreads `appConfig.ui?.contentNavigation || {}`.
       files: ["app/components/docs/DocsNavigation.vue"],
       rules: {
+        // It renders the sidebar in place of Nuxt UI's UContentNavigation and keeps its code
+        // in step with the original (AGENTS.md, "Things that change together"), whose theme
+        // line spreads `appConfig.ui?.contentNavigation || {}`.
         "unicorn/no-useless-fallback-in-spread": "off",
         // tv() loses the theme's types once the app config is spread into it, so its
         // result is cast through unknown to the slot functions DocsNavigationList.vue takes.
@@ -74,10 +74,10 @@ export default defineConfig({
       },
     },
     {
-      // ACCENTS matches combining marks on their own, after NFD has split them off their
-      // letters, so the class holds combining marks on purpose, written as escapes.
       files: ["app/reference/combobox/Combobox.vue"],
       rules: {
+        // ACCENTS matches combining marks on their own, after NFD has split them off their
+        // letters, so the class holds combining marks on purpose, written as escapes.
         "no-misleading-character-class": "off",
       },
     },
