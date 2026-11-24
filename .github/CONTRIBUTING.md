@@ -16,6 +16,8 @@ pnpm build:mcp        # nuxt build mcp → mcp/.output, the MCP server's Worker
 pnpm preview          # serve the generated site
 pnpm check-types      # type-check the .ts and .vue sources, the MCP server's included (see "The docs" for what it skips)
 pnpm check-reference  # check the component pages show app/reference/ as it is
+pnpm lint             # lint with oxlint and the shared @uxfront config (oxlint.config.ts), as CI does
+pnpm format           # format with oxfmt and the shared @uxfront config (oxfmt.config.ts)
 pnpm check-mcp        # after both builds: serve the MCP server with wrangler dev, and check every tool, resource and prompt against the built site
 pnpm check-seo        # after pnpm build: check what search engines and AI crawlers get (see "Keeping 100s")
 pnpm test             # run the reference implementations' tests (app/reference/<component>/*.test.ts), validate the contracts and test the MCP server and the agent plugin

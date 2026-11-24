@@ -54,6 +54,24 @@ jobs:
       # and the contracts, validated against public/schemas/contract.json.
       - run: pnpm test
 
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # oxlint with the shared @uxfront config (oxlint.config.ts). Errors fail the job, and
+      # warnings only annotate the PR.
+      - run: pnpm lint --format=github
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -104,8 +122,11 @@ jobs:
           name: dist
           path: dist
       # Serves dist and fails below 95 in any category (lighthouserc.json), using
-      # the runner's Chrome.
+      # the runner's Chrome. pnpm 11 installs before it runs a script when
+      # node_modules is missing. This job needs none, so it skips that.
       - run: pnpm lighthouse
+        env:
+          pnpm_config_verify_deps_before_run: "false"
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

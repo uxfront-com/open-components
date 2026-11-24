@@ -3,6 +3,9 @@ allowBuilds:
   # built-in node:sqlite, so the native binding is never built.
   better-sqlite3: false
   esbuild: true
+  # Comes in through ipx, nuxt-og-image and miniflare, which use its prebuilt
+  # binaries. pnpm installs those as optional dependencies, so it needs no build.
+  sharp: false
   # Its postinstall only switches the build to Vue 2; the default build is Vue 3's.
   vue-demi: false
   # Wrangler's runtime, for `wrangler dev`. Its postinstall only checks for the

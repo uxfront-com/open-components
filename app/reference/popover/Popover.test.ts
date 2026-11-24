@@ -93,9 +93,20 @@ beforeAll(() => {
   });
 });
 
+// Waits for every deferred `toggle` to fire, rather than for a fixed time. The click and
+// Escape stand-ins show or hide the popover in a microtask, which may not have run yet when
+// this starts, so it waits a task at a time until no `toggle` is left.
+async function toggled() {
+  do await new Promise((resolve) => setTimeout(resolve));
+  while (pendingToggle.size);
+}
+
 afterEach(() => {
   shown.clear();
   deferToggle = false;
+  // A `toggle` still on its way would reach a popover the next test can't see.
+  for (const { timer } of pendingToggle.values()) clearTimeout(timer);
+  pendingToggle.clear();
 });
 
 const field = (id: string, text: string) => [h("label", { for: id }, text), h("input", { id })];
@@ -508,7 +519,7 @@ describe("Popover", () => {
     deferToggle = true;
     popover().hidePopover();
     first.click();
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await toggled();
     expect(first).toHaveAttribute("aria-expanded", "true");
     expect(second).toHaveAttribute("aria-expanded", "false");
     expect(second.style.getPropertyValue("anchor-name")).toBe("");
@@ -518,7 +529,7 @@ describe("Popover", () => {
     const escape = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
     second.dispatchEvent(escape);
     expect(escape.defaultPrevented).toBe(false);
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await toggled();
     expect(first).toHaveAttribute("aria-expanded", "false");
     expect(second).toHaveAttribute("aria-expanded", "false");
   });
@@ -561,7 +572,7 @@ describe("Popover", () => {
     await nextTick();
     open.value = true;
     await nextTick();
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await toggled();
     expect(shown.has(popover())).toBe(true);
     expect(popover()).toHaveAttribute("data-state", "open");
     expect(open.value).toBe(true);
@@ -583,7 +594,7 @@ describe("Popover", () => {
     await nextTick();
     open.value = false;
     await nextTick();
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await toggled();
     expect(shown.has(popover())).toBe(false);
     expect(popover()).toHaveAttribute("data-state", "closed");
     expect(open.value).toBe(false);
