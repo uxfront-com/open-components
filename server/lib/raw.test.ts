@@ -224,7 +224,7 @@ describe.each(SPLIT)("The %s page, split into parts,", (name) => {
     );
     for (const file of parts) {
       const { title } = frontmatter(read(file));
-      const rules = outline(read(file)).find((line) => / Checklist$/.test(line))!.replace(/^## /, "");
+      const rules = outline(read(file)).find((line) => line.endsWith(" Checklist"))!.replace(/^## /, "");
       expect(checklist).toContain(`- [${title} Checklist](${docsPath(`${folder}/${file}`)}#${anchorsOf()(rules)})`);
     }
   });

@@ -11,6 +11,8 @@ pnpm dev              # the site, on http://localhost:3000
 pnpm dev:mcp          # the MCP server (mcp/port.mjs picks its port)
 pnpm check-types      # vue-tsc on the site, the MCP server and the plugin
 pnpm check-reference  # the component pages show app/reference/ as it is
+pnpm lint             # oxlint with the shared @uxfront config (oxlint.config.ts)
+pnpm format           # oxfmt with the shared @uxfront config (oxfmt.config.ts)
 pnpm test             # Vitest: reference tests, contracts, MCP server, agent plugin
 pnpm build            # nuxt generate → dist
 pnpm build:mcp        # nuxt build mcp → mcp/.output
@@ -23,7 +25,7 @@ Building needs Node 22.13 or later. Which checks to run depends on what you chan
 
 | You changed                                      | Run                                                        |
 | ------------------------------------------------ | ---------------------------------------------------------- |
-| Anything                                         | `pnpm check-types` and `pnpm test`                         |
+| Anything                                         | `pnpm check-types`, `pnpm lint` and `pnpm test`            |
 | A docs page or `app/reference/`                  | `pnpm check-reference` too                                 |
 | `mcp/`, or the headings and contracts it reads   | `pnpm build`, `pnpm build:mcp`, then `pnpm check-mcp`      |
 | The homepage                                     | `pnpm build`, then `pnpm lighthouse`                       |
