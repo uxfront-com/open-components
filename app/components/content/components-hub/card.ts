@@ -1,4 +1,5 @@
-import { Comment, Text, type VNode } from "vue";
+import { Comment, Text } from "vue";
+import type { VNode } from "vue";
 
 export interface Link {
   href: string;

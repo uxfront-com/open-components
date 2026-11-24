@@ -671,10 +671,12 @@ onBeforeUnmount(() => {
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type VNodeChild } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { VNodeChild } from "vue";
 import Dialog from "../dialog/Dialog.vue";
 import Tooltip from "../tooltip/Tooltip.vue";
-import Popover, { type PopoverProps } from "./Popover.vue";
+import Popover from "./Popover.vue";
+import type { PopoverProps } from "./Popover.vue";
 
 // jsdom has no Popover API, so these stand in for the parts the Popover relies on: showing
 // and hiding with `beforetoggle` and `toggle`, giving focus back to whatever had it before,

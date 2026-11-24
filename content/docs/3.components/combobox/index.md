@@ -85,7 +85,8 @@ The tests are in `Combobox.test.ts`. To run them, you'll need [Vitest](https://v
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import { isGroup, isSeparator, type SelectItem, type SelectOption, toSections, usePlacement, useListbox } from "../select/listbox";
+import { isGroup, isSeparator, toSections, usePlacement, useListbox } from "../select/listbox";
+import type { SelectItem, SelectOption } from "../select/listbox";
 import SelectPanel from "../select/SelectPanel.vue";
 import SelectTags from "../select/SelectTags.vue";
 import "../select/select.css";
@@ -886,7 +887,8 @@ import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
 import Select from "../select/Select.vue";
 import type { SelectItem } from "../select/listbox";
-import Combobox, { type ComboboxProps } from "./Combobox.vue";
+import Combobox from "./Combobox.vue";
+import type { ComboboxProps } from "./Combobox.vue";
 
 // jsdom has no Popover API or scrollIntoView, so these stand in for them: showing and
 // hiding with `beforetoggle`. The Combobox's panel is a manual popover, which the browser

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, useAttrs, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import Tag, { type TagProps } from "../tag/Tag.vue";
+import Tag from "../tag/Tag.vue";
+import type { TagProps } from "../tag/Tag.vue";
 
 export interface TagGroupItem {
   /** The tag's key, unique in the group, and what `remove` hands back. */

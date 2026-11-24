@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSSRApp, h, nextTick } from "vue";
 import { renderToString } from "vue/server-renderer";
-import Tooltip, { type TooltipProps } from "./Tooltip.vue";
+import Tooltip from "./Tooltip.vue";
+import type { TooltipProps } from "./Tooltip.vue";
 
 // A trigger with a name of its own, like an icon-only Button's visually hidden label.
 function tooltip(props: TooltipProps & Record<string, unknown>, name = "Settings") {

@@ -6,7 +6,8 @@ export type { SelectGroup, SelectItem, SelectOption, SelectSeparator } from "./l
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import { type SelectItem, type SelectOption, usePlacement, useListbox } from "./listbox";
+import { usePlacement, useListbox } from "./listbox";
+import type { SelectItem, SelectOption } from "./listbox";
 import SelectPanel from "./SelectPanel.vue";
 import SelectTags from "./SelectTags.vue";
 import "./select.css";

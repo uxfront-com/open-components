@@ -78,7 +78,18 @@ The tests are in `Textarea.test.ts`. To run them, you'll need [Vitest](https://v
 :::code-group
 ```vue [Textarea.vue]
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useTemplateRef, watch, type TextareaHTMLAttributes } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  onUpdated,
+  ref,
+  useAttrs,
+  useTemplateRef,
+  watch,
+} from "vue";
+import type { TextareaHTMLAttributes } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
 
 export interface TextareaProps {
@@ -450,7 +461,8 @@ onBeforeUnmount(() => {
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import Textarea from "./Textarea.vue";
 
 const label = (id: string, text: string) => h("label", { for: id }, text);

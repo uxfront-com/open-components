@@ -5,7 +5,8 @@ import { createSSRApp, h, nextTick, ref } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
-import Select, { type SelectItem, type SelectProps } from "./Select.vue";
+import Select from "./Select.vue";
+import type { SelectItem, SelectProps } from "./Select.vue";
 
 // jsdom has no Popover API, matchMedia or scrollIntoView, so these stand in for them:
 // showing and hiding with `beforetoggle`, the light dismiss of a press outside the panel,

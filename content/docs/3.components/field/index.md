@@ -78,7 +78,8 @@ The tests are in `Field.test.ts`, and mount the real controls too. To run them, 
 :::code-group
 ```vue [Field.vue]
 <script lang="ts">
-import { Comment, Fragment, Text, cloneVNode, defineComponent, h, isVNode, onMounted, type PropType, type SlotsType, type VNode } from "vue";
+import { Comment, Fragment, Text, cloneVNode, defineComponent, h, isVNode, onMounted } from "vue";
+import type { PropType, SlotsType, VNode } from "vue";
 import Checkbox from "../checkbox/Checkbox.vue";
 import CheckboxGroup from "../checkbox-group/CheckboxGroup.vue";
 import RadioGroup from "../radio-group/RadioGroup.vue";

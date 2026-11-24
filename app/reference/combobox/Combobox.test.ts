@@ -7,7 +7,8 @@ import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
 import Select from "../select/Select.vue";
 import type { SelectItem } from "../select/listbox";
-import Combobox, { type ComboboxProps } from "./Combobox.vue";
+import Combobox from "./Combobox.vue";
+import type { ComboboxProps } from "./Combobox.vue";
 
 // jsdom has no Popover API or scrollIntoView, so these stand in for them: showing and
 // hiding with `beforetoggle`. The Combobox's panel is a manual popover, which the browser

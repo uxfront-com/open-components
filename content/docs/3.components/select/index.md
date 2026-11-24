@@ -88,7 +88,8 @@ export type { SelectGroup, SelectItem, SelectOption, SelectSeparator } from "./l
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import { type SelectItem, type SelectOption, usePlacement, useListbox } from "./listbox";
+import { usePlacement, useListbox } from "./listbox";
+import type { SelectItem, SelectOption } from "./listbox";
 import SelectPanel from "./SelectPanel.vue";
 import SelectTags from "./SelectTags.vue";
 import "./select.css";
@@ -937,7 +938,8 @@ defineExpose({ focusAt });
 ```
 
 ```ts [listbox.ts]
-import { computed, type Ref } from "vue";
+import { computed } from "vue";
+import type { Ref } from "vue";
 
 // What the Select and the Combobox share about their list: its items, how they're walked
 // and where the panel goes. Both draw it with SelectPanel.vue, so neither keeps a copy.
@@ -1540,7 +1542,8 @@ import { createSSRApp, h, nextTick, ref } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
-import Select, { type SelectItem, type SelectProps } from "./Select.vue";
+import Select from "./Select.vue";
+import type { SelectItem, SelectProps } from "./Select.vue";
 
 // jsdom has no Popover API, matchMedia or scrollIntoView, so these stand in for them:
 // showing and hiding with `beforetoggle`, the light dismiss of a press outside the panel,

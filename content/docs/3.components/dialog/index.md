@@ -435,8 +435,10 @@ onBeforeUnmount(hide);
 import { fireEvent, render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
-import { h, nextTick, ref, type VNodeChild } from "vue";
-import Dialog, { type DialogProps } from "./Dialog.vue";
+import { h, nextTick, ref } from "vue";
+import type { VNodeChild } from "vue";
+import Dialog from "./Dialog.vue";
+import type { DialogProps } from "./Dialog.vue";
 
 // jsdom has <dialog> and its `open`, but not showModal() or close(), so these stand in
 // for them. They can't put the dialog in the top layer, make the rest of the page inert

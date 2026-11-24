@@ -19,7 +19,8 @@ import { join } from "node:path";
 import { parse } from "yaml";
 import { anchors, cells, heading, scan } from "../../mcp/lib/markdown";
 import { docsPath } from "./raw";
-import { type Criterion, understandingUrl, WCAG, type WcagLevel } from "./wcag";
+import { understandingUrl, WCAG } from "./wcag";
+import type { Criterion, WcagLevel } from "./wcag";
 
 /** Where the checklists live in content/docs/, and where the components do. */
 export const CHECKLISTS = "4.accessibility";

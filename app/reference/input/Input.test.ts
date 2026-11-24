@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import Input from "./Input.vue";
 
 const icon = () => h("svg");

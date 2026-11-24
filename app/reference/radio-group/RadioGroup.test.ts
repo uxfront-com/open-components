@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { createSSRApp, h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { createSSRApp, h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Radio from "./Radio.vue";
 import RadioGroup from "./RadioGroup.vue";

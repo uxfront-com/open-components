@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import { isGroup, isSeparator, type SelectItem, type SelectOption, toSections, usePlacement, useListbox } from "../select/listbox";
+import { isGroup, isSeparator, toSections, usePlacement, useListbox } from "../select/listbox";
+import type { SelectItem, SelectOption } from "../select/listbox";
 import SelectPanel from "../select/SelectPanel.vue";
 import SelectTags from "../select/SelectTags.vue";
 import "../select/select.css";

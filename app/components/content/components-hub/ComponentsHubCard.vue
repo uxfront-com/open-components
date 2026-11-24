@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { type VNode, useSlots } from "vue";
+import { useSlots } from "vue";
+import type { VNode } from "vue";
 import { layout } from "./card";
 
 /**

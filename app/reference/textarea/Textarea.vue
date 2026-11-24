@@ -1,5 +1,16 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useTemplateRef, watch, type TextareaHTMLAttributes } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  onUpdated,
+  ref,
+  useAttrs,
+  useTemplateRef,
+  watch,
+} from "vue";
+import type { TextareaHTMLAttributes } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
 
 export interface TextareaProps {

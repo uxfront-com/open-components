@@ -1,4 +1,5 @@
-import { computed, type Ref } from "vue";
+import { computed } from "vue";
+import type { Ref } from "vue";
 
 // What the Select and the Combobox share about their list: its items, how they're walked
 // and where the panel goes. Both draw it with SelectPanel.vue, so neither keeps a copy.

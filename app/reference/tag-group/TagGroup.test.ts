@@ -2,7 +2,8 @@ import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, reactive, ref } from "vue";
-import TagGroup, { type TagGroupItem, type TagGroupProps } from "./TagGroup.vue";
+import TagGroup from "./TagGroup.vue";
+import type { TagGroupItem, TagGroupProps } from "./TagGroup.vue";
 
 const LABELS: TagGroupItem[] = [
   { value: "bug", label: "Bug" },

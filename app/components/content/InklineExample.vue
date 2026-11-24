@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   INKLINE_PREVIEW_ORIGIN,
-  type EmbedTheme,
   embedTheme,
   inklineEmbedUrl,
   inklineTarget,
@@ -10,6 +9,7 @@ import {
   themeMessage,
   themeOnReady,
 } from "~/lib/inkline-embed";
+import type { EmbedTheme } from "~/lib/inkline-embed";
 import { FRAMEWORKS } from "~/data/frameworks";
 
 /**
