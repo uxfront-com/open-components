@@ -152,7 +152,9 @@ describe("sectionText and pageText", () => {
 
   it("keeps every framework's examples, under their names", () => {
     const text = sectionText(standard, button, loading);
-    for (const { label } of FRAMEWORKS) expect(text).toContain(`\n**${label}**\n`);
+    for (const { label } of FRAMEWORKS) {
+      expect(text).toContain(`\n**${label}**\n`);
+    }
   });
 
   it.each(standard.pages.map((page) => [page.key, page]))("renders %s's switchers", (_, page) => {

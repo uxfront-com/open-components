@@ -18,24 +18,33 @@ const mediaListeners = new Set<() => void>();
 
 function toggle(el: HTMLElement, newState: "open" | "closed") {
   el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState: newState === "open" ? "closed" : "open" }));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+  if (newState === "open") {
+    shown.add(el);
+  } else {
+    shown.delete(el);
+  }
   // jsdom can't match :popover-open, so this stands in for it.
   el.style.display = newState === "open" ? "block" : "none";
 }
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
@@ -57,7 +66,11 @@ beforeAll(() => {
   document.addEventListener(
     "pointerup",
     (event) => {
-      for (const el of shown) if (!el.contains(event.target as Node)) el.hidePopover();
+      for (const el of shown) {
+        if (!el.contains(event.target as Node)) {
+          el.hidePopover();
+        }
+      }
     },
     true,
   );
@@ -688,7 +701,9 @@ describe("Select", () => {
       const user = userEvent.setup();
       await page({ multiple: true, value: ["fr", "es"] });
       if (isCoarse) {
-        for (const item of Array.from(native().options)) item.selected = item.value === "nz";
+        for (const item of Array.from(native().options)) {
+          item.selected = item.value === "nz";
+        }
         native().dispatchEvent(new Event("change", { bubbles: true }));
       } else {
         await user.click(trigger());
@@ -785,7 +800,9 @@ describe("Select", () => {
     it("reports several values as an array", async () => {
       const update = vi.fn();
       await page({ multiple: true, "onUpdate:modelValue": update });
-      for (const option of Array.from(native().options)) option.selected = option.value !== "nz";
+      for (const option of Array.from(native().options)) {
+        option.selected = option.value !== "nz";
+      }
       native().dispatchEvent(new Event("change", { bubbles: true }));
       expect(update).toHaveBeenCalledWith(["fr", "de", "es"]);
     });
@@ -1057,7 +1074,9 @@ describe("Select", () => {
         set(this: HTMLOptionElement, value: boolean) {
           const gaining = value && !this.hasAttribute("selected");
           defaultSelected.set!.call(this, value);
-          if (gaining) this.selected = true;
+          if (gaining) {
+            this.selected = true;
+          }
         },
       });
       const el = host.querySelector("select")!;

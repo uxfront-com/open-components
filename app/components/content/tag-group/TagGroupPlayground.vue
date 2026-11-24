@@ -94,7 +94,9 @@ const code = computed(() => {
     removable.value && onRemove,
   ].filter(Boolean);
   const links = link.value ? "\n\n<!-- Each tag in labels has an href, like { value: \"bug\", label: \"Bug\", href: \"/labels/bug\" }. -->" : "";
-  if (fw === "angular") return `<div appTagGroup ${props.join(" ")}></div>${links}`;
+  if (fw === "angular") {
+    return `<div appTagGroup ${props.join(" ")}></div>${links}`;
+  }
   const comment = (text: string) => (fw === "react" || fw === "solid" ? `\n\n{/* ${text} */}` : `\n\n<!-- ${text} -->`);
   return `<TagGroup ${props.join(" ")} />${link.value ? comment('Each tag in labels has an href, like { value: "bug", label: "Bug", href: "/labels/bug" }.') : ""}`;
 });

@@ -113,7 +113,9 @@ watch(
     const labels = new Map(previousTags.map((tag) => [tag.value, tag.label]));
     previousTags = [...tags];
     const removed = previous.filter((value) => !next.includes(value));
-    if (!removed.length) return;
+    if (!removed.length) {
+      return;
+    }
     const before = list.value ? [...list.value.children] : [];
     const active = document.activeElement;
     const focusedIndex = before.findIndex((item) => item.contains(active));
@@ -122,9 +124,13 @@ watch(
     // went and focus is nowhere, like after a click in Safari, which doesn't focus buttons.
     // Anywhere else, like a dialog that asked first, it stays.
     let anchor = focusedIndex >= 0 && removed.includes(previous[focusedIndex]!) ? focusedIndex : -1;
-    if (anchor < 0 && focusWasLost) anchor = previous.findIndex((value) => removed.includes(value) && pressed.has(value));
+    if (anchor < 0 && focusWasLost) {
+      anchor = previous.findIndex((value) => removed.includes(value) && pressed.has(value));
+    }
     const announced = removed.filter((value) => pressed.has(value));
-    for (const value of removed) pressed.delete(value);
+    for (const value of removed) {
+      pressed.delete(value);
+    }
 
     nextTick(() => {
       if (anchor >= 0) {
@@ -139,18 +145,25 @@ watch(
           return !!target && document.activeElement === target;
         };
         if (!focused(find(after)) && !focused(resolve(fallbackFocus)) && !focused(find(prior))) {
-          if (list.value) focusList(list.value);
-          else empty.value?.focus();
+          if (list.value) {
+            focusList(list.value);
+          } else {
+            empty.value?.focus();
+          }
         }
       }
-      for (const value of announced) announce(removedLabel(labels.get(value) ?? value));
+      for (const value of announced) {
+        announce(removedLabel(labels.get(value) ?? value));
+      }
     });
   },
   { flush: "pre" },
 );
 
 onMounted(() => {
-  if (removable) prepareAnnouncer();
+  if (removable) {
+    prepareAnnouncer();
+  }
   if (import.meta.env.DEV && !label && !listAttrs.value["aria-label"] && !listAttrs.value["aria-labelledby"]) {
     console.warn(
       "[TagGroup] has no name, so screen readers can't say what its tags are: give it a label, or aria-labelledby.",

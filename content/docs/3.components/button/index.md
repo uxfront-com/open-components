@@ -150,7 +150,9 @@ function onClick(event: MouseEvent) {
 watch(
   () => loading,
   (isLoading) => {
-    if (isLoading) announce(loadingLabel);
+    if (isLoading) {
+      announce(loadingLabel);
+    }
   },
 );
 
@@ -477,7 +479,9 @@ onMounted(() => {
 let region: HTMLElement | undefined;
 
 export function prepareAnnouncer(): HTMLElement {
-  if (region?.isConnected) return region;
+  if (region?.isConnected) {
+    return region;
+  }
   region = document.createElement("div");
   region.setAttribute("role", "status");
   // Visually hidden, but not with display: none, which would take it out of the accessibility tree.

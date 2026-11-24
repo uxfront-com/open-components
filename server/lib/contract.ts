@@ -10,7 +10,9 @@
  */
 export function buildContract(markdown: string): string | undefined {
   const contract = section(markdown, "### Described")?.match(/^```yaml\n([\s\S]*?)^```$/m)?.[1];
-  if (!contract) return;
+  if (!contract) {
+    return;
+  }
   const rules = checklist(markdown);
   return rules.length ? contract.replace(/^rules: .*$/m, () => ["rules:", ...rules].join("\n")) : contract;
 }
@@ -21,15 +23,21 @@ function section(markdown: string, heading: string): string | undefined {
   const level = heading.indexOf(" ");
   const lines = markdown.split("\n");
   const start = lines.indexOf(heading);
-  if (start === -1) return;
+  if (start === -1) {
+    return;
+  }
 
   let code = false;
   let end = start + 1;
   for (; end < lines.length; end++) {
     const line = lines[end] ?? "";
-    if (line.startsWith("```")) code = !code;
+    if (line.startsWith("```")) {
+      code = !code;
+    }
     const hashes = line.match(/^(#+) /)?.[1]?.length;
-    if (!code && hashes && hashes <= level) break;
+    if (!code && hashes && hashes <= level) {
+      break;
+    }
   }
   return lines.slice(start + 1, end).join("\n");
 }
@@ -56,7 +64,9 @@ function checklist(markdown: string): Array<string> {
       columns = cells.map((cell) => cell.toLowerCase());
       continue;
     }
-    if (cells.every((cell) => /^:?-+:?$/.test(cell))) continue;
+    if (cells.every((cell) => /^:?-+:?$/.test(cell))) {
+      continue;
+    }
 
     const cell = (column: string) => cells[columns!.indexOf(column)];
     const scope = cell("scope");

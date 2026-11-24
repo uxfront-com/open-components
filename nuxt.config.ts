@@ -64,7 +64,9 @@ const CRAWL_HEADERS: Array<[string, Record<string, string>]> = [
 // /raw/<path>.yaml: every component page, split into a folder like
 // 3.components/button/, has one, like /raw/docs/components/button.yaml.
 const contracts = readPages("content/docs").flatMap(({ file, source }) => {
-  if (!buildContract(source)) return [];
+  if (!buildContract(source)) {
+    return [];
+  }
   return {
     title: source.match(/^title: (.+)$/m)?.[1] ?? file,
     path: `/raw${docsPath(file)}.yaml`,
@@ -314,7 +316,9 @@ export default defineNuxtConfig({
     "nitro:init"(nitro) {
       nitro.hooks.hook("compiled", async () => {
         const file = join(nitro.options.output.dir, "_redirects");
-        if (!existsSync(file)) return;
+        if (!existsSync(file)) {
+          return;
+        }
         const rules = (await readFile(file, "utf8"))
           .split("\n")
           .filter((line) => line && !/\s404$/.test(line));

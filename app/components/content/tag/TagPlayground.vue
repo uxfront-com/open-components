@@ -81,8 +81,12 @@ const code = computed(() => {
   if (fw === "angular") {
     return `<span appTag ${props.join(" ")}>${icon.value ? `\n  ${leading}\n` : ""}</span>`;
   }
-  if (icon.value && (fw === "react" || fw === "solid")) props.push(leading);
-  if (icon.value && fw !== "react" && fw !== "solid") return `<Tag ${props.join(" ")}>\n  ${leading}\n</Tag>`;
+  if (icon.value && (fw === "react" || fw === "solid")) {
+    props.push(leading);
+  }
+  if (icon.value && fw !== "react" && fw !== "solid") {
+    return `<Tag ${props.join(" ")}>\n  ${leading}\n</Tag>`;
+  }
   return `<Tag ${props.join(" ")} />`;
 });
 </script>

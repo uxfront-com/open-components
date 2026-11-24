@@ -162,10 +162,15 @@ const describedBy = () => [attrs["aria-describedby"], countId.value].filter(Bool
 // since a change to your own `style` replaces the root's.
 function setRows() {
   const el = root.value;
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   el.style.setProperty("--textarea--rows", String(rows));
-  if (autoGrow && maxRows !== undefined) el.style.setProperty("--textarea--max-rows", String(maxRows));
-  else el.style.removeProperty("--textarea--max-rows");
+  if (autoGrow && maxRows !== undefined) {
+    el.style.setProperty("--textarea--max-rows", String(maxRows));
+  } else {
+    el.style.removeProperty("--textarea--max-rows");
+  }
 }
 onMounted(setRows);
 onUpdated(setRows);
@@ -174,7 +179,9 @@ onUpdated(setRows);
 // others, it's set to the height of its text, which max-height caps.
 function grow() {
   const el = textarea.value;
-  if (!autoGrow || !el || (typeof CSS !== "undefined" && CSS.supports?.("field-sizing", "content"))) return;
+  if (!autoGrow || !el || (typeof CSS !== "undefined" && CSS.supports?.("field-sizing", "content"))) {
+    return;
+  }
   el.style.height = "auto";
   el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
 }
@@ -187,11 +194,15 @@ const PAUSE = 1000;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let announced = "";
 function announceCount() {
-  if (limit === undefined) return;
+  if (limit === undefined) {
+    return;
+  }
   clearTimeout(timer);
   timer = setTimeout(() => {
     const near = limit - remaining.value >= limit * NEAR_LIMIT;
-    if (!near || countText.value === announced) return;
+    if (!near || countText.value === announced) {
+      return;
+    }
     announced = countText.value;
     announce(countText.value);
   }, PAUSE);
@@ -214,7 +225,9 @@ function onReset() {
   setTimeout(() => {
     const text = textarea.value?.value ?? "";
     typed.value = text;
-    if (model.value !== undefined) model.value = text;
+    if (model.value !== undefined) {
+      model.value = text;
+    }
   });
 }
 
@@ -223,7 +236,9 @@ defineExpose({ textarea });
 
 onMounted(() => {
   // The live region has to be in the page before anything is announced.
-  if (limit !== undefined) prepareAnnouncer();
+  if (limit !== undefined) {
+    prepareAnnouncer();
+  }
   grow();
   form = textarea.value?.form ?? null;
   form?.addEventListener("reset", onReset);

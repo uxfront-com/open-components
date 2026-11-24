@@ -227,7 +227,9 @@ function vanilla() {
 // way you'd write it in each framework, or for Vanilla, the markup from the DOM contract.
 const code = computed(() => {
   const fw = framework.value;
-  if (fw === "vanilla") return vanilla().join("\n");
+  if (fw === "vanilla") {
+    return vanilla().join("\n");
+  }
   const { id, label, hint, error } = copy.value;
   const radios = control.value === "RadioGroup";
   const props = [
@@ -239,11 +241,15 @@ const code = computed(() => {
     required.value && takesRequired.value && "required",
     disabled.value && "disabled",
   ];
-  if (fw === "angular") return element("div", ["appField", ...props.slice(1)], angular()).join("\n");
+  if (fw === "angular") {
+    return element("div", ["appField", ...props.slice(1)], angular()).join("\n");
+  }
   let body: Array<string>;
-  if (fw === "react" || fw === "vue") body = component(fw, false);
-  else if (fw === "svelte") body = ["{#snippet children(control)}", ...indent(component(fw, true)), "{/snippet}"];
-  else {
+  if (fw === "react" || fw === "vue") {
+    body = component(fw, false);
+  } else if (fw === "svelte") {
+    body = ["{#snippet children(control)}", ...indent(component(fw, true)), "{/snippet}"];
+  } else {
     const inner = component(fw, true);
     body = inner.length === 1 ? [`{(control) => ${inner[0]}}`] : ["{(control) => (", ...indent(inner), ")}"];
   }

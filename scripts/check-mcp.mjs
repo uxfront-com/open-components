@@ -26,7 +26,9 @@ const problems = [];
 const check = (ok, problem) => ok || problems.push(problem);
 
 const url = process.argv.includes("--url") ? process.argv[process.argv.indexOf("--url") + 1] : undefined;
-if (!existsSync("dist/raw/docs")) throw new Error("dist is missing: run `pnpm build` first.");
+if (!existsSync("dist/raw/docs")) {
+  throw new Error("dist is missing: run `pnpm build` first.");
+}
 // The site's security headers, which dist/_headers gives every static file.
 const HEADERS = Object.fromEntries(
   (readFileSync("dist/_headers", "utf8").split(/^(?=\S)/m).find((block) => block.startsWith("/*\n")) ?? "")
@@ -44,7 +46,9 @@ try {
   await checkServer();
 } catch (error) {
   // Why the Worker stopped answering, if it did, is only in wrangler dev's own output.
-  if (wrangler) console.error(`wrangler dev's output:\n${wrangler.log()}`);
+  if (wrangler) {
+    console.error(`wrangler dev's output:\n${wrangler.log()}`);
+  }
   throw error;
 } finally {
   wrangler?.process.kill();
@@ -77,7 +81,9 @@ function docsParts() {
   const parts = new Map();
   for (const file of readdirSync("content/docs", { recursive: true, encoding: "utf8" })) {
     const folder = dirname(file);
-    if (!file.endsWith(".md") || basename(file) === "index.md" || !existsSync(join("content/docs", folder, "index.md"))) continue;
+    if (!file.endsWith(".md") || basename(file) === "index.md" || !existsSync(join("content/docs", folder, "index.md"))) {
+      continue;
+    }
     const whole = docsPath(join(folder, "index.md"));
     parts.set(whole, [...(parts.get(whole) ?? []), docsPath(file)]);
   }
@@ -92,7 +98,9 @@ function docsPath(file) {
 
 // Serves the Worker on a free port, the way `npx wrangler dev -c mcp/wrangler.jsonc` does.
 async function serve() {
-  if (!existsSync("mcp/.output/server/index.mjs")) throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
+  if (!existsSync("mcp/.output/server/index.mjs")) {
+    throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
+  }
   const port = await new Promise((resolve) => {
     const server = createServer().listen(0, "127.0.0.1", () => {
       const { port } = server.address();
@@ -108,9 +116,13 @@ async function serve() {
   child.stderr.on("data", (data) => (log += data));
   const url = `http://127.0.0.1:${port}`;
   for (let attempt = 0; attempt < 120; attempt++) {
-    if (child.exitCode !== null) break;
+    if (child.exitCode !== null) {
+      break;
+    }
     // Any response will do: `/` redirects to the site.
-    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) return { url, process: child, log: () => log };
+    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) {
+      return { url, process: child, log: () => log };
+    }
     await new Promise((resolve) => {
       setTimeout(resolve, 500);
     });
@@ -204,8 +216,12 @@ async function checkServer() {
     ["prompt", prompts, PROMPTS],
   ]) {
     const names = served.map(({ name }) => name);
-    for (const name of names) check(expected.includes(name), `The server has a ${kind}, ${name}, that check-mcp doesn't list`);
-    for (const name of expected) check(names.includes(name), `The server has no ${kind} named ${name}`);
+    for (const name of names) {
+      check(expected.includes(name), `The server has a ${kind}, ${name}, that check-mcp doesn't list`);
+    }
+    for (const name of expected) {
+      check(names.includes(name), `The server has no ${kind} named ${name}`);
+    }
   }
   // Every tool works with each of the examples it gives agents.
   for (const tool of tools) {
@@ -217,7 +233,9 @@ async function checkServer() {
   }
   const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
   for (const [where, text] of [["The instructions", instructions], ...tools.map((tool) => [tool.name, tool.description ?? ""])]) {
-    for (const name of named(text)) check(TOOLS.includes(name), `${where} name a tool that doesn't exist: ${name}`);
+    for (const name of named(text)) {
+      check(TOOLS.includes(name), `${where} name a tool that doesn't exist: ${name}`);
+    }
   }
 
   // What the standard covers. Arguments are optional when every one of them is.
@@ -417,7 +435,9 @@ async function checkServer() {
     const { messages } = await client.getPrompt({ name: prompt.name, arguments: filled[prompt.name] });
     const text = messages.map((message) => message.content.text).join("\n");
     check(text.includes(SITE), `The ${prompt.name} prompt doesn't link to the standard`);
-    for (const name of named(text)) check(TOOLS.includes(name), `The ${prompt.name} prompt names a tool that doesn't exist: ${name}`);
+    for (const name of named(text)) {
+      check(TOOLS.includes(name), `The ${prompt.name} prompt names a tool that doesn't exist: ${name}`);
+    }
   }
 
   await client.close();

@@ -30,10 +30,15 @@ export const isGroup = (item: SelectItem): item is SelectGroup => "options" in i
 export function toSections(items: Array<SelectItem>) {
   const result: Array<Section> = [];
   for (const item of items) {
-    if (isSeparator(item)) result.push({ separator: true, options: [] });
-    else if (isGroup(item)) result.push({ label: item.label, options: item.options });
-    else if (result.at(-1) && !result.at(-1)!.separator && result.at(-1)!.label === undefined) result.at(-1)!.options.push(item);
-    else result.push({ options: [item] });
+    if (isSeparator(item)) {
+      result.push({ separator: true, options: [] });
+    } else if (isGroup(item)) {
+      result.push({ label: item.label, options: item.options });
+    } else if (result.at(-1) && !result.at(-1)!.separator && result.at(-1)!.label === undefined) {
+      result.at(-1)!.options.push(item);
+    } else {
+      result.push({ options: [item] });
+    }
   }
   return result;
 }
@@ -63,7 +68,11 @@ export function useListbox({ items, all = items, baseId, active }: ListboxOption
   const isEnabled = (index: number) => flat.value[index] !== undefined && !flat.value[index]!.disabled;
   // The nearest enabled option in a direction, or `from` at either end, since a listbox doesn't wrap.
   function step(from: number, by: 1 | -1) {
-    for (let index = from + by; index >= 0 && index < flat.value.length; index += by) if (isEnabled(index)) return index;
+    for (let index = from + by; index >= 0 && index < flat.value.length; index += by) {
+      if (isEnabled(index)) {
+        return index;
+      }
+    }
     return from;
   }
   const firstEnabled = () => step(-1, 1);
@@ -71,7 +80,9 @@ export function useListbox({ items, all = items, baseId, active }: ListboxOption
   // PageDown and PageUp move ten options, stopping at either end.
   function jump(by: 1 | -1) {
     let index = active.value;
-    for (let count = 0; count < 10; count++) index = step(index, by);
+    for (let count = 0; count < 10; count++) {
+      index = step(index, by);
+    }
     return index;
   }
 
@@ -101,11 +112,16 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
   function place() {
     const el = panel();
     const field = anchor();
-    if (!el || !field) return;
+    if (!el || !field) {
+      return;
+    }
     const keyboard = keyboardUp();
     // The data attribute turns CSS anchor positioning off, so the styles below take over.
-    if (keyboard) el.dataset.fit = "visual";
-    else delete el.dataset.fit;
+    if (keyboard) {
+      el.dataset.fit = "visual";
+    } else {
+      delete el.dataset.fit;
+    }
     if (!keyboard && anchored()) {
       el.style.removeProperty("top");
       el.style.removeProperty("left");
@@ -131,7 +147,9 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
     // shrunk on the bigger one, with its options scrolling.
     const under = natural <= below || (natural > above && below >= above);
     const height = Math.min(natural, Math.max(under ? below : above, 0));
-    if (height < natural) el.style.maxHeight = `${height}px`;
+    if (height < natural) {
+      el.style.maxHeight = `${height}px`;
+    }
     const top = under ? a.bottom : a.top - 2 * gap - height;
     el.style.left = `${Math.max(0, Math.min(a.left, clientWidth - width))}px`;
     el.style.top = `${Math.max(viewTop - gap, Math.min(top, viewBottom - height - gap))}px`;
@@ -142,7 +160,9 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
   let listening = false;
   function listen(open: boolean) {
     const on = open && (scripted() || fitKeyboard);
-    if (on === listening) return;
+    if (on === listening) {
+      return;
+    }
     listening = on;
     const method = on ? "addEventListener" : "removeEventListener";
     window[method]("scroll", place, { capture: true, passive: true } as AddEventListenerOptions);

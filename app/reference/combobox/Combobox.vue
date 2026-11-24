@@ -175,17 +175,27 @@ const query = computed(() => (text.value !== display.value ? text.value.trim() :
 // between two things it separates.
 const shown = computed<Array<SelectItem>>(() => {
   const q = query.value;
-  if (!q) return options;
+  if (!q) {
+    return options;
+  }
   const result: Array<SelectItem> = [];
   for (const item of options) {
     if (isSeparator(item)) {
-      if (result.length && !isSeparator(result.at(-1)!)) result.push(item);
+      if (result.length && !isSeparator(result.at(-1)!)) {
+        result.push(item);
+      }
     } else if (isGroup(item)) {
       const found = item.options.filter((option) => matches(option, q));
-      if (found.length) result.push({ label: item.label, options: found });
-    } else if (matches(item, q)) result.push(item);
+      if (found.length) {
+        result.push({ label: item.label, options: found });
+      }
+    } else if (matches(item, q)) {
+      result.push(item);
+    }
   }
-  if (result.length && isSeparator(result.at(-1)!)) result.pop();
+  if (result.length && isSeparator(result.at(-1)!)) {
+    result.pop();
+  }
   return result;
 });
 
@@ -220,8 +230,12 @@ const create = computed(
     },
 );
 const activeId = computed(() => {
-  if (!open.value) return undefined;
-  if (onCreate()) return create.value ? create.value.id : undefined;
+  if (!open.value) {
+    return undefined;
+  }
+  if (onCreate()) {
+    return create.value ? create.value.id : undefined;
+  }
   const option = flat.value[active.value];
   return option ? optionId(option) : undefined;
 });
@@ -231,14 +245,17 @@ const activeId = computed(() => {
 const firstIndex = () => (firstEnabled() >= 0 ? firstEnabled() : creating.value ? createIndex() : -1);
 const lastIndex = () => (creating.value ? createIndex() : lastEnabled() < flat.value.length ? lastEnabled() : -1);
 function move(by: 1 | -1) {
-  if (active.value < 0) active.value = by === 1 ? firstIndex() : lastIndex();
-  else if (by === 1 && !onCreate()) {
+  if (active.value < 0) {
+    active.value = by === 1 ? firstIndex() : lastIndex();
+  } else if (by === 1 && !onCreate()) {
     const next = step(active.value, 1);
     active.value = next === active.value && creating.value ? createIndex() : next;
   } else if (by === -1) {
     const from = onCreate() ? flat.value.length : active.value;
     const next = step(from, -1);
-    if (next !== from) active.value = next;
+    if (next !== from) {
+      active.value = next;
+    }
   }
 }
 
@@ -251,7 +268,9 @@ const first = [...values.value];
 const extra = computed(() => [...new Set([...first, ...values.value])].filter((value) => !byValue.value.has(value)));
 function setDefaults() {
   const el = select.value;
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   const list = Array.from(el.options);
   const picked = list.map((option) => option.selected);
   list.forEach((option, index) => {
@@ -281,13 +300,17 @@ function commit(next: string | Array<string>) {
 // Whether the value changed, from what was decided here, since a bound value only changes
 // once your framework renders it again.
 function setValue(next: Array<string>) {
-  if (next.join() === values.value.join()) return false;
+  if (next.join() === values.value.join()) {
+    return false;
+  }
   commit(multiple ? next : (next[0] ?? ""));
   return true;
 }
 
 function pickOption(option: SelectOption) {
-  if (option.disabled) return;
+  if (option.disabled) {
+    return;
+  }
   if (multiple) {
     setValue(isPicked(option) ? values.value.filter((value) => value !== option.value) : [...values.value, option.value]);
     // The text clears for the next search, and the highlight stays on the option people toggled.
@@ -302,7 +325,9 @@ function pickOption(option: SelectOption) {
 
 function pickCreate() {
   const value = creating.value;
-  if (!value) return;
+  if (!value) {
+    return;
+  }
   emit("create", value);
   if (multiple) {
     setValue([...values.value, value]);
@@ -335,11 +360,16 @@ function commitText() {
   const option = typed ? byLabel(typed) : undefined;
   let next = values.value;
   let shown = display.value;
-  if (!typed) [next, shown] = [[], ""];
-  else if (option) [next, shown] = [[option.value], option.label];
+  if (!typed) {
+    [next, shown] = [[], ""];
+  } else if (option) {
+    [next, shown] = [[option.value], option.label];
+  }
   // Text that's an option's value, but not its label, would submit as that option, so it
   // isn't kept, and goes back like any other text.
-  else if (allowCustomValue && !byValue.value.has(typed)) [next, shown] = [[typed], typed];
+  else if (allowCustomValue && !byValue.value.has(typed)) {
+    [next, shown] = [[typed], typed];
+  }
   text.value = shown;
   return setValue(next);
 }
@@ -348,11 +378,15 @@ async function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
   setValue(values.value.filter((value) => value !== option.value));
   announce(removedLabel(option.label));
-  if (moveFocus && !(await tags.value?.focusAt(index))) control.value?.focus();
+  if (moveFocus && !(await tags.value?.focusAt(index))) {
+    control.value?.focus();
+  }
 }
 
 function show(to = -1) {
-  if (open.value || disabled || readonly) return;
+  if (open.value || disabled || readonly) {
+    return;
+  }
   active.value = to;
   panelName.value = (attrs["aria-label"] as string | undefined) ?? control.value?.labels?.[0]?.textContent ?? undefined;
   panel.value?.showPopover?.();
@@ -363,11 +397,15 @@ function show(to = -1) {
 }
 function hide() {
   clearTimeout(countTimer);
-  if (open.value) panel.value?.hidePopover?.();
+  if (open.value) {
+    panel.value?.hidePopover?.();
+  }
 }
 
 function scrollToActive() {
-  if (open.value) panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  if (open.value) {
+    panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  }
 }
 watch(active, scrollToActive, { flush: "post" });
 
@@ -383,7 +421,9 @@ let countTimer: ReturnType<typeof setTimeout> | undefined;
 function announceCount() {
   clearTimeout(countTimer);
   countTimer = setTimeout(() => {
-    if (!open.value) return;
+    if (!open.value) {
+      return;
+    }
     const count = flat.value.length;
     announce(count ? resultsLabel(count) : creating.value ? createLabel(creating.value) : emptyLabel);
   }, COUNT_PAUSE);
@@ -392,7 +432,9 @@ function announceCount() {
 function onInput(event: Event) {
   text.value = (event.target as HTMLInputElement).value;
   // Autofill types too, without focus, and leaves the panel closed.
-  if (document.activeElement !== control.value) return;
+  if (document.activeElement !== control.value) {
+    return;
+  }
   // Nothing is highlighted while people type, so Enter keeps what they typed. That's the
   // APG's list autocomplete with manual selection.
   active.value = -1;
@@ -402,7 +444,9 @@ function onInput(event: Event) {
 
 // Autofill's change, which comes without focus, settles at once.
 function onChange() {
-  if (document.activeElement !== control.value) commitText();
+  if (document.activeElement !== control.value) {
+    commitText();
+  }
 }
 
 // The fields that keep Enter from submitting a form without a submit button, once there's more than one.
@@ -413,13 +457,19 @@ const BLOCKING = new Set(["text", "search", "url", "tel", "email", "password", "
 async function submitAfter() {
   const form = select.value?.form;
   await nextTick();
-  if (!form) return;
+  if (!form) {
+    return;
+  }
   const submitter = Array.from(form.elements).find((el): el is HTMLButtonElement => (el as HTMLButtonElement).type === "submit");
-  if (submitter?.disabled) return;
+  if (submitter?.disabled) {
+    return;
+  }
   // Without a submit button, Enter only submits a form with one text field, as the HTML
   // Standard's implicit submission says.
   const fields = Array.from(form.elements).filter((el) => el instanceof HTMLInputElement && BLOCKING.has(el.type));
-  if (!submitter && fields.length > 1) return;
+  if (!submitter && fields.length > 1) {
+    return;
+  }
   form.requestSubmit(submitter);
 }
 
@@ -428,19 +478,29 @@ async function submitAfter() {
 // Space, Home, End and the side arrows edit the text, as in any text field.
 function onKeydown(event: KeyboardEvent) {
   // Safari ends a composition with an Enter whose keyCode is 229 and isComposing false.
-  if (readonly || event.isComposing || event.keyCode === 229) return;
+  if (readonly || event.isComposing || event.keyCode === 229) {
+    return;
+  }
   const { key } = event;
 
   if (key === "ArrowDown") {
     event.preventDefault();
-    if (!open.value) show(event.altKey ? -1 : firstIndex());
-    else move(1);
+    if (!open.value) {
+      show(event.altKey ? -1 : firstIndex());
+    } else {
+      move(1);
+    }
   } else if (key === "ArrowUp") {
     event.preventDefault();
     if (!open.value) {
-      if (!event.altKey) show(lastIndex());
-    } else if (event.altKey) hide();
-    else move(-1);
+      if (!event.altKey) {
+        show(lastIndex());
+      }
+    } else if (event.altKey) {
+      hide();
+    } else {
+      move(-1);
+    }
   } else if ((key === "PageDown" || key === "PageUp") && open.value && !onCreate()) {
     event.preventDefault();
     active.value = jump(key === "PageDown" ? 1 : -1);
@@ -449,9 +509,11 @@ function onKeydown(event: KeyboardEvent) {
       // People were choosing, so Enter picks rather than submitting.
       event.preventDefault();
       const option = flat.value[active.value];
-      if (onCreate()) pickCreate();
-      else if (option) pickOption(option);
-      else {
+      if (onCreate()) {
+        pickCreate();
+      } else if (option) {
+        pickOption(option);
+      } else {
         commitText();
         hide();
       }
@@ -465,18 +527,27 @@ function onKeydown(event: KeyboardEvent) {
     // Not cancelled, so focus goes on. A single value takes the highlighted option, as the
     // APG says, and with several, what people toggled stays.
     const option = flat.value[active.value];
-    if (open.value && !multiple && onCreate()) pickCreate();
-    else if (open.value && !multiple && option) pickOption(option);
-    else commitText();
+    if (open.value && !multiple && onCreate()) {
+      pickCreate();
+    } else if (open.value && !multiple && option) {
+      pickOption(option);
+    } else {
+      commitText();
+    }
     hide();
   } else if (key === "Escape") {
     // The first press closes the panel and keeps the text, the second clears it, and both
     // go no further, so a Dialog around the Combobox stays open. With nothing to clear, it does.
-    if (open.value) hide();
-    else if (text.value) {
+    if (open.value) {
+      hide();
+    } else if (text.value) {
       text.value = "";
-      if (!multiple) setValue([]);
-    } else return;
+      if (!multiple) {
+        setValue([]);
+      }
+    } else {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
   } else if (key === "Backspace" && multiple && !text.value && selected.value.length) {
@@ -493,22 +564,31 @@ function onBlur() {
 // The panel is a manual popover, since a press in the text, outside the panel, mustn't
 // close it. A press outside the field does, as light dismiss would.
 function onDocumentPointerdown(event: PointerEvent) {
-  if (open.value && !root.value?.contains(event.target as Node)) hide();
+  if (open.value && !root.value?.contains(event.target as Node)) {
+    hide();
+  }
 }
 
 // The toggle doesn't take focus, which stays in the text, as in the APG's example.
 function onToggle() {
-  if (disabled || readonly) return;
+  if (disabled || readonly) {
+    return;
+  }
   control.value?.focus();
-  if (open.value) hide();
-  else show();
+  if (open.value) {
+    hide();
+  } else {
+    show();
+  }
 }
 
 // A press on the field around the text, like between the tags or on the icon, puts the
 // caret in it, as the Input does. It's on mousedown, so the text keeps focus, with no blur.
 function onRootMousedown(event: MouseEvent) {
   const target = event.target as Element;
-  if (target.closest("input, button, select")) return;
+  if (target.closest("input, button, select")) {
+    return;
+  }
   event.preventDefault();
   control.value?.focus();
 }
@@ -546,9 +626,15 @@ onMounted(() => {
   if (import.meta.env.DEV) {
     const el = control.value;
     const named = el?.labels?.length || el?.hasAttribute("aria-label") || el?.hasAttribute("aria-labelledby");
-    if (el && !named) console.warn("[Combobox] has no accessible name: give it a <label for>, or put it in a Field.", el);
-    if (el && !baseId()) console.warn("[Combobox] has no id or name: give it one, so the text field can point at its options.", el);
-    if (multiple && allowCustomValue) console.warn("[Combobox] ignores allowCustomValue with multiple: use creatable to add new values.", el);
+    if (el && !named) {
+      console.warn("[Combobox] has no accessible name: give it a <label for>, or put it in a Field.", el);
+    }
+    if (el && !baseId()) {
+      console.warn("[Combobox] has no id or name: give it one, so the text field can point at its options.", el);
+    }
+    if (multiple && allowCustomValue) {
+      console.warn("[Combobox] ignores allowCustomValue with multiple: use creatable to add new values.", el);
+    }
   }
 });
 

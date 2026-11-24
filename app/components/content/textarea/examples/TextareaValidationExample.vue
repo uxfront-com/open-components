@@ -11,15 +11,21 @@ const messageTextarea = useTemplateRef("message-textarea");
 
 // Returns an error message, or an empty string when the message is fine.
 function validateMessage(value: string) {
-  if (!value.trim()) return "Enter a message";
-  if ([...value].length > LIMIT) return `Message must be ${LIMIT} characters or fewer`;
+  if (!value.trim()) {
+    return "Enter a message";
+  }
+  if ([...value].length > LIMIT) {
+    return `Message must be ${LIMIT} characters or fewer`;
+  }
   return "";
 }
 
 function update(value = "") {
   message.value = value;
   // Once an error shows, check again as people type, so it clears as soon as it's fixed.
-  if (error.value) error.value = validateMessage(value);
+  if (error.value) {
+    error.value = validateMessage(value);
+  }
 }
 
 async function send() {

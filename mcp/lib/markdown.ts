@@ -11,7 +11,9 @@ export function scan(markdown: string): Array<{ text: string; code: boolean }> {
   return markdown.split("\n").map((text) => {
     const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
     if (!fence) {
-      if (marker) fence = { char: marker[1]![0]!, length: marker[1]!.length };
+      if (marker) {
+        fence = { char: marker[1]![0]!, length: marker[1]!.length };
+      }
       return { text, code: !!marker };
     }
     if (marker && marker[1]![0] === fence.char && marker[1]!.length >= fence.length && !marker[2]!.trim()) {

@@ -233,7 +233,9 @@ describe("Field", () => {
     expect(screen.getByRole("checkbox", { name: "I agree to the terms" })).toBeDisabled();
     expect(screen.getByRole("switch", { name: "Price alerts" })).toBeDisabled();
     expect(screen.getByRole("group", { name: "How can we contact you?" })).toBeDisabled();
-    for (const box of within(screen.getByRole("group")).getAllByRole("checkbox")) expect(box).toBeDisabled();
+    for (const box of within(screen.getByRole("group")).getAllByRole("checkbox")) {
+      expect(box).toBeDisabled();
+    }
     await user.tab();
     expect(document.body).toHaveFocus();
   });

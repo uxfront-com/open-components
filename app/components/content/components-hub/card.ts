@@ -19,7 +19,9 @@ export interface Link {
 export function layout(nodes: Array<VNode>): { name: Link; sentence: Array<VNode>; layers: Array<Link> } {
   const blocks = nodes.filter((node) => node.type !== Comment && !(node.type === Text && !String(node.children).trim()));
   const name = links(blocks.slice(0, 1))[0];
-  if (!name) throw new Error("A components hub card starts with a paragraph that links to the component's Overview");
+  if (!name) {
+    throw new Error("A components hub card starts with a paragraph that links to the component's Overview");
+  }
   const layers = blocks.length > 2 ? links(blocks.slice(-1)) : [];
   // Whatever sits between the name and the layers, which is the sentence: the
   // inside of its paragraph, so the card can lay it out.
@@ -47,7 +49,9 @@ function text(nodes: Array<VNode | string>): string {
 // What a node holds: an element's children, or what a component's default slot renders.
 function children(node: VNode): Array<VNode> {
   const content = node.children;
-  if (Array.isArray(content)) return content as Array<VNode>;
+  if (Array.isArray(content)) {
+    return content as Array<VNode>;
+  }
   if (content && typeof content === "object" && "default" in content && typeof content.default === "function") {
     return [content.default()].flat() as Array<VNode>;
   }

@@ -138,7 +138,9 @@ function onBeforetoggle(event: Event) {
     unanchor();
     trigger = findTrigger(event);
     opener = document.activeElement as HTMLElement | null;
-    if (trigger && anchorName.value) trigger.style.setProperty("anchor-name", anchorName.value);
+    if (trigger && anchorName.value) {
+      trigger.style.setProperty("anchor-name", anchorName.value);
+    }
     return;
   }
   showing = false;
@@ -158,9 +160,13 @@ function onToggle(event: Event) {
     listen(true);
     // Focus moves in, so keyboard and screen reader users start in the popover, unless
     // the browser already focused an `autofocus` control in it.
-    if (!el.contains(document.activeElement)) initialFocus(el)?.focus();
+    if (!el.contains(document.activeElement)) {
+      initialFocus(el)?.focus();
+    }
     nextTick(update);
-    if (arrow) nextTick(follow);
+    if (arrow) {
+      nextTick(follow);
+    }
     return;
   }
   state.value = "closed";
@@ -172,9 +178,13 @@ function onToggle(event: Event) {
   // Safari, where a click doesn't focus a button, isn't the trigger. So the trigger gets it,
   // unless focus has already moved somewhere else, like into another popover.
   const active = document.activeElement;
-  if (returnFocus && (!active || active === document.body || el.contains(active))) (trigger ?? opener)?.focus();
+  if (returnFocus && (!active || active === document.body || el.contains(active))) {
+    (trigger ?? opener)?.focus();
+  }
   returnFocus = false;
-  if (reason) emit("close", reason);
+  if (reason) {
+    emit("close", reason);
+  }
 }
 
 // Escape closes the popover and goes no further, so a dialog around it stays open, whether
@@ -183,8 +193,12 @@ function onToggle(event: Event) {
 // that cancels it, close first and alone. Cancelling it also keeps the browser from closing
 // anything else on it. With a popover open inside this one, Escape is that one's.
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape" || event.defaultPrevented || !showing) return;
-  if (popover.value?.querySelector('[popover]:popover-open, .popover[data-state="open"]')) return;
+  if (event.key !== "Escape" || event.defaultPrevented || !showing) {
+    return;
+  }
+  if (popover.value?.querySelector('[popover]:popover-open, .popover[data-state="open"]')) {
+    return;
+  }
   event.preventDefault();
   event.stopPropagation();
   dismiss("escape");
@@ -196,7 +210,9 @@ function onKeydown(event: KeyboardEvent) {
 // Escape after the control that has focus and before the Dialog does.
 function onHostKeydown(event: KeyboardEvent) {
   const target = event.target as Node;
-  if (popover.value?.contains(target) || trigger?.contains(target)) return;
+  if (popover.value?.contains(target) || trigger?.contains(target)) {
+    return;
+  }
   onKeydown(event);
 }
 
@@ -204,12 +220,16 @@ function onHostKeydown(event: KeyboardEvent) {
 // take focus, none of its parts hears the key. So the Dialog does too, in the capture
 // phase, but only then: with no control focused, it takes the key from nobody.
 function onDialogKeydown(event: KeyboardEvent) {
-  if (event.target === event.currentTarget) onKeydown(event);
+  if (event.target === event.currentTarget) {
+    onKeydown(event);
+  }
 }
 
 // A Dialog that closes, like from its Done button, takes the popover with it.
 function onHostClose() {
-  if (showing) dismiss("closed");
+  if (showing) {
+    dismiss("closed");
+  }
 }
 
 function dismiss(why: PopoverCloseReason | null) {
@@ -224,11 +244,15 @@ function onPointerdown(event: PointerEvent) {
 }
 function onPointerup(event: PointerEvent) {
   const target = event.target as Node;
-  if (pressedOutside && !popover.value?.contains(target) && !trigger?.contains(target)) note("outside");
+  if (pressedOutside && !popover.value?.contains(target) && !trigger?.contains(target)) {
+    note("outside");
+  }
   pressedOutside = false;
 }
 function onPageKeydown(event: KeyboardEvent) {
-  if (event.key === "Escape" && !event.defaultPrevented) note("escape");
+  if (event.key === "Escape" && !event.defaultPrevented) {
+    note("escape");
+  }
 }
 function onTriggerClick() {
   note("trigger");
@@ -243,11 +267,17 @@ function listen(on: boolean) {
   trigger?.[method]("keydown", onKeydown as EventListener);
   trigger?.[method]("click", onTriggerClick);
   const host = popover.value?.parentElement?.closest("dialog");
-  if (on) hostParts = [...(host?.children ?? [])];
-  for (const part of hostParts) part[method]("keydown", onHostKeydown as EventListener);
+  if (on) {
+    hostParts = [...(host?.children ?? [])];
+  }
+  for (const part of hostParts) {
+    part[method]("keydown", onHostKeydown as EventListener);
+  }
   host?.[method]("keydown", onDialogKeydown as EventListener, true);
   host?.[method]("close", onHostClose);
-  if (!on) hostParts = [];
+  if (!on) {
+    hostParts = [];
+  }
   if (!anchored()) {
     window[method]("scroll", update, { capture: true, passive: true } as AddEventListenerOptions);
     window[method]("resize", update);
@@ -264,9 +294,14 @@ watch(
   open,
   (value) => {
     const el = popover.value;
-    if (!el?.showPopover) return;
-    if (value && !showing) el.showPopover();
-    else if (!value && showing) dismiss(null);
+    if (!el?.showPopover) {
+      return;
+    }
+    if (value && !showing) {
+      el.showPopover();
+    } else if (!value && showing) {
+      dismiss(null);
+    }
   },
   { flush: "post" },
 );
@@ -276,14 +311,20 @@ watch(
 const anchored = () => globalThis.CSS?.supports?.("position-area: top") ?? false;
 
 function update() {
-  if (!anchored()) place();
-  if (arrow) aim();
+  if (!anchored()) {
+    place();
+  }
+  if (arrow) {
+    aim();
+  }
 }
 
 // The arrow follows it on every frame while it's open, since the browser moves an anchored
 // popover after a scroll handler runs, and a flip can move it with no scroll at all.
 function follow() {
-  if (state.value !== "open") return;
+  if (state.value !== "open") {
+    return;
+  }
   aim();
   frame = requestAnimationFrame(follow);
 }
@@ -292,7 +333,9 @@ function follow() {
 // doesn't fit, centred on the trigger and kept inside the viewport.
 function place() {
   const el = popover.value;
-  if (!el || !trigger) return;
+  if (!el || !trigger) {
+    return;
+  }
   // Its margin is the gap, which `left` and `top` place it outside of.
   const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
   const a = trigger.getBoundingClientRect();
@@ -310,10 +353,14 @@ function place() {
     right: a.right + gap + width <= clientWidth,
   };
   let at: keyof typeof opposite = sides[placement];
-  if (!fits[at] && fits[opposite[at]]) at = opposite[at];
+  if (!fits[at] && fits[opposite[at]]) {
+    at = opposite[at];
+  }
   // Beside a trigger with room on neither side, like on a phone, it goes below it or above it,
   // rather than over it.
-  else if (!fits[at] && (at === "left" || at === "right")) at = fits.bottom || !fits.top ? "bottom" : "top";
+  else if (!fits[at] && (at === "left" || at === "right")) {
+    at = fits.bottom || !fits.top ? "bottom" : "top";
+  }
   const across = at === "top" || at === "bottom";
   const x = across ? a.left + (a.width - width) / 2 : at === "left" ? a.left - gap - width : a.right + gap;
   const y = across ? (at === "top" ? a.top - gap - height : a.bottom + gap) : a.top + (a.height - height) / 2;
@@ -328,7 +375,9 @@ function place() {
 function aim() {
   const el = popover.value;
   const part = arrowPart.value;
-  if (!el || !part || !trigger) return;
+  if (!el || !part || !trigger) {
+    return;
+  }
   const a = trigger.getBoundingClientRect();
   const p = el.getBoundingClientRect();
   const x = p.left + p.width / 2;
@@ -345,8 +394,12 @@ function aim() {
 }
 
 onMounted(() => {
-  for (const el of triggers()) expand(el, false);
-  if (open.value) popover.value?.showPopover?.();
+  for (const el of triggers()) {
+    expand(el, false);
+  }
+  if (open.value) {
+    popover.value?.showPopover?.();
+  }
 
   if (import.meta.env.DEV && !title.trim()) {
     console.warn("[Popover] has no title: give it one, since it's what names the popover.", popover.value);
@@ -354,7 +407,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (showing) dismiss(null);
+  if (showing) {
+    dismiss(null);
+  }
   listen(false);
   expand(trigger, false);
   unanchor();

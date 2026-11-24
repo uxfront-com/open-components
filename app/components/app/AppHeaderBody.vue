@@ -12,7 +12,9 @@ const navigation = inject<Ref<Array<ContentNavigationItem>>>("navigation");
 const { subNavigationMode } = useSubNavigation();
 const items = computed<Array<ContentNavigationItem>>(() => {
   const nav = navigation?.value || [];
-  if (!subNavigationMode.value) return nav;
+  if (!subNavigationMode.value) {
+    return nav;
+  }
   return nav.map(({ children, ...item }) => ({
     ...item,
     path: children?.length ? getFirstPagePath({ ...item, children }) : item.path,

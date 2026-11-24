@@ -31,13 +31,18 @@ export function renderFrameworks(markdown: string, frameworks: Array<Framework>,
         }
         lines.push(...trim(slots.get(shown!) ?? []));
       } else {
-        for (const [value, code] of slots) lines.push(`**${label(value)}**`, "", ...trim(code), "");
+        for (const [value, code] of slots) {
+          lines.push(`**${label(value)}**`, "", ...trim(code), "");
+        }
       }
       slots = undefined;
     } else if (slots) {
       const match = line.match(SLOT);
-      if (match) slots.set(match[1]!, (current = []));
-      else current?.push(line);
+      if (match) {
+        slots.set(match[1]!, (current = []));
+      } else {
+        current?.push(line);
+      }
     } else {
       lines.push(line);
     }
@@ -49,7 +54,11 @@ export function renderFrameworks(markdown: string, frameworks: Array<Framework>,
 function trim(lines: Array<string>): Array<string> {
   let start = 0;
   let end = lines.length;
-  while (start < end && !lines[start]!.trim()) start++;
-  while (end > start && !lines[end - 1]!.trim()) end--;
+  while (start < end && !lines[start]!.trim()) {
+    start++;
+  }
+  while (end > start && !lines[end - 1]!.trim()) {
+    end--;
+  }
   return lines.slice(start, end);
 }

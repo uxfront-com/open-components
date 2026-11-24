@@ -115,8 +115,12 @@ describe("The standard", () => {
   it.each(pages)("%s's framework switchers are marked in pairs", (_, page) => {
     let open = false;
     for (const { text, code } of scan(page.markdown)) {
-      if (code) continue;
-      if (text.startsWith("<!-- framework: ")) expect(open).toBe(true);
+      if (code) {
+        continue;
+      }
+      if (text.startsWith("<!-- framework: ")) {
+        expect(open).toBe(true);
+      }
       if (text === SWITCHER || text === SWITCHER_END) {
         expect(open).toBe(text === SWITCHER_END);
         open = !open;
@@ -176,14 +180,18 @@ describe("The standard", () => {
     const rows = roadmap.match(/^\| :roadmap-check/gm) ?? [];
     const listed = standard.components.filter((component) => component.kind === "component");
     expect(listed).toHaveLength(rows.length);
-    for (const component of listed) expect(component.group).toEqual(expect.any(String));
+    for (const component of listed) {
+      expect(component.group).toEqual(expect.any(String));
+    }
   });
 
   it.each(readdirSync("app/reference"))("serves app/reference/%s as it is, in the order its page shows it", (component) => {
     const reference = standard.references.find((candidate) => candidate.component === component)!;
     const dir = join("app/reference", component);
     expect(reference.files.map((file) => file.name).sort()).toEqual(readdirSync(dir).sort());
-    for (const file of reference.files) expect(file.content).toBe(readFileSync(join(dir, file.name), "utf8"));
+    for (const file of reference.files) {
+      expect(file.content).toBe(readFileSync(join(dir, file.name), "utf8"));
+    }
 
     const source = sources.get(standard.pages.find((page) => page.key === component)!.path)!;
     const start = source.indexOf("\n## Reference implementation\n");
@@ -258,7 +266,9 @@ describe("buildStandard's problems", () => {
       ...changes,
     };
     for (const [file, content] of Object.entries(files)) {
-      if (content === undefined) continue;
+      if (content === undefined) {
+        continue;
+      }
       mkdirSync(dirname(join(root, file)), { recursive: true });
       writeFileSync(join(root, file), content);
     }

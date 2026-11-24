@@ -38,9 +38,14 @@ export function parseChecks(check: string): { checks: Array<CheckKind>; axe: Arr
     const value = part.trim().toLowerCase();
     const rule = value.match(/^axe `([^`]+)`$/)?.[1];
     const kind = rule ? "axe" : KINDS[value];
-    if (rule) axe.push(rule);
-    if (kind && !checks.includes(kind)) checks.push(kind);
-    else if (!kind && value) unknown.push(part.trim());
+    if (rule) {
+      axe.push(rule);
+    }
+    if (kind && !checks.includes(kind)) {
+      checks.push(kind);
+    } else if (!kind && value) {
+      unknown.push(part.trim());
+    }
   }
   return { checks, axe, unknown };
 }

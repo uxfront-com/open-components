@@ -130,7 +130,9 @@ const initial = attrs.value as string | Array<string> | undefined;
 const current = computed(() => model.value ?? initial);
 const values = computed<Array<string>>(() => {
   const value = current.value;
-  if (multiple) return value === undefined ? [] : [value].flat();
+  if (multiple) {
+    return value === undefined ? [] : [value].flat();
+  }
   const one = Array.isArray(value) ? value[0] : value;
   return one !== undefined && flat.value.some((option) => option.value === one) ? [one] : [];
 });
@@ -154,7 +156,9 @@ const summary = computed(() =>
 const first = [...values.value];
 function setDefaults() {
   const el = select.value;
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   const list = Array.from(el.options);
   const picked = list.map((option) => option.selected);
   list.forEach((option, index) => {
@@ -178,7 +182,9 @@ function readSelect() {
 // read the new value in both renderings.
 function onNativeChange() {
   const next = readSelect();
-  if ([next].flat().join() !== values.value.join()) model.value = next;
+  if ([next].flat().join() !== values.value.join()) {
+    model.value = next;
+  }
 }
 
 // A selection in the panel changes the <select> too, once it has rendered, then fires the
@@ -192,14 +198,18 @@ function commit(next: string | Array<string>) {
 }
 
 function pickOption(option: SelectOption) {
-  if (option.disabled) return;
+  if (option.disabled) {
+    return;
+  }
   if (multiple) {
     const next = isPicked(option) ? values.value.filter((value) => value !== option.value) : [...values.value, option.value];
     commit(flat.value.filter((item) => next.includes(item.value)).map((item) => item.value));
     return;
   }
   hide();
-  if (values.value[0] !== option.value) commit(option.value);
+  if (values.value[0] !== option.value) {
+    commit(option.value);
+  }
 }
 
 // The next tag's remove button takes focus, or the control when there's no tag after
@@ -208,11 +218,15 @@ async function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
   commit(selected.value.filter((item) => item !== option).map((item) => item.value));
   announce(removedLabel(option.label));
-  if (moveFocus && !(await tags.value?.focusAt(index))) control.value?.focus();
+  if (moveFocus && !(await tags.value?.focusAt(index))) {
+    control.value?.focus();
+  }
 }
 
 function show(to?: number) {
-  if (open.value || disabled || readonly || native.value) return;
+  if (open.value || disabled || readonly || native.value) {
+    return;
+  }
   const picked = flat.value.findIndex(isPicked);
   active.value = to ?? (picked >= 0 ? picked : firstEnabled());
   // The panel carries the control's name, which is the Field's <label>, or an aria-label.
@@ -225,11 +239,15 @@ function show(to?: number) {
 }
 
 function hide() {
-  if (open.value) panel.value?.hidePopover?.();
+  if (open.value) {
+    panel.value?.hidePopover?.();
+  }
 }
 
 function scrollToActive() {
-  if (open.value) panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  if (open.value) {
+    panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  }
 }
 watch(active, scrollToActive, { flush: "post" });
 
@@ -269,7 +287,9 @@ function typeahead(key: string) {
 // APG's keyboard model for a select-only combobox. DOM focus stays on the control the
 // whole time, and aria-activedescendant says which option is highlighted.
 function onKeydown(event: KeyboardEvent) {
-  if (readonly) return;
+  if (readonly) {
+    return;
+  }
   const { key } = event;
   const space = key === " ";
 
@@ -290,9 +310,13 @@ function onKeydown(event: KeyboardEvent) {
       event.preventDefault();
       show();
       // With nothing picked, the first option is only a default, and a letter can land on it.
-      if (!selected.value.length) active.value = -1;
+      if (!selected.value.length) {
+        active.value = -1;
+      }
       typeahead(key);
-      if (active.value < 0) active.value = firstEnabled();
+      if (active.value < 0) {
+        active.value = firstEnabled();
+      }
     }
     return;
   }
@@ -308,7 +332,9 @@ function onKeydown(event: KeyboardEvent) {
   } else if (key === "ArrowUp" && event.altKey) {
     event.preventDefault();
     // Several values close and keep what people toggled, as Tab does.
-    if (option && !multiple) pickOption(option);
+    if (option && !multiple) {
+      pickOption(option);
+    }
     hide();
   } else if (key === "ArrowUp") {
     event.preventDefault();
@@ -324,11 +350,15 @@ function onKeydown(event: KeyboardEvent) {
     active.value = jump(key === "PageDown" ? 1 : -1);
   } else if (key === "Enter" || space) {
     event.preventDefault();
-    if (option) pickOption(option);
+    if (option) {
+      pickOption(option);
+    }
   } else if (key === "Tab") {
     // Not cancelled, so focus goes on. A single value takes the highlighted option, as
     // APG says, while several values keep what people toggled.
-    if (option && !multiple) pickOption(option);
+    if (option && !multiple) {
+      pickOption(option);
+    }
     hide();
   } else if (key === "Escape") {
     // It goes no further, so a Dialog or a Popover around the Select stays open.
@@ -346,7 +376,9 @@ function onKeydown(event: KeyboardEvent) {
 // `detail` can't tell the two apart, since a screen reader's activation has 0 as well.
 let fromLabel = false;
 function onDocumentClick(event: MouseEvent) {
-  if (event.target === control.value) return;
+  if (event.target === control.value) {
+    return;
+  }
   const label = (event.target as Element).closest?.("label");
   fromLabel = !!label && label.control === control.value;
 }
@@ -366,15 +398,20 @@ function onClick() {
     pressedWhileOpen = false;
     return;
   }
-  if (open.value) hide();
-  else show();
+  if (open.value) {
+    hide();
+  } else {
+    show();
+  }
 }
 
 // If the browser focuses the hidden <select> to report a problem, focus moves to the
 // control right away, in this handler: Chromium hides its validation bubble on any later
 // change of focus, so a deferred move would block the submit with no message.
 function onSelectFocus() {
-  if (!native.value) control.value?.focus();
+  if (!native.value) {
+    control.value?.focus();
+  }
 }
 
 // A form's reset puts back each option's default selectedness without a change event, so
@@ -415,8 +452,12 @@ onMounted(() => {
     nextTick(() => {
       const el = native.value ? select.value : control.value;
       const named = el?.labels?.length || el?.hasAttribute("aria-label") || el?.hasAttribute("aria-labelledby");
-      if (el && !named) console.warn("[Select] has no accessible name: give it a <label for>, or put it in a Field.", el);
-      if (el && !baseId()) console.warn("[Select] has no id or name: give it one, so the control can point at its options.", el);
+      if (el && !named) {
+        console.warn("[Select] has no accessible name: give it a <label for>, or put it in a Field.", el);
+      }
+      if (el && !baseId()) {
+        console.warn("[Select] has no id or name: give it one, so the control can point at its options.", el);
+      }
     });
   }
 });

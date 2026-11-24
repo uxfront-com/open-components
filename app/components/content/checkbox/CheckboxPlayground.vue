@@ -48,7 +48,9 @@ function element(tag: string, attributes: Array<string | false | undefined>, chi
     line.length > 88
       ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), close]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   // A short child stays on the line, as in <Checkbox>I agree to the terms</Checkbox>.
   if (open.length === 1 && children.length === 1 && `${open[0]}${children[0]}</${tag}>`.length <= 88) {
     return [`${open[0]}${children[0]}</${tag}>`];

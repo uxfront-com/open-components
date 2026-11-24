@@ -43,7 +43,11 @@ const open = ref<Record<string, boolean>>({});
 watch(
   () => route.path,
   (path) => {
-    for (const item of props.navigation) if (toggles(item)) open.value[item.path] = inside(item, path);
+    for (const item of props.navigation) {
+      if (toggles(item)) {
+        open.value[item.path] = inside(item, path);
+      }
+    }
   },
   { immediate: true },
 );

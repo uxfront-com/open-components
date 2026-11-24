@@ -81,7 +81,9 @@ export function findSections(page: Page, names: Array<string>): { found: Array<H
       .map((part) => part.trim().replace(/\s*\(#[^)]*\)$/, "").replace(/^#/, "").replaceAll("`", "").toLowerCase())
       .filter(Boolean);
     // A trail from search-docs starts with the page's title, which isn't a heading.
-    if (parts.length > 1 && parts[0] === page.title.toLowerCase()) parts.shift();
+    if (parts.length > 1 && parts[0] === page.title.toLowerCase()) {
+      parts.shift();
+    }
     const last = parts.pop() ?? "";
     const within = (candidate: Heading, matches: typeof strict) =>
       matches(candidate, last) && parts.every((part) => candidate.trail.some((parent) => matches({ text: parent }, part)));
@@ -89,8 +91,11 @@ export function findSections(page: Page, names: Array<string>): { found: Array<H
       page.headings.find((candidate) => within(candidate, strict)) ??
       page.headings.find((candidate) => within(candidate, sloppy)) ??
       (!parts.length && last === page.title.toLowerCase() ? introduction(page) : undefined);
-    if (heading) found.push(heading);
-    else missing.push(name);
+    if (heading) {
+      found.push(heading);
+    } else {
+      missing.push(name);
+    }
   }
   // In page order, without the ones inside another section asked for.
   const sections = [...new Set(found)].sort((a, b) => a.start - b.start);

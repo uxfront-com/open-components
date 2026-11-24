@@ -39,8 +39,12 @@ export function inklineExampleId(example: string): string {
  * would show a message in place of the component.
  */
 export function inklineTarget(framework: string | undefined, { controls = false } = {}): string {
-  if (!framework || !TARGETS.has(framework)) return DEFAULT_TARGET;
-  if (controls && framework === "astro") return DEFAULT_TARGET;
+  if (!framework || !TARGETS.has(framework)) {
+    return DEFAULT_TARGET;
+  }
+  if (controls && framework === "astro") {
+    return DEFAULT_TARGET;
+  }
   return framework;
 }
 
@@ -67,7 +71,9 @@ export function inklineEmbedUrl({
   const url = new URL("/embed.html", INKLINE_PREVIEW_ORIGIN);
   url.searchParams.set("example", inklineExampleId(example));
   url.searchParams.set("target", target);
-  if (controls) url.searchParams.set("controls", "true");
+  if (controls) {
+    url.searchParams.set("controls", "true");
+  }
   url.searchParams.set("theme", theme);
   url.searchParams.set("resize", "true");
   return url.href;
@@ -87,10 +93,16 @@ export function readResizeMessage(
   event: { origin: string; source: unknown; data: unknown },
   frame: unknown,
 ): number | undefined {
-  if (event.origin !== INKLINE_PREVIEW_ORIGIN || !frame || event.source !== frame) return undefined;
+  if (event.origin !== INKLINE_PREVIEW_ORIGIN || !frame || event.source !== frame) {
+    return undefined;
+  }
   const data = event.data as { type?: unknown; kind?: unknown; height?: unknown } | null;
-  if (typeof data !== "object" || data === null) return undefined;
-  if (data.type !== MESSAGE_TYPE || data.kind !== "resize") return undefined;
+  if (typeof data !== "object" || data === null) {
+    return undefined;
+  }
+  if (data.type !== MESSAGE_TYPE || data.kind !== "resize") {
+    return undefined;
+  }
   const { height } = data;
   return typeof height === "number" && Number.isFinite(height) && height > 0 ? height : undefined;
 }

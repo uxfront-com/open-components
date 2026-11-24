@@ -14,7 +14,9 @@ beforeAll(() => {
     this.open = true;
   });
   HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   });
@@ -43,7 +45,9 @@ const button = (text: string, attrs = {}) => h("button", { type: "button", ...at
 function page(props: Partial<DialogProps> & Record<string, unknown> = {}, slots: Record<string, () => VNodeChild> = {}, { closes = true } = {}) {
   const open = ref(false);
   const onClose = vi.fn(() => {
-    if (closes) open.value = false;
+    if (closes) {
+      open.value = false;
+    }
   });
   const result = render({
     render: () => [
@@ -281,7 +285,9 @@ describe("Dialog", () => {
   function keepsOpen() {
     const open = ref(false);
     const onClose = vi.fn((reason: string) => {
-      if (reason === "closed") open.value = false;
+      if (reason === "closed") {
+        open.value = false;
+      }
     });
     render({
       render: () => [
@@ -368,7 +374,9 @@ describe("Dialog", () => {
     // The page sends the form itself, from a listener further up, once the dialog has
     // seen the submit, and leaves the Cancel button to the dialog.
     const onSubmit = vi.fn((event: SubmitEvent) => {
-      if (event.submitter?.getAttribute("formmethod") !== "dialog") event.preventDefault();
+      if (event.submitter?.getAttribute("formmethod") !== "dialog") {
+        event.preventDefault();
+      }
     });
     document.addEventListener("submit", onSubmit);
     onTestFinished(() => document.removeEventListener("submit", onSubmit));

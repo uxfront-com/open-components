@@ -75,7 +75,9 @@ function onClick(event: MouseEvent) {
 watch(
   () => loading,
   (isLoading) => {
-    if (isLoading) announce(loadingLabel);
+    if (isLoading) {
+      announce(loadingLabel);
+    }
   },
 );
 

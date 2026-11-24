@@ -56,7 +56,9 @@ function element(tag: string, attributes: Array<string | false | undefined>, chi
     line.length > 88
       ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), close + end]
       : [`${line}${children.length || paired ? ">" : " />"}${end}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 

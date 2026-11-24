@@ -26,7 +26,9 @@ function renderOwned(
   const tags = ref<Array<TagGroupItem>>(props.tags ?? LABELS.map((tag) => ({ ...tag })));
   const reset = ref<HTMLElement | null>(null);
   const onRemove = vi.fn((tag: TagGroupItem) => {
-    if (!keep.includes(tag.value)) tags.value = tags.value.filter((other) => other.value !== tag.value);
+    if (!keep.includes(tag.value)) {
+      tags.value = tags.value.filter((other) => other.value !== tag.value);
+    }
   });
   const Page = defineComponent({
     setup: () => () => [

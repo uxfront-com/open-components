@@ -21,11 +21,15 @@ export default defineNuxtModule({
   meta: { name: "open-components-standard" },
   setup(_options, nuxt) {
     // `nuxt prepare mcp` (pnpm install's postinstall) only writes types.
-    if (nuxt.options._prepare) return;
+    if (nuxt.options._prepare) {
+      return;
+    }
     const logger = useLogger("standard");
     const root = resolve(nuxt.options.rootDir, "..");
     const { standard, problems } = buildStandard({ root, site: SITE_URL, frameworks: FRAMEWORKS });
-    for (const problem of problems) logger.warn(problem);
+    for (const problem of problems) {
+      logger.warn(problem);
+    }
 
     // Written once Nuxt has emptied .nuxt/, which it does after modules run.
     const dir = join(nuxt.options.buildDir, "standard");

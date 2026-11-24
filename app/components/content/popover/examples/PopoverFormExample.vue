@@ -9,7 +9,9 @@ const name = ref("");
 const labels = ref<Array<string>>([]);
 
 function create() {
-  if (name.value.trim()) labels.value.push(name.value.trim());
+  if (name.value.trim()) {
+    labels.value.push(name.value.trim());
+  }
   name.value = "";
   open.value = false;
 }

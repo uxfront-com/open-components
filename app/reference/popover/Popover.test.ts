@@ -34,15 +34,20 @@ function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | 
     // where a click doesn't focus the button.
     const before = previous.get(el);
     if (focusPrevious && el.contains(document.activeElement)) {
-      if (before instanceof HTMLElement && before !== document.body) before.focus();
-      else (document.activeElement as HTMLElement).blur();
+      if (before instanceof HTMLElement && before !== document.body) {
+        before.focus();
+      } else {
+        (document.activeElement as HTMLElement).blur();
+      }
     }
   }
   // jsdom hides every popover, as browsers hide a closed one, but can't match :popover-open,
   // which shows an open one, so this stands in for it.
   el.style.display = newState === "open" ? "flex" : "";
   const fire = (old: string) => el.dispatchEvent(Object.assign(new Event("toggle"), { newState, oldState: old, source }));
-  if (!deferToggle) return fire(oldState);
+  if (!deferToggle) {
+    return fire(oldState);
+  }
   const pending = pendingToggle.get(el);
   clearTimeout(pending?.timer);
   const old = pending?.oldState ?? oldState;
@@ -57,16 +62,22 @@ function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | 
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
@@ -74,11 +85,15 @@ beforeAll(() => {
   document.addEventListener("click", (event) => {
     const invoker = (event.target as Element).closest<HTMLElement>("[popovertarget]");
     const target = invoker && document.getElementById(invoker.getAttribute("popovertarget")!);
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     queueMicrotask(() => (shown.has(target) ? toggle(target, "closed", invoker) : toggle(target, "open", invoker)));
   });
   window.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || event.defaultPrevented) return;
+    if (event.key !== "Escape" || event.defaultPrevented) {
+      return;
+    }
     queueMicrotask(() => [...shown].at(-1)?.hidePopover());
   });
   let down: EventTarget | null = null;
@@ -99,17 +114,20 @@ beforeAll(() => {
 // Escape stand-ins show or hide the popover in a microtask, which may not have run yet when
 // this starts, so it waits a task at a time until no `toggle` is left.
 async function toggled() {
-  do await new Promise((resolve) => {
-    setTimeout(resolve);
-  });
-  while (pendingToggle.size);
+  do {
+    await new Promise((resolve) => {
+      setTimeout(resolve);
+    });
+  } while (pendingToggle.size);
 }
 
 afterEach(() => {
   shown.clear();
   deferToggle = false;
   // A `toggle` still on its way would reach a popover the next test can't see.
-  for (const { timer } of pendingToggle.values()) clearTimeout(timer);
+  for (const { timer } of pendingToggle.values()) {
+    clearTimeout(timer);
+  }
   pendingToggle.clear();
 });
 

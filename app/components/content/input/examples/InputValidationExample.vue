@@ -10,7 +10,9 @@ const emailInput = useTemplateRef("email-input");
 
 // Returns an error message, or an empty string when the address looks right.
 function validateEmail(value: string) {
-  if (!value) return "Enter your email address";
+  if (!value) {
+    return "Enter your email address";
+  }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     return "Enter an email address in the correct format, like name@example.com";
   }
@@ -19,13 +21,17 @@ function validateEmail(value: string) {
 
 // Only checks what people have typed, so tabbing past the input doesn't flag it.
 function leave() {
-  if (email.value) error.value = validateEmail(email.value);
+  if (email.value) {
+    error.value = validateEmail(email.value);
+  }
 }
 
 function update(value = "") {
   email.value = value;
   // Once an error shows, check again as people type, so it clears as soon as it's fixed.
-  if (error.value) error.value = validateEmail(value);
+  if (error.value) {
+    error.value = validateEmail(value);
+  }
 }
 
 async function subscribe() {

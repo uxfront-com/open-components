@@ -65,13 +65,17 @@ A page longer than about ${PAGE_LIMIT.toLocaleString("en")} tokens, like the but
         });
       }
       const text = `${header(found.length === 1 ? found[0]!.anchor : undefined)}${found.map((heading) => sectionText(standard, page, heading, framework)).join("\n\n")}\n`;
-      if (text.length <= REPLY_LIMIT) return text;
+      if (text.length <= REPLY_LIMIT) {
+        return text;
+      }
       const inside = page.headings.filter((heading) => found.some((section) => section.start <= heading.start && heading.end <= section.end));
       return `${header()}These sections are about ${count(tokens(text))} tokens, too long to return together. Ask for fewer of them, or for the ones inside them${framework ? "" : ", in one framework"}:\n\n${outline(page, inside)}\n`;
     }
 
     const text = `${header()}${pageText(standard, page, framework)}\n`;
-    if (tokens(text) <= PAGE_LIMIT && text.length <= REPLY_LIMIT) return text;
+    if (tokens(text) <= PAGE_LIMIT && text.length <= REPLY_LIMIT) {
+      return text;
+    }
 
     const whole = tokens(pageText(standard, page));
     const single = tokens(pageText(standard, page, framework ?? standard.frameworks[0]?.value));

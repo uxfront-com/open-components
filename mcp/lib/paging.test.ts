@@ -29,7 +29,9 @@ describe("paginate", () => {
     let offset: number | undefined = 0;
     while (offset !== undefined) {
       const page: ReturnType<typeof paginate<Rule>> = paginate(button, { offset, limit: 10 });
-      if ("error" in page) throw new Error(page.error);
+      if ("error" in page) {
+        throw new Error(page.error);
+      }
       expect(page.total).toBe(button.length);
       seen.push(...page.items);
       offset = page.nextOffset;

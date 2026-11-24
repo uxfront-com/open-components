@@ -49,7 +49,9 @@ export interface TokenRules {
  */
 export function tokenRules(page: string): TokenRules {
   const contract = buildContract(page);
-  if (!contract) throw new Error("The Design Tokens page has no Described block");
+  if (!contract) {
+    throw new Error("The Design Tokens page has no Described block");
+  }
   const { pattern, theme, rules } = parse(contract) as {
     pattern: string;
     theme: { colors: Array<string> };
@@ -75,21 +77,30 @@ export function codeOf(source: string): Array<string> {
   for (const text of body.split("\n")) {
     const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
     if (!block) {
-      if (!marker) prose.push(text);
-      else {
+      if (!marker) {
+        prose.push(text);
+      } else {
         const language = marker[2]!.trim().match(/^[\w-]*/)![0].toLowerCase();
         block = { char: marker[1]![0]!, length: marker[1]!.length, shell: SHELL.has(language), lines: [] };
       }
       continue;
     }
     if (marker && marker[1]![0] === block.char && marker[1]!.length >= block.length && !marker[2]!.trim()) {
-      if (!block.shell) code.push(block.lines.join("\n"));
+      if (!block.shell) {
+        code.push(block.lines.join("\n"));
+      }
       block = undefined;
-    } else block.lines.push(text);
+    } else {
+      block.lines.push(text);
+    }
   }
-  if (block && !block.shell) code.push(block.lines.join("\n"));
+  if (block && !block.shell) {
+    code.push(block.lines.join("\n"));
+  }
   // Inline code: a run of backticks, up to a run of the same length.
-  for (const [, , span] of prose.join("\n").matchAll(/(`+)([\s\S]*?[^`])\1(?!`)/g)) code.push(span!);
+  for (const [, , span] of prose.join("\n").matchAll(/(`+)([\s\S]*?[^`])\1(?!`)/g)) {
+    code.push(span!);
+  }
   return code;
 }
 
@@ -114,7 +125,9 @@ export function checkPost(source: string, tokens: TokenRules): Array<string> {
   const errors: Array<string> = [];
 
   for (const name of names) {
-    if (counterExamples.has(name)) continue;
+    if (counterExamples.has(name)) {
+      continue;
+    }
     const unknown = name
       .matchAll(/\{([^}]*)\}/g)
       .map(([, placeholder]) => placeholder!)
@@ -125,16 +138,22 @@ export function checkPost(source: string, tokens: TokenRules): Array<string> {
       continue;
     }
     const wrong = expand(name, tokens.colors).filter((filled) => !tokens.pattern.test(filled));
-    if (wrong.length) errors.push(`${name}: doesn't match the token path pattern ${tokens.pattern.source}`);
+    if (wrong.length) {
+      errors.push(`${name}: doesn't match the token path pattern ${tokens.pattern.source}`);
+    }
   }
 
   for (const name of counterExamples) {
-    if (!names.includes(name)) errors.push(`${name}: listed in counterExamples, but not in the post's code`);
+    if (!names.includes(name)) {
+      errors.push(`${name}: listed in counterExamples, but not in the post's code`);
+    }
   }
 
   const ids = new Set(codeOf(source).flatMap((code) => code.match(/^tokens\/[a-z0-9-]+$/) ?? []));
   for (const id of ids) {
-    if (!tokens.rules.includes(id)) errors.push(`${id}: not a rule in the Design Tokens page's checklist`);
+    if (!tokens.rules.includes(id)) {
+      errors.push(`${id}: not a rule in the Design Tokens page's checklist`);
+    }
   }
 
   return errors;

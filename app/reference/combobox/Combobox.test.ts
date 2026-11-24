@@ -18,30 +18,41 @@ const shown = new Set<HTMLElement>();
 
 function toggle(el: HTMLElement, newState: "open" | "closed") {
   el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState: newState === "open" ? "closed" : "open" }));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+  if (newState === "open") {
+    shown.add(el);
+  } else {
+    shown.delete(el);
+  }
   el.style.display = newState === "open" ? "block" : "none";
 }
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
   Element.prototype.scrollIntoView = vi.fn();
   // jsdom has no requestSubmit, so this does what a browser does: validate, then submit.
   HTMLFormElement.prototype.requestSubmit = function (this: HTMLFormElement) {
-    if (this.reportValidity()) this.dispatchEvent(new Event("submit", { cancelable: true }));
+    if (this.reportValidity()) {
+      this.dispatchEvent(new Event("submit", { cancelable: true }));
+    }
   };
 });
 

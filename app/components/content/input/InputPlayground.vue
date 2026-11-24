@@ -60,9 +60,15 @@ const actionSizes = { xs: "xs", sm: "xs", md: "xs", lg: "sm", xl: "md" } as cons
 const actionSize = computed(() => actionSizes[size.value]);
 // The action: Show password in a password input, and Clear in any other it can change.
 const action = computed(() => {
-  if (content.value !== "action") return;
-  if (type.value === "password") return "show password";
-  if (!disabled.value && !readonly.value) return "clear";
+  if (content.value !== "action") {
+    return;
+  }
+  if (type.value === "password") {
+    return "show password";
+  }
+  if (!disabled.value && !readonly.value) {
+    return "clear";
+  }
 });
 
 const { current } = useFramework();
@@ -88,7 +94,9 @@ function element(tag: string, attributes: Array<string | false | undefined>, chi
     line.length > 88 || attrs.some((attribute) => attribute.includes("\n"))
       ? [`<${tag}`, ...attrs.flatMap((attribute) => attribute.split("\n").map((part) => `  ${part}`)), close]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 

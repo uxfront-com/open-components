@@ -30,8 +30,11 @@ for (const component of await readdir(REFERENCE)) {
   for (const file of await readdir(join(REFERENCE, component))) {
     const code = blocks.get(file);
     const source = await readFile(join(REFERENCE, component, file), "utf8");
-    if (code === undefined) problems.push(`${PAGES}/${page} doesn't show ${file}`);
-    else if (code.trim() !== source.trim()) problems.push(`${PAGES}/${page} shows an outdated ${file}`);
+    if (code === undefined) {
+      problems.push(`${PAGES}/${page} doesn't show ${file}`);
+    } else if (code.trim() !== source.trim()) {
+      problems.push(`${PAGES}/${page} shows an outdated ${file}`);
+    }
   }
 }
 

@@ -25,7 +25,9 @@ export async function readDocsPage(event: H3Event, path: string) {
   const page = (await queryCollection(event, "docs" as never)
     .path(path)
     .first()) as DocsPage | null;
-  if (!page) return;
+  if (!page) {
+    return;
+  }
 
   const source = readPage(join(process.cwd(), "content"), `${page.stem}.${page.extension}`);
   return { page, source };

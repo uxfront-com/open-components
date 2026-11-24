@@ -34,7 +34,9 @@ function onChange(event: Event) {
 // read-only switch as it is, without a change event. It still takes focus, and its form
 // still sends it, unlike a disabled one.
 function onClick(event: MouseEvent) {
-  if (readonly) event.preventDefault();
+  if (readonly) {
+    event.preventDefault();
+  }
 }
 
 // A ref to the Switch gets you the <input>, through `input`.

@@ -37,7 +37,9 @@ const DESCRIPTION = [70, 160];
 // fallback. Redirect pages, like /docs, are left out by their meta refresh.
 const NOT_PAGES = new Set(["404.html", "200.html"]);
 
-if (!existsSync(join(DIST, "sitemap.xml"))) throw new Error("dist is missing: run `pnpm build` first.");
+if (!existsSync(join(DIST, "sitemap.xml"))) {
+  throw new Error("dist is missing: run `pnpm build` first.");
+}
 
 const RULES = {
   status: "every sitemap URL is a page in dist/, and not the 404 page",
@@ -90,10 +92,15 @@ const W3C_DATETIME = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{
 const pages = [];
 for (const { loc, lastmod } of entries) {
   const { origin, pathname } = new URL(loc);
-  if (origin !== SITE) fail("canonical", `${loc}: the sitemap lists another host`);
+  if (origin !== SITE) {
+    fail("canonical", `${loc}: the sitemap lists another host`);
+  }
 
-  if (lastmod === undefined) fail("lastmod", `${loc}: no <lastmod>`);
-  else if (!W3C_DATETIME.test(lastmod) || !(Date.parse(lastmod) <= Date.now())) fail("lastmod", `${loc}: <lastmod> ${lastmod}`);
+  if (lastmod === undefined) {
+    fail("lastmod", `${loc}: no <lastmod>`);
+  } else if (!W3C_DATETIME.test(lastmod) || !(Date.parse(lastmod) <= Date.now())) {
+    fail("lastmod", `${loc}: <lastmod> ${lastmod}`);
+  }
 
   const file = fileOf(pathname);
   const html = file && read(file);
@@ -101,7 +108,9 @@ for (const { loc, lastmod } of entries) {
     fail("status", `${loc}: no page in dist/`);
     continue;
   }
-  if (isNoindex(html)) fail("noindex", `${loc}: noindex`);
+  if (isNoindex(html)) {
+    fail("noindex", `${loc}: noindex`);
+  }
 
   const metas = [...html.matchAll(/<meta\s[^>]*>/g)].map(([tag]) => tag);
   const meta = (key) =>
@@ -113,32 +122,56 @@ for (const { loc, lastmod } of entries) {
   const one = (key) => meta(key)[0];
 
   const titles = [...html.matchAll(/<title>([^<]*)<\/title>/g)].map(([, title]) => decode(title));
-  if (titles.length !== 1) fail("title", `${loc}: ${titles.length} <title>s`);
-  else if (titles[0].length > MAX_TITLE) fail("title", `${loc}: ${titles[0].length} characters, "${titles[0]}"`);
+  if (titles.length !== 1) {
+    fail("title", `${loc}: ${titles.length} <title>s`);
+  } else if (titles[0].length > MAX_TITLE) {
+    fail("title", `${loc}: ${titles[0].length} characters, "${titles[0]}"`);
+  }
 
   const descriptions = meta("description");
-  if (descriptions.length !== 1) fail("description", `${loc}: ${descriptions.length} meta descriptions`);
-  else if (descriptions[0].length < DESCRIPTION[0] || descriptions[0].length > DESCRIPTION[1]) {
+  if (descriptions.length !== 1) {
+    fail("description", `${loc}: ${descriptions.length} meta descriptions`);
+  } else if (descriptions[0].length < DESCRIPTION[0] || descriptions[0].length > DESCRIPTION[1]) {
     fail("description", `${loc}: ${descriptions[0].length} characters`);
   }
 
   const h1s = (html.match(/<h1[\s>]/g) ?? []).length;
-  if (h1s !== 1) fail("h1", `${loc}: ${h1s} <h1>s`);
+  if (h1s !== 1) {
+    fail("h1", `${loc}: ${h1s} <h1>s`);
+  }
 
   const canonicals = [...html.matchAll(/<link\s[^>]*rel="canonical"[^>]*>/g)].map(([tag]) => decode(attr(tag, "href")));
-  if (canonicals.length !== 1 || canonicals[0] !== loc) fail("canonical", `${loc}: canonical ${canonicals.join(", ") || "missing"}`);
+  if (canonicals.length !== 1 || canonicals[0] !== loc) {
+    fail("canonical", `${loc}: canonical ${canonicals.join(", ") || "missing"}`);
+  }
 
-  if (!/<html[^>]*\slang="en"/.test(html)) fail("lang", `${loc}: no <html lang="en">`);
+  if (!/<html[^>]*\slang="en"/.test(html)) {
+    fail("lang", `${loc}: no <html lang="en">`);
+  }
 
-  for (const key of ["og:title", "og:description", "og:type", "og:image"]) if (!one(key)) fail("og", `${loc}: no ${key}`);
-  if (one("og:url") !== loc) fail("og", `${loc}: og:url ${one("og:url") ?? "missing"}`);
-  if (one("og:image") && !one("og:image").startsWith(`${SITE}/`)) fail("og", `${loc}: og:image ${one("og:image")} isn't on ${SITE}`);
+  for (const key of ["og:title", "og:description", "og:type", "og:image"]) {
+    if (!one(key)) {
+      fail("og", `${loc}: no ${key}`);
+    }
+  }
+  if (one("og:url") !== loc) {
+    fail("og", `${loc}: og:url ${one("og:url") ?? "missing"}`);
+  }
+  if (one("og:image") && !one("og:image").startsWith(`${SITE}/`)) {
+    fail("og", `${loc}: og:image ${one("og:image")} isn't on ${SITE}`);
+  }
 
-  if (one("twitter:card") !== "summary_large_image") fail("twitter", `${loc}: twitter:card ${one("twitter:card") ?? "missing"}`);
-  if (!one("twitter:image")) fail("twitter", `${loc}: no twitter:image`);
+  if (one("twitter:card") !== "summary_large_image") {
+    fail("twitter", `${loc}: twitter:card ${one("twitter:card") ?? "missing"}`);
+  }
+  if (!one("twitter:image")) {
+    fail("twitter", `${loc}: no twitter:image`);
+  }
 
   const jsonld = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(([, json]) => json);
-  if (!jsonld.length) fail("jsonld", `${loc}: no JSON-LD`);
+  if (!jsonld.length) {
+    fail("jsonld", `${loc}: no JSON-LD`);
+  }
   // Each entity is described once per page: a second node with the same @id,
   // in the same block or another, is a copy that can drift from the first.
   const ids = new Set();
@@ -151,12 +184,18 @@ for (const { loc, lastmod } of entries) {
       fail("jsonld", `${loc}: JSON-LD that doesn't parse`);
       continue;
     }
-    if (data?.["@context"] !== "https://schema.org") fail("jsonld", `${loc}: JSON-LD without @context https://schema.org`);
+    if (data?.["@context"] !== "https://schema.org") {
+      fail("jsonld", `${loc}: JSON-LD without @context https://schema.org`);
+    }
     for (const node of [data, ...(Array.isArray(data?.["@graph"]) ? data["@graph"] : [])]) {
       nodes.push(node);
       const id = node?.["@id"];
-      if (typeof id !== "string") continue;
-      if (ids.has(id)) fail("jsonld", `${loc}: two JSON-LD nodes with the @id ${id}`);
+      if (typeof id !== "string") {
+        continue;
+      }
+      if (ids.has(id)) {
+        fail("jsonld", `${loc}: two JSON-LD nodes with the @id ${id}`);
+      }
       ids.add(id);
     }
   }
@@ -165,13 +204,21 @@ for (const { loc, lastmod } of entries) {
   // an Article too, which app/pages/blog/[slug].vue doesn't call for that reason.
   if (pathname.startsWith("/blog/")) {
     const postings = nodes.filter((node) => node?.["@type"] === "BlogPosting");
-    if (postings.length !== 1) fail("jsonld", `${loc}: ${postings.length} BlogPosting nodes`);
+    if (postings.length !== 1) {
+      fail("jsonld", `${loc}: ${postings.length} BlogPosting nodes`);
+    }
     for (const posting of postings) {
       const missing = ["headline", "description", "datePublished", "image", "url"].filter((key) => !posting[key]);
-      if (!posting.author?.name) missing.push("author.name");
-      if (missing.length) fail("jsonld", `${loc}: BlogPosting without ${missing.join(", ")}`);
+      if (!posting.author?.name) {
+        missing.push("author.name");
+      }
+      if (missing.length) {
+        fail("jsonld", `${loc}: BlogPosting without ${missing.join(", ")}`);
+      }
     }
-    if (nodes.some((node) => node?.["@type"] === "Article")) fail("jsonld", `${loc}: an Article node beside its BlogPosting`);
+    if (nodes.some((node) => node?.["@type"] === "Article")) {
+      fail("jsonld", `${loc}: an Article node beside its BlogPosting`);
+    }
   }
 
   pages.push({ loc, pathname, title: titles[0], ogTitle: one("og:title"), description: descriptions[0], image: one("og:image") });
@@ -183,7 +230,9 @@ for (const key of ["title", "description"]) {
     (page) => page[key],
   );
   for (const [value, same] of seen) {
-    if (same.length > 1) fail(key, `${same.map((page) => page.loc).join(", ")} share "${value}"`);
+    if (same.length > 1) {
+      fail(key, `${same.map((page) => page.loc).join(", ")} share "${value}"`);
+    }
   }
 }
 
@@ -195,33 +244,49 @@ for (const image of new Set(pages.values().map((page) => page.image).filter(Bool
   }
   const png = readFileSync(file);
   const size = png.subarray(1, 4).toString() === "PNG" ? `${png.readUInt32BE(16)} × ${png.readUInt32BE(20)}` : "not a PNG";
-  if (size !== "1200 × 630") fail("ogimage", `${image}: ${size}`);
+  if (size !== "1200 × 630") {
+    fail("ogimage", `${image}: ${size}`);
+  }
 }
 
 // Every page a crawler could find in dist/ is in the sitemap, so none is left
 // out by mistake.
 const listed = new Set(pages.map((page) => page.pathname));
 for (const file of readdirSync(DIST, { recursive: true, encoding: "utf8" })) {
-  if (!file.endsWith(".html") || NOT_PAGES.has(file)) continue;
+  if (!file.endsWith(".html") || NOT_PAGES.has(file)) {
+    continue;
+  }
   const html = read(file);
-  if (isNoindex(html) || /<meta\s[^>]*http-equiv="refresh"/i.test(html)) continue;
+  if (isNoindex(html) || /<meta\s[^>]*http-equiv="refresh"/i.test(html)) {
+    continue;
+  }
   const path = `/${file.replace(/(^|\/)index\.html$/, "").replace(/\.html$/, "")}`.replace(/(.)\/$/, "$1");
-  if (!listed.has(path)) fail("coverage", `${SITE}${path} (dist/${file}) isn't in the sitemap`);
+  if (!listed.has(path)) {
+    fail("coverage", `${SITE}${path} (dist/${file}) isn't in the sitemap`);
+  }
 }
 
 // robots.txt: its groups, each a run of User-agent lines and then its rules.
 const robots = read("robots.txt");
-if (!robots.split("\n").includes(`Sitemap: ${SITE}/sitemap.xml`)) fail("robots", `no "Sitemap: ${SITE}/sitemap.xml" line`);
+if (!robots.split("\n").includes(`Sitemap: ${SITE}/sitemap.xml`)) {
+  fail("robots", `no "Sitemap: ${SITE}/sitemap.xml" line`);
+}
 // The directives Lighthouse's robots.txt audit knows: any other fails it, and
 // with it every page's SEO score.
 const DIRECTIVES = new Set(["user-agent", "disallow", "allow", "sitemap", "crawl-delay", "clean-param", "host", "request-rate", "visit-time", "noindex"]);
 const groups = [];
 for (const line of robots.split("\n").map((text) => text.replace(/#.*/, "").trim())) {
   const [, field, value] = line.match(/^([\w-]+):\s*(.*)$/) ?? [];
-  if (!field) continue;
-  if (!DIRECTIVES.has(field.toLowerCase())) fail("robots", `"${line}": Lighthouse doesn't know ${field}, and fails robots.txt on it`);
+  if (!field) {
+    continue;
+  }
+  if (!DIRECTIVES.has(field.toLowerCase())) {
+    fail("robots", `"${line}": Lighthouse doesn't know ${field}, and fails robots.txt on it`);
+  }
   if (/^user-agent$/i.test(field)) {
-    if (!groups.at(-1) || groups.at(-1).rules.length) groups.push({ agents: [], rules: [] });
+    if (!groups.at(-1) || groups.at(-1).rules.length) {
+      groups.push({ agents: [], rules: [] });
+    }
     groups.at(-1).agents.push(value);
   } else if (groups.length && !/^sitemap$/i.test(field)) {
     groups.at(-1).rules.push(`${field.toLowerCase()}: ${value}`);
@@ -229,8 +294,9 @@ for (const line of robots.split("\n").map((text) => text.replace(/#.*/, "").trim
 }
 for (const agent of ["*", ...AI_CRAWLERS]) {
   const own = groups.filter((group) => group.agents.includes(agent));
-  if (!own.length) fail("robots", `no group for User-agent: ${agent}`);
-  else if (!own.some((group) => group.rules.includes("allow: /")) || own.some((group) => group.rules.includes("disallow: /"))) {
+  if (!own.length) {
+    fail("robots", `no group for User-agent: ${agent}`);
+  } else if (!own.some((group) => group.rules.includes("allow: /")) || own.some((group) => group.rules.includes("disallow: /"))) {
     fail("robots", `User-agent: ${agent} isn't allowed everywhere`);
   }
 }
@@ -240,15 +306,25 @@ const docs = pages.filter((page) => page.pathname.startsWith("/docs/"));
 const posts = pages.filter((page) => page.pathname.startsWith("/blog/"));
 const llms = read("llms.txt");
 const [heading, summary] = llms.split("\n").filter(Boolean);
-if (!heading?.startsWith("# ")) fail("llms", "it doesn't start with a # heading");
-if (!summary?.startsWith("> ")) fail("llms", "no > summary under its heading");
+if (!heading?.startsWith("# ")) {
+  fail("llms", "it doesn't start with a # heading");
+}
+if (!summary?.startsWith("> ")) {
+  fail("llms", "no > summary under its heading");
+}
 for (const { pathname } of [...docs, ...posts]) {
-  if (!llms.includes(`](${SITE}/raw${pathname}.md)`)) fail("llms", `no link to ${SITE}/raw${pathname}.md`);
+  if (!llms.includes(`](${SITE}/raw${pathname}.md)`)) {
+    fail("llms", `no link to ${SITE}/raw${pathname}.md`);
+  }
 }
 const links = [...(llms.split(/^## Docs$/m)[1]?.split(/^## /m)[0] ?? "").matchAll(/^- \[([^\]]+)\]\(([^)]+)\)/gm)];
-if (!links.length) fail("llms", "no ## Docs section with links");
+if (!links.length) {
+  fail("llms", "no ## Docs section with links");
+}
 for (const [title, same] of Map.groupBy(links, ([, title]) => title)) {
-  if (same.length > 1) fail("llms", `${same.length} links in ## Docs share the title "${title}"`);
+  if (same.length > 1) {
+    fail("llms", `${same.length} links in ## Docs share the title "${title}"`);
+  }
 }
 
 // The markdown copies: one per docs page, each headed by a title of its own.
@@ -260,11 +336,15 @@ for (const { pathname } of docs) {
     continue;
   }
   const first = readFileSync(file, "utf8").split("\n")[0];
-  if (!first.startsWith("# ")) fail("raw", `${SITE}/raw${pathname}.md doesn't start with a # heading`);
+  if (!first.startsWith("# ")) {
+    fail("raw", `${SITE}/raw${pathname}.md doesn't start with a # heading`);
+  }
   firstLines.set(first, [...(firstLines.get(first) ?? []), pathname]);
 }
 for (const [first, paths] of firstLines) {
-  if (paths.length > 1) fail("raw", `${paths.map((path) => `${SITE}/raw${path}.md`).join(", ")} all start with "${first}"`);
+  if (paths.length > 1) {
+    fail("raw", `${paths.map((path) => `${SITE}/raw${path}.md`).join(", ")} all start with "${first}"`);
+  }
 }
 // And one per blog post, headed by the post's title.
 for (const { pathname, ogTitle } of posts) {
@@ -274,7 +354,9 @@ for (const { pathname, ogTitle } of posts) {
     continue;
   }
   const first = readFileSync(file, "utf8").split("\n")[0];
-  if (first !== `# ${ogTitle}`) fail("raw", `${SITE}/raw${pathname}.md starts with "${first}", not "# ${ogTitle}"`);
+  if (first !== `# ${ogTitle}`) {
+    fail("raw", `${SITE}/raw${pathname}.md starts with "${first}", not "# ${ogTitle}"`);
+  }
 }
 
 // _headers, as Cloudflare matches it: a rule's URL is a path, or a URL with a
@@ -306,14 +388,18 @@ const toRegExp = (pattern) => {
 // Cloudflare keeps only the last of two rules with the same pattern, so one
 // would drop the other's headers.
 for (const [pattern, same] of Map.groupBy(rules, (rule) => rule.pattern)) {
-  if (same.length > 1) fail("headers", `${same.length} rules for ${pattern}, of which Cloudflare applies only the last`);
+  if (same.length > 1) {
+    fail("headers", `${same.length} rules for ${pattern}, of which Cloudflare applies only the last`);
+  }
 }
 const matchers = rules.map((rule) => ({ ...rule, ...toRegExp(rule.pattern) }));
 const headersFor = (url) => {
   const { host, pathname } = new URL(url);
   return matchers.flatMap(({ absolute, regexp, headers }) => {
     const match = regexp.exec(absolute ? `${host}${pathname}` : pathname);
-    if (!match) return [];
+    if (!match) {
+      return [];
+    }
     const fill = (value) => value.replaceAll(/:([A-Za-z]\w*)/g, (placeholder, name) => match.groups?.[name] ?? placeholder);
     return headers.map(([name, value]) => [name, fill(value)]);
   });
@@ -324,7 +410,9 @@ const robotsTag = (url) =>
     .map(([, value]) => value)
     .join(", ");
 for (const { loc } of pages) {
-  if (/noindex/i.test(robotsTag(loc))) fail("headers", `${loc}: X-Robots-Tag ${robotsTag(loc)}`);
+  if (/noindex/i.test(robotsTag(loc))) {
+    fail("headers", `${loc}: X-Robots-Tag ${robotsTag(loc)}`);
+  }
 }
 for (const url of [
   "https://www.opencomponents.dev/",
@@ -340,13 +428,19 @@ for (const url of [
   `${SITE}/raw/docs/components/button.yaml`,
   `${SITE}/schemas/contract.json`,
 ]) {
-  if (!/noindex/i.test(robotsTag(url))) fail("headers", `${url}: no X-Robots-Tag: noindex`);
+  if (!/noindex/i.test(robotsTag(url))) {
+    fail("headers", `${url}: no X-Robots-Tag: noindex`);
+  }
 }
 for (const { pathname } of [...docs, ...posts]) {
   const url = `${SITE}/raw${pathname}.md`;
   const link = headersFor(url).find(([name]) => name === "link")?.[1];
-  if (link !== `<${SITE}${pathname}>; rel="canonical"`) fail("headers", `${url}: Link ${link ?? "missing"}, not its page as canonical`);
-  if (/noindex/i.test(robotsTag(url))) fail("headers", `${url}: X-Robots-Tag ${robotsTag(url)}`);
+  if (link !== `<${SITE}${pathname}>; rel="canonical"`) {
+    fail("headers", `${url}: Link ${link ?? "missing"}, not its page as canonical`);
+  }
+  if (/noindex/i.test(robotsTag(url))) {
+    fail("headers", `${url}: X-Robots-Tag ${robotsTag(url)}`);
+  }
 }
 if (headersFor(`${SITE}/schemas/contract.json`).find(([name]) => name === "access-control-allow-origin")?.[1] !== "*") {
   fail("headers", `${SITE}/schemas/contract.json: no Access-Control-Allow-Origin: *`);
@@ -357,8 +451,12 @@ for (const [rule, about] of Object.entries(RULES)) {
   const list = failures[rule];
   failed += list.length;
   console.log(`${list.length ? "✗" : "✓"} ${rule}: ${about}${list.length ? ` (${list.length} failed)` : ""}`);
-  for (const message of list.slice(0, 20)) console.log(`    ${message}`);
-  if (list.length > 20) console.log(`    … and ${list.length - 20} more`);
+  for (const message of list.slice(0, 20)) {
+    console.log(`    ${message}`);
+  }
+  if (list.length > 20) {
+    console.log(`    … and ${list.length - 20} more`);
+  }
 }
 console.log(`${entries.length} pages in the sitemap, ${docs.length} of them docs pages and ${posts.length} blog ${posts.length === 1 ? "post" : "posts"}, ${failed} failures`);
 process.exit(failed ? 1 : 0);

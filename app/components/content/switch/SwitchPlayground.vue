@@ -42,7 +42,9 @@ function element(tag: string, attributes: Array<string | false | undefined>, chi
     line.length > 88
       ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), children.length ? ">" : "/>"]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 

@@ -14,7 +14,9 @@ const CORS = {
 
 export default defineMcpHandler({
   middleware: (event) => {
-    if (event.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+    if (event.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: CORS });
+    }
     setResponseHeaders(event, CORS);
   },
 });

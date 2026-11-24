@@ -37,7 +37,9 @@ export function buildStandard(options: { root: string; site: string; frameworks:
     const path = docsPath(file);
     // Read the way Nuxt Content reads it, which builds past a YAML slip.
     const frontmatter = parseDocument(source.match(FRONTMATTER)?.[1] ?? "");
-    for (const error of frontmatter.errors) problems.push(`${path}: its frontmatter isn't valid YAML. ${error.message}`);
+    for (const error of frontmatter.errors) {
+      problems.push(`${path}: its frontmatter isn't valid YAML. ${error.message}`);
+    }
     const front = (frontmatter.toJSON() ?? {}) as { title?: unknown; description?: unknown };
     const title = typeof front.title === "string" ? front.title : path.split("/").pop()!;
     const description = typeof front.description === "string" ? front.description : "";
@@ -104,7 +106,9 @@ export function buildStandard(options: { root: string; site: string; frameworks:
 
   const rules = pages.flatMap((page) => {
     const contract = contracts.get(page.path);
-    if (!contract) return [];
+    if (!contract) {
+      return [];
+    }
     if (!Array.isArray(contract.rules)) {
       problems.push(`${page.path}: the contract has no rules. Is the "rules:" line missing from its Described block?`);
       return [];
@@ -125,7 +129,9 @@ export function buildStandard(options: { root: string; site: string; frameworks:
 
   const ids = new Set<string>();
   for (const rule of rules) {
-    if (ids.has(rule.id)) problems.push(`${rule.id} is the ID of more than one rule`);
+    if (ids.has(rule.id)) {
+      problems.push(`${rule.id} is the ID of more than one rule`);
+    }
     ids.add(rule.id);
   }
   return { standard, problems };
@@ -142,7 +148,9 @@ function headings(markdown: string, frameworks: Array<Framework>): Array<Heading
 
   const trail: Array<{ level: number; text: string }> = [];
   return found.map((current, i) => {
-    while (trail.length && trail.at(-1)!.level >= current.level) trail.pop();
+    while (trail.length && trail.at(-1)!.level >= current.level) {
+      trail.pop();
+    }
     const next = found.slice(i + 1).find((other) => other.level <= current.level);
     const end = next?.start ?? lines.length;
     const text = lines
@@ -166,12 +174,20 @@ const oneOf = <T extends string>(values: ReadonlyArray<T>, value?: string): valu
 
 function toRule(data: Record<string, string>, page: Page, site: string, problems: Array<string>): Rule {
   const { id = "", layer, level, scope, requirement = "", check = "" } = data;
-  if (!oneOf(LEVELS, level)) problems.push(`${id}: its level, ${level}, isn't one of ${LEVELS.join(", ")}`);
-  if (scope && !oneOf(SCOPES, scope)) problems.push(`${id}: its scope, ${scope}, isn't one of ${SCOPES.join(", ")}`);
-  if (layer && !oneOf(LAYERS, layer)) problems.push(`${id}: its layer, ${layer}, isn't one of ${LAYERS.join(", ")}`);
+  if (!oneOf(LEVELS, level)) {
+    problems.push(`${id}: its level, ${level}, isn't one of ${LEVELS.join(", ")}`);
+  }
+  if (scope && !oneOf(SCOPES, scope)) {
+    problems.push(`${id}: its scope, ${scope}, isn't one of ${SCOPES.join(", ")}`);
+  }
+  if (layer && !oneOf(LAYERS, layer)) {
+    problems.push(`${id}: its layer, ${layer}, isn't one of ${LAYERS.join(", ")}`);
+  }
 
   const { checks, axe, unknown } = parseChecks(check);
-  for (const value of unknown) problems.push(`${id}: "${value}" isn't a check the MCP server knows (see mcp/lib/rules.ts)`);
+  for (const value of unknown) {
+    problems.push(`${id}: "${value}" isn't a check the MCP server knows (see mcp/lib/rules.ts)`);
+  }
 
   // The table it's in, like "### UX rules", or the checklist when it has one table.
   const table =
@@ -199,9 +215,13 @@ const LANGUAGES: Record<string, string> = { ".vue": "vue", ".ts": "ts", ".tsx": 
 // its page shows the files, with what the page says about them.
 function readReferences(root: string, pages: Array<Page>, site: string, problems: Array<string>): Array<Reference> {
   const dir = join(root, "app/reference");
-  if (!existsSync(dir)) return [];
+  if (!existsSync(dir)) {
+    return [];
+  }
   return readdirSync(dir).flatMap((component): Array<Reference> => {
-    if (component.startsWith(".")) return [];
+    if (component.startsWith(".")) {
+      return [];
+    }
     const page = pages.find((candidate) => candidate.key === component);
     const section = page?.headings.find((heading) => heading.text === "Reference implementation");
     if (!page || !section) {
@@ -248,7 +268,9 @@ function components(
   problems: Array<string>,
 ): Array<Component> {
   const shipped = pages.flatMap((page): Array<Component> => {
-    if (!page.contract) return [];
+    if (!page.contract) {
+      return [];
+    }
     const own = rules.filter((rule) => rule.component === page.key);
     const reference = references.find((candidate) => candidate.component === page.key);
     return [
@@ -272,7 +294,9 @@ function components(
 
   const roadmap = pages.find((page) => page.key === "roadmap");
   const planned: Array<Component> = [];
-  if (!roadmap) return shipped;
+  if (!roadmap) {
+    return shipped;
+  }
 
   // The Roadmap's "## Components" section: a table per group, under a "### <group>"
   // heading, with a row per component, as in
@@ -281,21 +305,36 @@ function components(
   let within = false;
   for (const { text, code } of scan(sources.get(roadmap.path)!.replace(FRONTMATTER, ""))) {
     const match = !code && heading(text);
-    if (match && match.level <= 2) within = match.text === "Components";
-    if (!within || code) continue;
-    if (match) group = match.text;
+    if (match && match.level <= 2) {
+      within = match.text === "Components";
+    }
+    if (!within || code) {
+      continue;
+    }
+    if (match) {
+      group = match.text;
+    }
     const row = text.startsWith("|") && cells(text);
     const item = row && row[0]!.match(/^:roadmap-check(\{shipped\})?\s+(?:\[([^\]]+)\]\(([^)]+)\)|(.+))$/);
-    if (!row || !item) continue;
+    if (!row || !item) {
+      continue;
+    }
 
     const [, isShipped, linked, , plain] = item;
     const title = (linked ?? plain)!.trim();
     const key = title.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
     const component = shipped.find((candidate) => candidate.key === key);
-    if (isShipped && !component) problems.push(`The Roadmap ticks ${title} as shipped, but there's no ${key} page with a contract`);
-    if (!isShipped && component) problems.push(`The Roadmap doesn't tick ${title}, but its page has shipped`);
-    if (component) component.group = group;
-    else planned.push({ key, title, kind: "component", status: "planned", group, summary: row[1] ?? "" });
+    if (isShipped && !component) {
+      problems.push(`The Roadmap ticks ${title} as shipped, but there's no ${key} page with a contract`);
+    }
+    if (!isShipped && component) {
+      problems.push(`The Roadmap doesn't tick ${title}, but its page has shipped`);
+    }
+    if (component) {
+      component.group = group;
+    } else {
+      planned.push({ key, title, kind: "component", status: "planned", group, summary: row[1] ?? "" });
+    }
   }
   for (const component of shipped) {
     if (component.kind === "component" && !component.group) {

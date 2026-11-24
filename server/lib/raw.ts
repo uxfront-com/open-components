@@ -101,7 +101,9 @@ export function joinPage(index: string, parts: Array<string>): string {
       if (match && match.level === 2) {
         section = RULES.test(match.text) ? "rules" : match.text === "FAQ" ? "faq" : "own";
         // One `## FAQ` heads every part's questions.
-        if (section === "faq") continue;
+        if (section === "faq") {
+          continue;
+        }
         if (section === "rules") {
           sections.rules.push(`### ${wholeRules(match.text)}`);
           continue;
@@ -111,7 +113,9 @@ export function joinPage(index: string, parts: Array<string>): string {
     }
     blocks.set(before, [...(blocks.get(before) ?? []), `## ${title}\n\n${sections.own.join("\n").trim()}\n\n`]);
     for (const key of ["rules", "faq"] as const) {
-      if (sections[key].length) gathered[key].push(sections[key].join("\n").trim());
+      if (sections[key].length) {
+        gathered[key].push(sections[key].join("\n").trim());
+      }
     }
   }
 
@@ -122,17 +126,25 @@ export function joinPage(index: string, parts: Array<string>): string {
   let section = "";
   const joined = scan(index).map(({ text, code }) => {
     const match = !code && heading(text);
-    if (!match || match.level !== 2) return text;
+    if (!match || match.level !== 2) {
+      return text;
+    }
     let before = "";
-    if (section === "Checklist") [before, rules] = [rules, ""];
-    if (match.text === "Sources") [before, faq] = [before + faq, ""];
+    if (section === "Checklist") {
+      [before, rules] = [rules, ""];
+    }
+    if (match.text === "Sources") {
+      [before, faq] = [before + faq, ""];
+    }
     before += blocks.get(match.text)?.join("") ?? "";
     blocks.delete(match.text);
     section = match.text;
     return `${before}${text}`;
   });
   const missing = [...blocks.keys(), ...(rules ? ["Checklist"] : []), ...(faq ? ["Sources"] : [])];
-  if (missing.length) throw new Error(`A split page has no section named ${missing.join(", ")} for its parts to go before or into`);
+  if (missing.length) {
+    throw new Error(`A split page has no section named ${missing.join(", ")} for its parts to go before or into`);
+  }
   return joined.join("\n");
 }
 
@@ -170,7 +182,9 @@ export function splitAnchors(parts: Array<{ path: string; source: string }>): Re
   });
   const map: Record<string, { target: string; length: number }> = {};
   for (const { anchor, target, length } of found) {
-    if (!map[anchor] || length > map[anchor].length) map[anchor] = { target, length };
+    if (!map[anchor] || length > map[anchor].length) {
+      map[anchor] = { target, length };
+    }
   }
   return Object.fromEntries(Object.entries(map).map(([anchor, { target }]) => [anchor, target]));
 }
@@ -235,7 +249,9 @@ export function isPart(dir: string, file: string): boolean {
 
 // The files of an index.md's parts, in file order, or none for any other page.
 function partsOf(dir: string, file: string): Array<string> {
-  if (basename(file) !== "index.md") return [];
+  if (basename(file) !== "index.md") {
+    return [];
+  }
   const folder = dirname(file);
   return readdirSync(join(dir, folder))
     .filter((name) => name.endsWith(".md") && name !== "index.md")

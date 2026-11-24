@@ -24,9 +24,15 @@ function article(title: string): string {
 /** A component's or a convention's name in a sentence, like "buttons" or "radio groups". */
 export function plural(title: string): string {
   const name = title.toLowerCase();
-  if (name.endsWith("s")) return name;
-  if (/(x|ch|sh)$/.test(name)) return `${name}es`;
-  if (/[^aeiou]y$/.test(name)) return `${name.slice(0, -1)}ies`;
+  if (name.endsWith("s")) {
+    return name;
+  }
+  if (/(x|ch|sh)$/.test(name)) {
+    return `${name}es`;
+  }
+  if (/[^aeiou]y$/.test(name)) {
+    return `${name.slice(0, -1)}ies`;
+  }
   return `${name}s`;
 }
 
@@ -119,7 +125,9 @@ export function adoptTokenPathsText(standard: Standard): string {
  */
 export function codeToReview(value: string): string {
   const code = value.trim();
-  if (!code.includes("\n") && code.length <= 300) return `The code to review: ${code}`;
+  if (!code.includes("\n") && code.length <= 300) {
+    return `The code to review: ${code}`;
+  }
   // A fence longer than any run of backticks in the code.
   const fence = "`".repeat(Math.max(3, ...(code.match(/`+/g) ?? []).map((run) => run.length + 1)));
   return `The code to review:\n\n${fence}\n${code}\n${fence}`;

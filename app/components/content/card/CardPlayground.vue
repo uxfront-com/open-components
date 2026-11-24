@@ -52,7 +52,9 @@ function element(tag: string, attributes: Array<string | false | undefined>, chi
     line.length > 88 || attrs.some((attribute) => attribute.includes("\n"))
       ? [`<${tag}`, ...attrs.flatMap((attribute) => attribute.split("\n").map((part) => `  ${part}`)), children.length ? ">" : "/>"]
       : [`${line}${children.length ? ">" : " />"}`];
-  if (!children.length) return open;
+  if (!children.length) {
+    return open;
+  }
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
 }
 

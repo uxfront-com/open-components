@@ -41,7 +41,9 @@ export default defineNitroPlugin((nitroApp) => {
     for (const link of llms.sections.flatMap((section) => section.links ?? [])) {
       const path = link.href.match(/^https?:\/\/[^/]+\/raw(\/docs\/.+)\.md$/)?.[1];
       const title = path && titles.get(path);
-      if (title) link.title = title;
+      if (title) {
+        link.title = title;
+      }
     }
   });
 });

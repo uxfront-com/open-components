@@ -71,22 +71,32 @@ export function citedCriteria(basis: string): Array<Criterion & { number: string
     let pending: Array<string> = [];
     for (;;) {
       const next = rest.match(/^(\d+\.\d+\.\d+)(?:\s+\((A{1,3})\))?(?:,\s*|\s*$)/);
-      if (!next) break;
+      if (!next) {
+        break;
+      }
       pending.push(next[1]!);
       rest = rest.slice(next[0].length);
       const level = next[2] as WcagLevel | undefined;
-      if (!level) continue;
+      if (!level) {
+        continue;
+      }
       for (const number of pending) {
         const criterion = WCAG[number];
-        if (!criterion) throw new Error(`The Basis "${basis}" cites WCAG ${number}, which isn't a WCAG 2.2 success criterion`);
+        if (!criterion) {
+          throw new Error(`The Basis "${basis}" cites WCAG ${number}, which isn't a WCAG 2.2 success criterion`);
+        }
         if (criterion.level !== level) {
           throw new Error(`The Basis "${basis}" gives WCAG ${number} level ${level}, but it's at level ${criterion.level} in WCAG 2.2`);
         }
-        if (!found.some((other) => other.number === number)) found.push({ number, ...criterion });
+        if (!found.some((other) => other.number === number)) {
+          found.push({ number, ...criterion });
+        }
       }
       pending = [];
     }
-    if (pending.length) throw new Error(`The Basis "${basis}" cites WCAG ${pending.join(", ")} without a level, like (A)`);
+    if (pending.length) {
+      throw new Error(`The Basis "${basis}" cites WCAG ${pending.join(", ")} without a level, like (A)`);
+    }
   }
   return found;
 }
@@ -103,30 +113,46 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
   let layer: { name: string; anchor: string; columns?: Record<(typeof COLUMNS)[number], number> } | undefined;
   const rows: Array<ChecklistRow> = [];
   for (const { text, code } of lines) {
-    if (code) continue;
+    if (code) {
+      continue;
+    }
     const match = heading(text);
     if (match) {
       // Every heading gets its anchor, in order, as the site gives them.
       const anchor = slug(match.text);
-      if (match.level !== 2) continue;
-      if (layer) break;
+      if (match.level !== 2) {
+        continue;
+      }
+      if (layer) {
+        break;
+      }
       const rules = match.text.match(RULES);
-      if (rules) layer = { name: rules[1]!, anchor };
+      if (rules) {
+        layer = { name: rules[1]!, anchor };
+      }
       continue;
     }
-    if (!layer || !text.startsWith("|")) continue;
+    if (!layer || !text.startsWith("|")) {
+      continue;
+    }
     const row = cells(text);
     if (!layer.columns) {
       const columns = Object.fromEntries(COLUMNS.map((name) => [name, row.indexOf(name)]));
       const missing = COLUMNS.filter((name) => columns[name] === -1);
-      if (missing.length) throw new Error(`${file}: the ${layer.name} Checklist table has no ${missing.join(", ")} column`);
+      if (missing.length) {
+        throw new Error(`${file}: the ${layer.name} Checklist table has no ${missing.join(", ")} column`);
+      }
       layer.columns = columns as Record<(typeof COLUMNS)[number], number>;
       continue;
     }
     // The line under the header row.
-    if (row.every((cell) => /^:?-+:?$/.test(cell))) continue;
+    if (row.every((cell) => /^:?-+:?$/.test(cell))) {
+      continue;
+    }
     const basis = row[layer.columns.Basis]!;
-    if (!picked(basis)) continue;
+    if (!picked(basis)) {
+      continue;
+    }
     let criteria: ChecklistRow["criteria"];
     try {
       criteria = citedCriteria(basis);
@@ -216,7 +242,9 @@ export function readChecklists(docs: string): Map<string, string> {
     const dir = join(COMPONENTS, folder);
     const index = readFileSync(join(docs, dir, "index.md"), "utf8");
     const { title } = (parse(index.match(FRONTMATTER)?.[1] ?? "") ?? {}) as { title?: unknown };
-    if (typeof title !== "string") throw new Error(`${dir}/index.md has no title`);
+    if (typeof title !== "string") {
+      throw new Error(`${dir}/index.md has no title`);
+    }
     const layers = readdirSync(join(docs, dir))
       .filter((name) => /^\d+\..+\.md$/.test(name))
       .sort((a, b) => a.localeCompare(b, "en", { numeric: true }))
@@ -234,14 +262,18 @@ export function readChecklists(docs: string): Map<string, string> {
 export function brokenLinks(markdown: string, pages: Map<string, string>): Array<string> {
   const broken: Array<string> = [];
   for (const { text, code } of scan(markdown.replace(FRONTMATTER, ""))) {
-    if (code) continue;
+    if (code) {
+      continue;
+    }
     for (const [, path, anchor] of text.matchAll(/\]\((\/docs\/[^)#\s]*)(?:#([^)\s]+))?\)/g)) {
       const source = pages.get(path!);
       if (source === undefined) {
         broken.push(`${path}${anchor ? `#${anchor}` : ""}`);
         continue;
       }
-      if (anchor && !headingAnchors(source).includes(anchor)) broken.push(`${path}#${anchor}`);
+      if (anchor && !headingAnchors(source).includes(anchor)) {
+        broken.push(`${path}#${anchor}`);
+      }
     }
   }
   return broken;

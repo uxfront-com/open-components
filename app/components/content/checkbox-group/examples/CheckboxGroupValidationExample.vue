@@ -16,7 +16,9 @@ const group = useTemplateRef("group");
 function update(value: Array<string>) {
   picked.value = value;
   // Picking one fixes the error, so it clears right away.
-  if (value.length) error.value = "";
+  if (value.length) {
+    error.value = "";
+  }
 }
 
 async function signUp() {

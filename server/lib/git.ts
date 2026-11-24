@@ -24,7 +24,11 @@ export function lastModified(paths: Array<string>, cwd?: string): Map<string, st
   for (const commit of log.split("\0").slice(1)) {
     const [seconds, ...files] = commit.trim().split("\n");
     const date = new Date(Number(seconds) * 1000).toISOString().slice(0, 10);
-    for (const file of files) if (file && !dates.has(file)) dates.set(file, date);
+    for (const file of files) {
+      if (file && !dates.has(file)) {
+        dates.set(file, date);
+      }
+    }
   }
   return dates;
 }

@@ -13,11 +13,15 @@ import { rawContract } from "../lib/raw";
  */
 export default defineEventHandler(async (event) => {
   const match = event.path.match(/^\/raw(\/.+?)\.yaml$/);
-  if (!match?.[1]) return;
+  if (!match?.[1]) {
+    return;
+  }
 
   const docs = await readDocsPage(event, match[1]);
   const contract = docs && buildContract(docs.source);
-  if (!docs || !contract) return;
+  if (!docs || !contract) {
+    return;
+  }
 
   const { siteUrl } = useRuntimeConfig(event).public;
   setHeader(event, "Content-Type", "application/yaml; charset=utf-8");

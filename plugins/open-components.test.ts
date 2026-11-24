@@ -24,7 +24,9 @@ const mcp = json("mcp.json");
 const ajv = new Ajv2020({ allErrors: true });
 const SCHEMAS = "https://agent-plugins.org/schemas/";
 function errors(document: { $schema: string }) {
-  if (!document.$schema?.startsWith(SCHEMAS)) return [`${document.$schema} isn't an Agent Plugins schema`];
+  if (!document.$schema?.startsWith(SCHEMAS)) {
+    return [`${document.$schema} isn't an Agent Plugins schema`];
+  }
   const validate = ajv.getSchema(document.$schema) ?? ajv.compile(JSON.parse(readFileSync(join("plugins/schemas", document.$schema.slice(SCHEMAS.length)), "utf8")));
   validate(document);
   return validate.errors ?? [];
@@ -166,8 +168,12 @@ describe("The skills", () => {
       const pages = placeholder(name) ? shipped.map((component) => component.key) : name ? [name] : [];
       return pages.flatMap((key) => {
         const page = standard.pages.find((candidate) => candidate.key === key);
-        if (!page) return [`${tool}: no page ${key}`];
-        if (args.component && !placeholder(args.component) && !standard.components.some((component) => component.key === key)) return [`${tool}: no component ${key}`];
+        if (!page) {
+          return [`${tool}: no page ${key}`];
+        }
+        if (args.component && !placeholder(args.component) && !standard.components.some((component) => component.key === key)) {
+          return [`${tool}: no component ${key}`];
+        }
         const sections = ((args.sections ?? []) as Array<string>).filter((section) => !placeholder(section));
         return sections
           .filter((section) => !page.headings.some((heading) => heading.text === section))

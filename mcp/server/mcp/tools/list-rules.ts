@@ -96,7 +96,9 @@ A component meets the standard when it meets every must rule. Each should rule i
         (automated === undefined || rule.automated === automated),
     );
     const page = paginate(found, { offset, limit });
-    if ("error" in page) throw createError({ statusCode: 400, message: page.error });
+    if ("error" in page) {
+      throw createError({ statusCode: 400, message: page.error });
+    }
     const structuredContent: {
       total: number;
       rules: typeof page.items;

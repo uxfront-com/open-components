@@ -60,8 +60,12 @@ export function createSearch(standard: Standard) {
   // `text` is what an excerpt quotes, and `more` is searched without being quoted.
   const add = (component: string, result: SearchResult, title: string, text: string, more = "", weight = 1) => {
     const counts = new Map<string, number>();
-    for (const term of terms(title)) counts.set(term, (counts.get(term) ?? 0) + 3);
-    for (const term of terms(`${text} ${more}`)) counts.set(term, (counts.get(term) ?? 0) + 1);
+    for (const term of terms(title)) {
+      counts.set(term, (counts.get(term) ?? 0) + 3);
+    }
+    for (const term of terms(`${text} ${more}`)) {
+      counts.set(term, (counts.get(term) ?? 0) + 1);
+    }
     const length = [...counts.values()].reduce((a, b) => a + b, 0);
     documents.push({ result, component, terms: counts, weight, length, text });
   };
@@ -79,7 +83,9 @@ export function createSearch(standard: Standard) {
     for (const { start, end, heading } of sections) {
       const own = lines.slice(start + 1, end).filter((line) => heading?.text !== "Checklist" || !line.startsWith("|"));
       const text = prose(own.join("\n"), standard);
-      if (!text) continue;
+      if (!text) {
+        continue;
+      }
       const result: SearchResult = {
         type: "section",
         title: heading?.text ?? page.title,
@@ -120,8 +126,11 @@ export function createSearch(standard: Standard) {
     const frequency = (document: Document, term: string) => {
       let total = 0;
       for (const [word, count] of document.terms) {
-        if (word === term) total += count;
-        else if (term.length >= 3 && word.startsWith(term)) total += count * 0.7;
+        if (word === term) {
+          total += count;
+        } else if (term.length >= 3 && word.startsWith(term)) {
+          total += count * 0.7;
+        }
       }
       return total;
     };
@@ -139,7 +148,9 @@ export function createSearch(standard: Standard) {
       let matched = 0;
       for (const term of wanted) {
         const tf = frequency(document, term);
-        if (!tf) continue;
+        if (!tf) {
+          continue;
+        }
         score += (idf.get(term)! * tf * 2.2) / (tf + 1.2 * (0.25 + (0.75 * document.length) / average));
         matched++;
       }
@@ -179,7 +190,9 @@ function prose(markdown: string, standard: Standard): string {
 function excerpt(text: string, wanted: Array<string>): string {
   const lower = text.toLowerCase();
   const at = Math.min(...wanted.values().map((term) => lower.indexOf(term)).filter((index) => index >= 0), Infinity);
-  if (text.length <= 220) return text;
+  if (text.length <= 220) {
+    return text;
+  }
   const start = at === Infinity ? 0 : Math.max(0, text.lastIndexOf(" ", Math.max(0, at - 60)) + 1);
   const end = text.indexOf(" ", Math.min(text.length, start + 200));
   return `${start > 0 ? "…" : ""}${text.slice(start, end === -1 ? undefined : end)}${end === -1 ? "" : "…"}`;

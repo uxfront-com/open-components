@@ -18,7 +18,9 @@ const PRIVATE = /\$([A-Za-z][A-Za-z0-9_]*)/g;
  */
 export function spotlight(formation: Formation, plate: number): Formation {
   const anchor = formation.anchors[plate];
-  if (!anchor) throw new Error(`Formation "${formation.key}" has no anchor for plate ${plate}.`);
+  if (!anchor) {
+    throw new Error(`Formation "${formation.key}" has no anchor for plate ${plate}.`);
+  }
   const at: Vec3 = [0, 0, 0];
   anchor.place({ stage: 0, local: 1, approach: 1, presence: 1, time: 0 }, at);
   return wrapMain(

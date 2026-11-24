@@ -40,7 +40,9 @@ const input = useTemplateRef<HTMLInputElement>("input");
 // A cancelled click puts back the checked and indeterminate states, and fires no
 // change, whether it came from the box, its label or Space.
 function onClick(event: MouseEvent) {
-  if (readonly) event.preventDefault();
+  if (readonly) {
+    event.preventDefault();
+  }
 }
 
 // Bound before your own listeners, so a `change` listener of yours already sees the new state.
@@ -59,7 +61,9 @@ async function onChange(event: Event) {
 // once it has rendered, which also keeps it out of the server's markup.
 watchEffect(
   () => {
-    if (input.value) input.value.indeterminate = indeterminate.value;
+    if (input.value) {
+      input.value.indeterminate = indeterminate.value;
+    }
   },
   { flush: "post" },
 );

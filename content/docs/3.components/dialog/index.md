@@ -153,14 +153,18 @@ function initialFocus(el: HTMLDialogElement) {
 // rest of the page inert, so focus, clicks and screen readers stay inside it.
 function show() {
   const el = dialog.value;
-  if (!el || el.open) return;
+  if (!el || el.open) {
+    return;
+  }
   opener = document.activeElement as HTMLElement | null;
   el.showModal();
   initialFocus(el)?.focus();
 }
 
 function hide() {
-  if (dialog.value?.open) dialog.value.close();
+  if (dialog.value?.open) {
+    dialog.value.close();
+  }
   restoreFocus();
 }
 
@@ -181,7 +185,9 @@ watch(
 // Escape is handled on keydown, rather than through the dialog's `cancel`, so a control
 // inside that closes on Escape first, like a menu, can stop it with preventDefault().
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape" || event.defaultPrevented) return;
+  if (event.key !== "Escape" || event.defaultPrevented) {
+    return;
+  }
   event.preventDefault();
   emit("close", "escape", "");
 }
@@ -190,7 +196,9 @@ function onKeydown(event: KeyboardEvent) {
 // A browser that won't let one be turned down, without a press or a key since the last,
 // makes its `cancel` uncancelable and closes the dialog itself, which `onClose` reports.
 function onCancel(event: Event) {
-  if (!event.cancelable) return;
+  if (!event.cancelable) {
+    return;
+  }
   event.preventDefault();
   emit("close", "escape", "");
 }
@@ -200,9 +208,13 @@ function onCancel(event: Event) {
 // that arrives once it's open again, like after closing and reopening it in one go, is
 // one it already handled.
 function onClose() {
-  if (dialog.value?.open) return;
+  if (dialog.value?.open) {
+    return;
+  }
   restoreFocus();
-  if (open) emit("close", "closed", "");
+  if (open) {
+    emit("close", "closed", "");
+  }
 }
 
 // A <form method="dialog"> would close the dialog itself. It asks instead, with the
@@ -211,7 +223,9 @@ function onClose() {
 function onSubmit(event: SubmitEvent) {
   const submitter = event.submitter as HTMLButtonElement | null;
   const method = submitter?.getAttribute("formmethod")?.toLowerCase() ?? (event.target as HTMLFormElement).method;
-  if (method !== "dialog" || event.defaultPrevented) return;
+  if (method !== "dialog" || event.defaultPrevented) {
+    return;
+  }
   event.preventDefault();
   emit("close", "action", submitter?.value ?? "");
 }
@@ -233,12 +247,16 @@ function onMousedown(event: MouseEvent) {
 
 function onClick(event: MouseEvent) {
   // An alert dialog needs an answer, so a stray click outside it doesn't count as one.
-  if (role === "dialog" && pressedBackdrop && onBackdrop(event)) emit("close", "backdrop", "");
+  if (role === "dialog" && pressedBackdrop && onBackdrop(event)) {
+    emit("close", "backdrop", "");
+  }
   pressedBackdrop = false;
 }
 
 onMounted(() => {
-  if (open) show();
+  if (open) {
+    show();
+  }
 
   if (import.meta.env.DEV && !title.trim()) {
     console.warn("[Dialog] has no title: give it one, since it's what names the dialog.", dialog.value);
@@ -448,7 +466,9 @@ beforeAll(() => {
     this.open = true;
   });
   HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   });
@@ -477,7 +497,9 @@ const button = (text: string, attrs = {}) => h("button", { type: "button", ...at
 function page(props: Partial<DialogProps> & Record<string, unknown> = {}, slots: Record<string, () => VNodeChild> = {}, { closes = true } = {}) {
   const open = ref(false);
   const onClose = vi.fn(() => {
-    if (closes) open.value = false;
+    if (closes) {
+      open.value = false;
+    }
   });
   const result = render({
     render: () => [
@@ -715,7 +737,9 @@ describe("Dialog", () => {
   function keepsOpen() {
     const open = ref(false);
     const onClose = vi.fn((reason: string) => {
-      if (reason === "closed") open.value = false;
+      if (reason === "closed") {
+        open.value = false;
+      }
     });
     render({
       render: () => [
@@ -802,7 +826,9 @@ describe("Dialog", () => {
     // The page sends the form itself, from a listener further up, once the dialog has
     // seen the submit, and leaves the Cancel button to the dialog.
     const onSubmit = vi.fn((event: SubmitEvent) => {
-      if (event.submitter?.getAttribute("formmethod") !== "dialog") event.preventDefault();
+      if (event.submitter?.getAttribute("formmethod") !== "dialog") {
+        event.preventDefault();
+      }
     });
     document.addEventListener("submit", onSubmit);
     onTestFinished(() => document.removeEventListener("submit", onSubmit));

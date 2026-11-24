@@ -19,17 +19,27 @@ export function suggest(id: string, ids: Array<string>): Array<string> {
   const limit = Math.max(2, Math.floor(name.length / 4));
 
   const ranked = ids.flatMap((option) => {
-    if (component && !option.startsWith(`${component}/`)) return [];
+    if (component && !option.startsWith(`${component}/`)) {
+      return [];
+    }
     const rule = option.slice(option.indexOf("/") + 1);
     const parts = rule.split("-");
-    if (rule === name) return [{ option, rank: [0, 0] }];
+    if (rule === name) {
+      return [{ option, rank: [0, 0] }];
+    }
     const shared = words.filter((word) => parts.includes(word)).length;
-    if (shared) return [{ option, rank: [1, -shared] }];
+    if (shared) {
+      return [{ option, rank: [1, -shared] }];
+    }
     // Two names are at least as far apart as their lengths, which rules most
     // out before comparing them.
     const apart = Math.abs(rule.length - name.length) <= limit ? distance(name, rule) : Infinity;
-    if (apart <= limit) return [{ option, rank: [2, apart] }];
-    if (parts.some((part) => words.some((word) => part.startsWith(word)))) return [{ option, rank: [3, 0] }];
+    if (apart <= limit) {
+      return [{ option, rank: [2, apart] }];
+    }
+    if (parts.some((part) => words.some((word) => part.startsWith(word)))) {
+      return [{ option, rank: [3, 0] }];
+    }
     return [];
   });
   return ranked

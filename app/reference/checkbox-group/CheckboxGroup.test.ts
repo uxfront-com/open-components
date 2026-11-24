@@ -210,7 +210,9 @@ describe("CheckboxGroup", () => {
     await user.click(screen.getByRole("checkbox", { name: "All toppings" }));
     await user.click(screen.getByText("Mushrooms"));
     expect(document.body).toHaveFocus();
-    for (const checkbox of screen.getAllByRole("checkbox")) expect(checkbox).toBeDisabled();
+    for (const checkbox of screen.getAllByRole("checkbox")) {
+      expect(checkbox).toBeDisabled();
+    }
     expect(screen.getByRole("checkbox", { name: "Mushrooms" })).not.toBeChecked();
     expect([...new FormData(container.querySelector("form")!)]).toEqual([]);
   });
@@ -244,7 +246,9 @@ describe("CheckboxGroup", () => {
     const root = row.firstElementChild!;
     expect(root).toHaveAttribute("data-orientation", "horizontal");
     expect(root).toHaveAttribute("data-size", "lg");
-    for (const checkbox of root.querySelectorAll(".checkbox")) expect(checkbox).toHaveAttribute("data-size", "lg");
+    for (const checkbox of root.querySelectorAll(".checkbox")) {
+      expect(checkbox).toHaveAttribute("data-size", "lg");
+    }
   });
 
   it("renders the same markup every time, with its parts in a fixed order, across states", async () => {

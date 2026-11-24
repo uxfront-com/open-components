@@ -43,15 +43,23 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
     if (start) {
       const [, space, name, props] = start;
       open.push({ name: name!, indent: space!.length });
-      if (name === "framework-switcher") lines.push(SWITCHER);
+      if (name === "framework-switcher") {
+        lines.push(SWITCHER);
+      }
       const label = prop(props, "label");
-      if ((name === "accordion-item" || name === "tabs-item") && label) lines.push(`**${label}**`, "");
+      if ((name === "accordion-item" || name === "tabs-item") && label) {
+        lines.push(`**${label}**`, "");
+      }
       const [title, to] = name === "card" ? [prop(props, "title"), prop(props, "to")] : [];
-      if (title) lines.push(to ? `[**${title}**](${to.startsWith("/") ? page.site : ""}${to})` : `**${title}**`, "");
+      if (title) {
+        lines.push(to ? `[**${title}**](${to.startsWith("/") ? page.site : ""}${to})` : `**${title}**`, "");
+      }
       continue;
     }
     if (/^\s*:{2,}\s*$/.test(text)) {
-      if (open.pop()?.name === "framework-switcher") lines.push(SWITCHER_END);
+      if (open.pop()?.name === "framework-switcher") {
+        lines.push(SWITCHER_END);
+      }
       continue;
     }
     if (open.some((component) => component.name === "framework-switcher") && heading(line)) {
@@ -75,7 +83,9 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
         .replaceAll("](/", `](${page.site}/`),
     );
   }
-  if (open.length) throw new Error(`${page.path}: ::${open.at(-1)!.name} is never closed`);
+  if (open.length) {
+    throw new Error(`${page.path}: ::${open.at(-1)!.name} is never closed`);
+  }
   return collapse(lines.join("\n"));
 }
 
