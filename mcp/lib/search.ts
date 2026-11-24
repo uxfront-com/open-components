@@ -178,7 +178,7 @@ function prose(markdown: string, standard: Standard): string {
 // About 200 characters around the first of the query's terms in a text.
 function excerpt(text: string, wanted: string[]): string {
   const lower = text.toLowerCase();
-  const at = Math.min(...wanted.map((term) => lower.indexOf(term)).filter((index) => index >= 0), Infinity);
+  const at = Math.min(...wanted.values().map((term) => lower.indexOf(term)).filter((index) => index >= 0), Infinity);
   if (text.length <= 220) return text;
   const start = at === Infinity ? 0 : Math.max(0, text.lastIndexOf(" ", Math.max(0, at - 60)) + 1);
   const end = text.indexOf(" ", Math.min(text.length, start + 200));

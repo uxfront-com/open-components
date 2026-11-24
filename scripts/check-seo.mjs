@@ -104,7 +104,12 @@ for (const { loc, lastmod } of entries) {
   if (isNoindex(html)) fail("noindex", `${loc}: noindex`);
 
   const metas = [...html.matchAll(/<meta\s[^>]*>/g)].map(([tag]) => tag);
-  const meta = (key) => metas.filter((tag) => attr(tag, "name") === key || attr(tag, "property") === key).map((tag) => decode(attr(tag, "content")));
+  const meta = (key) =>
+    metas
+      .values()
+      .filter((tag) => attr(tag, "name") === key || attr(tag, "property") === key)
+      .map((tag) => decode(attr(tag, "content")))
+      .toArray();
   const one = (key) => meta(key)[0];
 
   const titles = [...html.matchAll(/<title>([^<]*)<\/title>/g)].map(([, title]) => decode(title));
@@ -182,7 +187,7 @@ for (const key of ["title", "description"]) {
   }
 }
 
-for (const image of new Set(pages.map((page) => page.image).filter(Boolean))) {
+for (const image of new Set(pages.values().map((page) => page.image).filter(Boolean))) {
   const file = join(DIST, decodeURIComponent(new URL(image).pathname));
   if (!existsSync(file)) {
     fail("ogimage", `${image}: not in dist/`);

@@ -672,9 +672,12 @@ describe("Popover", () => {
     const fallback = render(Popover, { props: { id: "hint", title: "Hint" } });
     expect(fallback.container.querySelector(".popover")).toHaveAttribute("data-placement", "bottom");
     // The close button is a Button, with parts of its own.
-    const parts = [...el.querySelectorAll("[data-slot]")]
+    const parts = el
+      .querySelectorAll("[data-slot]")
+      .values()
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))
-      .map((part) => part.getAttribute("data-slot"));
+      .map((part) => part.getAttribute("data-slot"))
+      .toArray();
     expect(parts).toEqual(["header", "title", "close", "body", "arrow"]);
   });
 

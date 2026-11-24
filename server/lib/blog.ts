@@ -115,9 +115,11 @@ export function checkPost(source: string, tokens: TokenRules): string[] {
 
   for (const name of names) {
     if (counterExamples.has(name)) continue;
-    const unknown = [...name.matchAll(/\{([^}]*)\}/g)]
+    const unknown = name
+      .matchAll(/\{([^}]*)\}/g)
       .map(([, placeholder]) => placeholder!)
-      .filter((placeholder) => placeholder !== "color" && !WORDS.includes(placeholder));
+      .filter((placeholder) => placeholder !== "color" && !WORDS.includes(placeholder))
+      .toArray();
     if (unknown.length) {
       errors.push(`${name}: the Design Tokens page defines no {${unknown.join("}, {")}} placeholder`);
       continue;

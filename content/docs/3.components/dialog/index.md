@@ -861,9 +861,12 @@ describe("Dialog", () => {
     const fallback = render(Dialog, { props: { id: "rename", title: "Rename file" } });
     expect(fallback.container.querySelector("dialog")).toHaveAttribute("data-size", "md");
     // The close button is a Button, with parts of its own.
-    const parts = [...dialog.querySelectorAll("[data-slot]")]
+    const parts = dialog
+      .querySelectorAll("[data-slot]")
+      .values()
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))
-      .map((part) => part.getAttribute("data-slot"));
+      .map((part) => part.getAttribute("data-slot"))
+      .toArray();
     expect(parts).toEqual(["header", "title", "close", "description", "body", "actions"]);
   });
 
