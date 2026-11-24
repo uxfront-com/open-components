@@ -76,7 +76,7 @@ onNuxtReady(async () => {
   stars.value = (await fetchStars()) ?? stars.value;
 });
 const starCount = computed(() =>
-  stars.value == null || stars.value <= MIN_STARS
+  stars.value === null || stars.value === undefined || stars.value <= MIN_STARS
     ? null
     : new Intl.NumberFormat("en", { notation: "compact" }).format(stars.value),
 );
