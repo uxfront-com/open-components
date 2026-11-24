@@ -69,9 +69,9 @@ defineSlots<{
 // and everything else, like a class or an id, to the root.
 defineOptions({ inheritAttrs: false });
 const attrs = useAttrs();
-const NAMING = ["aria-label", "aria-labelledby", "aria-describedby"];
-const rootAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => !NAMING.includes(key))));
-const listAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => NAMING.includes(key))));
+const NAMING = new Set(["aria-label", "aria-labelledby", "aria-describedby"]);
+const rootAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => !NAMING.has(key))));
+const listAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => NAMING.has(key))));
 
 const root = useTemplateRef<HTMLElement>("root");
 const list = useTemplateRef<HTMLElement>("list");

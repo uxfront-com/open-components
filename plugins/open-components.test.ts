@@ -34,7 +34,7 @@ function errors(document: { $schema: string }) {
 // clients install it under, and its URL in nuxt.config.ts.
 const SERVER_NAME = readFileSync("mcp/nuxt.config.ts", "utf8").match(/^\s+name: "(.+)",$/m)?.[1];
 const SERVER_URL = readFileSync("nuxt.config.ts", "utf8").match(/^const MCP_URL = "(.+)";$/m)?.[1];
-const TOOLS = readdirSync("mcp/server/mcp/tools").map((file) => file.replace(/\.ts$/, ""));
+const TOOLS = new Set(readdirSync("mcp/server/mcp/tools").map((file) => file.replace(/\.ts$/, "")));
 const PROMPTS = readdirSync("mcp/server/mcp/prompts").map((file) => file.replace(/\.ts$/, ""));
 
 // Every skill, as a client discovers them: each child of skills/ with a SKILL.md.
@@ -155,7 +155,7 @@ describe("The skills", () => {
   it.each(each)("%s only calls the MCP server's tools", (_, { body }) => {
     const named = spans(body).flatMap((span) => span.match(/^((?:get|list|search)-[a-z-]+)(?: \{.*\})?$/)?.[1] ?? []);
     expect(named.length).toBeGreaterThan(0);
-    expect(named.filter((tool) => !TOOLS.includes(tool))).toEqual([]);
+    expect(named.filter((tool) => !TOOLS.has(tool))).toEqual([]);
   });
 
   // A call with a placeholder, like `<component>`, is checked on every shipped component's page.

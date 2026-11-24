@@ -19,7 +19,6 @@ export default defineConfig({
     "import/consistent-type-specifier-style": "off",
     "unicorn/prefer-number-properties": "off",
     "quality/no-unsafe-dictionary-type": "off",
-    "unicorn/prefer-set-has": "off",
     "quality/no-array-filter-map": "off",
     "no-promise-executor-return": "off",
     "quality/no-chained-type-assertions": "off",

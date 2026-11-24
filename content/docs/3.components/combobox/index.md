@@ -188,12 +188,12 @@ const attrs = useAttrs();
 // variables. What a form reads goes on the <select>, and so do `change` and `input`, since
 // it fires them when the value changes, rather than on every key. Everything else goes on
 // the text field: `id`, `autocomplete`, ARIA and the other listeners.
-const FORM_ATTRS = ["name", "form", "onChange", "onInput"];
+const FORM_ATTRS = new Set(["name", "form", "onChange", "onInput"]);
 const pick = (test: (key: string) => boolean) => Object.fromEntries(Object.entries(attrs).filter(([key]) => test(key)));
 const onRoot = (key: string) => key === "class" || key === "style";
 const rootAttrs = () => pick(onRoot);
-const formAttrs = () => pick((key) => FORM_ATTRS.includes(key));
-const controlAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.includes(key) && key !== "value");
+const formAttrs = () => pick((key) => FORM_ATTRS.has(key));
+const controlAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.has(key) && key !== "value");
 
 const root = useTemplateRef<HTMLElement>("root");
 const select = useTemplateRef<HTMLSelectElement>("select");
@@ -489,7 +489,7 @@ function onChange() {
 }
 
 // The fields that keep Enter from submitting a form without a submit button, once there's more than one.
-const BLOCKING = ["text", "search", "url", "tel", "email", "password", "date", "month", "week", "time", "datetime-local", "number"];
+const BLOCKING = new Set(["text", "search", "url", "tel", "email", "password", "date", "month", "week", "time", "datetime-local", "number"]);
 
 // What `Enter` does once the value has to change first. Submitting waits for the <select>
 // to render the new value, then goes through the form's default button, as it would have.
@@ -501,7 +501,7 @@ async function submitAfter() {
   if (submitter?.disabled) return;
   // Without a submit button, Enter only submits a form with one text field, as the HTML
   // Standard's implicit submission says.
-  const fields = Array.from(form.elements).filter((el) => el instanceof HTMLInputElement && BLOCKING.includes(el.type));
+  const fields = Array.from(form.elements).filter((el) => el instanceof HTMLInputElement && BLOCKING.has(el.type));
   if (!submitter && fields.length > 1) return;
   form.requestSubmit(submitter);
 }

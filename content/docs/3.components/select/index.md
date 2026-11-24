@@ -170,12 +170,12 @@ const attrs = useAttrs();
 // variables. What a form reads goes on the <select>, and so do `change` and `input`, since
 // it fires both in each rendering. Everything else goes on whichever control is active:
 // `id`, ARIA and the other listeners. Attrs aren't reactive, so these run on every render.
-const FORM_ATTRS = ["name", "form", "autocomplete", "onChange", "onInput"];
+const FORM_ATTRS = new Set(["name", "form", "autocomplete", "onChange", "onInput"]);
 const pick = (test: (key: string) => boolean) => Object.fromEntries(Object.entries(attrs).filter(([key]) => test(key)));
 const onRoot = (key: string) => key === "class" || key === "style";
 const rootAttrs = () => pick(onRoot);
-const formAttrs = () => pick((key) => FORM_ATTRS.includes(key));
-const activeAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.includes(key) && key !== "value");
+const formAttrs = () => pick((key) => FORM_ATTRS.has(key));
+const activeAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.has(key) && key !== "value");
 
 const root = useTemplateRef<HTMLElement>("root");
 const select = useTemplateRef<HTMLSelectElement>("select");
@@ -1639,8 +1639,8 @@ const listbox = () => document.querySelector<HTMLElement>('[role="listbox"]')!;
 // jsdom enters a selected option in the form data even when it's disabled, which the HTML
 // Standard and browsers don't, so this leaves those out. The checklist checks it in a browser too.
 const submitted = () => {
-  const disabled = Array.from(native().selectedOptions).filter((option) => option.disabled).map((option) => option.value);
-  return new FormData(form()).getAll("country").filter((value) => !disabled.includes(String(value)));
+  const disabled = new Set(Array.from(native().selectedOptions).filter((option) => option.disabled).map((option) => option.value));
+  return new FormData(form()).getAll("country").filter((value) => !disabled.has(String(value)));
 };
 const option = (name: string) => within(listbox()).getByRole("option", { name, hidden: true });
 const announcements = () => document.querySelector('[role="status"]')?.textContent ?? "";
