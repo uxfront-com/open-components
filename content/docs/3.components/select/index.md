@@ -1586,7 +1586,7 @@ beforeAll(() => {
   document.addEventListener(
     "pointerup",
     (event) => {
-      for (const el of [...shown]) if (!el.contains(event.target as Node)) el.hidePopover();
+      for (const el of shown) if (!el.contains(event.target as Node)) el.hidePopover();
     },
     true,
   );
