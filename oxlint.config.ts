@@ -24,15 +24,24 @@ export default defineConfig({
     {
       files: ["app/reference/**"],
       rules: {
-        // The reference implementations are browser code, where `instanceof` is how you tell
-        // an element's kind, like an HTMLInputElement among a form's controls, and narrow it.
-        "@nkzw/no-instanceof": "off",
         // A slot's content is whatever the page passes, and the component only renders it
         // without reading it, so defineSlots gives each slot an `unknown` return type.
         "quality/no-unknown-returns": "off",
         // A reference component warns in the console when it's used in a way that breaks a
         // rule, like a Button with no accessible name, and its tests check those warnings.
         "no-console": "off",
+      },
+    },
+    {
+      files: [
+        "app/reference/combobox/Combobox.vue",
+        "app/reference/popover/Popover.vue",
+        "app/reference/popover/Popover.test.ts",
+      ],
+      rules: {
+        // Browser code, where `instanceof` is how you tell an element's kind, like an
+        // HTMLInputElement among a form's controls, and narrow it.
+        "@nkzw/no-instanceof": "off",
       },
     },
     {

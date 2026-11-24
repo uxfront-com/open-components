@@ -365,6 +365,15 @@ describe("Combobox", () => {
       expect(listbox().querySelector('[data-slot="separator"]')).toBeNull();
     });
 
+    it("drops a separator that no match comes after", async () => {
+      const user = userEvent.setup();
+      await page({ options: places });
+      await user.click(input());
+      await user.type(input(), "spa");
+      expect(options()).toEqual(["Spain"]);
+      expect(listbox().querySelector('[data-slot="separator"]')).toBeNull();
+    });
+
     it("shows every option when it opens on a picked value, rather than only the one it shows", async () => {
       const user = userEvent.setup();
       await page({ value: "es" });
@@ -755,6 +764,33 @@ describe("Combobox", () => {
       await user.click(screen.getByRole("button", { name: "Reset" }));
       await waitFor(() => expect(input()).toHaveValue("France"));
       expect(submitted()).toEqual(["fr"]);
+    });
+
+    it("keeps a value picked once its defaults are set, where a new selected attribute selects an untouched option", async () => {
+      const user = userEvent.setup();
+      await page();
+      // A browser selects an option whose selectedness was never set when it gains the
+      // `selected` attribute, like the placeholder once the Combobox sets its defaults.
+      // jsdom marks them all as set.
+      const defaultSelected = Object.getOwnPropertyDescriptor(HTMLOptionElement.prototype, "defaultSelected")!;
+      Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", {
+        ...defaultSelected,
+        set(this: HTMLOptionElement, value: boolean) {
+          const gaining = value && !this.hasAttribute("selected");
+          defaultSelected.set!.call(this, value);
+          if (gaining) {
+            this.selected = true;
+          }
+        },
+      });
+      try {
+        await user.click(input());
+        await user.click(option("Spain"));
+        await nextTick();
+        expect(submitted()).toEqual(["es"]);
+      } finally {
+        Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", defaultSelected);
+      }
     });
 
     it("resets to a first value that was typed, with allowCustomValue", async () => {
