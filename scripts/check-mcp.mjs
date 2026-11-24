@@ -24,6 +24,8 @@ const MAX_RESULT = 40_000;
 
 const problems = [];
 const check = (ok, problem) => ok || problems.push(problem);
+// The tools a text names, like get-page.
+const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
 
 const url = process.argv.includes("--url") ? process.argv[process.argv.indexOf("--url") + 1] : undefined;
 if (!existsSync("dist/raw/docs")) {
@@ -193,9 +195,6 @@ async function checkRoutes() {
   }
   check(crossOrigin.headers.get("x-robots-tag") === "noindex", "/mcp responses don't have X-Robots-Tag: noindex");
 }
-
-// The tools a text names, like get-page.
-const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
 
 async function checkServer() {
   const client = new Client({ name: "check-mcp", version: "1.0.0" });
