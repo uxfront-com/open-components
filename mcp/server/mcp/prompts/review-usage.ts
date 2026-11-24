@@ -14,7 +14,7 @@ export default defineMcpPrompt({
     // Clients like VS Code can pass a whole file, or the selection, as an argument.
     screen: z
       .string()
-      .max(200000)
+      .max(200_000)
       .optional()
       .describe('The screen to review, like "our checkout page", or its code. Defaults to "our app".'),
   },

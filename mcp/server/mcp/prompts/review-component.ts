@@ -12,7 +12,7 @@ export default defineMcpPrompt({
       (value = "") => names.contracts.filter((name) => name.startsWith(value.trim().toLowerCase().replace(/[\s_]+/g, "-"))),
     ),
     // Clients like VS Code can pass a whole file, or the selection, as an argument.
-    code: z.string().max(200000).optional().describe("The code to review, or the files or folder it's in, like src/components/Button.tsx."),
+    code: z.string().max(200_000).optional().describe("The code to review, or the files or folder it's in, like src/components/Button.tsx."),
   },
   handler: async ({ component: key, code }) => {
     const standard = await useStandard();

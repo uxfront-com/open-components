@@ -48,6 +48,6 @@ describe("paginate", () => {
 
   it("fits a page of the longest rules well under the 40,000 characters some clients pass on", () => {
     const longest = [...rules].sort((a, b) => JSON.stringify(b).length - JSON.stringify(a).length);
-    expect(JSON.stringify(paginate(longest)).length).toBeLessThan(30000);
+    expect(JSON.stringify(paginate(longest)).length).toBeLessThan(30_000);
   });
 });

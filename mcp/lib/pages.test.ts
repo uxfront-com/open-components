@@ -186,7 +186,7 @@ describe("outline", () => {
     heading(2, "Token paths", 910),
     heading(3, "Groups", 364),
     heading(2, "Component variables", 970, 580),
-    heading(4, "Deep", 8_700),
+    heading(4, "Deep", 8700),
   ];
 
   it("lists the headings, indented from the top level, with their length", () => {
@@ -225,7 +225,7 @@ describe("count", () => {
     [994, "990"],
     [1000, "1k"],
     [1049, "1k"],
-    [8_700, "8.7k"],
+    [8700, "8.7k"],
     [20_000, "20k"],
     [35_213, "35.2k"],
   ])("rounds %d to %s", (value, expected) => {

@@ -20,7 +20,7 @@ const PROMPTS = ["adopt-token-paths", "build-component", "review-component", "re
 // What some MCP clients pass on of a tool's result before cutting it short, like
 // Gemini CLI's 40,000 characters (Codex's is 48,000 bytes, and Claude Code's
 // 25,000 tokens).
-const MAX_RESULT = 40000;
+const MAX_RESULT = 40_000;
 
 const problems = [];
 const check = (ok, problem) => ok || problems.push(problem);
@@ -382,7 +382,7 @@ async function checkServer() {
     ["build-component for a component that doesn't exist", () => client.getPrompt({ name: "build-component", arguments: { component: "nope" } })],
   ]) {
     const error = await request().then(() => undefined, (error) => error);
-    check(error?.code === -32602, `${what} returned ${error ? `error ${error.code}` : "no error"}, not -32602`);
+    check(error?.code === -32_602, `${what} returned ${error ? `error ${error.code}` : "no error"}, not -32602`);
   }
 
   // Resources: the same bytes as the files the site publishes at their URIs.

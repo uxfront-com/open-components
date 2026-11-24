@@ -15,7 +15,7 @@ export const PAGE_LIMIT = 8000;
  * instead: under what MCP clients pass on whole by default, like Gemini CLI's
  * 40,000 characters and Codex's 48,000 bytes. Longer replies get cut short.
  */
-export const REPLY_LIMIT = 36000;
+export const REPLY_LIMIT = 36_000;
 
 /**
  * Finds a page from what an agent might call it: its path (`/docs/components/button`),
