@@ -183,7 +183,7 @@ function initialFocus(el: HTMLElement) {
 }
 
 // The buttons that point at it with `popovertarget`.
-const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, String.raw`\$&`)}"]`);
+const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replaceAll(/["\\]/g, String.raw`\$&`)}"]`);
 
 // The trigger is the button the browser says opened it, where it says so, or else the
 // first one that points at it. TypeScript doesn't know `source` yet.
@@ -1358,7 +1358,7 @@ describe("Popover", () => {
     const first = render(Popover, options).container.innerHTML;
     const { container, rerender } = render(Popover, options);
     // The anchor's name is generated once it mounts, so it's left out of the comparison.
-    const strip = (html: string) => html.replace(/ style="[^"]*"/g, "");
+    const strip = (html: string) => html.replaceAll(/ style="[^"]*"/g, "");
     expect(strip(container.innerHTML)).toBe(strip(first));
     expect(first).not.toMatch(/id="(?!filters)/);
 

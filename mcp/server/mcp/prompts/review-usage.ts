@@ -9,7 +9,7 @@ export default defineMcpPrompt({
   inputSchema: {
     component: completable(
       z.string().max(100).describe("The component, like button."),
-      (value = "") => names.usage.filter((name) => name.startsWith(value.trim().toLowerCase().replace(/[\s_]+/g, "-"))),
+      (value = "") => names.usage.filter((name) => name.startsWith(value.trim().toLowerCase().replaceAll(/[\s_]+/g, "-"))),
     ),
     // Clients like VS Code can pass a whole file, or the selection, as an argument.
     screen: z

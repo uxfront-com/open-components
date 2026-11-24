@@ -43,7 +43,7 @@ export function terms(text: string): string[] {
   return text
     .toLowerCase()
     .replaceAll("’", "'")
-    .replace(/'s\b/g, "")
+    .replaceAll(/'s\b/g, "")
     .replaceAll("'", "")
     .split(/[^a-z0-9]+/)
     .filter((term) => term && !STOPWORDS.has(term))
@@ -164,11 +164,11 @@ function prose(markdown: string, standard: Standard): string {
     .filter(({ text, code }) => !code && !/^\s*\|?\s*:?-{3,}/.test(text))
     .map(({ text }) =>
       text
-        .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replaceAll(/\[([^\]]*)\]\([^)]*\)/g, "$1")
         .split(/(`[^`]*`)/)
-        .map((part, i) => (i % 2 ? part.replaceAll(String.raw`\|`, "|") : part.replace(/(?<!\\)\||[*_]{1,2}|^\s*(#{1,6}|>)\s/g, " ")))
+        .map((part, i) => (i % 2 ? part.replaceAll(String.raw`\|`, "|") : part.replaceAll(/(?<!\\)\||[*_]{1,2}|^\s*(#{1,6}|>)\s/g, " ")))
         .join("")
-        .replace(/\s+/g, " ")
+        .replaceAll(/\s+/g, " ")
         .trim(),
     )
     .filter(Boolean)

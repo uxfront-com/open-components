@@ -68,11 +68,11 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
 
     lines.push(
       line
-        .replace(/:roadmap-check\{shipped\}/g, "[x]")
-        .replace(/:roadmap-check\b/g, "[ ]")
-        .replace(/(\]\([^)\s]*\))\{external(?:=""|='')?\}/g, "$1")
-        .replace(/\]\(#/g, `](${page.site}${page.path}#`)
-        .replace(/\]\(\//g, `](${page.site}/`),
+        .replaceAll(":roadmap-check{shipped}", "[x]")
+        .replaceAll(/:roadmap-check\b/g, "[ ]")
+        .replaceAll(/(\]\([^)\s]*\))\{external(?:=""|='')?\}/g, "$1")
+        .replaceAll("](#", `](${page.site}${page.path}#`)
+        .replaceAll("](/", `](${page.site}/`),
     );
   }
   if (open.length) throw new Error(`${page.path}: ::${open.at(-1)!.name} is never closed`);

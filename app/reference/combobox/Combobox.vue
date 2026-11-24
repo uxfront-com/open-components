@@ -124,7 +124,7 @@ const tags = useTemplateRef<InstanceType<typeof SelectTags>>("tags");
 // Greek and Cyrillic alphabets. Other marks stay, since in scripts like Devanagari and Thai
 // they're vowels, and dropping them would let "कताब" find and pick "किताब", another word.
 const ACCENTS = /[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]/g;
-const fold = (text: string) => text.normalize("NFD").replace(ACCENTS, "").toLocaleLowerCase();
+const fold = (text: string) => text.normalize("NFD").replaceAll(ACCENTS, "").toLocaleLowerCase();
 const matches = (option: SelectOption, text: string) => (filter ? filter(option, text) : fold(option.label).includes(fold(text)));
 
 const everything = computed(() => toSections(options).flatMap((section) => section.options));

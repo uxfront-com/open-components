@@ -23,7 +23,7 @@ const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 export function docsPath(file: string): string {
   return `/docs/${file
     .replace(/\.md$/, "")
-    .replace(/(^|\/)\d+\./g, "$1")
+    .replaceAll(/(^|\/)\d+\./g, "$1")
     .replace(/\/index$/, "")}`;
 }
 

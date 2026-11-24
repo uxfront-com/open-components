@@ -47,13 +47,13 @@ export function share(formation: Formation, source: Formation): Formation {
       throw new Error(`Formation "${formation.key}" updates its uniforms every frame.`);
     }
     const names = new Set<string>();
-    const body = glsl.replace(UNIFORM, (_, name: string) => {
+    const body = glsl.replaceAll(UNIFORM, (_, name: string) => {
       names.add(name);
       return "";
     });
     return {
       ...shader,
-      glsl: body.replace(PRIVATE, (match, name: string) =>
+      glsl: body.replaceAll(PRIVATE, (match, name: string) =>
         names.has(name) ? `${source.key}_${name}` : match,
       ),
     };

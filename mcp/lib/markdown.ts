@@ -37,8 +37,8 @@ export function anchors(): (text: string) => string {
   return (text) =>
     slugger
       .slug(text)
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
+      .replaceAll(/-+/g, "-")
+      .replaceAll(/^-|-$/g, "")
       .replace(/^(\d)/, "_$1");
 }
 
@@ -46,7 +46,7 @@ export function anchors(): (text: string) => string {
 export function cells(row: string): string[] {
   return row
     .trim()
-    .replace(/^\||\|$/g, "")
+    .replaceAll(/^\||\|$/g, "")
     .split(/(?<!\\)\|/)
     .map((cell) => cell.trim().replaceAll(String.raw`\|`, "|"));
 }

@@ -107,7 +107,7 @@ describe("The standard", () => {
     // Inline code is an example, as it is in a code block.
     const prose = scan(page.markdown)
       .filter((line) => !line.code)
-      .map((line) => line.text.replace(/`[^`]*`/g, "``"));
+      .map((line) => line.text.replaceAll(/`[^`]*`/g, "``"));
     expect(prose.filter((line) => LEFTOVERS.some((pattern) => pattern.test(line)))).toEqual([]);
   });
 
@@ -159,7 +159,7 @@ describe("The standard", () => {
   it("has a contract for every component the Roadmap ticks, and only for those", () => {
     const roadmap = sources.get("/docs/getting-started/roadmap")!;
     const ticked = [...roadmap.matchAll(/^\| :roadmap-check\{shipped\} (?:\[([^\]]+)\]\([^)]*\)|([^|]+?))\s*\|/gm)].map(([, linked, plain]) =>
-      (linked ?? plain)!.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      (linked ?? plain)!.trim().toLowerCase().replaceAll(/[^a-z0-9]+/g, "-"),
     );
     const shipped = standard.pages.filter((page) => page.path.startsWith("/docs/components/") && page.contract).map((page) => page.key);
     expect(ticked.sort()).toEqual(shipped.sort());

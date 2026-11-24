@@ -11,7 +11,7 @@ const { standard } = buildStandard({ root: process.cwd(), site: "https://opencom
 const component = (key: string) => standard.components.find((candidate) => candidate.key === key)!;
 
 // The pages wrap their prompts at about 90 characters, and the server doesn't.
-const normalise = (text: string) => text.replace(/\s+/g, " ").trim();
+const normalise = (text: string) => text.replaceAll(/\s+/g, " ").trim();
 
 // The code blocks in a section, each with the framework slot it's in, if any.
 function blocks(page: Page, heading: Heading): { framework?: string; text: string }[] {

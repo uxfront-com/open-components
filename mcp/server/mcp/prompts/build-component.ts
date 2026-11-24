@@ -9,7 +9,7 @@ export default defineMcpPrompt({
   inputSchema: {
     component: completable(
       z.string().max(100).describe("The component, like button, or one on the Roadmap, like tabs."),
-      (value = "") => names.buildable.filter((name) => name.startsWith(value.trim().toLowerCase().replace(/[\s_]+/g, "-"))),
+      (value = "") => names.buildable.filter((name) => name.startsWith(value.trim().toLowerCase().replaceAll(/[\s_]+/g, "-"))),
     ),
     framework: completable(
       z.string().max(100).optional().describe(`Your framework: ${names.frameworks.join(", ")}.`),

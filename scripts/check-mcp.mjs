@@ -87,7 +87,7 @@ function docsParts() {
 // The path a file in content/docs is served at, as docsPath in server/lib/raw.ts
 // gives it: 3.components/button/2.ux.md is /docs/components/button/ux.
 function docsPath(file) {
-  return `/docs/${file.replace(/\.md$/, "").replace(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
+  return `/docs/${file.replace(/\.md$/, "").replaceAll(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
 }
 
 // Serves the Worker on a free port, the way `npx wrangler dev -c mcp/wrangler.jsonc` does.

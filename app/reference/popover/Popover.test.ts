@@ -688,7 +688,7 @@ describe("Popover", () => {
     const first = render(Popover, options).container.innerHTML;
     const { container, rerender } = render(Popover, options);
     // The anchor's name is generated once it mounts, so it's left out of the comparison.
-    const strip = (html: string) => html.replace(/ style="[^"]*"/g, "");
+    const strip = (html: string) => html.replaceAll(/ style="[^"]*"/g, "");
     expect(strip(container.innerHTML)).toBe(strip(first));
     expect(first).not.toMatch(/id="(?!filters)/);
 

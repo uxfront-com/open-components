@@ -74,7 +74,7 @@ export function buildStandard(options: { root: string; site: string; frameworks:
     // so headings stay plain text. Inline code is fine: both read it as written.
     const lines = markdown.split("\n");
     for (const { text, start } of page.headings) {
-      const plain = lines[start]!.replace(/^#+\s+/, "").replace(/(`+)[\s\S]*?\1/g, "");
+      const plain = lines[start]!.replace(/^#+\s+/, "").replaceAll(/(`+)[\s\S]*?\1/g, "");
       if (/\[[^\]]*\]\(|<\/?[a-z]|&[a-z0-9#]+;|(^|[^\w\\])_{1,2}[^\s_]|\{#|(^|\s):[a-z][\w-]*[[{]/i.test(plain)) {
         problems.push(
           `${path}: the heading "${text}" has a link, HTML, emphasis or a component in it, so its anchor wouldn't match the site's. Keep headings to text and inline code.`,
@@ -290,7 +290,7 @@ function components(
 
     const [, isShipped, linked, , plain] = item;
     const title = (linked ?? plain)!.trim();
-    const key = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const key = title.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
     const component = shipped.find((candidate) => candidate.key === key);
     if (isShipped && !component) problems.push(`The Roadmap ticks ${title} as shipped, but there's no ${key} page with a contract`);
     if (!isShipped && component) problems.push(`The Roadmap doesn't tick ${title}, but its page has shipped`);

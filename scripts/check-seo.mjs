@@ -65,11 +65,11 @@ const fail = (rule, message) => failures[rule].push(message);
 
 const decode = (text) =>
   text
-    ?.replace(/&quot;/g, '"')
-    .replace(/&#39;|&#x27;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&");
+    ?.replaceAll("&quot;", '"')
+    .replaceAll(/&#39;|&#x27;/g, "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&");
 const attr = (tag, name) => tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
 const read = (file) => readFileSync(join(DIST, file), "utf8");
 const isNoindex = (html) =>
@@ -291,7 +291,7 @@ const rules = read("_headers")
     });
     return { pattern, headers };
   });
-const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+const escape = (text) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const segment = (text, delimiters) =>
   text
     .split(/(\*|:[A-Za-z]\w*)/)
@@ -314,7 +314,7 @@ const headersFor = (url) => {
   return matchers.flatMap(({ absolute, regexp, headers }) => {
     const match = regexp.exec(absolute ? `${host}${pathname}` : pathname);
     if (!match) return [];
-    const fill = (value) => value.replace(/:([A-Za-z]\w*)/g, (placeholder, name) => match.groups?.[name] ?? placeholder);
+    const fill = (value) => value.replaceAll(/:([A-Za-z]\w*)/g, (placeholder, name) => match.groups?.[name] ?? placeholder);
     return headers.map(([name, value]) => [name, fill(value)]);
   });
 };

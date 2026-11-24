@@ -13,7 +13,6 @@ export default defineConfig({
     "typescript/no-non-null-assertion": "off",
     "quality/no-unknown-returns": "off",
     "unicorn/consistent-function-scoping": "off",
-    "unicorn/prefer-string-replace-all": "off",
     "quality/no-known-value-widening": "off",
     "no-console": "off",
     "quality/no-unsafe-dictionary-type": "off",

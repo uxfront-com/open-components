@@ -9,7 +9,7 @@ export default defineMcpPrompt({
   inputSchema: {
     component: completable(
       z.string().max(100).describe("The component or foundation, like button or design-tokens."),
-      (value = "") => names.contracts.filter((name) => name.startsWith(value.trim().toLowerCase().replace(/[\s_]+/g, "-"))),
+      (value = "") => names.contracts.filter((name) => name.startsWith(value.trim().toLowerCase().replaceAll(/[\s_]+/g, "-"))),
     ),
     // Clients like VS Code can pass a whole file, or the selection, as an argument.
     code: z.string().max(200_000).optional().describe("The code to review, or the files or folder it's in, like src/components/Button.tsx."),

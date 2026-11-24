@@ -12,7 +12,7 @@ import type { Component, Standard } from "./types";
 export function findComponent(standard: Standard, name: string): Component | undefined {
   const wanted = name.trim().toLowerCase();
   return standard.components.find(
-    (component) => component.key === wanted.replace(/[\s_]+/g, "-") || component.title.toLowerCase() === wanted,
+    (component) => component.key === wanted.replaceAll(/[\s_]+/g, "-") || component.title.toLowerCase() === wanted,
   );
 }
 
