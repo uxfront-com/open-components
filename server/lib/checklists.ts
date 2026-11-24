@@ -130,7 +130,7 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
     try {
       criteria = citedCriteria(basis);
     } catch (error) {
-      throw new Error(`${file}: ${(error as Error).message}`);
+      throw new Error(`${file}: ${(error as Error).message}`, { cause: error });
     }
     rows.push({
       rule: row[layer.columns.Rule]!.replaceAll("`", ""),
