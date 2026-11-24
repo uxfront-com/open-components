@@ -159,7 +159,11 @@ function onSubmit(event: SubmitEvent) {
 let pressedBackdrop = false;
 
 function onBackdrop(event: MouseEvent) {
-  const el = dialog.value!;
+  const el = dialog.value;
+  // The listeners are on the <dialog> itself, so it's always there when they run.
+  if (!el) {
+    return false;
+  }
   const box = el.getBoundingClientRect();
   const { clientX: x, clientY: y } = event;
   return event.target === el && (x < box.left || x > box.right || y < box.top || y > box.bottom);

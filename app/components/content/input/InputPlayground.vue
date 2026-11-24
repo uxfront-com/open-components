@@ -223,7 +223,7 @@ const code = computed(() => {
     fw === "vanilla" && typeAttribute,
     fw === "vanilla" && disabled.value && "disabled",
     search ? `aria-label="${label}"` : `id="${id}"`,
-    ...(early ? binding.get(fw)! : []),
+    ...(early ? (binding.get(fw) ?? []) : []),
     fw !== "vanilla" && typeAttribute,
     fw !== "vanilla" && fw !== "angular" && size.value !== "md" && `size="${size.value}"`,
     autocomplete && `${fw === "react" ? "autoComplete" : "autocomplete"}="${autocomplete}"`,
@@ -231,7 +231,7 @@ const code = computed(() => {
     readonly.value && (jsx ? "readOnly" : "readonly"),
     invalid.value && 'aria-invalid="true"',
     invalid.value && `aria-describedby="${id}-error"`,
-    ...(early ? [] : binding.get(fw)!),
+    ...(early ? [] : (binding.get(fw) ?? [])),
   ];
 
   const icon = content.value === "leading icon";

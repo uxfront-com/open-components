@@ -18,7 +18,7 @@ export function suggest(id: string, ids: Array<string>): Array<string> {
   const words = name.split(/[^a-z0-9]+/).filter((word) => word.length >= 3);
   const limit = Math.max(2, Math.floor(name.length / 4));
 
-  const ranked = ids.flatMap((option) => {
+  const ranked = ids.flatMap((option): Array<{ option: string; rank: [number, number] }> => {
     if (component && !option.startsWith(`${component}/`)) {
       return [];
     }
@@ -43,22 +43,23 @@ export function suggest(id: string, ids: Array<string>): Array<string> {
     return [];
   });
   return ranked
-    .sort((a, b) => a.rank[0]! - b.rank[0]! || a.rank[1]! - b.rank[1]!)
+    .sort((a, b) => a.rank[0] - b.rank[0] || a.rank[1] - b.rank[1])
     .slice(0, 3)
     .map(({ option }) => option);
 }
 
-// Levenshtein distance, one row at a time.
+// Levenshtein distance, one row at a time. Every index is inside the row, which holds
+// b.length + 1 numbers, so the `?? 0` fallbacks never apply.
 function distance(a: string, b: string): number {
   const row = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
-    let previous = row[0]!;
+    let previous = row[0] ?? 0;
     row[0] = i;
     for (let j = 1; j <= b.length; j++) {
-      const current = row[j]!;
-      row[j] = Math.min(row[j]! + 1, row[j - 1]! + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
+      const current = row[j] ?? 0;
+      row[j] = Math.min(current + 1, (row[j - 1] ?? 0) + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
       previous = current;
     }
   }
-  return row[b.length]!;
+  return row[b.length] ?? 0;
 }

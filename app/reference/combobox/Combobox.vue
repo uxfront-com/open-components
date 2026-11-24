@@ -181,7 +181,8 @@ const shown = computed<Array<SelectItem>>(() => {
   const result: Array<SelectItem> = [];
   for (const item of options) {
     if (isSeparator(item)) {
-      if (result.length && !isSeparator(result.at(-1)!)) {
+      const last = result.at(-1);
+      if (last && !isSeparator(last)) {
         result.push(item);
       }
     } else if (isGroup(item)) {
@@ -193,7 +194,8 @@ const shown = computed<Array<SelectItem>>(() => {
       result.push(item);
     }
   }
-  if (result.length && isSeparator(result.at(-1)!)) {
+  const last = result.at(-1);
+  if (last && isSeparator(last)) {
     result.pop();
   }
   return result;
@@ -272,12 +274,14 @@ function setDefaults() {
     return;
   }
   const list = Array.from(el.options);
-  const picked = list.map((option) => option.selected);
+  const picked = list.map((option) => [option, option.selected] as const);
   list.forEach((option, index) => {
     const placeholding = !multiple && index === 0;
     option.defaultSelected = placeholding ? !first.length : first.includes(option.value);
   });
-  list.forEach((option, index) => (option.selected = picked[index]!));
+  for (const [option, selected] of picked) {
+    option.selected = selected;
+  }
 }
 onUpdated(setDefaults);
 
@@ -552,7 +556,10 @@ function onKeydown(event: KeyboardEvent) {
     event.stopPropagation();
   } else if (key === "Backspace" && multiple && !text.value && selected.value.length) {
     event.preventDefault();
-    remove(selected.value.at(-1)!, false);
+    const last = selected.value.at(-1);
+    if (last) {
+      remove(last, false);
+    }
   }
 }
 

@@ -68,7 +68,8 @@ function checklist(markdown: string): Array<string> {
       continue;
     }
 
-    const cell = (column: string) => cells[columns!.indexOf(column)];
+    const header = columns;
+    const cell = (column: string) => cells[header.indexOf(column)];
     const scope = cell("scope");
     const basis = cell("basis");
     items.push(

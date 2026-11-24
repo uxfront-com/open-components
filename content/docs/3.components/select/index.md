@@ -242,12 +242,14 @@ function setDefaults() {
     return;
   }
   const list = Array.from(el.options);
-  const picked = list.map((option) => option.selected);
+  const picked = list.map((option) => [option, option.selected] as const);
   list.forEach((option, index) => {
     const placeholding = !multiple && index === 0;
     option.defaultSelected = placeholding ? !first.length : first.includes(option.value);
   });
-  list.forEach((option, index) => (option.selected = picked[index]!));
+  for (const [option, selected] of picked) {
+    option.selected = selected;
+  }
 }
 onUpdated(setDefaults);
 
@@ -359,7 +361,7 @@ function typeahead(key: string) {
   const start = active.value + (search.length === 1 ? 1 : 0);
   for (let offset = 0; offset < count; offset++) {
     const index = (start + offset) % count;
-    if (isEnabled(index) && flat.value[index]!.label.toLowerCase().startsWith(search)) {
+    if (isEnabled(index) && flat.value[index]?.label.toLowerCase().startsWith(search)) {
       active.value = index;
       return;
     }
@@ -378,7 +380,10 @@ function onKeydown(event: KeyboardEvent) {
   if (!open.value) {
     if (key === "Backspace" && multiple && selected.value.length) {
       event.preventDefault();
-      remove(selected.value.at(-1)!, false);
+      const last = selected.value.at(-1);
+      if (last) {
+        remove(last, false);
+      }
     } else if (key === "ArrowDown" || key === "Enter" || space) {
       event.preventDefault();
       show();
@@ -1015,10 +1020,13 @@ export function toSections(items: Array<SelectItem>) {
       result.push({ separator: true, options: [] });
     } else if (isGroup(item)) {
       result.push({ label: item.label, options: item.options });
-    } else if (result.at(-1) && !result.at(-1)!.separator && result.at(-1)!.label === undefined) {
-      result.at(-1)!.options.push(item);
     } else {
-      result.push({ options: [item] });
+      const last = result.at(-1);
+      if (last && !last.separator && last.label === undefined) {
+        last.options.push(item);
+      } else {
+        result.push({ options: [item] });
+      }
     }
   }
   return result;
@@ -1046,7 +1054,10 @@ export function useListbox({ items, all = items, baseId, active }: ListboxOption
   const optionId = (option: SelectOption) => baseId() && `${baseId()}-option-${positions.value.get(option)}`;
   const groupId = (section: number) => baseId() && `${baseId()}-group-${section}`;
 
-  const isEnabled = (index: number) => flat.value[index] !== undefined && !flat.value[index]!.disabled;
+  const isEnabled = (index: number) => {
+    const option = flat.value[index];
+    return option !== undefined && !option.disabled;
+  };
   // The nearest enabled option in a direction, or `from` at either end, since a listbox doesn't wrap.
   function step(from: number, by: 1 | -1) {
     for (let index = from + by; index >= 0 && index < flat.value.length; index += by) {
@@ -1115,7 +1126,8 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
     const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
     const { clientWidth, clientHeight } = document.documentElement;
     // The part of the page people can see: all of it, or what the keyboard leaves.
-    const view = keyboard ? window.visualViewport! : undefined;
+    // The keyboard is only up where the browser has a visual viewport.
+    const view = keyboard ? window.visualViewport : undefined;
     const viewTop = view ? view.offsetTop : 0;
     const viewBottom = view ? view.offsetTop + view.height : clientHeight;
     const width = Math.min(a.width, clientWidth - 32);

@@ -49,11 +49,12 @@ async function submit() {
     errors[name] = checks[name](values[name]);
   }
   const invalid = (Object.keys(checks) as Array<Name>).filter((name) => errors[name]);
-  if (invalid.length) {
+  const [first] = invalid;
+  if (first) {
     status.value = `Couldn't create your account. ${invalid.length === 1 ? "There's 1 error" : `There are ${invalid.length} errors`} to fix.`;
     // Focus once the errors are in the page, so screen readers read the first one with its field.
     await nextTick();
-    fields[invalid[0]!].value?.input?.focus();
+    fields[first].value?.input?.focus();
     return;
   }
   status.value = "Your account is ready";

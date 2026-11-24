@@ -83,7 +83,7 @@ const code = computed(() => {
     fw === "vanilla" && 'type="checkbox"',
     fw === "angular" && 'type="checkbox"',
     scripted && indeterminate.value && 'id="terms"',
-    ...binding.get(fw)!,
+    ...(binding.get(fw) ?? []),
     fw !== "vanilla" && fw !== "angular" && size.value !== "md" && `size="${size.value}"`,
     mixed,
     disabled.value && "disabled",

@@ -69,7 +69,7 @@ const code = computed(() => {
     native && 'type="checkbox"',
     native && 'role="switch"',
     'id="wifi"',
-    ...binding.get(fw)!,
+    ...(binding.get(fw) ?? []),
     !native && size.value !== "md" && `size="${size.value}"`,
     disabled.value && "disabled",
     // A checkbox has no readonly of its own: the Switch takes a prop, Angular's on its <span>,

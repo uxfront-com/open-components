@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { FRAMEWORKS } from "../../app/data/frameworks";
 import { SWITCHER, SWITCHER_END } from "./frameworks";
 import { tokens } from "./markdown";
-import { count, findPage, findSections, outline, PAGE_LIMIT, pageText, sectionText } from "./pages";
+import { count, findPage, findSections, outline, PAGE_LIMIT, pageByKey, pageText, sectionText } from "./pages";
 import { buildStandard } from "./standard";
 import type { Heading, Page } from "./types";
 
@@ -11,6 +11,16 @@ import type { Heading, Page } from "./types";
 const { standard } = buildStandard({ root: process.cwd(), site: "https://opencomponents.dev", frameworks: FRAMEWORKS });
 const page = (key: string) => standard.pages.find((candidate) => candidate.key === key)!;
 const button = page("button");
+
+describe("pageByKey", () => {
+  it("finds the page a component's key comes from", () => {
+    expect(pageByKey(standard, "button")).toBe(button);
+  });
+
+  it("throws on a key no page has, since the standard only gives out its own", () => {
+    expect(() => pageByKey(standard, "no-such-page")).toThrow('The standard has no page with the key "no-such-page"');
+  });
+});
 
 describe("findPage", () => {
   it.each([

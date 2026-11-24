@@ -1,3 +1,4 @@
+import { pageByKey } from "./pages";
 import type { Component, Standard } from "./types";
 
 /**
@@ -86,7 +87,7 @@ export function buildText(standard: Standard, component: Component, framework?: 
 
 /** Reviewing a component against its contract, or code against a convention like the token paths. */
 export function reviewText(standard: Standard, component: Component): string {
-  const page = standard.pages.find((candidate) => candidate.key === component.key)!;
+  const page = pageByKey(standard, component.key);
   if (page.contract?.kind === "convention") {
     const what = component.key === "design-tokens" ? "our theme and component styles" : "our code";
     const standardName = component.key === "design-tokens" ? "tokens" : component.title;
@@ -103,7 +104,7 @@ export function reviewText(standard: Standard, component: Component): string {
 
 /** Reviewing how a screen uses a component, against the rules the screen meets. */
 export function reviewUsageText(standard: Standard, component: Component, screen: string): string {
-  const page = standard.pages.find((candidate) => candidate.key === component.key)!;
+  const page = pageByKey(standard, component.key);
   return [
     `Review how ${screen} uses its ${plural(component.title)} against the Open Components ${component.title} contract: ${raw(standard, page.path, "yaml")}`,
     `For each rule with a usage or both scope, report pass or fail with the rule ID and the evidence from our code. Then fix the failures.`,
@@ -112,7 +113,7 @@ export function reviewUsageText(standard: Standard, component: Component, screen
 
 /** Moving a codebase's CSS variables over to token paths, as the Design Tokens page puts it. */
 export function adoptTokenPathsText(standard: Standard): string {
-  const page = standard.pages.find((candidate) => candidate.key === "design-tokens")!;
+  const page = pageByKey(standard, "design-tokens");
   return [
     `Rename our CSS variables to follow the Open Components token paths: ${raw(standard, page.path, "md")}`,
     `List our token groups first, then rename every variable along with every var() that reads it, keeping the values as they are. Then add the Stylelint rule from the page, and fix anything it reports.`,

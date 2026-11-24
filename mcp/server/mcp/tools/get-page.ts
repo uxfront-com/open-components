@@ -64,7 +64,7 @@ A page longer than about ${PAGE_LIMIT.toLocaleString("en")} tokens, like the but
           message: `The ${page.title} page has no section named ${missing.map((name) => `"${name}"`).join(", ")}. Its sections are:\n${outline(page)}`,
         });
       }
-      const text = `${header(found.length === 1 ? found[0]!.anchor : undefined)}${found.map((heading) => sectionText(standard, page, heading, framework)).join("\n\n")}\n`;
+      const text = `${header(found.length === 1 ? found[0]?.anchor : undefined)}${found.map((heading) => sectionText(standard, page, heading, framework)).join("\n\n")}\n`;
       if (text.length <= REPLY_LIMIT) {
         return text;
       }

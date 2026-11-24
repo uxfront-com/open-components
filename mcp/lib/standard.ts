@@ -44,7 +44,7 @@ export function buildStandard(options: { root: string; site: string; frameworks:
       problems.push(`${path}: its frontmatter isn't valid YAML. ${error.message}`);
     }
     const front = (frontmatter.toJSON() ?? {}) as { title?: unknown; description?: unknown };
-    const title = typeof front.title === "string" ? front.title : path.split("/").pop()!;
+    const title = typeof front.title === "string" ? front.title : (path.split("/").at(-1) ?? path);
     const description = typeof front.description === "string" ? front.description : "";
     if (title !== front.title || description !== front.description) {
       problems.push(`${path}: its frontmatter needs a title and a description, which /raw/${path.slice(1)}.md starts with`);
@@ -63,7 +63,7 @@ export function buildStandard(options: { root: string; site: string; frameworks:
     }
 
     const page: Page = {
-      key: path.split("/").pop()!,
+      key: path.split("/").at(-1) ?? path,
       path,
       title,
       description,
@@ -79,7 +79,7 @@ export function buildStandard(options: { root: string; site: string; frameworks:
     // so headings stay plain text. Inline code is fine: both read it as written.
     const lines = markdown.split("\n");
     for (const { text, start } of page.headings) {
-      const plain = lines[start]!.replace(/^#+\s+/, "").replaceAll(/(`+)[\s\S]*?\1/g, "");
+      const plain = (lines[start] ?? "").replace(/^#+\s+/, "").replaceAll(/(`+)[\s\S]*?\1/g, "");
       if (/\[[^\]]*\]\(|<\/?[a-z]|&[a-z0-9#]+;|(^|[^\w\\])_{1,2}[^\s_]|\{#|(^|\s):[a-z][\w-]*[[{]/i.test(plain)) {
         problems.push(
           `${path}: the heading "${text}" has a link, HTML, emphasis or a component in it, so its anchor wouldn't match the site's. Keep headings to text and inline code.`,
@@ -151,7 +151,7 @@ function headings(markdown: string, frameworks: Array<Framework>): Array<Heading
 
   const trail: Array<{ level: number; text: string }> = [];
   return found.map((current, i) => {
-    while (trail.length && trail.at(-1)!.level >= current.level) {
+    for (let last = trail.at(-1); last && last.level >= current.level; last = trail.at(-1)) {
       trail.pop();
     }
     const next = found.slice(i + 1).find((other) => other.level <= current.level);
@@ -306,7 +306,8 @@ function components(
   // | :roadmap-check{shipped} [Button](/docs/components/button) | What it's for |
   let group: string | undefined;
   let within = false;
-  for (const { text, code } of scan(sources.get(roadmap.path)!.replace(FRONTMATTER, ""))) {
+  // Every page comes from a source, so the Roadmap's is always there.
+  for (const { text, code } of scan((sources.get(roadmap.path) ?? "").replace(FRONTMATTER, ""))) {
     const match = !code && heading(text);
     if (match && match.level <= 2) {
       within = match.text === "Components";
@@ -318,13 +319,14 @@ function components(
       group = match.text;
     }
     const row = text.startsWith("|") && cells(text);
-    const item = row && row[0]!.match(/^:roadmap-check(\{shipped\})?\s+(?:\[([^\]]+)\]\(([^)]+)\)|(.+))$/);
+    const item = row && (row[0] ?? "").match(/^:roadmap-check(\{shipped\})?\s+(?:\[([^\]]+)\]\(([^)]+)\)|(.+))$/);
     if (!row || !item) {
       continue;
     }
 
     const [, isShipped, linked, , plain] = item;
-    const title = (linked ?? plain)!.trim();
+    // One of the two takes part in every match, so the fallback never applies.
+    const title = (linked ?? plain ?? "").trim();
     const key = title.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
     const component = shipped.find((candidate) => candidate.key === key);
     if (isShipped && !component) {

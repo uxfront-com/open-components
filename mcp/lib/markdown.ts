@@ -10,13 +10,15 @@ export function scan(markdown: string): Array<{ text: string; code: boolean }> {
   let fence: { char: string; length: number } | undefined;
   return markdown.split("\n").map((text) => {
     const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    // Both groups take part in every match, so the defaults never apply.
+    const [, run = "", rest = ""] = marker ?? [];
     if (!fence) {
       if (marker) {
-        fence = { char: marker[1]![0]!, length: marker[1]!.length };
+        fence = { char: run.charAt(0), length: run.length };
       }
       return { text, code: !!marker };
     }
-    if (marker && marker[1]![0] === fence.char && marker[1]!.length >= fence.length && !marker[2]!.trim()) {
+    if (marker && run.charAt(0) === fence.char && run.length >= fence.length && !rest.trim()) {
       fence = undefined;
     }
     return { text, code: true };
@@ -26,7 +28,12 @@ export function scan(markdown: string): Array<{ text: string; code: boolean }> {
 /** A heading's level and text, for a line outside code that is one. */
 export function heading(line: string): { level: number; text: string } | undefined {
   const match = line.match(/^(#{1,6})\s+(.+?)(?:\s+#+)?\s*$/);
-  return match ? { level: match[1]!.length, text: match[2]!.replaceAll("`", "") } : undefined;
+  if (!match) {
+    return undefined;
+  }
+  // Both groups take part in every match, so the defaults never apply.
+  const [, hashes = "", text = ""] = match;
+  return { level: hashes.length, text: text.replaceAll("`", "") };
 }
 
 /**
@@ -60,7 +67,7 @@ export function cells(row: string): Array<string> {
 export function collapse(markdown: string): string {
   const lines = scan(markdown);
   return lines
-    .filter(({ text, code }, i) => code || text.trim() || (i > 0 && lines[i - 1]!.text.trim()))
+    .filter(({ text, code }, i) => code || text.trim() || (i > 0 && lines[i - 1]?.text.trim()))
     .map(({ text }) => text)
     .join("\n")
     .trim();

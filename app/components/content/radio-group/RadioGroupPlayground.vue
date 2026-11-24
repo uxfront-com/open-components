@@ -133,7 +133,7 @@ const code = computed(() => {
     hint.value && `hint="${HINT}"`,
     ...states,
     invalid.value && `error="${ERROR}"`,
-    ...binding.get(fw)!,
+    ...(binding.get(fw) ?? []),
   ];
   const radios = options.map((option) => {
     const attributes = [

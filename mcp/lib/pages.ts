@@ -18,6 +18,19 @@ export const PAGE_LIMIT = 8000;
 export const REPLY_LIMIT = 36_000;
 
 /**
+ * The page with a key the standard gave out itself, like a component's or a rule's.
+ * Each of those comes from a page, so a missing one means the standard was built
+ * wrong: an error, rather than a page an agent asked for that isn't there.
+ */
+export function pageByKey(standard: Standard, key: string): Page {
+  const page = standard.pages.find((candidate) => candidate.key === key);
+  if (!page) {
+    throw new Error(`The standard has no page with the key "${key}"`);
+  }
+  return page;
+}
+
+/**
  * Finds a page from what an agent might call it: its path (`/docs/components/button`),
  * its URL or `/raw` file, its name (`button`), its title (`Design Tokens`), or its
  * contract's name (`Button`, `token-paths`) or rule prefix (`tokens`). A part of a

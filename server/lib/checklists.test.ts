@@ -219,6 +219,13 @@ describe("layerRows", () => {
     const source = "## UX Checklist\n\n| Rule | Level | Requirement |\n| - | - | - |\n| `widget/one` | Must | It has a name |\n";
     expect(() => layerRows(FILE, source)).toThrow(/has no Basis column/);
   });
+
+  it("names the file of a row with fewer cells than the header", () => {
+    const source = "## UX Checklist\n\n| Rule | Level | Requirement | Basis |\n| - | - | - | - |\n| `widget/one` | Must |\n";
+    expect(() => layerRows(FILE, source)).toThrow(
+      "3.components/widget/2.ux.md: a row of the UX Checklist table has no Basis cell",
+    );
+  });
 });
 
 describe("checklistPage", () => {

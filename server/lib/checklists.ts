@@ -74,7 +74,9 @@ export function citedCriteria(basis: string): Array<Criterion & { number: string
       if (!next) {
         break;
       }
-      pending.push(next[1]!);
+      // The number takes part in every match, so the default never applies.
+      const [, number = ""] = next;
+      pending.push(number);
       rest = rest.slice(next[0].length);
       const level = next[2] as WcagLevel | undefined;
       if (!level) {
@@ -128,7 +130,9 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
       }
       const rules = match.text.match(RULES);
       if (rules) {
-        layer = { name: rules[1]!, anchor };
+        // The layer's name takes part in every match, so the default never applies.
+        const [, name = ""] = rules;
+        layer = { name, anchor };
       }
       continue;
     }
@@ -149,7 +153,16 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
     if (row.every((cell) => /^:?-+:?$/.test(cell))) {
       continue;
     }
-    const basis = row[layer.columns.Basis]!;
+    const { name, columns } = layer;
+    // A row with fewer cells than the header is a broken table, not one with empty cells.
+    const cellOf = (column: (typeof COLUMNS)[number]) => {
+      const value = row[columns[column]];
+      if (value === undefined) {
+        throw new Error(`${file}: a row of the ${name} Checklist table has no ${column} cell`);
+      }
+      return value;
+    };
+    const basis = cellOf("Basis");
     if (!picked(basis)) {
       continue;
     }
@@ -160,9 +173,9 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
       throw new Error(`${file}: ${(error as Error).message}`, { cause: error });
     }
     rows.push({
-      rule: row[layer.columns.Rule]!.replaceAll("`", ""),
-      level: row[layer.columns.Level]!,
-      requirement: row[layer.columns.Requirement]!,
+      rule: cellOf("Rule").replaceAll("`", ""),
+      level: cellOf("Level"),
+      requirement: cellOf("Requirement"),
       basis,
       criteria,
       link: `${docsPath(file)}#${layer.anchor}`,
@@ -265,8 +278,9 @@ export function brokenLinks(markdown: string, pages: Map<string, string>): Array
     if (code) {
       continue;
     }
-    for (const [, path, anchor] of text.matchAll(/\]\((\/docs\/[^)#\s]*)(?:#([^)\s]+))?\)/g)) {
-      const source = pages.get(path!);
+    // The path takes part in every match, so its default never applies.
+    for (const [, path = "", anchor] of text.matchAll(/\]\((\/docs\/[^)#\s]*)(?:#([^)\s]+))?\)/g)) {
+      const source = pages.get(path);
       if (source === undefined) {
         broken.push(`${path}${anchor ? `#${anchor}` : ""}`);
         continue;

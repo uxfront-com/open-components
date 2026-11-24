@@ -76,16 +76,19 @@ export function codeOf(source: string): Array<string> {
   let block: { char: string; length: number; shell: boolean; lines: Array<string> } | undefined;
   for (const text of body.split("\n")) {
     const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    // Both groups take part in every match, so the defaults never apply.
+    const [, run = "", rest = ""] = marker ?? [];
     if (!block) {
       if (!marker) {
         prose.push(text);
       } else {
-        const language = marker[2]!.trim().match(/^[\w-]*/)![0].toLowerCase();
-        block = { char: marker[1]![0]!, length: marker[1]!.length, shell: SHELL.has(language), lines: [] };
+        // The info string's first word, which can be empty.
+        const language = (rest.trim().match(/^[\w-]*/)?.[0] ?? "").toLowerCase();
+        block = { char: run.charAt(0), length: run.length, shell: SHELL.has(language), lines: [] };
       }
       continue;
     }
-    if (marker && marker[1]![0] === block.char && marker[1]!.length >= block.length && !marker[2]!.trim()) {
+    if (marker && run.charAt(0) === block.char && run.length >= block.length && !rest.trim()) {
       if (!block.shell) {
         code.push(block.lines.join("\n"));
       }
@@ -98,8 +101,9 @@ export function codeOf(source: string): Array<string> {
     code.push(block.lines.join("\n"));
   }
   // Inline code: a run of backticks, up to a run of the same length.
-  for (const [, , span] of prose.join("\n").matchAll(/(`+)([\s\S]*?[^`])\1(?!`)/g)) {
-    code.push(span!);
+  // The span's group takes part in every match, so the default never applies.
+  for (const [, , span = ""] of prose.join("\n").matchAll(/(`+)([\s\S]*?[^`])\1(?!`)/g)) {
+    code.push(span);
   }
   return code;
 }
@@ -130,7 +134,8 @@ export function checkPost(source: string, tokens: TokenRules): Array<string> {
     }
     const unknown = name
       .matchAll(/\{([^}]*)\}/g)
-      .map(([, placeholder]) => placeholder!)
+      // The group takes part in every match, so the default never applies.
+      .map(([, placeholder = ""]) => placeholder)
       .filter((placeholder) => placeholder !== "color" && !WORDS.includes(placeholder))
       .toArray();
     if (unknown.length) {

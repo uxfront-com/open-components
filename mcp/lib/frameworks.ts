@@ -29,7 +29,7 @@ export function renderFrameworks(markdown: string, frameworks: Array<Framework>,
         if (shown && shown !== framework) {
           lines.push(`_This example doesn't come in ${label(framework)}, so here it is in ${label(shown)}._`, "");
         }
-        lines.push(...trim(slots.get(shown!) ?? []));
+        lines.push(...trim(shown === undefined ? [] : (slots.get(shown) ?? [])));
       } else {
         for (const [value, code] of slots) {
           lines.push(`**${label(value)}**`, "", ...trim(code), "");
@@ -39,7 +39,9 @@ export function renderFrameworks(markdown: string, frameworks: Array<Framework>,
     } else if (slots) {
       const match = line.match(SLOT);
       if (match) {
-        slots.set(match[1]!, (current = []));
+        // The slot's name takes part in every match, so the default never applies.
+        const [, name = ""] = match;
+        slots.set(name, (current = []));
       } else {
         current?.push(line);
       }
@@ -54,10 +56,10 @@ export function renderFrameworks(markdown: string, frameworks: Array<Framework>,
 function trim(lines: Array<string>): Array<string> {
   let start = 0;
   let end = lines.length;
-  while (start < end && !lines[start]!.trim()) {
+  while (start < end && !lines[start]?.trim()) {
     start++;
   }
-  while (end > start && !lines[end - 1]!.trim()) {
+  while (end > start && !lines[end - 1]?.trim()) {
     end--;
   }
   return lines.slice(start, end);

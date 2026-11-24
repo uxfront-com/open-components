@@ -85,7 +85,7 @@ const layers = [
   { id: "ux", index: "01", code: "UX", title: "User experience" },
   { id: "dx", index: "02", code: "DX", title: "Developer experience" },
   { id: "ax", index: "03", code: "AX", title: "Agentic experience" },
-];
+] as const;
 
 // A close-up of one plate, held apart: plate 0 (UX) on top, 2 (AX) at the bottom.
 const closeUp = (plate: number, shift: [number, number]): FormationOptions["views"] => {
@@ -109,8 +109,8 @@ const hero = hold(
   }),
   1,
 );
-const layer = (plate: number, shift: [number, number]) => {
-  const { id, title } = layers[plate]!;
+const layer = (plate: 0 | 1 | 2, shift: [number, number]) => {
+  const { id, title } = layers[plate];
   const formation = plates({ key: id, label: title, views: closeUp(plate, shift) });
   return share(spotlight(hold(formation, 1), plate), hero);
 };

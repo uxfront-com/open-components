@@ -205,7 +205,7 @@ watch(
     // Focus moves when it was on a tag that's gone, or when a tag whose button was pressed
     // went and focus is nowhere, like after a click in Safari, which doesn't focus buttons.
     // Anywhere else, like a dialog that asked first, it stays.
-    let anchor = focusedIndex >= 0 && removed.includes(previous[focusedIndex]!) ? focusedIndex : -1;
+    let anchor = focusedIndex >= 0 && removed.some((value) => value === previous[focusedIndex]) ? focusedIndex : -1;
     if (anchor < 0 && focusWasLost) {
       anchor = previous.findIndex((value) => removed.includes(value) && pressed.has(value));
     }

@@ -1,5 +1,6 @@
 import { renderFrameworks } from "./frameworks";
 import { scan } from "./markdown";
+import { pageByKey } from "./pages";
 import type { Standard } from "./types";
 
 export interface SearchResult {
@@ -114,7 +115,7 @@ export function createSearch(standard: Standard) {
     }
   }
   for (const rule of standard.rules) {
-    const page = standard.pages.find((candidate) => candidate.key === rule.component)!;
+    const page = pageByKey(standard, rule.component);
     add(rule.component, {
       type: "rule",
       title: rule.id,
@@ -124,7 +125,7 @@ export function createSearch(standard: Standard) {
       url: rule.url,
       excerpt: "",
       rule: { id: rule.id, level: rule.level, ...(rule.scope && { scope: rule.scope }) },
-    }, rule.id.split("/").pop()!, rule.requirement, rule.check);
+    }, rule.id.split("/").at(-1) ?? rule.id, rule.requirement, rule.check);
   }
   const average = documents.reduce((sum, document) => sum + document.length, 0) / documents.length;
 
@@ -152,7 +153,8 @@ export function createSearch(standard: Standard) {
         if (!tf) {
           continue;
         }
-        score += (idf.get(term)! * tf * 2.2) / (tf + 1.2 * (0.25 + (0.75 * document.length) / average));
+        // Every wanted term has its idf, so the fallback never applies.
+        score += ((idf.get(term) ?? 0) * tf * 2.2) / (tf + 1.2 * (0.25 + (0.75 * document.length) / average));
         matched++;
       }
       return matched ? [{ document, score: score * document.weight * (matched / wanted.length) ** 2 }] : [];

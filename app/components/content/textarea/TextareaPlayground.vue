@@ -91,7 +91,7 @@ const code = computed(() => {
     fw === "vanilla" && 'data-slot="control"',
     (fw === "vanilla" || fw === "angular") && `rows="${rows.value}"`,
     'id="message"',
-    ...binding.get(fw)!,
+    ...(binding.get(fw) ?? []),
     disabled.value && "disabled",
     readonly.value && (jsx ? "readOnly" : "readonly"),
     invalid.value && 'aria-invalid="true"',

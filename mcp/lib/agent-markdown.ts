@@ -41,8 +41,9 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
 
     const start = text.match(/^(\s*):{2,}([a-z][\w-]*)\s*(\{.*\})?\s*$/);
     if (start) {
-      const [, space, name, props] = start;
-      open.push({ name: name!, indent: space!.length });
+      // The indent and the name take part in every match, so their defaults never apply.
+      const [, space = "", name = "", props] = start;
+      open.push({ name, indent: space.length });
       if (name === "framework-switcher") {
         lines.push(SWITCHER);
       }
@@ -84,7 +85,7 @@ export function agentMarkdown(body: string, page: { site: string; path: string; 
     );
   }
   if (open.length) {
-    throw new Error(`${page.path}: ::${open.at(-1)!.name} is never closed`);
+    throw new Error(`${page.path}: ::${open.at(-1)?.name} is never closed`);
   }
   return collapse(lines.join("\n"));
 }

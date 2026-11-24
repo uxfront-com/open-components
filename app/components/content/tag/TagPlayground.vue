@@ -77,7 +77,7 @@ const code = computed(() => {
     angular: '<lucide-icon leading name="bug" />',
     solid: "leading={<BugIcon />}",
     astro: '<BugIcon slot="leading" />',
-  }[fw]!;
+  }[fw] ?? "";
   if (fw === "angular") {
     return `<span appTag ${props.join(" ")}>${icon.value ? `\n  ${leading}\n` : ""}</span>`;
   }

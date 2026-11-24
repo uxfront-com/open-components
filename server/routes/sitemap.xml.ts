@@ -73,5 +73,5 @@ const XML_ENTITIES = new Map<string, string>(Object.entries({
 }));
 
 function escapeXml(value: string) {
-  return value.replaceAll(/[&<>"']/g, (char) => XML_ENTITIES.get(char)!);
+  return value.replaceAll(/[&<>"']/g, (char) => XML_ENTITIES.get(char) ?? char);
 }

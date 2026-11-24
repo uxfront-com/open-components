@@ -206,7 +206,11 @@ function unanchor() {
 }
 
 function onBeforetoggle(event: Event) {
-  const el = popover.value!;
+  const el = popover.value;
+  // The listeners are on the popover itself, so it's always there when they run.
+  if (!el) {
+    return;
+  }
   if ((event as ToggleEvent).newState === "open") {
     showing = true;
     // Opening it again from another trigger before the browser said it closed leaves the
@@ -230,7 +234,11 @@ function onBeforetoggle(event: Event) {
 }
 
 function onToggle(event: Event) {
-  const el = popover.value!;
+  const el = popover.value;
+  // The listeners are on the popover itself, so it's always there when they run.
+  if (!el) {
+    return;
+  }
   if ((event as ToggleEvent).newState === "open") {
     state.value = "open";
     open.value = true;

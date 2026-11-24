@@ -7,7 +7,8 @@
  */
 export default defineEventHandler((event) => {
   // However the path is written: the router also matches it with a trailing slash.
-  const raw = event.path.split("?")[0]!;
+  // split() always gives at least one part, so the fallback never applies.
+  const raw = event.path.split("?")[0] ?? event.path;
   let path = raw;
   try {
     path = decodeURIComponent(raw);

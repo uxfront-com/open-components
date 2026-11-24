@@ -112,7 +112,7 @@ const code = computed(() => {
       svelte: `(open = ${value})`,
       angular: `open.set(${value})`,
       solid: `setOpen(${value})`,
-    })[fw]!;
+    })[fw] ?? "";
   const onClick = (value: boolean) =>
     ({
       react: `onClick={() => ${set(value)}}`,
@@ -222,7 +222,7 @@ const code = computed(() => {
       // Angular's Dialog is on the <dialog>, which keeps a `title` attribute as a tooltip.
       `${fw === "angular" ? "dialogTitle" : "title"}="${title}"`,
       described.value && `description="${description}"`,
-      ...bound.get(fw)!,
+      ...(bound.get(fw) ?? []),
     ];
     if (jsx) {
       const fragment = ["<>", ...actionsBlock.map((line) => `  ${line}`), "</>"];
@@ -234,7 +234,7 @@ const code = computed(() => {
         angular: ["<div actions>", "</div>"],
         astro: ['<Fragment slot="actions">', "</Fragment>"],
       }));
-      const [start, end] = wrappers.get(fw)!;
+      const [start, end] = wrappers.get(fw) ?? ["", ""];
       dialog = element(fw === "angular" ? "dialog" : "Dialog", props, [
         ...body,
         start,

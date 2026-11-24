@@ -124,7 +124,7 @@ const code = computed(() => {
   const attributes = [
     fw === "angular" && "appCheckboxGroup",
     'name="emails"',
-    ...binding.get(fw)!,
+    ...(binding.get(fw) ?? []),
     size.value !== "md" && `size="${size.value}"`,
     orientation.value !== "vertical" && `orientation="${orientation.value}"`,
     selectAll.value && `${fw === "vue" ? "select-all" : "selectAll"}="${allLabel}"`,
