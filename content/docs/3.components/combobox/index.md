@@ -1837,9 +1837,11 @@ describe("Combobox", () => {
 
   describe("the on-screen keyboard", () => {
     const viewport = (height: number, offsetTop = 0) => {
-      const target = new EventTarget();
-      vi.stubGlobal("visualViewport", Object.assign(target, { height, offsetTop, width: 390 }));
+      const target = Object.assign(new EventTarget(), { height, offsetTop, width: 390 });
+      vi.stubGlobal("visualViewport", target);
       vi.spyOn(window, "innerHeight", "get").mockReturnValue(844);
+      // The stub, so a test can resize it the way the on-screen keyboard does.
+      return target;
     };
     afterEach(() => {
       vi.restoreAllMocks();
@@ -1885,11 +1887,11 @@ describe("Combobox", () => {
     });
 
     it("fits the panel when the keyboard comes up after it opened", async () => {
-      viewport(844);
+      const visual = viewport(844);
       const panel = await openOn({ top: 300, bottom: 336 }, 256);
       expect(panel).not.toHaveAttribute("data-fit");
-      (window.visualViewport as unknown as { height: number }).height = 400;
-      window.visualViewport!.dispatchEvent(new Event("resize"));
+      visual.height = 400;
+      visual.dispatchEvent(new Event("resize"));
       expect(panel).toHaveAttribute("data-fit", "visual");
       expect(panel.style.top).toBe(`${300 - 8 - 256}px`);
     });
@@ -1908,10 +1910,10 @@ describe("Combobox", () => {
     });
 
     it("goes back to anchor positioning once the keyboard closes", async () => {
-      viewport(400);
+      const visual = viewport(400);
       const panel = await openOn({ top: 300, bottom: 336 }, 256);
-      (window.visualViewport as unknown as { height: number }).height = 844;
-      window.visualViewport!.dispatchEvent(new Event("resize"));
+      visual.height = 844;
+      visual.dispatchEvent(new Event("resize"));
       expect(panel).not.toHaveAttribute("data-fit");
       expect(panel.style.top).toBe("");
     });

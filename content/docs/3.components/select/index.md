@@ -1574,13 +1574,18 @@ beforeAll(() => {
     this.dispatchEvent(new Event("close"));
   };
   Element.prototype.scrollIntoView = vi.fn();
-  window.matchMedia = ((query: string) => ({
-    get matches() {
-      return query === "(pointer: coarse)" && coarse;
-    },
-    addEventListener: (_: string, listener: () => void) => mediaListeners.add(listener),
-    removeEventListener: (_: string, listener: () => void) => mediaListeners.delete(listener),
-  })) as unknown as typeof window.matchMedia;
+  window.matchMedia = (query: string) =>
+    ({
+      get matches() {
+        return query === "(pointer: coarse)" && coarse;
+      },
+      addEventListener: (_: string, listener: () => void) => {
+        mediaListeners.add(listener);
+      },
+      removeEventListener: (_: string, listener: () => void) => {
+        mediaListeners.delete(listener);
+      },
+    }) as MediaQueryList;
 
   // A press that starts outside every open panel closes them, before the click arrives.
   document.addEventListener(

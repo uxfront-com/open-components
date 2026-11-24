@@ -21,7 +21,6 @@ export default defineConfig({
     "quality/no-unsafe-dictionary-type": "off",
     "quality/no-array-filter-map": "off",
     "no-promise-executor-return": "off",
-    "quality/no-chained-type-assertions": "off",
     "@nkzw/no-instanceof": "off",
     // Destructuring a key beside a rest element is how the code copies an object without
     // that key, like `({ component, ...contract }) => contract`, so the key is unused on
@@ -44,6 +43,9 @@ export default defineConfig({
       files: ["app/components/docs/DocsNavigation.vue"],
       rules: {
         "unicorn/no-useless-fallback-in-spread": "off",
+        // tv() loses the theme's types once the app config is spread into it, so its
+        // result is cast through unknown to the slot functions DocsNavigationList.vue takes.
+        "quality/no-chained-type-assertions": "off",
       },
     },
     {
