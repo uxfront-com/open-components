@@ -11,7 +11,9 @@ export default defineEventHandler((event) => {
   let path = raw;
   try {
     path = decodeURIComponent(raw);
-  } catch {}
+  } catch {
+    // A malformed escape, like `%E0`, leaves the path as it was written.
+  }
   if (path.replace(/\/+/g, "/").replace(/\/$/, "").toLowerCase() === "/mcp/badge.svg") {
     throw createError({ statusCode: 404, statusMessage: "Not Found" });
   }
