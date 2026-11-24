@@ -8,12 +8,12 @@ const emails = [
   { value: "tips", label: "Tips and guides" },
   { value: "events", label: "Events near you" },
 ];
-const picked = ref<string[]>([]);
+const picked = ref<Array<string>>([]);
 const error = ref("");
 const status = ref("");
 const group = useTemplateRef("group");
 
-function update(value: string[]) {
+function update(value: Array<string>) {
   picked.value = value;
   // Picking one fixes the error, so it clears right away.
   if (value.length) error.value = "";

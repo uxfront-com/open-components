@@ -13,7 +13,7 @@ const {
   popover = "auto",
 } = defineProps<{
   id?: string;
-  sections: Section[];
+  sections: Array<Section>;
   /** The highlighted option, which `aria-activedescendant` on the control points at. */
   active?: SelectOption;
   isPicked: (option: SelectOption) => boolean;

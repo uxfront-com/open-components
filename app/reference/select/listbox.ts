@@ -13,7 +13,7 @@ export interface SelectOption {
 /** A heading over some of the options. */
 export interface SelectGroup {
   label: string;
-  options: SelectOption[];
+  options: Array<SelectOption>;
 }
 /** A rule between options or groups. */
 export interface SelectSeparator {
@@ -22,13 +22,13 @@ export interface SelectSeparator {
 export type SelectItem = SelectOption | SelectGroup | SelectSeparator;
 
 /** A group, a run of options outside any group, or a separator, which the panel draws in turn. */
-export type Section = { separator?: true; label?: string; options: SelectOption[] };
+export type Section = { separator?: true; label?: string; options: Array<SelectOption> };
 
 export const isSeparator = (item: SelectItem): item is SelectSeparator => "separator" in item;
 export const isGroup = (item: SelectItem): item is SelectGroup => "options" in item;
 
-export function toSections(items: SelectItem[]) {
-  const result: Section[] = [];
+export function toSections(items: Array<SelectItem>) {
+  const result: Array<Section> = [];
   for (const item of items) {
     if (isSeparator(item)) result.push({ separator: true, options: [] });
     else if (isGroup(item)) result.push({ label: item.label, options: item.options });
@@ -40,9 +40,9 @@ export function toSections(items: SelectItem[]) {
 
 export interface ListboxOptions {
   /** What the panel shows. */
-  items: () => SelectItem[];
+  items: () => Array<SelectItem>;
   /** Every option, when the panel shows only some of them, so an option keeps its ID as the list narrows. */
-  all?: () => SelectItem[];
+  all?: () => Array<SelectItem>;
   /** The control's `id`, or its `name`, which every ID in the panel starts with. */
   baseId: () => string | undefined;
   /** The highlighted option's index in what the panel shows. */

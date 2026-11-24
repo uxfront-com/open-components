@@ -315,7 +315,7 @@ describe("Field", () => {
 
   it("warns in development when it has no id, a label a control doesn't take, a native checkbox, or more than one control", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const warns = (props: Record<string, unknown>, ...children: ReturnType<typeof h>[]) => {
+    const warns = (props: Record<string, unknown>, ...children: Array<ReturnType<typeof h>>) => {
       warn.mockClear();
       render(Field, { props, slots: { default: () => children } });
       return warn.mock.calls.filter(([message]) => String(message).startsWith("[Field]")).map(([message]) => String(message));

@@ -28,7 +28,7 @@ const HOMEPAGE = "app/pages/index.vue";
  */
 export default defineEventHandler(async (event) => {
   const { siteUrl } = useRuntimeConfig(event).public;
-  const pages = (await queryCollection(event, "docs" as never).all()) as DocsPage[];
+  const pages = (await queryCollection(event, "docs" as never).all()) as Array<DocsPage>;
   const entries = await queryCollection(event, "changelog").order("date", "DESC").all();
   const posts = await queryCollection(event, "blog").order("date", "DESC").all();
 

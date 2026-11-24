@@ -25,11 +25,11 @@ import { collapse, heading, scan } from "./markdown";
  * `nuxt build mcp` warns about and `pnpm test` fails on, and the page goes
  * without agent markdown.
  */
-export function agentMarkdown(body: string, page: { site: string; path: string; frameworks: string[] }): string {
-  const lines: string[] = [];
+export function agentMarkdown(body: string, page: { site: string; path: string; frameworks: Array<string> }): string {
+  const lines: Array<string> = [];
   // The components the line is in: a component's content is indented as far as
   // its opening line, like an `:::accordion-item` inside an `::accordion`.
-  const open: { name: string; indent: number }[] = [];
+  const open: Array<{ name: string; indent: number }> = [];
 
   for (const { text, code } of scan(body)) {
     const indent = open.at(-1)?.indent ?? 0;

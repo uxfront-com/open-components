@@ -47,8 +47,8 @@ const LANGUAGES: Record<string, string> = {
 };
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open = line.length > 88 ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), ">"] : [`${line}>`];
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
@@ -116,7 +116,7 @@ const code = computed(() => {
   // The value is bound where the framework holds it. Astro has no state on the client,
   // so it checks the radio it starts with, and its radios take the group's name, size
   // and required state.
-  const binding: Record<string, string[]> = {
+  const binding: Record<string, Array<string>> = {
     react: ["value={delivery}", "onChange={(event) => setDelivery(event.target.value)}"],
     vue: ['v-model="delivery"'],
     svelte: ["bind:value={delivery}"],

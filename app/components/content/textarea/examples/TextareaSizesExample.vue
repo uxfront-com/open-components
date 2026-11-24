@@ -4,7 +4,7 @@ import Textarea from "~/reference/textarea/Textarea.vue";
 import type { TextareaProps } from "~/reference/textarea/Textarea.vue";
 
 /** `::textarea-sizes-example`: a textarea of one row at each size, beside an Input of the same size. */
-const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies TextareaProps["size"][];
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies Array<TextareaProps["size"]>;
 </script>
 
 <template>

@@ -56,14 +56,14 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const countries: SelectItem[] = [
+const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany", disabled: true },
   { value: "es", label: "Spain" },
   { value: "ch", label: "Zürich" },
   { value: "nz", label: "New Zealand" },
 ];
-const places: SelectItem[] = [
+const places: Array<SelectItem> = [
   { label: "Europe", options: [{ value: "fr", label: "France" }, { value: "es", label: "Spain" }] },
   { separator: true },
   { label: "Oceania", options: [{ value: "nz", label: "New Zealand" }] },
@@ -375,7 +375,7 @@ describe("Combobox", () => {
 
     // In Devanagari, a vowel sign is a combining mark, and a letter of its own: "कताब" isn't
     // "किताब" (a book) without one, so neither lists nor picks it.
-    const books: SelectItem[] = [
+    const books: Array<SelectItem> = [
       { value: "kitab", label: "किताब" },
       { value: "kalam", label: "कलम" },
     ];
@@ -482,7 +482,7 @@ describe("Combobox", () => {
 
     it("keeps the picked option when people leave without changing its text, even when another has the same label", async () => {
       const user = userEvent.setup();
-      const others: SelectItem[] = [
+      const others: Array<SelectItem> = [
         { label: "Europe", options: [{ value: "eu-other", label: "Other" }] },
         { label: "Asia", options: [{ value: "as-other", label: "Other" }] },
       ];
@@ -527,7 +527,7 @@ describe("Combobox", () => {
 
     it("reverts unmatched text with Enter on a closed panel, before the form submits", async () => {
       const user = userEvent.setup();
-      const values: unknown[] = [];
+      const values: Array<unknown> = [];
       const { submit } = await page({ value: "fr" });
       submit.mockImplementation((event: Event) => {
         event.preventDefault();
@@ -553,7 +553,7 @@ describe("Combobox", () => {
 
     it("submits the new value with Enter on a closed panel, once the value has changed", async () => {
       const user = userEvent.setup();
-      const values: unknown[] = [];
+      const values: Array<unknown> = [];
       const { submit } = await page({ allowCustomValue: true });
       submit.mockImplementation((event: Event) => {
         event.preventDefault();
@@ -571,8 +571,8 @@ describe("Combobox", () => {
       ["another option's label", {}, "es", "France", ["fr"]],
     ])("submits the new value with Enter on a closed panel when its value is bound, after %s", async (_, props, start, typed, expected) => {
       const user = userEvent.setup();
-      const value = ref<string | string[] | undefined>(start);
-      const values: unknown[] = [];
+      const value = ref<string | Array<string> | undefined>(start);
+      const values: Array<unknown> = [];
       const submit = vi.fn((event: Event) => {
         event.preventDefault();
         values.push(new FormData(event.target as HTMLFormElement).getAll("country"));
@@ -587,7 +587,7 @@ describe("Combobox", () => {
                 options: countries,
                 ...props,
                 modelValue: value.value,
-                "onUpdate:modelValue": (next?: string | string[]) => (value.value = next),
+                "onUpdate:modelValue": (next?: string | Array<string>) => (value.value = next),
               }),
             ),
             h("button", { type: "submit" }, "Save"),
@@ -798,11 +798,11 @@ describe("Combobox", () => {
   describe("the API", () => {
     it("binds its value with v-model, and updates its text when the value changes", async () => {
       const user = userEvent.setup();
-      const value = ref<string | string[]>("fr");
+      const value = ref<string | Array<string>>("fr");
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
-            h(Combobox, { id: "country", options: countries, modelValue: value.value, "onUpdate:modelValue": (next?: string | string[]) => (value.value = next ?? "") }),
+            h(Combobox, { id: "country", options: countries, modelValue: value.value, "onUpdate:modelValue": (next?: string | Array<string>) => (value.value = next ?? "") }),
           ),
       });
       await nextTick();
@@ -816,7 +816,7 @@ describe("Combobox", () => {
 
     it("fires the select's input and change events when the value changes, not on every key", async () => {
       const user = userEvent.setup();
-      const fired: string[] = [];
+      const fired: Array<string> = [];
       await page({ onChange: () => fired.push("change"), onInput: () => fired.push("input") });
       await user.click(input());
       await user.type(input(), "sp");
@@ -1052,7 +1052,7 @@ describe("Combobox", () => {
       const app = createSSRApp({ render: markup });
       app.mount(host);
       await nextTick();
-      expect(warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes("Hydration"))).toEqual([]);
+      expect(warn.mock.calls.filter((call: Array<unknown>) => String(call[0]).includes("Hydration"))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       expect(host.querySelector("input")).toHaveValue("New Zealand");
       app.unmount();

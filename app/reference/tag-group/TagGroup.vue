@@ -19,7 +19,7 @@ export interface TagGroupItem {
 
 export interface TagGroupProps {
   /** The tags, in order. The group shows them and never changes the list itself. */
-  tags: TagGroupItem[];
+  tags: Array<TagGroupItem>;
   /** Names the list, like "Labels", for screen readers. Or point `aria-labelledby` at a visible heading. */
   label?: string;
   size?: TagProps["size"];
@@ -131,7 +131,7 @@ watch(
         const items = list.value ? [...list.value.children] : [];
         const after = previous.slice(anchor + 1).filter((value) => next.includes(value));
         const prior = previous.slice(0, anchor).filter((value) => next.includes(value)).reverse();
-        const find = (values: string[]) =>
+        const find = (values: Array<string>) =>
           values.map((value) => removeButton(items[next.indexOf(value)])).find(Boolean) ?? null;
         // A candidate that can't take focus, like a disabled button, gives way to the next.
         const focused = (target: HTMLElement | null) => {

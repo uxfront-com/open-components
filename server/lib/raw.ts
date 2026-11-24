@@ -89,12 +89,12 @@ export function rawContract(page: { title: string; path: string }, contract: str
  * it, and its questions, under `## FAQ`, go into one `## FAQ` before the
  * Overview's `## Sources`.
  */
-export function joinPage(index: string, parts: string[]): string {
-  const blocks = new Map<string, string[]>();
-  const gathered = { rules: [] as string[], faq: [] as string[] };
+export function joinPage(index: string, parts: Array<string>): string {
+  const blocks = new Map<string, Array<string>>();
+  const gathered = { rules: [] as Array<string>, faq: [] as Array<string> };
   for (const source of parts) {
     const { title, before, body } = readPart(source);
-    const sections = { own: [] as string[], rules: [] as string[], faq: [] as string[] };
+    const sections = { own: [] as Array<string>, rules: [] as Array<string>, faq: [] as Array<string> };
     let section: keyof typeof sections = "own";
     for (const { text, code } of scan(body)) {
       const match = !code && heading(text);
@@ -149,7 +149,7 @@ export function joinPage(index: string, parts: string[]): string {
  * A rules table's anchor on the whole page, like `ui-rules`, goes to its heading
  * on the part, like `/docs/components/button/ui#ui-checklist`.
  */
-export function splitAnchors(parts: { path: string; source: string }[]): Record<string, string> {
+export function splitAnchors(parts: Array<{ path: string; source: string }>): Record<string, string> {
   const found = parts.flatMap(({ path, source }) => {
     const { title, body } = readPart(source);
     const lines = scan(body);
@@ -205,7 +205,7 @@ export function readPage(dir: string, file: string): string {
  * lists them. The parts of a split page aren't pages of their own here: their
  * index.md stands for the whole page, and lists their files in `parts`.
  */
-export function readPages(dir: string): { file: string; source: string; parts: string[] }[] {
+export function readPages(dir: string): Array<{ file: string; source: string; parts: Array<string> }> {
   return readdirSync(dir, { recursive: true, encoding: "utf8" })
     .filter((file) => file.endsWith(".md") && !isPart(dir, file))
     .sort(byNumber)
@@ -234,7 +234,7 @@ export function isPart(dir: string, file: string): boolean {
 }
 
 // The files of an index.md's parts, in file order, or none for any other page.
-function partsOf(dir: string, file: string): string[] {
+function partsOf(dir: string, file: string): Array<string> {
   if (basename(file) !== "index.md") return [];
   const folder = dirname(file);
   return readdirSync(join(dir, folder))

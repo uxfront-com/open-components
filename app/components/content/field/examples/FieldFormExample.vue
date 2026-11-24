@@ -37,8 +37,8 @@ function update(name: Name, value = "") {
 }
 
 async function submit() {
-  for (const name of Object.keys(checks) as Name[]) errors[name] = checks[name](values[name]);
-  const invalid = (Object.keys(checks) as Name[]).filter((name) => errors[name]);
+  for (const name of Object.keys(checks) as Array<Name>) errors[name] = checks[name](values[name]);
+  const invalid = (Object.keys(checks) as Array<Name>).filter((name) => errors[name]);
   if (invalid.length) {
     status.value = `Couldn't create your account. ${invalid.length === 1 ? "There's 1 error" : `There are ${invalid.length} errors`} to fix.`;
     // Focus once the errors are in the page, so screen readers read the first one with its field.

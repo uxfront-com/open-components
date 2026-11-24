@@ -69,7 +69,7 @@ A component meets the standard when it meets every must rule. Each should rule i
     const { rules } = await useStandard();
     // An empty list filters nothing, as with get-page's sections: some clients
     // send every optional field.
-    const some = <T>(list?: T[]) => (list?.length ? list : undefined);
+    const some = <T>(list?: Array<T>) => (list?.length ? list : undefined);
     const [ids, scope, layer, level, check] = [some(lists.ids), some(lists.scope), some(lists.layer), some(lists.level), some(lists.check)];
 
     // Suggestions for the first few IDs no rule has, which is all a typo needs.

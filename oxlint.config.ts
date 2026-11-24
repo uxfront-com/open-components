@@ -9,7 +9,6 @@ export default defineConfig({
   rules: {
     // Baseline for 0.2.0: the rules it adds that fail here, each fixed in its own commit.
     "curly": "off",
-    "@typescript-eslint/array-type": "off",
     "typescript/no-non-null-assertion": "off",
     "quality/no-unknown-returns": "off",
     "unicorn/consistent-function-scoping": "off",

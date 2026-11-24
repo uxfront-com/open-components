@@ -21,8 +21,8 @@ const placement = ref<Placement>("top");
 const delay = ref("500");
 const arrow = ref(true);
 
-const types: Type[] = ["label", "description"];
-const placements: Placement[] = ["top", "bottom", "start", "end"];
+const types: Array<Type> = ["label", "description"];
+const placements: Array<Placement> = ["top", "bottom", "start", "end"];
 const delays = ["300", "500", "700", "1000"];
 
 // A label shows an icon-only button's hidden name, and a description adds a hint to a named one.
@@ -56,7 +56,7 @@ const code = computed(() => {
     delay.value !== "500" && (fw === "vue" ? `:delay="${delay.value}"` : `delay={${delay.value}}`),
     placement.value !== "top" && `placement="${placement.value}"`,
     !arrow.value && (fw === "vue" ? ':arrow="false"' : "arrow={false}"),
-  ].filter(Boolean) as string[];
+  ].filter(Boolean) as Array<string>;
 
   switch (fw) {
     case "react":

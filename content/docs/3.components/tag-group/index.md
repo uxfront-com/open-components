@@ -95,7 +95,7 @@ export interface TagGroupItem {
 
 export interface TagGroupProps {
   /** The tags, in order. The group shows them and never changes the list itself. */
-  tags: TagGroupItem[];
+  tags: Array<TagGroupItem>;
   /** Names the list, like "Labels", for screen readers. Or point `aria-labelledby` at a visible heading. */
   label?: string;
   size?: TagProps["size"];
@@ -207,7 +207,7 @@ watch(
         const items = list.value ? [...list.value.children] : [];
         const after = previous.slice(anchor + 1).filter((value) => next.includes(value));
         const prior = previous.slice(0, anchor).filter((value) => next.includes(value)).reverse();
-        const find = (values: string[]) =>
+        const find = (values: Array<string>) =>
           values.map((value) => removeButton(items[next.indexOf(value)])).find(Boolean) ?? null;
         // A candidate that can't take focus, like a disabled button, gives way to the next.
         const focused = (target: HTMLElement | null) => {
@@ -366,7 +366,7 @@ import { defineComponent, h, nextTick, reactive, ref } from "vue";
 import TagGroup from "./TagGroup.vue";
 import type { TagGroupItem, TagGroupProps } from "./TagGroup.vue";
 
-const LABELS: TagGroupItem[] = [
+const LABELS: Array<TagGroupItem> = [
   { value: "bug", label: "Bug" },
   { value: "docs", label: "Docs" },
   { value: "feature", label: "Feature" },
@@ -381,10 +381,10 @@ beforeEach(() => document.querySelector('[role="status"]')?.remove());
 // A page that owns its tags: it drops a tag when the group fires remove, unless it keeps it,
 // and renders a Reset button after the group, which some tests pass as fallbackFocus.
 function renderOwned(
-  props: Partial<TagGroupProps> & { keep?: string[]; withFallback?: boolean | "element"; disabledFallback?: boolean } = {},
+  props: Partial<TagGroupProps> & { keep?: Array<string>; withFallback?: boolean | "element"; disabledFallback?: boolean } = {},
 ) {
   const { keep = [], withFallback = false, disabledFallback = false, ...rest } = props;
-  const tags = ref<TagGroupItem[]>(props.tags ?? LABELS.map((tag) => ({ ...tag })));
+  const tags = ref<Array<TagGroupItem>>(props.tags ?? LABELS.map((tag) => ({ ...tag })));
   const reset = ref<HTMLElement | null>(null);
   const onRemove = vi.fn((tag: TagGroupItem) => {
     if (!keep.includes(tag.value)) tags.value = tags.value.filter((other) => other.value !== tag.value);
@@ -593,7 +593,7 @@ describe("TagGroup", () => {
 
     it("announces a tag by its label when the app removes it from the same array, in place", async () => {
       const user = userEvent.setup();
-      const tags = reactive<TagGroupItem[]>([
+      const tags = reactive<Array<TagGroupItem>>([
         { value: "u-1", label: "Alpha" },
         { value: "u-2", label: "Beta" },
       ]);

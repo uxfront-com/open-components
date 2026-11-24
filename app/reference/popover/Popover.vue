@@ -71,7 +71,7 @@ let frame: number | undefined;
 // isn't mistaken for a popover that's still open.
 let showing = false;
 // The parts of a Dialog around it, which it listens on while it's open.
-let hostParts: Element[] = [];
+let hostParts: Array<Element> = [];
 
 // Why it's closing. The popover closes itself on its close button and on Escape, and
 // `null` means your code closed it, which fires no `close`. Every other close is the

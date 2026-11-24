@@ -28,7 +28,7 @@ const required = ref(true);
 const disabled = ref(false);
 const invalid = ref(false);
 
-const controls: { label: string; value: Control }[] = [
+const controls: Array<{ label: string; value: Control }> = [
   { label: "Input", value: "Input" },
   { label: "Textarea", value: "Textarea" },
   { label: "Checkbox", value: "Checkbox" },
@@ -69,11 +69,11 @@ const LANGUAGES: Record<string, string> = {
   vanilla: "html",
 };
 
-const indent = (lines: string[], by = 2) => lines.map((line) => (line ? `${" ".repeat(by)}${line}` : line));
+const indent = (lines: Array<string>, by = 2) => lines.map((line) => (line ? `${" ".repeat(by)}${line}` : line));
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children?: string[]) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children?: Array<string>) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open =
     line.length > 88 ? [`<${tag}`, ...indent(attrs), children ? ">" : "/>"] : [`${line}${children ? ">" : " />"}`];
@@ -180,7 +180,7 @@ function vanilla() {
     disabled.value && "disabled",
   ];
   const kind = { Input: "text", Textarea: "text", Checkbox: "checkbox", Switch: "switch", CheckboxGroup: "checkbox-group" }[control.value];
-  let markup: string[];
+  let markup: Array<string>;
   switch (control.value) {
     case "Input":
       markup = element("div", ['class="input"', `data-size="${s}"`], element("input", ['data-slot="control"', 'type="email"', ...wired]));
@@ -240,7 +240,7 @@ const code = computed(() => {
     disabled.value && "disabled",
   ];
   if (fw === "angular") return element("div", ["appField", ...props.slice(1)], angular()).join("\n");
-  let body: string[];
+  let body: Array<string>;
   if (fw === "react" || fw === "vue") body = component(fw, false);
   else if (fw === "svelte") body = ["{#snippet children(control)}", ...indent(component(fw, true)), "{/snippet}"];
   else {

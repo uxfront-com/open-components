@@ -6,7 +6,7 @@ import type { CheckKind } from "./types";
 describe("parseChecks", () => {
   // Every Check the checklists use today. One the server doesn't know shows up
   // as a problem when it's built (see standard.test.ts).
-  it.each<[string, CheckKind[], string[]]>([
+  it.each<[string, Array<CheckKind>, Array<string>]>([
     ["Review", ["review"], []],
     ["axe `color-contrast`", ["axe"], ["color-contrast"]],
     ["axe `target-size`", ["axe"], ["target-size"]],

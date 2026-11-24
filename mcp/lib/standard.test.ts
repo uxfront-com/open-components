@@ -197,11 +197,11 @@ describe("The standard", () => {
 // A repository of its own, which follows the conventions, for a change at a time
 // that breaks one: the build reports it as a problem, rather than failing.
 describe("buildStandard's problems", () => {
-  const roots: string[] = [];
+  const roots: Array<string> = [];
   afterAll(() => roots.forEach((root) => rmSync(root, { recursive: true, force: true })));
 
   const RULE = "| `widget/name` | Must | Component | It has a name | Review |";
-  const component = (name: string, options: { rows?: string[]; table?: string; contract?: string; reference?: boolean } = {}) => {
+  const component = (name: string, options: { rows?: Array<string>; table?: string; contract?: string; reference?: boolean } = {}) => {
     const { rows = [RULE], table = "### UI rules", contract = `component: ${name}`, reference = true } = options;
     return [
       "---",
@@ -227,7 +227,7 @@ describe("buildStandard's problems", () => {
       ...(reference ? ["## Reference implementation", "", "It's in Vue.", "", `\`\`\`vue [${name}.vue]`, "<template />", "```"] : []),
     ].join("\n");
   };
-  const roadmap = (...rows: string[]) =>
+  const roadmap = (...rows: Array<string>) =>
     [
       "---",
       "title: Roadmap",
@@ -244,7 +244,7 @@ describe("buildStandard's problems", () => {
     ].join("\n");
   const WIDGET = "| :roadmap-check{shipped} [Widget](/docs/components/widget) | Doing things |";
   const GIZMO = "| :roadmap-check Gizmo | Doing more |";
-  const guide = (...lines: string[]) => ["---", "title: Guide", "description: How to.", "---", "", ...lines].join("\n");
+  const guide = (...lines: Array<string>) => ["---", "title: Guide", "description: How to.", "---", "", ...lines].join("\n");
 
   const build = (changes: Record<string, string | undefined> = {}) => {
     const root = mkdtempSync(join(tmpdir(), "open-components-standard-"));
@@ -302,7 +302,7 @@ describe("buildStandard's problems", () => {
     ]);
   });
 
-  it.each<[string, Record<string, string | undefined>, (string | RegExp)[]]>([
+  it.each<[string, Record<string, string | undefined>, Array<string | RegExp>]>([
     [
       "an unknown check",
       { "content/docs/2.components/1.widget.md": component("Widget", { rows: [RULE.replace("Review", "Vibes")] }) },

@@ -54,9 +54,9 @@ export function findPage(standard: Standard, name: string): Page | undefined {
  * it, like "DX", in US spelling, like "Colors", or singular, like "Toggle button".
  * The page's own title names its introduction, before its first heading.
  */
-export function findSections(page: Page, names: string[]): { found: Heading[]; missing: string[] } {
-  const found: Heading[] = [];
-  const missing: string[] = [];
+export function findSections(page: Page, names: Array<string>): { found: Array<Heading>; missing: Array<string> } {
+  const found: Array<Heading> = [];
+  const missing: Array<string> = [];
   const slug = (text: string) => anchors()(text);
   // Every way a heading can be named loosely: its text without "(DX)", and "DX".
   const loose = (text: string) => {

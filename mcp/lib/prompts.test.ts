@@ -14,10 +14,10 @@ const component = (key: string) => standard.components.find((candidate) => candi
 const normalise = (text: string) => text.replaceAll(/\s+/g, " ").trim();
 
 // The code blocks in a section, each with the framework slot it's in, if any.
-function blocks(page: Page, heading: Heading): { framework?: string; text: string }[] {
-  const found: { framework?: string; text: string }[] = [];
+function blocks(page: Page, heading: Heading): Array<{ framework?: string; text: string }> {
+  const found: Array<{ framework?: string; text: string }> = [];
   let framework: string | undefined;
-  let block: string[] | undefined;
+  let block: Array<string> | undefined;
   // The blank line at the end closes a block that ends the section.
   for (const { text, code } of scan([...page.markdown.split("\n").slice(heading.start, heading.end), ""].join("\n"))) {
     if (code) {

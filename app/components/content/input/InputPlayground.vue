@@ -26,8 +26,8 @@ const value = ref("");
 const shown = ref(false);
 
 const sizes = ["xs", "sm", "md", "lg", "xl"];
-const types: Type[] = ["text", "email", "password", "search", "tel", "url"];
-const contents: Content[] = ["none", "leading icon", "prefix and suffix", "action"];
+const types: Array<Type> = ["text", "email", "password", "search", "tel", "url"];
+const contents: Array<Content> = ["none", "leading icon", "prefix and suffix", "action"];
 
 // What each type asks for: its label (a search is named by its Search button instead),
 // its autocomplete, and an error message that says how to fix it.
@@ -80,8 +80,8 @@ const LANGUAGES: Record<string, string> = {
 };
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const close = children.length ? ">" : "/>";
   const open =
@@ -200,7 +200,7 @@ const code = computed(() => {
           : `type={${typeNow.replaceAll("'", '"')}}`
       : (type.value !== "text" || fw === "vanilla") && `type="${type.value}"`;
   // The value is bound where the framework holds it, and left to the form where it doesn't.
-  const binding: Record<string, string[]> = {
+  const binding: Record<string, Array<string>> = {
     react: ["value={value}", "onChange={(event) => setValue(event.target.value)}"],
     vue: ['v-model="value"'],
     svelte: ["bind:value"],
@@ -229,7 +229,7 @@ const code = computed(() => {
   const icon = content.value === "leading icon";
   const affixes = content.value === "prefix and suffix";
   const button = action.value ? actionButton() : [];
-  let input: string[];
+  let input: Array<string>;
   if (jsx) {
     input = element("Input", [
       ...control,

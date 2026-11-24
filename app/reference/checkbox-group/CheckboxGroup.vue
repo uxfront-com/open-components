@@ -11,7 +11,7 @@ export interface CheckboxGroupOption {
 
 export interface CheckboxGroupProps {
   /** One checkbox per option, in this order. */
-  options: CheckboxGroupOption[];
+  options: Array<CheckboxGroupOption>;
   /** The name every checkbox shares, so the form sends the group as one field with a value per checked option. */
   name?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -29,7 +29,7 @@ defineOptions({ inheritAttrs: false });
 const { options, name, size = "md", orientation = "vertical", disabled = false, selectAll } = defineProps<CheckboxGroupProps>();
 
 /** The checked options' values, in the options' order, which `v-model:value` binds. Without it, the group keeps its own, and starts from `value`. */
-const value = defineModel<string[]>("value", { default: () => [] });
+const value = defineModel<Array<string>>("value", { default: () => [] });
 
 defineSlots<{
   /** The legend, which names the group. */

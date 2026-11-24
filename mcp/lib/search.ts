@@ -39,7 +39,7 @@ const STOPWORDS = new Set(
  * A text's terms: lowercased words, without stopwords, and without a plural's
  * `s`. A contraction stays one word, so `don't` is `dont` rather than `don` and `t`.
  */
-export function terms(text: string): string[] {
+export function terms(text: string): Array<string> {
   return text
     .toLowerCase()
     .replaceAll("’", "'")
@@ -56,7 +56,7 @@ export function terms(text: string): string[] {
  * `focused`), and results that match more of the query's terms come first.
  */
 export function createSearch(standard: Standard) {
-  const documents: Document[] = [];
+  const documents: Array<Document> = [];
   // `text` is what an excerpt quotes, and `more` is searched without being quoted.
   const add = (component: string, result: SearchResult, title: string, text: string, more = "", weight = 1) => {
     const counts = new Map<string, number>();
@@ -176,7 +176,7 @@ function prose(markdown: string, standard: Standard): string {
 }
 
 // About 200 characters around the first of the query's terms in a text.
-function excerpt(text: string, wanted: string[]): string {
+function excerpt(text: string, wanted: Array<string>): string {
   const lower = text.toLowerCase();
   const at = Math.min(...wanted.values().map((term) => lower.indexOf(term)).filter((index) => index >= 0), Infinity);
   if (text.length <= 220) return text;

@@ -22,12 +22,12 @@ const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
  * build, which would hold back the site too. `pnpm test` fails on any of them
  * (standard.test.ts).
  */
-export function buildStandard(options: { root: string; site: string; frameworks: Framework[] }): {
+export function buildStandard(options: { root: string; site: string; frameworks: Array<Framework> }): {
   standard: Standard;
-  problems: string[];
+  problems: Array<string>;
 } {
   const { root, site, frameworks } = options;
-  const problems: string[] = [];
+  const problems: Array<string> = [];
   const docs = join(root, "content/docs");
 
   const sources = new Map<string, string>();
@@ -132,7 +132,7 @@ export function buildStandard(options: { root: string; site: string; frameworks:
 }
 
 // Every heading of a page, with the lines it covers, sub-sections included.
-function headings(markdown: string, frameworks: Framework[]): Heading[] {
+function headings(markdown: string, frameworks: Array<Framework>): Array<Heading> {
   const lines = scan(markdown);
   const slug = anchors();
   const found = lines.flatMap(({ text, code }, start) => {
@@ -140,7 +140,7 @@ function headings(markdown: string, frameworks: Framework[]): Heading[] {
     return match ? [{ ...match, anchor: slug(match.text), start }] : [];
   });
 
-  const trail: { level: number; text: string }[] = [];
+  const trail: Array<{ level: number; text: string }> = [];
   return found.map((current, i) => {
     while (trail.length && trail.at(-1)!.level >= current.level) trail.pop();
     const next = found.slice(i + 1).find((other) => other.level <= current.level);
@@ -162,9 +162,9 @@ function headings(markdown: string, frameworks: Framework[]): Heading[] {
 }
 
 // Whether a checklist's value is one of the values a rule's field can take.
-const oneOf = <T extends string>(values: readonly T[], value?: string): value is T => values.includes(value as T);
+const oneOf = <T extends string>(values: ReadonlyArray<T>, value?: string): value is T => values.includes(value as T);
 
-function toRule(data: Record<string, string>, page: Page, site: string, problems: string[]): Rule {
+function toRule(data: Record<string, string>, page: Page, site: string, problems: Array<string>): Rule {
   const { id = "", layer, level, scope, requirement = "", check = "" } = data;
   if (!oneOf(LEVELS, level)) problems.push(`${id}: its level, ${level}, isn't one of ${LEVELS.join(", ")}`);
   if (scope && !oneOf(SCOPES, scope)) problems.push(`${id}: its scope, ${scope}, isn't one of ${SCOPES.join(", ")}`);
@@ -197,10 +197,10 @@ const LANGUAGES: Record<string, string> = { ".vue": "vue", ".ts": "ts", ".tsx": 
 
 // The reference implementations in app/reference/<component>/, each in the order
 // its page shows the files, with what the page says about them.
-function readReferences(root: string, pages: Page[], site: string, problems: string[]): Reference[] {
+function readReferences(root: string, pages: Array<Page>, site: string, problems: Array<string>): Array<Reference> {
   const dir = join(root, "app/reference");
   if (!existsSync(dir)) return [];
-  return readdirSync(dir).flatMap((component): Reference[] => {
+  return readdirSync(dir).flatMap((component): Array<Reference> => {
     if (component.startsWith(".")) return [];
     const page = pages.find((candidate) => candidate.key === component);
     const section = page?.headings.find((heading) => heading.text === "Reference implementation");
@@ -240,14 +240,14 @@ function readReferences(root: string, pages: Page[], site: string, problems: str
 // What the standard covers: every page with a contract, a component or a
 // foundation, and every component on the Roadmap, shipped or planned.
 function components(
-  pages: Page[],
-  rules: Rule[],
-  references: Reference[],
+  pages: Array<Page>,
+  rules: Array<Rule>,
+  references: Array<Reference>,
   sources: Map<string, string>,
   site: string,
-  problems: string[],
-): Component[] {
-  const shipped = pages.flatMap((page): Component[] => {
+  problems: Array<string>,
+): Array<Component> {
+  const shipped = pages.flatMap((page): Array<Component> => {
     if (!page.contract) return [];
     const own = rules.filter((rule) => rule.component === page.key);
     const reference = references.find((candidate) => candidate.component === page.key);
@@ -271,7 +271,7 @@ function components(
   });
 
   const roadmap = pages.find((page) => page.key === "roadmap");
-  const planned: Component[] = [];
+  const planned: Array<Component> = [];
   if (!roadmap) return shipped;
 
   // The Roadmap's "## Components" section: a table per group, under a "### <group>"

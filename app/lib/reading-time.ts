@@ -10,8 +10,8 @@ const WORDS_PER_MINUTE = 230;
  */
 type BodyNode =
   | string
-  | unknown[]
-  | { type?: string; value?: unknown; children?: unknown[] }
+  | Array<unknown>
+  | { type?: string; value?: unknown; children?: Array<unknown> }
   | null
   | undefined;
 
@@ -48,6 +48,6 @@ function textOf(node: BodyNode): string {
   return textOfAll(node.children ?? []);
 }
 
-function textOfAll(nodes: unknown[]): string {
+function textOfAll(nodes: Array<unknown>): string {
   return nodes.map((node) => textOf(node as BodyNode)).join(" ");
 }

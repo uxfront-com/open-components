@@ -8,9 +8,9 @@
 import type { ContentNavigationItem } from "@nuxt/content";
 import { getFirstPagePath } from "docus/app/composables/useSubNavigation";
 
-const navigation = inject<Ref<ContentNavigationItem[]>>("navigation");
+const navigation = inject<Ref<Array<ContentNavigationItem>>>("navigation");
 const { subNavigationMode } = useSubNavigation();
-const items = computed<ContentNavigationItem[]>(() => {
+const items = computed<Array<ContentNavigationItem>>(() => {
   const nav = navigation?.value || [];
   if (!subNavigationMode.value) return nav;
   return nav.map(({ children, ...item }) => ({

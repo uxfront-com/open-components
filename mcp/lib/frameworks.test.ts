@@ -14,7 +14,7 @@ const switcher = (slots: Record<string, string>) => [
   ...Object.entries(slots).flatMap(([framework, code]) => [slot(framework), "", "```", code, "```", ""]),
   SWITCHER_END,
 ];
-const markdown = (...lines: (string | string[])[]) => lines.flat().join("\n");
+const markdown = (...lines: Array<string | Array<string>>) => lines.flat().join("\n");
 
 describe("renderFrameworks", () => {
   const page = markdown("## Sizes", "", "Pick a size:", "", switcher({ react: "<Button size='sm' />", vue: '<Button size="sm" />' }), "", "After");

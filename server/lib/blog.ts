@@ -37,9 +37,9 @@ export interface TokenRules {
   /** The pattern every token path matches. */
   pattern: RegExp;
   /** The theme's colours, which `{color}` stands for. */
-  colors: string[];
+  colors: Array<string>;
   /** The IDs of the page's checklist, like `tokens/groups`. */
-  rules: string[];
+  rules: Array<string>;
 }
 
 /**
@@ -52,8 +52,8 @@ export function tokenRules(page: string): TokenRules {
   if (!contract) throw new Error("The Design Tokens page has no Described block");
   const { pattern, theme, rules } = parse(contract) as {
     pattern: string;
-    theme: { colors: string[] };
-    rules: { id: string }[];
+    theme: { colors: Array<string> };
+    rules: Array<{ id: string }>;
   };
   return { pattern: new RegExp(pattern), colors: theme.colors, rules: rules.map(({ id }) => id) };
 }
@@ -64,14 +64,14 @@ export function tokenRules(page: string): TokenRules {
  * docs write every token in code, so prose, tables' rules (`| --- |`) and the
  * frontmatter's fence are never read.
  */
-export function codeOf(source: string): string[] {
+export function codeOf(source: string): Array<string> {
   const body = source.replace(FRONTMATTER, "");
-  const code: string[] = [];
-  const prose: string[] = [];
+  const code: Array<string> = [];
+  const prose: Array<string> = [];
   // The open code block, if any, with its fence, as scan() in mcp/lib/markdown.ts
   // reads them: it closes on a line of the same character, at least as long, with
   // nothing else on it.
-  let block: { char: string; length: number; shell: boolean; lines: string[] } | undefined;
+  let block: { char: string; length: number; shell: boolean; lines: Array<string> } | undefined;
   for (const text of body.split("\n")) {
     const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
     if (!block) {
@@ -94,7 +94,7 @@ export function codeOf(source: string): string[] {
 }
 
 /** Every token name in a post's code, once each, in the order they come. */
-export function namesOf(source: string): string[] {
+export function namesOf(source: string): Array<string> {
   return [...new Set(codeOf(source).flatMap((code) => code.match(NAME) ?? []))];
 }
 
@@ -107,11 +107,11 @@ export function namesOf(source: string): string[] {
  * - every counter-example is in the post's code;
  * - every rule ID it names in code, like `tokens/groups`, is in the checklist.
  */
-export function checkPost(source: string, tokens: TokenRules): string[] {
-  const frontmatter = (parse(source.match(FRONTMATTER)?.[1] ?? "") ?? {}) as { counterExamples?: string[] };
+export function checkPost(source: string, tokens: TokenRules): Array<string> {
+  const frontmatter = (parse(source.match(FRONTMATTER)?.[1] ?? "") ?? {}) as { counterExamples?: Array<string> };
   const counterExamples = new Set(frontmatter.counterExamples ?? []);
   const names = namesOf(source);
-  const errors: string[] = [];
+  const errors: Array<string> = [];
 
   for (const name of names) {
     if (counterExamples.has(name)) continue;
@@ -142,7 +142,7 @@ export function checkPost(source: string, tokens: TokenRules): string[] {
 
 // A name with every placeholder filled in: once for each theme colour for
 // `{color}`, and a single word for the others.
-function expand(name: string, colors: string[]): string[] {
+function expand(name: string, colors: Array<string>): Array<string> {
   const words = WORDS.reduce((filled, word) => filled.replaceAll(`{${word}}`, "x"), name);
   return words.includes("{color}") ? colors.map((color) => words.replaceAll("{color}", color)) : [words];
 }

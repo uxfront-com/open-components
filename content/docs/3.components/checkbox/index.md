@@ -506,7 +506,7 @@ describe("Checkbox", () => {
   it("binds checked with v-model, or keeps its own state without it, starting from checked", async () => {
     const user = userEvent.setup();
     const agreed = ref(false);
-    const seen: boolean[] = [];
+    const seen: Array<boolean> = [];
     render({
       render: () => [
         h(

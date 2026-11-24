@@ -15,7 +15,7 @@ const frontmatter = (source: string) => parse(source.match(/^---\r?\n([\s\S]*?)\
 
 // A layer page's source, with a rules table of the given rows, each
 // [rule, level, requirement, basis].
-const layer = (name: string, rows: string[][], ...before: string[]) =>
+const layer = (name: string, rows: Array<Array<string>>, ...before: Array<string>) =>
   [
     "---",
     "title: A layer",
@@ -100,7 +100,7 @@ describe("The accessibility checklists", () => {
     // The contracts read the same tables on their own, Basis included.
     const expected = standard.pages
       .filter((page) => page.contract?.kind === "component")
-      .flatMap((page) => (parse(page.contract!.yaml).rules as { id: string; basis: string }[]).filter((rule) => picked(rule.basis)))
+      .flatMap((page) => (parse(page.contract!.yaml).rules as Array<{ id: string; basis: string }>).filter((rule) => picked(rule.basis)))
       .map((rule) => rule.id);
     expect(expected.length).toBeGreaterThan(0);
     expect([...listed].sort()).toEqual([...expected].sort());

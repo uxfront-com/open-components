@@ -18,7 +18,7 @@ const orientation = ref<NonNullable<CheckboxGroupProps["orientation"]>>("vertica
 const selectAll = ref(false);
 const disabled = ref(false);
 const invalid = ref(false);
-const picked = ref<string[]>(["news"]);
+const picked = ref<Array<string>>(["news"]);
 
 const sizes = ["xs", "sm", "md", "lg", "xl"];
 const orientations = ["vertical", "horizontal"];
@@ -46,8 +46,8 @@ const LANGUAGES: Record<string, string> = {
 };
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open = line.length > 88 ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), ">"] : [`${line}>`];
   // A short child stays on the line, as in <legend>Which emails would you like?</legend>.
@@ -58,7 +58,7 @@ function element(tag: string, attributes: (string | false | undefined)[], childr
 }
 
 // A Checkbox from the DOM contract, for Vanilla.
-function box(attributes: string[], label: string) {
+function box(attributes: Array<string>, label: string) {
   return element("label", ['class="checkbox"', `data-size="${size.value}"`], [
     `<input ${['data-slot="box"', 'type="checkbox"', ...attributes].join(" ")} />`,
     '<svg data-slot="indicator" viewBox="0 0 16 16" aria-hidden="true">…</svg>',
@@ -113,7 +113,7 @@ const code = computed(() => {
   }
 
   // The value is bound where the framework holds it, and left to the form where it doesn't.
-  const binding: Record<string, string[]> = {
+  const binding: Record<string, Array<string>> = {
     react: ["options={emails}", "value={picked}", "onValueChange={setPicked}"],
     vue: [':options="emails"', 'v-model:value="picked"'],
     svelte: ["options={emails}", "bind:value={picked}"],

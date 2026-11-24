@@ -1,7 +1,7 @@
 import type { SelectItem } from "~/reference/select/Select.vue";
 
 /** The list most of the Select page's examples pick from. */
-export const countries: SelectItem[] = [
+export const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany" },
   { value: "es", label: "Spain" },
@@ -10,7 +10,7 @@ export const countries: SelectItem[] = [
 ];
 
 /** A list with groups and a separator, for the examples that show them. */
-export const destinations: SelectItem[] = [
+export const destinations: Array<SelectItem> = [
   {
     label: "Europe",
     options: [
@@ -29,7 +29,7 @@ export const destinations: SelectItem[] = [
 ];
 
 /** Issue labels, for the example that shows each option's icon. */
-export const labels: SelectItem[] = [
+export const labels: Array<SelectItem> = [
   { value: "bug", label: "Bug" },
   { value: "feature", label: "Feature" },
   { value: "docs", label: "Docs" },
@@ -40,7 +40,7 @@ export const labels: SelectItem[] = [
  * A longer list, with accents, for the Combobox page's examples, where people type to find
  * one: "cote" finds "Côte d'Ivoire".
  */
-export const nations: SelectItem[] = [
+export const nations: Array<SelectItem> = [
   { value: "at", label: "Austria" },
   { value: "be", label: "Belgium" },
   { value: "ci", label: "Côte d'Ivoire" },
@@ -66,7 +66,7 @@ export const nations: SelectItem[] = [
 ];
 
 /** Tags for an article, which the Combobox page's example of new values adds to. */
-export const topics: SelectItem[] = [
+export const topics: Array<SelectItem> = [
   { value: "accessibility", label: "Accessibility" },
   { value: "css", label: "CSS" },
   { value: "design-tokens", label: "Design tokens" },

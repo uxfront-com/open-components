@@ -96,7 +96,7 @@ import "./select.css";
 
 export interface SelectProps {
   /** What people pick from. A prop rather than child components, since both renderings need the same list. */
-  options: SelectItem[];
+  options: Array<SelectItem>;
   /** Picks any number of values, each shown as a tag, so the value is an array. */
   multiple?: boolean;
   /** Text shown while nothing is picked. It's never a value, so nothing submits. */
@@ -141,13 +141,13 @@ const {
  * The value, which `v-model` binds: a string, or an array of them with `multiple`. Without
  * it, the Select keeps its own, starting from the `value` attribute, and its form submits it.
  */
-const model = defineModel<string | string[]>();
+const model = defineModel<string | Array<string>>();
 
 defineSlots<{
   /** An icon before the value. It stays in both renderings. */
   leading?: () => unknown;
   /** How the picked value reads in the field. The native rendering draws its own text instead. */
-  value?: (props: { selected: SelectOption[] }) => unknown;
+  value?: (props: { selected: Array<SelectOption> }) => unknown;
   /** The chevron, which turns as the panel opens. It stays in both renderings. */
   arrow?: () => unknown;
   /** How an option reads in the panel. The check mark stays beside it. */
@@ -208,9 +208,9 @@ const { sections, flat, panelId, optionId, groupId, isEnabled, step, firstEnable
 });
 
 // Without `v-model`, the value starts from the `value` attribute.
-const initial = attrs.value as string | string[] | undefined;
+const initial = attrs.value as string | Array<string> | undefined;
 const current = computed(() => model.value ?? initial);
-const values = computed<string[]>(() => {
+const values = computed<Array<string>>(() => {
   const value = current.value;
   if (multiple) return value === undefined ? [] : [value].flat();
   const one = Array.isArray(value) ? value[0] : value;
@@ -265,7 +265,7 @@ function onNativeChange() {
 
 // A selection in the panel changes the <select> too, once it has rendered, then fires the
 // events it would fire itself, so form-level listeners and form libraries hear it.
-function commit(next: string | string[]) {
+function commit(next: string | Array<string>) {
   model.value = next;
   nextTick(() => {
     select.value?.dispatchEvent(new Event("input", { bubbles: true }));
@@ -770,7 +770,7 @@ const {
   popover = "auto",
 } = defineProps<{
   id?: string;
-  sections: Section[];
+  sections: Array<Section>;
   /** The highlighted option, which `aria-activedescendant` on the control points at. */
   active?: SelectOption;
   isPicked: (option: SelectOption) => boolean;
@@ -892,7 +892,7 @@ import type { SelectOption } from "./listbox";
 // after it, so Tab reaches the remove buttons after the control.
 
 const { selected, removable = true } = defineProps<{
-  selected: SelectOption[];
+  selected: Array<SelectOption>;
   /** Off while the control is disabled or read-only, which leaves the tags without their buttons. */
   removable?: boolean;
   removeLabel: (label: string) => string;
@@ -953,7 +953,7 @@ export interface SelectOption {
 /** A heading over some of the options. */
 export interface SelectGroup {
   label: string;
-  options: SelectOption[];
+  options: Array<SelectOption>;
 }
 /** A rule between options or groups. */
 export interface SelectSeparator {
@@ -962,13 +962,13 @@ export interface SelectSeparator {
 export type SelectItem = SelectOption | SelectGroup | SelectSeparator;
 
 /** A group, a run of options outside any group, or a separator, which the panel draws in turn. */
-export type Section = { separator?: true; label?: string; options: SelectOption[] };
+export type Section = { separator?: true; label?: string; options: Array<SelectOption> };
 
 export const isSeparator = (item: SelectItem): item is SelectSeparator => "separator" in item;
 export const isGroup = (item: SelectItem): item is SelectGroup => "options" in item;
 
-export function toSections(items: SelectItem[]) {
-  const result: Section[] = [];
+export function toSections(items: Array<SelectItem>) {
+  const result: Array<Section> = [];
   for (const item of items) {
     if (isSeparator(item)) result.push({ separator: true, options: [] });
     else if (isGroup(item)) result.push({ label: item.label, options: item.options });
@@ -980,9 +980,9 @@ export function toSections(items: SelectItem[]) {
 
 export interface ListboxOptions {
   /** What the panel shows. */
-  items: () => SelectItem[];
+  items: () => Array<SelectItem>;
   /** Every option, when the panel shows only some of them, so an option keeps its ID as the list narrows. */
-  all?: () => SelectItem[];
+  all?: () => Array<SelectItem>;
   /** The control's `id`, or its `name`, which every ID in the panel starts with. */
   baseId: () => string | undefined;
   /** The highlighted option's index in what the panel shows. */
@@ -1612,13 +1612,13 @@ afterEach(() => {
   warn.mockRestore();
 });
 
-const countries: SelectItem[] = [
+const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany", disabled: true },
   { value: "es", label: "Spain" },
   { value: "nz", label: "New Zealand" },
 ];
-const fruit: SelectItem[] = [
+const fruit: Array<SelectItem> = [
   { label: "Citrus", options: [{ value: "lemon", label: "Lemon" }, { value: "lime", label: "Lime" }] },
   { separator: true },
   { value: "apple", label: "Apple" },
@@ -2072,7 +2072,7 @@ describe("Select", () => {
     it("fires one update, in the list's order, when a value is removed", async () => {
       const user = userEvent.setup();
       const value = ref(["es", "fr", "de"]);
-      const update = vi.fn((next: unknown) => (value.value = next as string[]));
+      const update = vi.fn((next: unknown) => (value.value = next as Array<string>));
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -2201,7 +2201,7 @@ describe("Select", () => {
     it("has the new value by the time a listener on it hears input and change", async () => {
       const user = userEvent.setup();
       const value = ref("fr");
-      const heard: string[] = [];
+      const heard: Array<string> = [];
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -2438,7 +2438,7 @@ describe("Select", () => {
               {
                 leading: () => h("i", { "data-testid": "leading" }),
                 arrow: () => h("i", { "data-testid": "arrow" }),
-                value: ({ selected }: { selected: { label: string }[] }) => `Picked ${selected.length}`,
+                value: ({ selected }: { selected: Array<{ label: string }> }) => `Picked ${selected.length}`,
                 option: ({ option }: { option: { label: string } }) => `Fruit: ${option.label}`,
                 tag: ({ option }: { option: { label: string } }) => `Tag: ${option.label}`,
                 "group-label": ({ label }: { label: string }) => `Group: ${label}`,
@@ -2570,7 +2570,7 @@ describe("Select", () => {
       const app = createSSRApp({ render: form });
       app.mount(host);
       await nextTick();
-      expect(warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes("Hydration"))).toEqual([]);
+      expect(warn.mock.calls.filter((call: Array<unknown>) => String(call[0]).includes("Hydration"))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       app.unmount();
       host.remove();

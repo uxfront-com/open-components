@@ -11,7 +11,7 @@ interface DocsPage {
 }
 
 interface Llms {
-  sections: { links?: { title: string; href: string }[] }[];
+  sections: Array<{ links?: Array<{ title: string; href: string }> }>;
 }
 
 // nuxt-llms (which Docus installs) calls this hook as it writes llms.txt. Its own
@@ -36,7 +36,7 @@ declare module "nitropack/types" {
  */
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook("llms:generate", async (event, llms) => {
-    const pages = (await queryCollection(event, "docs" as never).all()) as DocsPage[];
+    const pages = (await queryCollection(event, "docs" as never).all()) as Array<DocsPage>;
     const titles = new Map(pages.map((page) => [page.path, rawTitle(page)]));
     for (const link of llms.sections.flatMap((section) => section.links ?? [])) {
       const path = link.href.match(/^https?:\/\/[^/]+\/raw(\/docs\/.+)\.md$/)?.[1];

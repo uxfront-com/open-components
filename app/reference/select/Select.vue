@@ -14,7 +14,7 @@ import "./select.css";
 
 export interface SelectProps {
   /** What people pick from. A prop rather than child components, since both renderings need the same list. */
-  options: SelectItem[];
+  options: Array<SelectItem>;
   /** Picks any number of values, each shown as a tag, so the value is an array. */
   multiple?: boolean;
   /** Text shown while nothing is picked. It's never a value, so nothing submits. */
@@ -59,13 +59,13 @@ const {
  * The value, which `v-model` binds: a string, or an array of them with `multiple`. Without
  * it, the Select keeps its own, starting from the `value` attribute, and its form submits it.
  */
-const model = defineModel<string | string[]>();
+const model = defineModel<string | Array<string>>();
 
 defineSlots<{
   /** An icon before the value. It stays in both renderings. */
   leading?: () => unknown;
   /** How the picked value reads in the field. The native rendering draws its own text instead. */
-  value?: (props: { selected: SelectOption[] }) => unknown;
+  value?: (props: { selected: Array<SelectOption> }) => unknown;
   /** The chevron, which turns as the panel opens. It stays in both renderings. */
   arrow?: () => unknown;
   /** How an option reads in the panel. The check mark stays beside it. */
@@ -126,9 +126,9 @@ const { sections, flat, panelId, optionId, groupId, isEnabled, step, firstEnable
 });
 
 // Without `v-model`, the value starts from the `value` attribute.
-const initial = attrs.value as string | string[] | undefined;
+const initial = attrs.value as string | Array<string> | undefined;
 const current = computed(() => model.value ?? initial);
-const values = computed<string[]>(() => {
+const values = computed<Array<string>>(() => {
   const value = current.value;
   if (multiple) return value === undefined ? [] : [value].flat();
   const one = Array.isArray(value) ? value[0] : value;
@@ -183,7 +183,7 @@ function onNativeChange() {
 
 // A selection in the panel changes the <select> too, once it has rendered, then fires the
 // events it would fire itself, so form-level listeners and form libraries hear it.
-function commit(next: string | string[]) {
+function commit(next: string | Array<string>) {
   model.value = next;
   nextTick(() => {
     select.value?.dispatchEvent(new Event("input", { bubbles: true }));

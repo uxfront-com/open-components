@@ -11,7 +11,7 @@ const { part } = defineProps<{ part: "trigger" | "panel" | "option" | "tag" | "a
 
 const grouped = computed(() => part === "group-label" || part === "separator");
 const several = computed(() => part === "tag");
-const value = ref<string | string[]>(several.value ? ["fr", "es"] : "fr");
+const value = ref<string | Array<string>>(several.value ? ["fr", "es"] : "fr");
 </script>
 
 <template>

@@ -8,13 +8,13 @@ export interface Standard {
   /** The site's origin, which every URL below starts with. */
   site: string;
   /** The frameworks the docs' examples come in, in the order the docs show them. */
-  frameworks: Framework[];
-  pages: Page[];
+  frameworks: Array<Framework>;
+  pages: Array<Page>;
   /** What the standard covers: the pages with a contract, and the components on the Roadmap. */
-  components: Component[];
+  components: Array<Component>;
   /** Every rule, from every page's checklist, in page order. */
-  rules: Rule[];
-  references: Reference[];
+  rules: Array<Rule>;
+  references: Array<Reference>;
   /** public/schemas/contract.json, the schema every contract follows. */
   schema: string;
 }
@@ -40,14 +40,14 @@ export interface Page {
    * keep one framework's examples (see frameworks.ts).
    */
   markdown: string;
-  headings: Heading[];
+  headings: Array<Heading>;
   /** The frameworks its examples come in. */
-  frameworks: string[];
+  frameworks: Array<string>;
   /**
    * The paths of its parts, for a page split into an Overview and a page per
    * part, like the Button's /docs/components/button/ux. They're read as this page.
    */
-  parts?: string[];
+  parts?: Array<string>;
   contract?: Contract;
 }
 
@@ -57,7 +57,7 @@ export interface Heading {
   /** Its id on the page, like `ux-rules`. */
   anchor: string;
   /** The headings it sits under, outermost first. */
-  trail: string[];
+  trail: Array<string>;
   /** The lines of `markdown` it covers, sub-sections included: from `start` up to, but not including, `end`. */
   start: number;
   end: number;
@@ -103,9 +103,9 @@ export interface Rule {
   requirement: string;
   /** How to check it, as the checklist says, like "axe `button-name`, unit test". */
   check: string;
-  checks: CheckKind[];
+  checks: Array<CheckKind>;
   /** The axe rules that check it, like `button-name`. */
-  axe: string[];
+  axe: Array<string>;
   /** Whether tools check all of it: unit tests, axe, a type check, a linter or a visual regression test. */
   automated: boolean;
   /** Its checklist table on the page. */
@@ -126,7 +126,7 @@ export interface Component {
   contractUrl?: string;
   rules?: { total: number; must: number; should: number };
   /** The files of its reference implementation. */
-  reference?: string[];
+  reference?: Array<string>;
 }
 
 export interface Reference {
@@ -135,6 +135,6 @@ export interface Reference {
   /** What the page says about it, before the code. */
   notes: string;
   /** In the order the page shows them. */
-  files: { name: string; lang: string; content: string }[];
+  files: Array<{ name: string; lang: string; content: string }>;
   url: string;
 }

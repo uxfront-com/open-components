@@ -23,7 +23,7 @@ const creatable = ref(false);
 const disabled = ref(false);
 const readonly = ref(false);
 
-const sizes: Size[] = ["xs", "sm", "md", "lg", "xl"];
+const sizes: Array<Size> = ["xs", "sm", "md", "lg", "xl"];
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");

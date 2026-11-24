@@ -40,7 +40,7 @@ export interface ChecklistRow {
   requirement: string;
   basis: string;
   /** The WCAG 2.2 criteria its Basis cites, in the order it cites them. */
-  criteria: (Criterion & { number: string })[];
+  criteria: Array<Criterion & { number: string }>;
   /** Its rules table on its layer page, like /docs/components/button/ui#ui-checklist. */
   link: string;
 }
@@ -48,7 +48,7 @@ export interface ChecklistRow {
 export interface ChecklistLayer {
   /** The layer's short name, like UI. */
   name: string;
-  rows: ChecklistRow[];
+  rows: Array<ChecklistRow>;
 }
 
 /** Whether a rule with this Basis goes on the accessibility checklist. */
@@ -64,11 +64,11 @@ export function picked(basis: string): boolean {
  * criterion's, or a run with no level, so a slip in a new rule fails `pnpm test`
  * rather than reaching the page.
  */
-export function citedCriteria(basis: string): (Criterion & { number: string })[] {
-  const found: (Criterion & { number: string })[] = [];
+export function citedCriteria(basis: string): Array<Criterion & { number: string }> {
+  const found: Array<Criterion & { number: string }> = [];
   for (const match of basis.matchAll(/\bWCAG\s+/g)) {
     let rest = basis.slice(match.index + match[0].length);
-    let pending: string[] = [];
+    let pending: Array<string> = [];
     for (;;) {
       const next = rest.match(/^(\d+\.\d+\.\d+)(?:\s+\((A{1,3})\))?(?:,\s*|\s*$)/);
       if (!next) break;
@@ -101,7 +101,7 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
   const lines = scan(source.replace(FRONTMATTER, ""));
   const slug = anchors();
   let layer: { name: string; anchor: string; columns?: Record<(typeof COLUMNS)[number], number> } | undefined;
-  const rows: ChecklistRow[] = [];
+  const rows: Array<ChecklistRow> = [];
   for (const { text, code } of lines) {
     if (code) continue;
     const match = heading(text);
@@ -150,7 +150,7 @@ export function layerRows(file: string, source: string): ChecklistLayer | undefi
  * the path of its Overview, like /docs/components/checkbox-group, and its layers'
  * rows, in layer order.
  */
-export function checklistPage(component: { title: string; path: string }, layers: ChecklistLayer[]): string {
+export function checklistPage(component: { title: string; path: string }, layers: Array<ChecklistLayer>): string {
   const { title, path } = component;
   const rows = layers.flatMap((layer) => layer.rows);
   const cites = (pattern: RegExp) => rows.some((row) => pattern.test(row.basis));
@@ -231,8 +231,8 @@ export function readChecklists(docs: string): Map<string, string> {
  * section it doesn't have. `pages` holds every docs page's source by its path on
  * the site, a split page's parts each under their own, as the site serves them.
  */
-export function brokenLinks(markdown: string, pages: Map<string, string>): string[] {
-  const broken: string[] = [];
+export function brokenLinks(markdown: string, pages: Map<string, string>): Array<string> {
+  const broken: Array<string> = [];
   for (const { text, code } of scan(markdown.replace(FRONTMATTER, ""))) {
     if (code) continue;
     for (const [, path, anchor] of text.matchAll(/\]\((\/docs\/[^)#\s]*)(?:#([^)\s]+))?\)/g)) {
@@ -248,7 +248,7 @@ export function brokenLinks(markdown: string, pages: Map<string, string>): strin
 }
 
 // Every heading's anchor on a page, as the site gives them.
-function headingAnchors(source: string): string[] {
+function headingAnchors(source: string): Array<string> {
   const slug = anchors();
   return scan(source.replace(FRONTMATTER, "")).flatMap(({ text, code }) => {
     const match = !code && heading(text);

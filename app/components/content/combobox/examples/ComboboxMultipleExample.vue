@@ -4,7 +4,7 @@ import Field from "~/reference/field/Field.vue";
 import { nations } from "~/data/select-options";
 
 /** `::combobox-multiple-example`: several values, each a tag under the text, with a remove button. */
-const value = ref<string | string[]>(["fr", "es"]);
+const value = ref<string | Array<string>>(["fr", "es"]);
 </script>
 
 <template>

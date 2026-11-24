@@ -3,7 +3,7 @@ import Switch from "~/reference/switch/Switch.vue";
 import type { SwitchProps } from "~/reference/switch/Switch.vue";
 
 /** `::switch-sizes-example`: a switch at each size, each beside its label. */
-const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies SwitchProps["size"][];
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies Array<SwitchProps["size"]>;
 </script>
 
 <template>

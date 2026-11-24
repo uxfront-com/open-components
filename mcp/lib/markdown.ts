@@ -6,7 +6,7 @@ import GithubSlugger from "github-slugger";
  * can be indented, as it is inside an `:::accordion-item`, and it closes on a line
  * of the same character, at least as long, with nothing else on it.
  */
-export function scan(markdown: string): { text: string; code: boolean }[] {
+export function scan(markdown: string): Array<{ text: string; code: boolean }> {
   let fence: { char: string; length: number } | undefined;
   return markdown.split("\n").map((text) => {
     const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
@@ -43,7 +43,7 @@ export function anchors(): (text: string) => string {
 }
 
 /** The cells of a markdown table row, with escaped pipes (`\|`) unescaped. */
-export function cells(row: string): string[] {
+export function cells(row: string): Array<string> {
   return row
     .trim()
     .replaceAll(/^\||\|$/g, "")

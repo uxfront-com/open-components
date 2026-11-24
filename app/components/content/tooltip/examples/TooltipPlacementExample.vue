@@ -9,7 +9,7 @@ const placements = [
   { placement: "bottom", name: "Bottom", label: "Opens below the button" },
   { placement: "start", name: "Start", label: "Opens before the button" },
   { placement: "end", name: "End", label: "Opens after the button" },
-] as const satisfies { placement: TooltipProps["placement"]; name: string; label: string }[];
+] as const satisfies Array<{ placement: TooltipProps["placement"]; name: string; label: string }>;
 </script>
 
 <template>

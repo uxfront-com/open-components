@@ -33,7 +33,7 @@ defineProps<{
 const slots = useSlots();
 
 // Renders what the markdown had inside the sentence's paragraph, like inline code.
-const Nodes = (props: { nodes: VNode[] }) => props.nodes;
+const Nodes = (props: { nodes: Array<VNode> }) => props.nodes;
 </script>
 
 <template>

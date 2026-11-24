@@ -35,8 +35,8 @@ const LANGUAGES: Record<string, string> = {
 };
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open =
     line.length > 88
@@ -52,7 +52,7 @@ function element(tag: string, attributes: (string | false | undefined)[], childr
 const code = computed(() => {
   const fw = framework.value;
   // Bound where the framework holds the state, and written out where it doesn't.
-  const binding: Record<string, string[]> = {
+  const binding: Record<string, Array<string>> = {
     react: ["checked={on}", "onChange={(event) => setOn(event.target.checked)}"],
     vue: ['v-model:checked="on"'],
     svelte: ["bind:checked={on}"],
@@ -78,7 +78,7 @@ const code = computed(() => {
     invalid.value && 'aria-describedby="wifi-error"',
   ];
 
-  let input: string[];
+  let input: Array<string>;
   if (fw === "angular") {
     // The Switch is a component on a <span>, around the <input> you write out.
     input = element(

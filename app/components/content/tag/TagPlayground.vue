@@ -23,7 +23,7 @@ const readonly = ref(false);
 // Removing it here only counts, so the tag stays to play with.
 const removed = ref(0);
 
-const sizes: Size[] = ["xs", "sm", "md", "lg", "xl"];
+const sizes: Array<Size> = ["xs", "sm", "md", "lg", "xl"];
 
 const { current } = useFramework();
 const framework = computed(() => current.value?.value ?? "react");

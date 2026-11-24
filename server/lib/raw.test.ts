@@ -15,7 +15,7 @@ const SPLIT = readdirSync(join(DOCS, COMPONENTS), { withFileTypes: true })
   .map((entry) => entry.name);
 
 // A part's source, with the frontmatter joinPage reads.
-const part = (title: string, before: string, ...lines: string[]) =>
+const part = (title: string, before: string, ...lines: Array<string>) =>
   ["---", `title: ${title}`, "description: A part.", `before: ${before}`, "---", "", ...lines, ""].join("\n");
 // The headings of a page outside its code, as `## Text`.
 const outline = (markdown: string) =>

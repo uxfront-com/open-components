@@ -37,10 +37,10 @@ function section(markdown: string, heading: string): string | undefined {
 // Every rule in the checklist's tables, as YAML list items. The tables are read by
 // their header row, so a column like Scope or Basis only shows up on pages that have
 // it, and a heading like "### UX rules" gives the rules below it their layer.
-function checklist(markdown: string): string[] {
-  const items: string[] = [];
+function checklist(markdown: string): Array<string> {
+  const items: Array<string> = [];
   let layer: string | undefined;
-  let columns: string[] | undefined;
+  let columns: Array<string> | undefined;
 
   for (const line of section(markdown, "## Checklist")?.split("\n") ?? []) {
     layer = line.match(/^### (\w+) rules$/)?.[1] ?? layer;

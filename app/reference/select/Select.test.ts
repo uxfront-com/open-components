@@ -75,13 +75,13 @@ afterEach(() => {
   warn.mockRestore();
 });
 
-const countries: SelectItem[] = [
+const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany", disabled: true },
   { value: "es", label: "Spain" },
   { value: "nz", label: "New Zealand" },
 ];
-const fruit: SelectItem[] = [
+const fruit: Array<SelectItem> = [
   { label: "Citrus", options: [{ value: "lemon", label: "Lemon" }, { value: "lime", label: "Lime" }] },
   { separator: true },
   { value: "apple", label: "Apple" },
@@ -535,7 +535,7 @@ describe("Select", () => {
     it("fires one update, in the list's order, when a value is removed", async () => {
       const user = userEvent.setup();
       const value = ref(["es", "fr", "de"]);
-      const update = vi.fn((next: unknown) => (value.value = next as string[]));
+      const update = vi.fn((next: unknown) => (value.value = next as Array<string>));
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -664,7 +664,7 @@ describe("Select", () => {
     it("has the new value by the time a listener on it hears input and change", async () => {
       const user = userEvent.setup();
       const value = ref("fr");
-      const heard: string[] = [];
+      const heard: Array<string> = [];
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -901,7 +901,7 @@ describe("Select", () => {
               {
                 leading: () => h("i", { "data-testid": "leading" }),
                 arrow: () => h("i", { "data-testid": "arrow" }),
-                value: ({ selected }: { selected: { label: string }[] }) => `Picked ${selected.length}`,
+                value: ({ selected }: { selected: Array<{ label: string }> }) => `Picked ${selected.length}`,
                 option: ({ option }: { option: { label: string } }) => `Fruit: ${option.label}`,
                 tag: ({ option }: { option: { label: string } }) => `Tag: ${option.label}`,
                 "group-label": ({ label }: { label: string }) => `Group: ${label}`,
@@ -1033,7 +1033,7 @@ describe("Select", () => {
       const app = createSSRApp({ render: form });
       app.mount(host);
       await nextTick();
-      expect(warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes("Hydration"))).toEqual([]);
+      expect(warn.mock.calls.filter((call: Array<unknown>) => String(call[0]).includes("Hydration"))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       app.unmount();
       host.remove();

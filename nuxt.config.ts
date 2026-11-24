@@ -37,7 +37,7 @@ const NOINDEX = { "X-Robots-Tag": "noindex" };
 // Rules dist/_headers gets after the ones routeRules writes, for what routeRules
 // can't match: other hosts, and files by their extension. Cloudflare applies
 // every rule that matches a request, and joins an X-Robots-Tag set twice.
-const CRAWL_HEADERS: [string, Record<string, string>][] = [
+const CRAWL_HEADERS: Array<[string, Record<string, string>]> = [
   // Only opencomponents.dev is indexed. The Worker answers on other hosts too:
   // www, until its redirect in Cloudflare answers first, each branch's preview
   // on a custom domain, like <branch>.opencomponents.dev, and workers.dev, both

@@ -168,7 +168,7 @@ describe("The skills", () => {
         const page = standard.pages.find((candidate) => candidate.key === key);
         if (!page) return [`${tool}: no page ${key}`];
         if (args.component && !placeholder(args.component) && !standard.components.some((component) => component.key === key)) return [`${tool}: no component ${key}`];
-        const sections = ((args.sections ?? []) as string[]).filter((section) => !placeholder(section));
+        const sections = ((args.sections ?? []) as Array<string>).filter((section) => !placeholder(section));
         return sections
           .filter((section) => !page.headings.some((heading) => heading.text === section))
           .map((section) => `${tool}: no section "${section}" on ${key}`);

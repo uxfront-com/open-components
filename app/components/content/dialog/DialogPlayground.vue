@@ -23,9 +23,9 @@ const content = ref<Content>("form");
 const described = ref(true);
 const open = ref(false);
 
-const roles: Role[] = ["dialog", "alertdialog"];
+const roles: Array<Role> = ["dialog", "alertdialog"];
 const sizes = ["sm", "md", "lg"];
-const contents: Content[] = ["form", "message"];
+const contents: Array<Content> = ["form", "message"];
 
 // What each kind of dialog asks: a confirmation is an alert dialog, with its least
 // destructive action first, and the rest are dialogs with a form or a message.
@@ -61,7 +61,7 @@ const scenarios = {
 
 type Action = { label: string; value: string; variant?: "outline"; color?: "primary" | "error" };
 const scenario = computed(() => scenarios[role.value === "alertdialog" ? "confirmation" : content.value]);
-const actions = computed<readonly Action[]>(() => scenario.value.actions);
+const actions = computed<ReadonlyArray<Action>>(() => scenario.value.actions);
 const form = computed(() => role.value === "dialog" && content.value === "form");
 
 const { current } = useFramework();
@@ -79,8 +79,8 @@ const LANGUAGES: Record<string, string> = {
 };
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const close = children.length ? ">" : "/>";
   const open =
@@ -120,7 +120,7 @@ const code = computed(() => {
       solid: `onClick={() => ${set(value)}}`,
     })[fw];
 
-  function button(label: string, attrs: (string | false | undefined)[], variant = "solid", color = "neutral") {
+  function button(label: string, attrs: Array<string | false | undefined>, variant = "solid", color = "neutral") {
     if (fw === "vanilla") {
       return element(
         "button",
@@ -167,7 +167,7 @@ const code = computed(() => {
       ? ["<p>Turn it on under Settings, or keep following your system's.</p>"]
       : [];
 
-  let dialog: string[];
+  let dialog: Array<string>;
   if (fw === "vanilla") {
     const close = element(
       "button",
@@ -204,7 +204,7 @@ const code = computed(() => {
       ],
     );
   } else {
-    const bound: Record<string, (string | false)[]> = {
+    const bound: Record<string, Array<string | false>> = {
       react: ["open={open}", "onClose={() => setOpen(false)}"],
       vue: [':open="open"', '@close="open = false"'],
       svelte: ["{open}", "onclose={() => (open = false)}"],

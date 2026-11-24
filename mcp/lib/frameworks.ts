@@ -13,11 +13,11 @@ const SLOT = /^<!-- framework: (\S+) -->$/;
  * under its name, or only `framework`'s. Where an example doesn't come in it,
  * that example shows the first framework it has, with a note, as the site does.
  */
-export function renderFrameworks(markdown: string, frameworks: Framework[], framework?: string): string {
+export function renderFrameworks(markdown: string, frameworks: Array<Framework>, framework?: string): string {
   const label = (value: string) => frameworks.find((f) => f.value === value)?.label ?? value;
-  const lines: string[] = [];
-  let slots: Map<string, string[]> | undefined;
-  let current: string[] | undefined;
+  const lines: Array<string> = [];
+  let slots: Map<string, Array<string>> | undefined;
+  let current: Array<string> | undefined;
 
   for (const line of markdown.split("\n")) {
     if (line === SWITCHER) {
@@ -46,7 +46,7 @@ export function renderFrameworks(markdown: string, frameworks: Framework[], fram
 }
 
 // Drops the blank lines around a slot's code.
-function trim(lines: string[]): string[] {
+function trim(lines: Array<string>): Array<string> {
   let start = 0;
   let end = lines.length;
   while (start < end && !lines[start]!.trim()) start++;

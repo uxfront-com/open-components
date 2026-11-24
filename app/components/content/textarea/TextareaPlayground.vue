@@ -25,7 +25,7 @@ const value = ref("");
 
 const sizes = ["xs", "sm", "md", "lg", "xl"];
 const rowCounts = [1, 2, 3, 4, 5, 6];
-const heights: Height[] = ["resizable", "auto-grow"];
+const heights: Array<Height> = ["resizable", "auto-grow"];
 
 const LIMIT = 200;
 const MAX_ROWS = 8;
@@ -47,8 +47,8 @@ const LANGUAGES: Record<string, string> = {
 
 // An element's lines, with one attribute per line once they no longer fit on one.
 // A <textarea> is never self-closing in HTML, so `paired` closes it with a tag.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = [], paired = false) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = [], paired = false) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const close = children.length || paired ? ">" : "/>";
   const end = paired && !children.length ? `</${tag}>` : "";
@@ -74,7 +74,7 @@ const code = computed(() => {
     fw === "vue" ? `:${kebab}="${n}"` : fw === "angular" ? `[${name}]="${n}"` : `${name}={${n}}`;
   const flag = (name: string, kebab: string) => (fw === "vue" ? kebab : name);
 
-  const binding: Record<string, string[]> = {
+  const binding: Record<string, Array<string>> = {
     react: ["value={value}", "onChange={(event) => setValue(event.target.value)}"],
     vue: ['v-model="value"'],
     svelte: ["bind:value"],
@@ -106,7 +106,7 @@ const code = computed(() => {
     counted.value && number("limit", "limit", LIMIT),
   ];
 
-  let textarea: string[];
+  let textarea: Array<string>;
   if (fw === "vanilla") {
     // The markup the server renders, before anyone has written in it, so the count is the whole limit.
     const count = `${LIMIT} characters left`;

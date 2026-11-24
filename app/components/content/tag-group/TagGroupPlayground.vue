@@ -15,7 +15,7 @@ import "~/reference/button/tokens.css";
  */
 type Size = NonNullable<TagGroupProps["size"]>;
 
-const ALL: TagGroupItem[] = [
+const ALL: Array<TagGroupItem> = [
   { value: "bug", label: "Bug" },
   { value: "docs", label: "Docs" },
   { value: "accessibility", label: "Accessibility" },
@@ -29,7 +29,7 @@ const readonly = ref(false);
 const labels = ref([...ALL]);
 const reset = useTemplateRef<{ $el: HTMLElement }>("reset");
 
-const sizes: Size[] = ["xs", "sm", "md", "lg", "xl"];
+const sizes: Array<Size> = ["xs", "sm", "md", "lg", "xl"];
 const tags = computed(() => labels.value.map((tag) => (link.value ? { ...tag, href: `#labels-${tag.value}` } : tag)));
 
 const { current } = useFramework();

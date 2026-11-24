@@ -16,7 +16,7 @@ const COMPONENTS = "/docs/components";
  * comes first whatever its title, so renaming it in the sidebar can't move it in
  * among the components. It returns a new tree, since the one it's given is Docus's.
  */
-export function sortNavigation(navigation: ContentNavigationItem[]): ContentNavigationItem[] {
+export function sortNavigation(navigation: Array<ContentNavigationItem>): Array<ContentNavigationItem> {
   return navigation.map((item) => {
     if (!item.children) return item;
     const hubFirst = (a: ContentNavigationItem, b: ContentNavigationItem) =>
@@ -36,7 +36,7 @@ export function sortNavigation(navigation: ContentNavigationItem[]): ContentNavi
  * with a page of its own, like the Button's Overview, is that page.
  */
 export function findSurround(
-  navigation: ContentNavigationItem[],
+  navigation: Array<ContentNavigationItem>,
   path: string,
 ): [ContentNavigationItem | null, ContentNavigationItem | null] {
   const pages = flatten(navigation);
@@ -46,7 +46,7 @@ export function findSurround(
 }
 
 // As Nuxt Content's flattedData(), which its package doesn't export.
-function flatten(navigation: ContentNavigationItem[]): ContentNavigationItem[] {
+function flatten(navigation: Array<ContentNavigationItem>): Array<ContentNavigationItem> {
   return navigation.flatMap((item) => {
     const children = item.children ? flatten(item.children) : [];
     if (item.page === false || children.some((child) => child.path === item.path)) return children;

@@ -68,7 +68,7 @@ describe("The Button's introduction", () => {
 });
 
 describe("findSections", () => {
-  const find = (...names: string[]) => {
+  const find = (...names: Array<string>) => {
     const { found, missing } = findSections(button, names);
     return { found: found.map((heading) => heading.text), missing };
   };

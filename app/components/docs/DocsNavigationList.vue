@@ -20,7 +20,7 @@ import type theme from "#build/ui/content/content-navigation";
  */
 const props = withDefaults(
   defineProps<{
-    navigation: ContentNavigationItem[];
+    navigation: Array<ContentNavigationItem>;
     // The classes DocsNavigation.vue builds from Nuxt UI's theme.
     ui: Record<keyof typeof theme.slots, (variants?: Record<string, unknown>) => string>;
     level?: number;

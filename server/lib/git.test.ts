@@ -19,7 +19,7 @@ function commit(file: string, date: string) {
     GIT_AUTHOR_DATE: date,
     GIT_COMMITTER_DATE: date,
   };
-  const git = (...args: string[]) => execFileSync("git", ["-c", "user.name=Test", "-c", "user.email=test@example.com", ...args], { cwd: repo, env });
+  const git = (...args: Array<string>) => execFileSync("git", ["-c", "user.name=Test", "-c", "user.email=test@example.com", ...args], { cwd: repo, env });
   git("add", file);
   git("commit", "--quiet", "--no-gpg-sign", "-m", `change ${file}`);
 }

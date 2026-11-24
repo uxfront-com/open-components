@@ -9,7 +9,7 @@
  * 3. the rules a typo or two away, like `button/loading` for `button/lodaing`;
  * 4. the rules with a word it starts, like `button/native-element` for `button/native`.
  */
-export function suggest(id: string, ids: string[]): string[] {
+export function suggest(id: string, ids: Array<string>): Array<string> {
   const wanted = id.trim().toLowerCase();
   // A prefix no rule has, like `design-tokens/` for `tokens/`, names no component.
   const prefix = wanted.includes("/") ? wanted.slice(0, wanted.indexOf("/")) : undefined;

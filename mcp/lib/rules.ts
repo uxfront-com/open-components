@@ -21,19 +21,19 @@ export const LEVELS = ["must", "should"] as const;
 export const SCOPES = ["component", "usage", "both"] as const;
 export const LAYERS = ["ui", "ux", "dx", "ax"] as const;
 
-export const CHECK_KINDS = ["axe", ...new Set(Object.values(KINDS))] as [CheckKind, ...CheckKind[]];
+export const CHECK_KINDS = ["axe", ...new Set(Object.values(KINDS))] as [CheckKind, ...Array<CheckKind>];
 
 /** Checks that a tool runs, rather than a person. */
-export const AUTOMATED_CHECKS: CheckKind[] = ["unit-test", "axe", "type-check", "lint", "visual-regression"];
+export const AUTOMATED_CHECKS: Array<CheckKind> = ["unit-test", "axe", "type-check", "lint", "visual-regression"];
 
 /**
  * Reads a rule's Check cell, like "axe `button-name`, unit test", into the kinds
  * of check it names and the axe rules among them. Anything else is `unknown`.
  */
-export function parseChecks(check: string): { checks: CheckKind[]; axe: string[]; unknown: string[] } {
-  const checks: CheckKind[] = [];
-  const axe: string[] = [];
-  const unknown: string[] = [];
+export function parseChecks(check: string): { checks: Array<CheckKind>; axe: Array<string>; unknown: Array<string> } {
+  const checks: Array<CheckKind> = [];
+  const axe: Array<string> = [];
+  const unknown: Array<string> = [];
   for (const part of check.split(/,(?=(?:[^`]*`[^`]*`)*[^`]*$)/)) {
     const value = part.trim().toLowerCase();
     const rule = value.match(/^axe `([^`]+)`$/)?.[1];

@@ -21,8 +21,8 @@ const placement = ref<Placement>("bottom");
 const arrow = ref(true);
 const content = ref<Content>("filters");
 
-const placements: Placement[] = ["top", "bottom", "start", "end"];
-const contents: Content[] = ["filters", "hint"];
+const placements: Array<Placement> = ["top", "bottom", "start", "end"];
+const contents: Array<Content> = ["filters", "hint"];
 
 // A few options to pick from, or a hint with a link, the two things popovers most often hold.
 const scenarios = {
@@ -47,8 +47,8 @@ const LANGUAGES: Record<string, string> = {
 };
 
 // An element's lines, with one attribute per line once they no longer fit on one.
-function element(tag: string, attributes: (string | false | undefined)[], children: string[] = []) {
-  const attrs = attributes.filter((attribute) => !!attribute) as string[];
+function element(tag: string, attributes: Array<string | false | undefined>, children: Array<string> = []) {
+  const attrs = attributes.filter((attribute) => !!attribute) as Array<string>;
   const line = `<${tag}${attrs.map((attribute) => ` ${attribute}`).join("")}`;
   const open = line.length > 88 ? [`<${tag}`, ...attrs.map((attribute) => `  ${attribute}`), ">"] : [`${line}>`];
   return [...open, ...children.map((child) => `  ${child}`), `</${tag}>`];
@@ -78,7 +78,7 @@ const code = computed(() => {
       ? [comment("…a Checkbox for each filter")]
       : ["<p>Press <kbd>?</kbd> anywhere to see them all. <a href=\"/shortcuts\">Every shortcut</a></p>"];
 
-  let popover: string[];
+  let popover: Array<string>;
   if (fw === "vanilla") {
     const close = element(
       "button",

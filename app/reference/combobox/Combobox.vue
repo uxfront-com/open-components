@@ -9,7 +9,7 @@ import "../select/select.css";
 
 export interface ComboboxProps {
   /** What people pick from, the same list a Select takes: options, groups and separators. */
-  options: SelectItem[];
+  options: Array<SelectItem>;
   /** Picks any number of values, each shown as a tag, so the value is an array. */
   multiple?: boolean;
   /** Text shown in the empty field. It's never a value, so nothing submits. */
@@ -72,7 +72,7 @@ const {
  * The value, which `v-model` binds: a string, or an array of them with `multiple`. It's an
  * option's `value`, or text people typed where `allowCustomValue` or `creatable` lets them.
  */
-const model = defineModel<string | string[]>();
+const model = defineModel<string | Array<string>>();
 
 const emit = defineEmits<{
   /** People picked the create option. Add the text to `options` to keep it in the list. */
@@ -138,9 +138,9 @@ const byLabel = (text: string) =>
 // Values that aren't options, which people typed and kept, are only values where a prop
 // lets people type them.
 const keepsText = computed(() => creatable || (allowCustomValue && !multiple));
-const initial = attrs.value as string | string[] | undefined;
+const initial = attrs.value as string | Array<string> | undefined;
 const current = computed(() => model.value ?? initial);
-const values = computed<string[]>(() => {
+const values = computed<Array<string>>(() => {
   const value = current.value;
   const list = (multiple ? (value === undefined ? [] : [value].flat()) : [Array.isArray(value) ? value[0] : value]).filter(
     (item): item is string => item !== undefined && item !== "",
@@ -149,7 +149,7 @@ const values = computed<string[]>(() => {
 });
 // In the list's order, which is the order the <select> submits, then the typed values in the
 // order people added them, each read as its own text.
-const selected = computed<SelectOption[]>(() => [
+const selected = computed<Array<SelectOption>>(() => [
   ...everything.value.filter((option) => values.value.includes(option.value)),
   ...values.value.filter((value) => !byValue.value.has(value)).map((value) => ({ value, label: value })),
 ]);
@@ -173,10 +173,10 @@ const query = computed(() => (text.value !== display.value ? text.value.trim() :
 
 // What the panel shows: the options that match, in their groups, with a separator only
 // between two things it separates.
-const shown = computed<SelectItem[]>(() => {
+const shown = computed<Array<SelectItem>>(() => {
   const q = query.value;
   if (!q) return options;
-  const result: SelectItem[] = [];
+  const result: Array<SelectItem> = [];
   for (const item of options) {
     if (isSeparator(item)) {
       if (result.length && !isSeparator(result.at(-1)!)) result.push(item);
@@ -271,7 +271,7 @@ function readSelect() {
 
 // A change of the value changes the <select> once it has rendered, then fires the events
 // it would fire itself, so form-level listeners and form libraries hear it.
-function commit(next: string | string[]) {
+function commit(next: string | Array<string>) {
   model.value = next;
   nextTick(() => {
     select.value?.dispatchEvent(new Event("input", { bubbles: true }));
@@ -280,7 +280,7 @@ function commit(next: string | string[]) {
 }
 // Whether the value changed, from what was decided here, since a bound value only changes
 // once your framework renders it again.
-function setValue(next: string[]) {
+function setValue(next: Array<string>) {
   if (next.join() === values.value.join()) return false;
   commit(multiple ? next : (next[0] ?? ""));
   return true;
