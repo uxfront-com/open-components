@@ -160,7 +160,7 @@ let pressedBackdrop = false;
 
 function onBackdrop(event: MouseEvent) {
   const el = dialog.value;
-  // The listeners are on the <dialog> itself, so it's always there when they run.
+  // Only a <dialog> in the page gets mouse events, so this only keeps TypeScript sure of it.
   if (!el) {
     return false;
   }

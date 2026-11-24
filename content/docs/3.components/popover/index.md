@@ -207,7 +207,8 @@ function unanchor() {
 
 function onBeforetoggle(event: Event) {
   const el = popover.value;
-  // The listeners are on the popover itself, so it's always there when they run.
+  // The browser fires `beforetoggle` at once, while the popover is still in the page, so this
+  // only keeps TypeScript sure of it.
   if (!el) {
     return;
   }
@@ -234,11 +235,9 @@ function onBeforetoggle(event: Event) {
 }
 
 function onToggle(event: Event) {
+  // The browser fires `toggle` a task after it hides the popover, so when the popover
+  // unmounts while it's open, this runs once it has gone, and its trigger still needs focus.
   const el = popover.value;
-  // The listeners are on the popover itself, so it's always there when they run.
-  if (!el) {
-    return;
-  }
   if ((event as ToggleEvent).newState === "open") {
     state.value = "open";
     open.value = true;
@@ -246,7 +245,7 @@ function onToggle(event: Event) {
     listen(true);
     // Focus moves in, so keyboard and screen reader users start in the popover, unless
     // the browser already focused an `autofocus` control in it.
-    if (!el.contains(document.activeElement)) {
+    if (el && !el.contains(document.activeElement)) {
       initialFocus(el)?.focus();
     }
     nextTick(update);
@@ -264,7 +263,7 @@ function onToggle(event: Event) {
   // Safari, where a click doesn't focus a button, isn't the trigger. So the trigger gets it,
   // unless focus has already moved somewhere else, like into another popover.
   const active = document.activeElement;
-  if (returnFocus && (!active || active === document.body || el.contains(active))) {
+  if (returnFocus && (!active || active === document.body || el?.contains(active))) {
     (trigger ?? opener)?.focus();
   }
   returnFocus = false;
@@ -1306,6 +1305,27 @@ describe("Popover", () => {
     await nextTick();
     expect(shown.has(el)).toBe(false);
     expect(screen.getByRole("button", { name: "Filters" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("gives focus back to its trigger when it unmounts while it's open, with the toggle a task late", async () => {
+    const shownPopover = ref(true);
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters" }),
+        shownPopover.value ? h(Popover, { id: "filters", title: "Filters" }, () => field("open-only", "Open issues only")) : null,
+      ],
+    });
+    deferToggle = true;
+    const trigger = screen.getByRole("button", { name: "Filters" });
+    // As in Safari, where a click doesn't focus the button.
+    trigger.click();
+    await toggled();
+    expect(screen.getByRole("textbox", { name: "Open issues only" })).toHaveFocus();
+
+    shownPopover.value = false;
+    await nextTick();
+    await toggled();
+    expect(trigger).toHaveFocus();
   });
 
   it("opens again when your code closes it and opens it again before the browser says it closed", async () => {

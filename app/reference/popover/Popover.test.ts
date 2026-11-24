@@ -575,6 +575,27 @@ describe("Popover", () => {
     expect(screen.getByRole("button", { name: "Filters" })).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("gives focus back to its trigger when it unmounts while it's open, with the toggle a task late", async () => {
+    const shownPopover = ref(true);
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters" }),
+        shownPopover.value ? h(Popover, { id: "filters", title: "Filters" }, () => field("open-only", "Open issues only")) : null,
+      ],
+    });
+    deferToggle = true;
+    const trigger = screen.getByRole("button", { name: "Filters" });
+    // As in Safari, where a click doesn't focus the button.
+    trigger.click();
+    await toggled();
+    expect(screen.getByRole("textbox", { name: "Open issues only" })).toHaveFocus();
+
+    shownPopover.value = false;
+    await nextTick();
+    await toggled();
+    expect(trigger).toHaveFocus();
+  });
+
   it("opens again when your code closes it and opens it again before the browser says it closed", async () => {
     deferToggle = true;
     const open = ref(false);
