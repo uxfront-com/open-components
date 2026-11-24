@@ -17,7 +17,7 @@ overrides:
   # @nuxtjs/partytown depends on 1.0.5 or later.
   '@nuxtjs/partytown>@qwik.dev/partytown': 1.0.5
 minimumReleaseAgeExclude:
-  - '@uxfront/layer-docs@0.8.4'
+  - '@uxfront/layer-docs@0.9.1'
   - '@uxfront/layer-ui@0.1.11'
   - '@uxfront/scene@0.5.1'
   - '@uxfront/ui@0.9.1'
