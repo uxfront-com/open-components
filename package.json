@@ -44,7 +44,7 @@
     "@testing-library/user-event": "^14.6.7",
     "@testing-library/vue": "^8.1.0",
     "@types/node": "^24.13.6",
-    "@uxfront/oxfmt-config": "^0.1.1",
+    "@uxfront/oxfmt-config": "^0.2.0",
     "@uxfront/oxlint-config": "^0.2.0",
     "@vitejs/plugin-vue": "^6.0.9",
     "ajv": "^8.20.0",

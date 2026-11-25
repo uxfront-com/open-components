@@ -25,3 +25,4 @@ minimumReleaseAgeExclude:
   - '@uxfront/scene@0.5.1'
   - '@uxfront/ui@0.9.1'
   - '@uxfront/oxlint-config@0.2.0'
+  - '@uxfront/oxfmt-config@0.2.0'
