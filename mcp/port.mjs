@@ -11,4 +11,5 @@
 const conductor = Number(process.env.CONDUCTOR_PORT);
 
 export const MCP_DEV_PORT =
-  Number(process.env.MCP_DEV_PORT) || (Number.isInteger(conductor) && conductor > 0 ? conductor + 1 : 3100);
+	Number(process.env.MCP_DEV_PORT) ||
+	(Number.isInteger(conductor) && conductor > 0 ? conductor + 1 : 3100);

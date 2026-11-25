@@ -6,10 +6,10 @@ const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 </script>
 
 <template>
-  <TagExample>
-    <div class="flex flex-wrap items-center justify-center gap-3">
-      <Tag v-for="size in sizes" :key="size" :size="size" :label="`Size ${size}`" removable />
-    </div>
-    <template v-if="$slots.default" #code><slot /></template>
-  </TagExample>
+	<TagExample>
+		<div class="flex flex-wrap items-center justify-center gap-3">
+			<Tag v-for="size in sizes" :key="size" :size="size" :label="`Size ${size}`" removable />
+		</div>
+		<template v-if="$slots.default" #code><slot /></template>
+	</TagExample>
 </template>

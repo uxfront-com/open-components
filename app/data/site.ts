@@ -13,4 +13,4 @@ export const GITHUB_API_URL = "https://api.github.com/repos/uxfront-com/open-com
 // What the site is, in one sentence: the homepage's meta description, and the
 // summary under llms.txt's heading (nuxt.config.ts).
 export const SITE_DESCRIPTION =
-  "Guidelines for building UI components with a perfect user experience, developer experience and agentic experience, whether humans or AI agents write them.";
+	"Guidelines for building UI components with a perfect user experience, developer experience and agentic experience, whether humans or AI agents write them.";

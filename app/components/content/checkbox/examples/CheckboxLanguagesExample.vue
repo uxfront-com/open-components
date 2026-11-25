@@ -5,11 +5,11 @@ import Checkbox from "~/reference/checkbox/Checkbox.vue";
 </script>
 
 <template>
-  <CheckboxExample>
-    <div dir="rtl" lang="ar" class="flex w-full max-w-sm flex-col gap-2">
-      <Checkbox checked>أرسل لي التحديثات عبر البريد الإلكتروني</Checkbox>
-      <Checkbox>أوافق على الشروط</Checkbox>
-    </div>
-    <template v-if="$slots.default" #code><slot /></template>
-  </CheckboxExample>
+	<CheckboxExample>
+		<div dir="rtl" lang="ar" class="flex w-full max-w-sm flex-col gap-2">
+			<Checkbox checked>أرسل لي التحديثات عبر البريد الإلكتروني</Checkbox>
+			<Checkbox>أوافق على الشروط</Checkbox>
+		</div>
+		<template v-if="$slots.default" #code><slot /></template>
+	</CheckboxExample>
 </template>

@@ -23,11 +23,11 @@ export const REPLY_LIMIT = 36_000;
  * wrong: an error, rather than a page an agent asked for that isn't there.
  */
 export function pageByKey(standard: Standard, key: string): Page {
-  const page = standard.pages.find((candidate) => candidate.key === key);
-  if (!page) {
-    throw new Error(`The standard has no page with the key "${key}"`);
-  }
-  return page;
+	const page = standard.pages.find((candidate) => candidate.key === key);
+	if (!page) {
+		throw new Error(`The standard has no page with the key "${key}"`);
+	}
+	return page;
 }
 
 /**
@@ -37,30 +37,30 @@ export function pageByKey(standard: Standard, key: string): Page {
  * split page, like `/docs/components/button/ux`, finds the whole page.
  */
 export function findPage(standard: Standard, name: string): Page | undefined {
-  const path = name
-    .trim()
-    .replace(/^https?:\/\/[^/]+/, "")
-    .replace(/^\/raw(?=\/)/, "")
-    .replace(/[#?].*$/, "")
-    .replace(/\.(md|yaml)$/, "")
-    .replace(/\/$/, "")
-    .toLowerCase();
-  return standard.pages.find(
-    (page) =>
-      page.path === path ||
-      page.path === `/docs/${path}` ||
-      page.parts?.some((part) => part === path || part === `/docs/${path}`) ||
-      page.key === path ||
-      page.title.toLowerCase() === path ||
-      page.contract?.name.toLowerCase() === path ||
-      standard.rules.some((rule) => rule.component === page.key && rule.id.startsWith(`${path}/`)),
-  );
+	const path = name
+		.trim()
+		.replace(/^https?:\/\/[^/]+/, "")
+		.replace(/^\/raw(?=\/)/, "")
+		.replace(/[#?].*$/, "")
+		.replace(/\.(md|yaml)$/, "")
+		.replace(/\/$/, "")
+		.toLowerCase();
+	return standard.pages.find(
+		(page) =>
+			page.path === path ||
+			page.path === `/docs/${path}` ||
+			page.parts?.some((part) => part === path || part === `/docs/${path}`) ||
+			page.key === path ||
+			page.title.toLowerCase() === path ||
+			page.contract?.name.toLowerCase() === path ||
+			standard.rules.some((rule) => rule.component === page.key && rule.id.startsWith(`${path}/`)),
+	);
 }
 
 /** The sections a page has under the names asked for, and the names it has none for. */
 export interface FoundSections {
-  found: Array<Heading>;
-  missing: Array<string>;
+	found: Array<Heading>;
+	missing: Array<string>;
 }
 
 // A heading's anchor, from its text.
@@ -68,19 +68,23 @@ const slug = (text: string) => anchors()(text);
 
 // Every way a heading can be named loosely: its text without "(DX)", and "DX".
 const loose = (text: string) => {
-  const short = text.replace(/\s*\(([^)]*)\)$/, "");
-  const abbreviation = text.match(/\(([^)]*)\)$/)?.[1];
-  return [short, ...(abbreviation ? [abbreviation] : [])].map(plain);
+	const short = text.replace(/\s*\(([^)]*)\)$/, "");
+	const abbreviation = text.match(/\(([^)]*)\)$/)?.[1];
+	return [short, ...(abbreviation ? [abbreviation] : [])].map(plain);
 };
 const plain = (text: string) =>
-  slug(text.toLowerCase().replaceAll("colour", "color"))
-    .split("-")
-    .map((word) => (word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word))
-    .join("-");
+	slug(text.toLowerCase().replaceAll("colour", "color"))
+		.split("-")
+		.map((word) =>
+			word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word,
+		)
+		.join("-");
 const strict = (heading: { text: string; anchor?: string }, name: string) =>
-  heading.anchor === name || heading.text.toLowerCase() === name || slug(heading.text) === slug(name);
+	heading.anchor === name ||
+	heading.text.toLowerCase() === name ||
+	slug(heading.text) === slug(name);
 const sloppy = (heading: { text: string; anchor?: string }, name: string) =>
-  strict(heading, name) || loose(heading.text).includes(plain(name));
+	strict(heading, name) || loose(heading.text).includes(plain(name));
 
 /**
  * The headings a list of section names point at, and the names it can't find. A
@@ -93,71 +97,101 @@ const sloppy = (heading: { text: string; anchor?: string }, name: string) =>
  * The page's own title names its introduction, before its first heading.
  */
 export function findSections(page: Page, names: Array<string>): FoundSections {
-  const found: Array<Heading> = [];
-  const missing: Array<string> = [];
+	const found: Array<Heading> = [];
+	const missing: Array<string> = [];
 
-  for (const name of names) {
-    const parts = name
-      .split(/\s*[>›]\s*/)
-      // Names copied from get-page's outline, like "Loading (#loading)", too.
-      .map((part) => part.trim().replace(/\s*\(#[^)]*\)$/, "").replace(/^#/, "").replaceAll("`", "").toLowerCase())
-      .filter(Boolean);
-    // A trail from search-docs starts with the page's title, which isn't a heading.
-    if (parts.length > 1 && parts[0] === page.title.toLowerCase()) {
-      parts.shift();
-    }
-    const last = parts.pop() ?? "";
-    const within = (candidate: Heading, matches: typeof strict) =>
-      matches(candidate, last) && parts.every((part) => candidate.trail.some((parent) => matches({ text: parent }, part)));
-    const heading =
-      page.headings.find((candidate) => within(candidate, strict)) ??
-      page.headings.find((candidate) => within(candidate, sloppy)) ??
-      (!parts.length && last === page.title.toLowerCase() ? introduction(page) : undefined);
-    if (heading) {
-      found.push(heading);
-    } else {
-      missing.push(name);
-    }
-  }
-  // In page order, without the ones inside another section asked for.
-  const sections = [...new Set(found)].sort((a, b) => a.start - b.start);
-  return {
-    found: sections.filter((heading) => !sections.some((other) => other !== heading && other.start <= heading.start && heading.end <= other.end)),
-    missing,
-  };
+	for (const name of names) {
+		const parts = name
+			.split(/\s*[>›]\s*/)
+			// Names copied from get-page's outline, like "Loading (#loading)", too.
+			.map((part) =>
+				part
+					.trim()
+					.replace(/\s*\(#[^)]*\)$/, "")
+					.replace(/^#/, "")
+					.replaceAll("`", "")
+					.toLowerCase(),
+			)
+			.filter(Boolean);
+		// A trail from search-docs starts with the page's title, which isn't a heading.
+		if (parts.length > 1 && parts[0] === page.title.toLowerCase()) {
+			parts.shift();
+		}
+		const last = parts.pop() ?? "";
+		const within = (candidate: Heading, matches: typeof strict) =>
+			matches(candidate, last) &&
+			parts.every((part) => candidate.trail.some((parent) => matches({ text: parent }, part)));
+		const heading =
+			page.headings.find((candidate) => within(candidate, strict)) ??
+			page.headings.find((candidate) => within(candidate, sloppy)) ??
+			(!parts.length && last === page.title.toLowerCase() ? introduction(page) : undefined);
+		if (heading) {
+			found.push(heading);
+		} else {
+			missing.push(name);
+		}
+	}
+	// In page order, without the ones inside another section asked for.
+	const sections = [...new Set(found)].sort((a, b) => a.start - b.start);
+	return {
+		found: sections.filter(
+			(heading) =>
+				!sections.some(
+					(other) => other !== heading && other.start <= heading.start && heading.end <= other.end,
+				),
+		),
+		missing,
+	};
 }
 
 /** A page's introduction, before its first heading, as if it were a section under the page's title. */
 function introduction(page: Page): Heading {
-  const end = page.headings[0]?.start ?? page.markdown.split("\n").length;
-  return { level: 1, text: page.title, anchor: "", trail: [], start: 0, end, tokens: 0, tokensOneFramework: 0 };
+	const end = page.headings[0]?.start ?? page.markdown.split("\n").length;
+	return {
+		level: 1,
+		text: page.title,
+		anchor: "",
+		trail: [],
+		start: 0,
+		end,
+		tokens: 0,
+		tokensOneFramework: 0,
+	};
 }
 
 /** The lines of a page's markdown under a heading, sub-sections included, with its frameworks rendered. */
-export function sectionText(standard: Standard, page: Page, heading: Heading, framework?: string): string {
-  const lines = page.markdown.split("\n").slice(heading.start, heading.end);
-  return renderFrameworks(lines.join("\n"), standard.frameworks, framework);
+export function sectionText(
+	standard: Standard,
+	page: Page,
+	heading: Heading,
+	framework?: string,
+): string {
+	const lines = page.markdown.split("\n").slice(heading.start, heading.end);
+	return renderFrameworks(lines.join("\n"), standard.frameworks, framework);
 }
 
 /** The whole page, with its frameworks rendered. */
 export function pageText(standard: Standard, page: Page, framework?: string): string {
-  return renderFrameworks(page.markdown, standard.frameworks, framework);
+	return renderFrameworks(page.markdown, standard.frameworks, framework);
 }
 
 /** A page's headings as a nested list, each with its anchor and rough length. */
 export function outline(page: Page, headings = page.headings): string {
-  const top = Math.min(...headings.map((heading) => heading.level));
-  return headings
-    .map((heading) => {
-      const both = heading.tokens === heading.tokensOneFramework;
-      const size = both ? `~${count(heading.tokens)}` : `~${count(heading.tokens)}, ~${count(heading.tokensOneFramework)} with one framework`;
-      return `${"  ".repeat(heading.level - top)}- ${heading.text} (#${heading.anchor}) ${size}`;
-    })
-    .join("\n");
+	const top = Math.min(...headings.map((heading) => heading.level));
+	return headings
+		.map((heading) => {
+			const both = heading.tokens === heading.tokensOneFramework;
+			const size = both
+				? `~${count(heading.tokens)}`
+				: `~${count(heading.tokens)}, ~${count(heading.tokensOneFramework)} with one framework`;
+			return `${"  ".repeat(heading.level - top)}- ${heading.text} (#${heading.anchor}) ${size}`;
+		})
+		.join("\n");
 }
 
 /** A token count, rounded, as in 350 or 8.7k. */
 export function count(value: number): string {
-  return value < 1000 ? `${Math.round(value / 10) * 10}` : `${(value / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+	return value < 1000
+		? `${Math.round(value / 10) * 10}`
+		: `${(value / 1000).toFixed(1).replace(/\.0$/, "")}k`;
 }
-

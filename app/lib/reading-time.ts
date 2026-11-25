@@ -9,11 +9,11 @@ const WORDS_PER_MINUTE = 230;
  * `children`.
  */
 type BodyNode =
-  | string
-  | Array<unknown>
-  | { type?: string; value?: unknown; children?: Array<unknown> }
-  | null
-  | undefined;
+	| string
+	| Array<unknown>
+	| { type?: string; value?: unknown; children?: Array<unknown> }
+	| null
+	| undefined;
 
 /**
  * The words a reader reads in a page's parsed body: every word of its text,
@@ -21,9 +21,9 @@ type BodyNode =
  * markdown syntax, which the parser has already taken out.
  */
 export function countWords(body: unknown): number {
-  return textOf(body as BodyNode)
-    .split(/\s+/)
-    .filter(Boolean).length;
+	return textOf(body as BodyNode)
+		.split(/\s+/)
+		.filter(Boolean).length;
 }
 
 /**
@@ -31,33 +31,33 @@ export function countWords(body: unknown): number {
  * reads faster than the byline says, and at least 1.
  */
 export function readingTime(body: unknown): number {
-  return Math.max(1, Math.ceil(countWords(body) / WORDS_PER_MINUTE));
+	return Math.max(1, Math.ceil(countWords(body) / WORDS_PER_MINUTE));
 }
 
 // The text below a node, each element's set apart from its neighbours', so the
 // last word of a cell and the first of the next don't run together.
 function textOf(node: BodyNode): string {
-  if (typeof node === "string") {
-    return node;
-  }
-  if (!node || typeof node !== "object") {
-    return "";
-  }
-  // A minimark element: [tag, props, ...children].
-  if (Array.isArray(node)) {
-    return textOfAll(node.slice(2));
-  }
-  if (node.type === "text") {
-    return typeof node.value === "string" ? node.value : "";
-  }
-  // The body itself is { type: "minimark", value: [...] }, or a tree's root, with
-  // `children`, like every element of the tree.
-  if (Array.isArray(node.value)) {
-    return textOfAll(node.value);
-  }
-  return textOfAll(node.children ?? []);
+	if (typeof node === "string") {
+		return node;
+	}
+	if (!node || typeof node !== "object") {
+		return "";
+	}
+	// A minimark element: [tag, props, ...children].
+	if (Array.isArray(node)) {
+		return textOfAll(node.slice(2));
+	}
+	if (node.type === "text") {
+		return typeof node.value === "string" ? node.value : "";
+	}
+	// The body itself is { type: "minimark", value: [...] }, or a tree's root, with
+	// `children`, like every element of the tree.
+	if (Array.isArray(node.value)) {
+		return textOfAll(node.value);
+	}
+	return textOfAll(node.children ?? []);
 }
 
 function textOfAll(nodes: Array<unknown>): string {
-  return nodes.map((node) => textOf(node as BodyNode)).join(" ");
+	return nodes.map((node) => textOf(node as BodyNode)).join(" ");
 }

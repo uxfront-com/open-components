@@ -13,6 +13,7 @@
  */
 
 import { parse } from "yaml";
+
 import { buildContract } from "./contract";
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
@@ -34,12 +35,12 @@ const SHELL = new Set(["bash", "sh", "shell", "zsh", "console"]);
 
 /** What the gate reads from the Design Tokens page's contract. */
 export interface TokenRules {
-  /** The pattern every token path matches. */
-  pattern: RegExp;
-  /** The theme's colours, which `{color}` stands for. */
-  colors: Array<string>;
-  /** The IDs of the page's checklist, like `tokens/groups`. */
-  rules: Array<string>;
+	/** The pattern every token path matches. */
+	pattern: RegExp;
+	/** The theme's colours, which `{color}` stands for. */
+	colors: Array<string>;
+	/** The IDs of the page's checklist, like `tokens/groups`. */
+	rules: Array<string>;
 }
 
 /**
@@ -48,16 +49,16 @@ export interface TokenRules {
  * rules (buildContract in contract.ts), rather than a copy that could drift.
  */
 export function tokenRules(page: string): TokenRules {
-  const contract = buildContract(page);
-  if (!contract) {
-    throw new Error("The Design Tokens page has no Described block");
-  }
-  const { pattern, theme, rules } = parse(contract) as {
-    pattern: string;
-    theme: { colors: Array<string> };
-    rules: Array<{ id: string }>;
-  };
-  return { pattern: new RegExp(pattern), colors: theme.colors, rules: rules.map(({ id }) => id) };
+	const contract = buildContract(page);
+	if (!contract) {
+		throw new Error("The Design Tokens page has no Described block");
+	}
+	const { pattern, theme, rules } = parse(contract) as {
+		pattern: string;
+		theme: { colors: Array<string> };
+		rules: Array<{ id: string }>;
+	};
+	return { pattern: new RegExp(pattern), colors: theme.colors, rules: rules.map(({ id }) => id) };
 }
 
 /**
@@ -67,50 +68,50 @@ export function tokenRules(page: string): TokenRules {
  * frontmatter's fence are never read.
  */
 export function codeOf(source: string): Array<string> {
-  const body = source.replace(FRONTMATTER, "");
-  const code: Array<string> = [];
-  const prose: Array<string> = [];
-  // The open code block, if any, with its fence, as scan() in mcp/lib/markdown.ts
-  // reads them: it closes on a line of the same character, at least as long, with
-  // nothing else on it.
-  let block: { char: string; length: number; shell: boolean; lines: Array<string> } | undefined;
-  for (const text of body.split("\n")) {
-    const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
-    // Both groups take part in every match, so the defaults never apply.
-    const [, run = "", rest = ""] = marker ?? [];
-    if (!block) {
-      if (!marker) {
-        prose.push(text);
-      } else {
-        // The info string's first word, which can be empty.
-        const language = (rest.trim().match(/^[\w-]*/)?.[0] ?? "").toLowerCase();
-        block = { char: run.charAt(0), length: run.length, shell: SHELL.has(language), lines: [] };
-      }
-      continue;
-    }
-    if (marker && run.charAt(0) === block.char && run.length >= block.length && !rest.trim()) {
-      if (!block.shell) {
-        code.push(block.lines.join("\n"));
-      }
-      block = undefined;
-    } else {
-      block.lines.push(text);
-    }
-  }
-  if (block && !block.shell) {
-    code.push(block.lines.join("\n"));
-  }
-  // Inline code: a run of backticks, up to a run of the same length.
-  // The span's group takes part in every match, so the default never applies.
-  for (const [, , span = ""] of prose.join("\n").matchAll(/(`+)([\s\S]*?[^`])\1(?!`)/g)) {
-    code.push(span);
-  }
-  return code;
+	const body = source.replace(FRONTMATTER, "");
+	const code: Array<string> = [];
+	const prose: Array<string> = [];
+	// The open code block, if any, with its fence, as scan() in mcp/lib/markdown.ts
+	// reads them: it closes on a line of the same character, at least as long, with
+	// nothing else on it.
+	let block: { char: string; length: number; shell: boolean; lines: Array<string> } | undefined;
+	for (const text of body.split("\n")) {
+		const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
+		// Both groups take part in every match, so the defaults never apply.
+		const [, run = "", rest = ""] = marker ?? [];
+		if (!block) {
+			if (!marker) {
+				prose.push(text);
+			} else {
+				// The info string's first word, which can be empty.
+				const language = (rest.trim().match(/^[\w-]*/)?.[0] ?? "").toLowerCase();
+				block = { char: run.charAt(0), length: run.length, shell: SHELL.has(language), lines: [] };
+			}
+			continue;
+		}
+		if (marker && run.charAt(0) === block.char && run.length >= block.length && !rest.trim()) {
+			if (!block.shell) {
+				code.push(block.lines.join("\n"));
+			}
+			block = undefined;
+		} else {
+			block.lines.push(text);
+		}
+	}
+	if (block && !block.shell) {
+		code.push(block.lines.join("\n"));
+	}
+	// Inline code: a run of backticks, up to a run of the same length.
+	// The span's group takes part in every match, so the default never applies.
+	for (const [, , span = ""] of prose.join("\n").matchAll(/(`+)([\s\S]*?[^`])\1(?!`)/g)) {
+		code.push(span);
+	}
+	return code;
 }
 
 /** Every token name in a post's code, once each, in the order they come. */
 export function namesOf(source: string): Array<string> {
-  return [...new Set(codeOf(source).flatMap((code) => code.match(NAME) ?? []))];
+	return [...new Set(codeOf(source).flatMap((code) => code.match(NAME) ?? []))];
 }
 
 /**
@@ -123,50 +124,56 @@ export function namesOf(source: string): Array<string> {
  * - every rule ID it names in code, like `tokens/groups`, is in the checklist.
  */
 export function checkPost(source: string, tokens: TokenRules): Array<string> {
-  const frontmatter = (parse(source.match(FRONTMATTER)?.[1] ?? "") ?? {}) as { counterExamples?: Array<string> };
-  const counterExamples = new Set(frontmatter.counterExamples ?? []);
-  const names = namesOf(source);
-  const errors: Array<string> = [];
+	const frontmatter = (parse(source.match(FRONTMATTER)?.[1] ?? "") ?? {}) as {
+		counterExamples?: Array<string>;
+	};
+	const counterExamples = new Set(frontmatter.counterExamples ?? []);
+	const names = namesOf(source);
+	const errors: Array<string> = [];
 
-  for (const name of names) {
-    if (counterExamples.has(name)) {
-      continue;
-    }
-    const unknown = name
-      .matchAll(/\{([^}]*)\}/g)
-      // The group takes part in every match, so the default never applies.
-      .map(([, placeholder = ""]) => placeholder)
-      .filter((placeholder) => placeholder !== "color" && !WORDS.includes(placeholder))
-      .toArray();
-    if (unknown.length) {
-      errors.push(`${name}: the Design Tokens page defines no {${unknown.join("}, {")}} placeholder`);
-      continue;
-    }
-    const wrong = expand(name, tokens.colors).filter((filled) => !tokens.pattern.test(filled));
-    if (wrong.length) {
-      errors.push(`${name}: doesn't match the token path pattern ${tokens.pattern.source}`);
-    }
-  }
+	for (const name of names) {
+		if (counterExamples.has(name)) {
+			continue;
+		}
+		const unknown = name
+			.matchAll(/\{([^}]*)\}/g)
+			// The group takes part in every match, so the default never applies.
+			.map(([, placeholder = ""]) => placeholder)
+			.filter((placeholder) => placeholder !== "color" && !WORDS.includes(placeholder))
+			.toArray();
+		if (unknown.length) {
+			errors.push(
+				`${name}: the Design Tokens page defines no {${unknown.join("}, {")}} placeholder`,
+			);
+			continue;
+		}
+		const wrong = expand(name, tokens.colors).filter((filled) => !tokens.pattern.test(filled));
+		if (wrong.length) {
+			errors.push(`${name}: doesn't match the token path pattern ${tokens.pattern.source}`);
+		}
+	}
 
-  for (const name of counterExamples) {
-    if (!names.includes(name)) {
-      errors.push(`${name}: listed in counterExamples, but not in the post's code`);
-    }
-  }
+	for (const name of counterExamples) {
+		if (!names.includes(name)) {
+			errors.push(`${name}: listed in counterExamples, but not in the post's code`);
+		}
+	}
 
-  const ids = new Set(codeOf(source).flatMap((code) => code.match(/^tokens\/[a-z0-9-]+$/) ?? []));
-  for (const id of ids) {
-    if (!tokens.rules.includes(id)) {
-      errors.push(`${id}: not a rule in the Design Tokens page's checklist`);
-    }
-  }
+	const ids = new Set(codeOf(source).flatMap((code) => code.match(/^tokens\/[a-z0-9-]+$/) ?? []));
+	for (const id of ids) {
+		if (!tokens.rules.includes(id)) {
+			errors.push(`${id}: not a rule in the Design Tokens page's checklist`);
+		}
+	}
 
-  return errors;
+	return errors;
 }
 
 // A name with every placeholder filled in: once for each theme colour for
 // `{color}`, and a single word for the others.
 function expand(name: string, colors: Array<string>): Array<string> {
-  const words = WORDS.reduce((filled, word) => filled.replaceAll(`{${word}}`, "x"), name);
-  return words.includes("{color}") ? colors.map((color) => words.replaceAll("{color}", color)) : [words];
+	const words = WORDS.reduce((filled, word) => filled.replaceAll(`{${word}}`, "x"), name);
+	return words.includes("{color}")
+		? colors.map((color) => words.replaceAll("{color}", color))
+		: [words];
 }

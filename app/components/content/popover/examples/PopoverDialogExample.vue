@@ -13,24 +13,26 @@ const open = ref(false);
 </script>
 
 <template>
-  <PopoverExample>
-    <Button @click="open = true">Share project</Button>
-    <Dialog id="share-project" title="Share project" :open="open" @close="open = false">
-      <p class="mb-3">Anyone with the link can view it.</p>
-      <Button popovertarget="share-permissions" aria-haspopup="dialog" variant="outline">Permissions</Button>
-      <Popover id="share-permissions" title="Who can edit">
-        <div class="flex flex-col gap-2">
-          <Checkbox checked>Owners</Checkbox>
-          <Checkbox>Members</Checkbox>
-          <Tooltip label="Guests can only comment" v-slot="{ trigger }">
-            <Checkbox v-bind="trigger">Guests</Checkbox>
-          </Tooltip>
-        </div>
-      </Popover>
-      <template #actions>
-        <Button @click="open = false">Done</Button>
-      </template>
-    </Dialog>
-    <template v-if="$slots.default" #code><slot /></template>
-  </PopoverExample>
+	<PopoverExample>
+		<Button @click="open = true">Share project</Button>
+		<Dialog id="share-project" title="Share project" :open="open" @close="open = false">
+			<p class="mb-3">Anyone with the link can view it.</p>
+			<Button popovertarget="share-permissions" aria-haspopup="dialog" variant="outline"
+				>Permissions</Button
+			>
+			<Popover id="share-permissions" title="Who can edit">
+				<div class="flex flex-col gap-2">
+					<Checkbox checked>Owners</Checkbox>
+					<Checkbox>Members</Checkbox>
+					<Tooltip label="Guests can only comment" v-slot="{ trigger }">
+						<Checkbox v-bind="trigger">Guests</Checkbox>
+					</Tooltip>
+				</div>
+			</Popover>
+			<template #actions>
+				<Button @click="open = false">Done</Button>
+			</template>
+		</Dialog>
+		<template v-if="$slots.default" #code><slot /></template>
+	</PopoverExample>
 </template>

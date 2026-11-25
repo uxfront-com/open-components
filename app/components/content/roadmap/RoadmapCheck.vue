@@ -12,19 +12,19 @@
  * control, and assistive technologies read the status as text instead.
  */
 defineProps<{
-  shipped?: boolean;
+	shipped?: boolean;
 }>();
 </script>
 
 <template>
-  <span class="roadmap-check">
-    <span
-      class="me-2 inline-flex size-4 items-center justify-center rounded-sm align-middle"
-      :class="shipped ? 'bg-primary text-inverted' : 'ring ring-inset ring-(--ui-text-muted)'"
-      aria-hidden="true"
-    >
-      <UIcon v-if="shipped" name="i-lucide-check" class="size-3" />
-    </span>
-    <span class="sr-only">{{ shipped ? "Shipped" : "Planned" }}</span>
-  </span>
+	<span class="roadmap-check">
+		<span
+			class="me-2 inline-flex size-4 items-center justify-center rounded-sm align-middle"
+			:class="shipped ? 'bg-primary text-inverted' : 'ring ring-inset ring-(--ui-text-muted)'"
+			aria-hidden="true"
+		>
+			<UIcon v-if="shipped" name="i-lucide-check" class="size-3" />
+		</span>
+		<span class="sr-only">{{ shipped ? "Shipped" : "Planned" }}</span>
+	</span>
 </template>

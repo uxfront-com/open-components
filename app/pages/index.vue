@@ -3,25 +3,32 @@ import { hold } from "@uxfront/scene";
 import type { FormationOptions } from "@uxfront/scene";
 import { corridor, plates } from "@uxfront/scene/formations";
 
-import { BLOG_URL, CHANGELOG_URL, DOCS_URL, GITHUB_API_URL, GITHUB_URL, SITE_DESCRIPTION } from "~/data/site";
+import {
+	BLOG_URL,
+	CHANGELOG_URL,
+	DOCS_URL,
+	GITHUB_API_URL,
+	GITHUB_URL,
+	SITE_DESCRIPTION,
+} from "~/data/site";
 import { share, spotlight } from "~/lib/formations";
 
 const description = SITE_DESCRIPTION;
 
 useUxHead({
-  title: "Open Components - The standard for perfect UI components",
-  description,
-  siteName: "Open Components",
-  logo: "/apple-touch-icon.png",
-  sameAs: [GITHUB_URL],
-  // The picture a shared link shows: the hero, in public/share.png.
-  // CONTRIBUTING.md ("Keeping 100s as the site grows") says how to remake it.
-  image: {
-    path: "/share.png",
-    width: 1200,
-    height: 630,
-    alt: "Open Components, the standard for perfect UI components: three glass plates for user, developer and agentic experience.",
-  },
+	title: "Open Components - The standard for perfect UI components",
+	description,
+	siteName: "Open Components",
+	logo: "/apple-touch-icon.png",
+	sameAs: [GITHUB_URL],
+	// The picture a shared link shows: the hero, in public/share.png.
+	// CONTRIBUTING.md ("Keeping 100s as the site grows") says how to remake it.
+	image: {
+		path: "/share.png",
+		width: 1200,
+		height: 630,
+		alt: "Open Components, the standard for perfect UI components: three glass plates for user, developer and agentic experience.",
+	},
 });
 
 // What the site is, for search engines and AI search: the website and the
@@ -30,36 +37,39 @@ useUxHead({
 const { siteUrl } = useRuntimeConfig().public;
 const organization = { "@id": `${siteUrl}/#organization` };
 useHead({
-  script: [
-    {
-      type: "application/ld+json",
-      innerHTML: JSON.stringify({
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "WebSite",
-            "@id": `${siteUrl}/#website`,
-            name: "Open Components",
-            alternateName: "OpenComponents",
-            url: `${siteUrl}/`,
-            description,
-            publisher: organization,
-          },
-          {
-            "@type": "SoftwareSourceCode",
-            "@id": `${siteUrl}/#source`,
-            name: "Open Components",
-            description,
-            url: `${siteUrl}/`,
-            codeRepository: GITHUB_URL,
-            // The guidelines are CC BY 4.0, and the site's code MIT.
-            license: ["https://creativecommons.org/licenses/by/4.0/", "https://opensource.org/license/mit"],
-            publisher: organization,
-          },
-        ],
-      }),
-    },
-  ],
+	script: [
+		{
+			type: "application/ld+json",
+			innerHTML: JSON.stringify({
+				"@context": "https://schema.org",
+				"@graph": [
+					{
+						"@type": "WebSite",
+						"@id": `${siteUrl}/#website`,
+						name: "Open Components",
+						alternateName: "OpenComponents",
+						url: `${siteUrl}/`,
+						description,
+						publisher: organization,
+					},
+					{
+						"@type": "SoftwareSourceCode",
+						"@id": `${siteUrl}/#source`,
+						name: "Open Components",
+						description,
+						url: `${siteUrl}/`,
+						codeRepository: GITHUB_URL,
+						// The guidelines are CC BY 4.0, and the site's code MIT.
+						license: [
+							"https://creativecommons.org/licenses/by/4.0/",
+							"https://opensource.org/license/mit",
+						],
+						publisher: organization,
+					},
+				],
+			}),
+		},
+	],
 });
 
 // Fetched when the page is prerendered, then refreshed in the browser once the
@@ -67,246 +77,248 @@ useHead({
 // (its API is rate limited).
 const MIN_STARS = 100;
 const fetchStars = () =>
-  $fetch<{ stargazers_count: number }>(GITHUB_API_URL).then(
-    (repo) => repo.stargazers_count,
-    () => null,
-  );
+	$fetch<{ stargazers_count: number }>(GITHUB_API_URL).then(
+		(repo) => repo.stargazers_count,
+		() => null,
+	);
 const { data: stars } = await useAsyncData("github-stars", fetchStars);
 onNuxtReady(async () => {
-  stars.value = (await fetchStars()) ?? stars.value;
+	stars.value = (await fetchStars()) ?? stars.value;
 });
 const starCount = computed(() =>
-  stars.value === null || stars.value === undefined || stars.value <= MIN_STARS
-    ? null
-    : new Intl.NumberFormat("en", { notation: "compact" }).format(stars.value),
+	stars.value === null || stars.value === undefined || stars.value <= MIN_STARS
+		? null
+		: new Intl.NumberFormat("en", { notation: "compact" }).format(stars.value),
 );
 
 const layers = [
-  { id: "ux", index: "01", code: "UX", title: "User experience" },
-  { id: "dx", index: "02", code: "DX", title: "Developer experience" },
-  { id: "ax", index: "03", code: "AX", title: "Agentic experience" },
+	{ id: "ux", index: "01", code: "UX", title: "User experience" },
+	{ id: "dx", index: "02", code: "DX", title: "Developer experience" },
+	{ id: "ax", index: "03", code: "AX", title: "Agentic experience" },
 ] as const;
 
 // A close-up of one plate, held apart: plate 0 (UX) on top, 2 (AX) at the bottom.
 const closeUp = (plate: number, shift: [number, number]): FormationOptions["views"] => {
-  const y = 0.95 * (1 - plate);
-  return {
-    desktop: { eye: [3.6, y + 3.2, 4.8], target: [0, y, 0], span: [2.3, 1.5], shift },
-    mobile: { eye: [3.4, y + 3, 4.5], target: [0, y, 0], span: [1.95, 1.25] },
-  };
+	const y = 0.95 * (1 - plate);
+	return {
+		desktop: { eye: [3.6, y + 3.2, 4.8], target: [0, y, 0], span: [2.3, 1.5], shift },
+		mobile: { eye: [3.4, y + 3, 4.5], target: [0, y, 0], span: [1.95, 1.25] },
+	};
 };
 
 // The hero shows the stack drawn apart, then each chapter closes in on one plate.
 // Framed with room on the right for the UX, DX and AX callouts.
 const hero = hold(
-  plates({
-    key: "hero",
-    label: "Open Components",
-    views: {
-      desktop: { span: [2.7, 2.1], shift: [0.26, 0.04] },
-      mobile: { span: [2.9, 2.1], shift: [-0.14, 0.5] },
-    },
-  }),
-  1,
+	plates({
+		key: "hero",
+		label: "Open Components",
+		views: {
+			desktop: { span: [2.7, 2.1], shift: [0.26, 0.04] },
+			mobile: { span: [2.9, 2.1], shift: [-0.14, 0.5] },
+		},
+	}),
+	1,
 );
 const layer = (plate: 0 | 1 | 2, shift: [number, number]) => {
-  const { id, title } = layers[plate];
-  const formation = plates({ key: id, label: title, views: closeUp(plate, shift) });
-  return share(spotlight(hold(formation, 1), plate), hero);
+	const { id, title } = layers[plate];
+	const formation = plates({ key: id, label: title, views: closeUp(plate, shift) });
+	return share(spotlight(hold(formation, 1), plate), hero);
 };
 const scene = [
-  hero,
-  layer(0, [0.36, 0.02]),
-  layer(1, [-0.42, 0.02]),
-  layer(2, [0.2, 0.28]),
-  corridor({ label: "Build on it" }),
+	hero,
+	layer(0, [0.36, 0.02]),
+	layer(1, [-0.42, 0.02]),
+	layer(2, [0.2, 0.28]),
+	corridor({ label: "Build on it" }),
 ];
 
 const nav = layers.map((layer) => ({
-  href: `#${layer.id}`,
-  label: layer.code,
-  index: layer.index,
+	href: `#${layer.id}`,
+	label: layer.code,
+	index: layer.index,
 }));
 
 const ux = [
-  { title: "Accessible", text: "Keyboard, pointer, touch and screen readers, following WAI-ARIA." },
-  { title: "Predictable", text: "The same interaction works the same way in every component." },
-  { title: "Every state", text: "Hover, focus, active, disabled, loading and error, all designed." },
-  {
-    title: "Adaptive",
-    text: "Respects motion, contrast, colour scheme and text size preferences.",
-  },
+	{ title: "Accessible", text: "Keyboard, pointer, touch and screen readers, following WAI-ARIA." },
+	{ title: "Predictable", text: "The same interaction works the same way in every component." },
+	{
+		title: "Every state",
+		text: "Hover, focus, active, disabled, loading and error, all designed.",
+	},
+	{
+		title: "Adaptive",
+		text: "Respects motion, contrast, colour scheme and text size preferences.",
+	},
 ];
 
 const dx = [
-  { title: "Consistent", text: "Sizes, colours, states and events share their names everywhere." },
-  { title: "Type-safe", text: "Every prop, event and slot is typed and documented." },
-  { title: "Composable", text: "Small parts build larger ones, with no hidden coupling." },
-  { title: "Controllable", text: "Controlled or uncontrolled, with every state within reach." },
+	{ title: "Consistent", text: "Sizes, colours, states and events share their names everywhere." },
+	{ title: "Type-safe", text: "Every prop, event and slot is typed and documented." },
+	{ title: "Composable", text: "Small parts build larger ones, with no hidden coupling." },
+	{ title: "Controllable", text: "Controlled or uncontrolled, with every state within reach." },
 ];
 
 const ax = [
-  { title: "Semantic", text: "Roles, names and states agents can read straight from the markup." },
-  { title: "Described", text: "Anatomy, props and states, published as machine-readable specs." },
-  { title: "Deterministic", text: "The same input always renders the same structure." },
-  { title: "Verifiable", text: "Rules agents can check their work against before shipping." },
+	{ title: "Semantic", text: "Roles, names and states agents can read straight from the markup." },
+	{ title: "Described", text: "Anatomy, props and states, published as machine-readable specs." },
+	{ title: "Deterministic", text: "The same input always renders the same structure." },
+	{ title: "Verifiable", text: "Rules agents can check their work against before shipping." },
 ];
 </script>
 
 <template>
-  <UxSite :scene="scene" skip-to="#ux" skip-label="Skip to the standard">
-    <template #anchors>
-      <UxAnchor
-        v-for="(layer, i) in layers"
-        :key="layer.code"
-        :anchor="`hero:${i}`"
-        variant="callout"
-        :label="layer.code"
-        :detail="layer.title"
-      />
-    </template>
-    <template #header>
-      <UxHeader brand="Open Components" :nav="nav" nav-label="The standard">
-        <template #mark />
-        <template #brand><strong>Open</strong>Components</template>
-        <template #byline>
-          by
-          <a href="https://uxfront.com">
-            <UxFrontMark />
-            <span><strong>UX</strong>Front</span>
-          </a>
-        </template>
-        <template #actions>
-          <NuxtLink class="header-link header-page" :to="BLOG_URL">Blog</NuxtLink>
-          <NuxtLink class="header-link header-page" :to="CHANGELOG_URL">Changelog</NuxtLink>
-          <NuxtLink class="header-link header-page" :to="DOCS_URL">Documentation</NuxtLink>
-          <a
-            class="header-link"
-            :href="GITHUB_URL"
-            :aria-label="starCount ? `GitHub, ${stars} stars` : 'GitHub'"
-          >
-            <UxGithubIcon class="header-icon" />
-            <span class="header-label">GitHub</span>
-            <span v-if="starCount" class="header-stars">
-              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                <path
-                  fill="currentColor"
-                  d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
-                />
-              </svg>
-              {{ starCount }}
-            </span>
-          </a>
-        </template>
-      </UxHeader>
-    </template>
+	<UxSite :scene="scene" skip-to="#ux" skip-label="Skip to the standard">
+		<template #anchors>
+			<UxAnchor
+				v-for="(layer, i) in layers"
+				:key="layer.code"
+				:anchor="`hero:${i}`"
+				variant="callout"
+				:label="layer.code"
+				:detail="layer.title"
+			/>
+		</template>
+		<template #header>
+			<UxHeader brand="Open Components" :nav="nav" nav-label="The standard">
+				<template #mark />
+				<template #brand><strong>Open</strong>Components</template>
+				<template #byline>
+					by
+					<a href="https://uxfront.com">
+						<UxFrontMark />
+						<span><strong>UX</strong>Front</span>
+					</a>
+				</template>
+				<template #actions>
+					<NuxtLink class="header-link header-page" :to="BLOG_URL">Blog</NuxtLink>
+					<NuxtLink class="header-link header-page" :to="CHANGELOG_URL">Changelog</NuxtLink>
+					<NuxtLink class="header-link header-page" :to="DOCS_URL">Documentation</NuxtLink>
+					<a
+						class="header-link"
+						:href="GITHUB_URL"
+						:aria-label="starCount ? `GitHub, ${stars} stars` : 'GitHub'"
+					>
+						<UxGithubIcon class="header-icon" />
+						<span class="header-label">GitHub</span>
+						<span v-if="starCount" class="header-stars">
+							<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+								<path
+									fill="currentColor"
+									d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
+								/>
+							</svg>
+							{{ starCount }}
+						</span>
+					</a>
+				</template>
+			</UxHeader>
+		</template>
 
-    <UxHero
-      title="The standard for perfect UI components"
-      :index="nav"
-      index-label="The standard"
-      scroll-href="#ux"
-    >
-      <template #lines>
-        <UxHeroLine>The <strong>standard</strong></UxHeroLine>
-        <UxHeroLine>for perfect UI</UxHeroLine>
-        <UxHeroLine>components</UxHeroLine>
-      </template>
-      <template #lead>
-        Guidelines for building UI components with a perfect user experience, developer experience
-        and agentic experience, whether humans or AI agents write them.
-        <br />
-        <UxPillLink class="mt-8" :href="DOCS_URL" label="Read the documentation" />
-      </template>
-    </UxHero>
+		<UxHero
+			title="The standard for perfect UI components"
+			:index="nav"
+			index-label="The standard"
+			scroll-href="#ux"
+		>
+			<template #lines>
+				<UxHeroLine>The <strong>standard</strong></UxHeroLine>
+				<UxHeroLine>for perfect UI</UxHeroLine>
+				<UxHeroLine>components</UxHeroLine>
+			</template>
+			<template #lead>
+				Guidelines for building UI components with a perfect user experience, developer experience
+				and agentic experience, whether humans or AI agents write them.
+				<br />
+				<UxPillLink class="mt-8" :href="DOCS_URL" label="Read the documentation" />
+			</template>
+		</UxHero>
 
+		<UxChapter id="ux" index="01" role="UX" title="User Experience" :steps="4">
+			<template #lead>
+				Components behave the way people expect them to, with any input, on any device and for every
+				ability.
+			</template>
+			<UxTraits :items="ux" />
+		</UxChapter>
 
-    <UxChapter id="ux" index="01" role="UX" title="User Experience" :steps="4">
-      <template #lead>
-        Components behave the way people expect them to, with any input, on any device and for
-        every ability.
-      </template>
-      <UxTraits :items="ux" />
-    </UxChapter>
+		<UxChapter id="dx" index="02" role="DX" title="Developer Experience" :steps="4" align="end">
+			<template #lead>
+				One clear API, learned once and used everywhere. Knowing one component means knowing them
+				all.
+			</template>
+			<UxTraits :items="dx" />
+		</UxChapter>
 
-    <UxChapter id="dx" index="02" role="DX" title="Developer Experience" :steps="4" align="end">
-      <template #lead>
-        One clear API, learned once and used everywhere. Knowing one component means knowing them
-        all.
-      </template>
-      <UxTraits :items="dx" />
-    </UxChapter>
+		<UxChapter id="ax" index="03" role="AX" title="Agentic Experience" :steps="4" valign="end">
+			<template #lead>
+				Components that AI agents can read, reason about and build with, so their output meets the
+				same bar as yours.
+			</template>
+			<UxTraits :items="ax" />
+		</UxChapter>
 
-    <UxChapter id="ax" index="03" role="AX" title="Agentic Experience" :steps="4" valign="end">
-      <template #lead>
-        Components that AI agents can read, reason about and build with, so their output meets the
-        same bar as yours.
-      </template>
-      <UxTraits :items="ax" />
-    </UxChapter>
-
-    <UxFinale>
-      <template #mark><UxFrontMark /></template>
-      <template #title>Build to the <strong>standard</strong>.</template>
-      <template #lead>
-        Learn the guidelines once, then hold every component to the same high standards, whether you or your agents
-        write it.
-      </template>
-      <template #actions>
-        <UxPillLink :href="DOCS_URL" label="Read the documentation" />
-      </template>
-      <template #footer>
-        <span>© 2026 UXFront</span>
-        <a :href="GITHUB_URL">GitHub</a>
-      </template>
-    </UxFinale>
-  </UxSite>
+		<UxFinale>
+			<template #mark><UxFrontMark /></template>
+			<template #title>Build to the <strong>standard</strong>.</template>
+			<template #lead>
+				Learn the guidelines once, then hold every component to the same high standards, whether you
+				or your agents write it.
+			</template>
+			<template #actions>
+				<UxPillLink :href="DOCS_URL" label="Read the documentation" />
+			</template>
+			<template #footer>
+				<span>© 2026 UXFront</span>
+				<a :href="GITHUB_URL">GitHub</a>
+			</template>
+		</UxFinale>
+	</UxSite>
 </template>
 
 <style scoped>
 /* The first frame only has the components' inline styles (Tailwind loads after
    it), so the header links are styled here rather than with utilities. */
 .header-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.75rem;
 }
 
 .header-icon {
-  width: 1.125rem;
-  height: 1.125rem;
+	width: 1.125rem;
+	height: 1.125rem;
 }
 
 .header-stars {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  border: 1px solid var(--ux-line-strong);
-  border-radius: 999px;
-  font-family: var(--font-ux-mono);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-variant-numeric: tabular-nums;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.125rem 0.5rem;
+	border: 1px solid var(--ux-line-strong);
+	border-radius: 999px;
+	font-family: var(--font-ux-mono);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-variant-numeric: tabular-nums;
 }
 
 .header-stars svg {
-  width: 0.75rem;
-  height: 0.75rem;
+	width: 0.75rem;
+	height: 0.75rem;
 }
 
 /* Phones can't fit the byline beside the links. The hero links to the docs just
    below, the docs header links to the changelog, and the GitHub link's
    aria-label still names it without the label. */
 @media (max-width: 639px) {
-  .header-page,
-  .header-label {
-    display: none;
-  }
+	.header-page,
+	.header-label {
+		display: none;
+	}
 
-  .header-link {
-    min-width: 2.75rem;
-    justify-content: flex-end;
-  }
+	.header-link {
+		min-width: 2.75rem;
+		justify-content: flex-end;
+	}
 }
 </style>

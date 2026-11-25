@@ -6,16 +6,16 @@
  * over one of ours.
  */
 export default defineEventHandler((event) => {
-  // However the path is written: the router also matches it with a trailing slash.
-  // split() always gives at least one part, so the fallback never applies.
-  const raw = event.path.split("?")[0] ?? event.path;
-  let path = raw;
-  try {
-    path = decodeURIComponent(raw);
-  } catch {
-    // A malformed escape, like `%E0`, leaves the path as it was written.
-  }
-  if (path.replaceAll(/\/+/g, "/").replace(/\/$/, "").toLowerCase() === "/mcp/badge.svg") {
-    throw createError({ statusCode: 404, statusMessage: "Not Found" });
-  }
+	// However the path is written: the router also matches it with a trailing slash.
+	// split() always gives at least one part, so the fallback never applies.
+	const raw = event.path.split("?")[0] ?? event.path;
+	let path = raw;
+	try {
+		path = decodeURIComponent(raw);
+	} catch {
+		// A malformed escape, like `%E0`, leaves the path as it was written.
+	}
+	if (path.replaceAll(/\/+/g, "/").replace(/\/$/, "").toLowerCase() === "/mcp/badge.svg") {
+		throw createError({ statusCode: 404, statusMessage: "Not Found" });
+	}
 });

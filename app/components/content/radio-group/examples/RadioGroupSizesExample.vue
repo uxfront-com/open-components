@@ -8,20 +8,20 @@ const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies Array<RadioGroup
 </script>
 
 <template>
-  <RadioGroupExample>
-    <div class="flex w-full flex-wrap justify-center gap-x-8 gap-y-4">
-      <RadioGroup
-        v-for="size in sizes"
-        :key="size"
-        :size="size"
-        :name="`sizes-delivery-${size}`"
-        :legend="`Delivery (${size})`"
-        model-value="standard"
-      >
-        <Radio value="standard">Standard</Radio>
-        <Radio value="express">Express</Radio>
-      </RadioGroup>
-    </div>
-    <template v-if="$slots.default" #code><slot /></template>
-  </RadioGroupExample>
+	<RadioGroupExample>
+		<div class="flex w-full flex-wrap justify-center gap-x-8 gap-y-4">
+			<RadioGroup
+				v-for="size in sizes"
+				:key="size"
+				:size="size"
+				:name="`sizes-delivery-${size}`"
+				:legend="`Delivery (${size})`"
+				model-value="standard"
+			>
+				<Radio value="standard">Standard</Radio>
+				<Radio value="express">Express</Radio>
+			</RadioGroup>
+		</div>
+		<template v-if="$slots.default" #code><slot /></template>
+	</RadioGroupExample>
 </template>

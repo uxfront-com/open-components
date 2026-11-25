@@ -8,9 +8,9 @@ export const PAGE_SIZE = 50;
 
 /** A page of a list, with the offset of the next one when there is one. */
 export interface Page<T> {
-  total: number;
-  items: Array<T>;
-  nextOffset?: number;
+	total: number;
+	items: Array<T>;
+	nextOffset?: number;
 }
 
 /**
@@ -19,16 +19,18 @@ export interface Page<T> {
  * lost its place, while an empty list still has an empty first page.
  */
 export function paginate<T>(
-  items: Array<T>,
-  { offset = 0, limit = PAGE_SIZE }: { offset?: number; limit?: number } = {},
+	items: Array<T>,
+	{ offset = 0, limit = PAGE_SIZE }: { offset?: number; limit?: number } = {},
 ): Page<T> | { error: string } {
-  if (offset > 0 && offset >= items.length) {
-    return { error: `Only ${items.length} match, so there's nothing from offset ${offset}. Start at 0 and follow nextOffset.` };
-  }
-  const end = offset + limit;
-  const page: Page<T> = { total: items.length, items: items.slice(offset, end) };
-  if (end < items.length) {
-    page.nextOffset = end;
-  }
-  return page;
+	if (offset > 0 && offset >= items.length) {
+		return {
+			error: `Only ${items.length} match, so there's nothing from offset ${offset}. Start at 0 and follow nextOffset.`,
+		};
+	}
+	const end = offset + limit;
+	const page: Page<T> = { total: items.length, items: items.slice(offset, end) };
+	if (end < items.length) {
+		page.nextOffset = end;
+	}
+	return page;
 }

@@ -18,10 +18,11 @@ overrides:
   # deprecation for each, and Lighthouse's Best Practices drops to 81. 1.0.5 skips
   # all three (1.0.0 only marked Partytown stable). Drop this once
   # @nuxtjs/partytown depends on 1.0.5 or later.
-  '@nuxtjs/partytown>@qwik.dev/partytown': 1.0.5
+  "@nuxtjs/partytown>@qwik.dev/partytown": 1.0.5
 minimumReleaseAgeExclude:
-  - '@uxfront/layer-docs@0.9.1'
-  - '@uxfront/layer-ui@0.1.11'
-  - '@uxfront/scene@0.5.1'
-  - '@uxfront/ui@0.9.1'
-  - '@uxfront/oxlint-config@0.2.0'
+  - "@uxfront/layer-docs@0.9.1"
+  - "@uxfront/layer-ui@0.1.11"
+  - "@uxfront/scene@0.5.1"
+  - "@uxfront/ui@0.9.1"
+  - "@uxfront/oxlint-config@0.2.0"
+  - "@uxfront/oxfmt-config@0.2.0"
