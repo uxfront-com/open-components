@@ -5,8 +5,8 @@ import Checkbox from "~/reference/checkbox/Checkbox.vue";
 </script>
 
 <template>
-  <CheckboxExample>
-    <Checkbox indeterminate>Select all</Checkbox>
-    <template v-if="$slots.default" #code><slot /></template>
-  </CheckboxExample>
+	<CheckboxExample>
+		<Checkbox indeterminate>Select all</Checkbox>
+		<template v-if="$slots.default" #code><slot /></template>
+	</CheckboxExample>
 </template>

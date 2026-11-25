@@ -9,79 +9,81 @@
  * the contracts to prerender.
  */
 export function buildContract(markdown: string): string | undefined {
-  const contract = section(markdown, "### Described")?.match(/^```yaml\n([\s\S]*?)^```$/m)?.[1];
-  if (!contract) {
-    return;
-  }
-  const rules = checklist(markdown);
-  return rules.length ? contract.replace(/^rules: .*$/m, () => ["rules:", ...rules].join("\n")) : contract;
+	const contract = section(markdown, "### Described")?.match(/^```yaml\n([\s\S]*?)^```$/m)?.[1];
+	if (!contract) {
+		return;
+	}
+	const rules = checklist(markdown);
+	return rules.length
+		? contract.replace(/^rules: .*$/m, () => ["rules:", ...rules].join("\n"))
+		: contract;
 }
 
 // The lines under a heading, up to the next heading of the same level or above,
 // skipping code blocks, where a line can start with a # without being a heading.
 function section(markdown: string, heading: string): string | undefined {
-  const level = heading.indexOf(" ");
-  const lines = markdown.split("\n");
-  const start = lines.indexOf(heading);
-  if (start === -1) {
-    return;
-  }
+	const level = heading.indexOf(" ");
+	const lines = markdown.split("\n");
+	const start = lines.indexOf(heading);
+	if (start === -1) {
+		return;
+	}
 
-  let code = false;
-  let end = start + 1;
-  for (; end < lines.length; end++) {
-    const line = lines[end] ?? "";
-    if (line.startsWith("```")) {
-      code = !code;
-    }
-    const hashes = line.match(/^(#+) /)?.[1]?.length;
-    if (!code && hashes && hashes <= level) {
-      break;
-    }
-  }
-  return lines.slice(start + 1, end).join("\n");
+	let code = false;
+	let end = start + 1;
+	for (; end < lines.length; end++) {
+		const line = lines[end] ?? "";
+		if (line.startsWith("```")) {
+			code = !code;
+		}
+		const hashes = line.match(/^(#+) /)?.[1]?.length;
+		if (!code && hashes && hashes <= level) {
+			break;
+		}
+	}
+	return lines.slice(start + 1, end).join("\n");
 }
 
 // Every rule in the checklist's tables, as YAML list items. The tables are read by
 // their header row, so a column like Scope or Basis only shows up on pages that have
 // it, and a heading like "### UX rules" gives the rules below it their layer.
 function checklist(markdown: string): Array<string> {
-  const items: Array<string> = [];
-  let layer: string | undefined;
-  let columns: Array<string> | undefined;
+	const items: Array<string> = [];
+	let layer: string | undefined;
+	let columns: Array<string> | undefined;
 
-  for (const line of section(markdown, "## Checklist")?.split("\n") ?? []) {
-    layer = line.match(/^### (\w+) rules$/)?.[1] ?? layer;
-    if (!line.startsWith("|")) {
-      columns = undefined;
-      continue;
-    }
-    const cells = line
-      .slice(1, line.lastIndexOf("|"))
-      .split(/(?<!\\)\|/)
-      .map((cell) => cell.trim().replaceAll(String.raw`\|`, "|"));
-    if (!columns) {
-      columns = cells.map((cell) => cell.toLowerCase());
-      continue;
-    }
-    if (cells.every((cell) => /^:?-+:?$/.test(cell))) {
-      continue;
-    }
+	for (const line of section(markdown, "## Checklist")?.split("\n") ?? []) {
+		layer = line.match(/^### (\w+) rules$/)?.[1] ?? layer;
+		if (!line.startsWith("|")) {
+			columns = undefined;
+			continue;
+		}
+		const cells = line
+			.slice(1, line.lastIndexOf("|"))
+			.split(/(?<!\\)\|/)
+			.map((cell) => cell.trim().replaceAll(String.raw`\|`, "|"));
+		if (!columns) {
+			columns = cells.map((cell) => cell.toLowerCase());
+			continue;
+		}
+		if (cells.every((cell) => /^:?-+:?$/.test(cell))) {
+			continue;
+		}
 
-    const header = columns;
-    const cell = (column: string) => cells[header.indexOf(column)];
-    const scope = cell("scope");
-    const basis = cell("basis");
-    items.push(
-      `  - id: ${cell("rule")?.replaceAll("`", "")}`,
-      ...(layer ? [`    layer: ${layer.toLowerCase()}`] : []),
-      `    level: ${cell("level")?.toLowerCase()}`,
-      ...(scope ? [`    scope: ${scope.toLowerCase()}`] : []),
-      // JSON strings are valid YAML, and these hold backticks, colons and quotes.
-      `    requirement: ${JSON.stringify(cell("requirement"))}`,
-      ...(basis ? [`    basis: ${JSON.stringify(basis)}`] : []),
-      `    check: ${JSON.stringify(cell("check"))}`,
-    );
-  }
-  return items;
+		const header = columns;
+		const cell = (column: string) => cells[header.indexOf(column)];
+		const scope = cell("scope");
+		const basis = cell("basis");
+		items.push(
+			`  - id: ${cell("rule")?.replaceAll("`", "")}`,
+			...(layer ? [`    layer: ${layer.toLowerCase()}`] : []),
+			`    level: ${cell("level")?.toLowerCase()}`,
+			...(scope ? [`    scope: ${scope.toLowerCase()}`] : []),
+			// JSON strings are valid YAML, and these hold backticks, colons and quotes.
+			`    requirement: ${JSON.stringify(cell("requirement"))}`,
+			...(basis ? [`    basis: ${JSON.stringify(basis)}`] : []),
+			`    check: ${JSON.stringify(cell("check"))}`,
+		);
+	}
+	return items;
 }

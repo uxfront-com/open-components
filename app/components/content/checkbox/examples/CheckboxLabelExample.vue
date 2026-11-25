@@ -5,11 +5,15 @@ import Checkbox from "~/reference/checkbox/Checkbox.vue";
 </script>
 
 <template>
-  <CheckboxExample>
-    <div class="flex w-full max-w-sm flex-col gap-1">
-      <Checkbox name="updates" aria-describedby="label-updates-hint">Email me product updates</Checkbox>
-      <p id="label-updates-hint" class="text-muted ps-6.5 text-sm">About once a month. You can stop them at any time.</p>
-    </div>
-    <template v-if="$slots.default" #code><slot /></template>
-  </CheckboxExample>
+	<CheckboxExample>
+		<div class="flex w-full max-w-sm flex-col gap-1">
+			<Checkbox name="updates" aria-describedby="label-updates-hint"
+				>Email me product updates</Checkbox
+			>
+			<p id="label-updates-hint" class="text-muted ps-6.5 text-sm">
+				About once a month. You can stop them at any time.
+			</p>
+		</div>
+		<template v-if="$slots.default" #code><slot /></template>
+	</CheckboxExample>
 </template>

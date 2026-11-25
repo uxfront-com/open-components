@@ -6,5 +6,5 @@ const { sidebarNavigation } = useSubNavigation();
 </script>
 
 <template>
-  <DocsNavigation :navigation="sidebarNavigation" />
+	<DocsNavigation :navigation="sidebarNavigation" />
 </template>

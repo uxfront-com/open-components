@@ -10,17 +10,21 @@ const git = (...args) => execFileSync("git", args, { encoding: "utf8" }).trim();
 const shallow = () => git("rev-parse", "--is-shallow-repository") === "true";
 
 if (shallow()) {
-  console.log("fetch-history: the clone is shallow, so fetching its full history for the sitemap's dates.");
-  let reason = "";
-  try {
-    git("fetch", "--unshallow", "--quiet");
-  } catch (error) {
-    reason = `\n${error.message}`;
-  }
-  // The site still builds, with every page dated by the latest commit.
-  if (shallow()) {
-    console.warn(`fetch-history: the clone is still shallow, so the sitemap dates every page by the latest commit.${reason}`);
-  }
+	console.log(
+		"fetch-history: the clone is shallow, so fetching its full history for the sitemap's dates.",
+	);
+	let reason = "";
+	try {
+		git("fetch", "--unshallow", "--quiet");
+	} catch (error) {
+		reason = `\n${error.message}`;
+	}
+	// The site still builds, with every page dated by the latest commit.
+	if (shallow()) {
+		console.warn(
+			`fetch-history: the clone is still shallow, so the sitemap dates every page by the latest commit.${reason}`,
+		);
+	}
 } else {
-  console.log("fetch-history: the clone has its full history.");
+	console.log("fetch-history: the clone has its full history.");
 }

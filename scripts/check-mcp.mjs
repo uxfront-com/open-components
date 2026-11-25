@@ -9,13 +9,21 @@ import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { basename, dirname, join } from "node:path";
+
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { slug } from "github-slugger";
 import { parse } from "yaml";
 
 const SITE = "https://opencomponents.dev";
-const TOOLS = ["get-contract", "get-page", "get-reference-implementation", "list-components", "list-rules", "search-docs"];
+const TOOLS = [
+	"get-contract",
+	"get-page",
+	"get-reference-implementation",
+	"list-components",
+	"list-rules",
+	"search-docs",
+];
 const PROMPTS = ["adopt-token-paths", "build-component", "review-component", "review-usage"];
 // What some MCP clients pass on of a tool's result before cutting it short, like
 // Gemini CLI's 40,000 characters (Codex's is 48,000 bytes, and Claude Code's
@@ -27,419 +35,617 @@ const check = (ok, problem) => ok || problems.push(problem);
 // The tools a text names, like get-page.
 const named = (text) => text.match(/\b(?:get|list|search)-[a-z-]+[a-z]\b/g) ?? [];
 
-const url = process.argv.includes("--url") ? process.argv[process.argv.indexOf("--url") + 1] : undefined;
+const url = process.argv.includes("--url")
+	? process.argv[process.argv.indexOf("--url") + 1]
+	: undefined;
 if (!existsSync("dist/raw/docs")) {
-  throw new Error("dist is missing: run `pnpm build` first.");
+	throw new Error("dist is missing: run `pnpm build` first.");
 }
 // The site's security headers, which dist/_headers gives every static file.
 const HEADERS = Object.fromEntries(
-  (readFileSync("dist/_headers", "utf8").split(/^(?=\S)/m).find((block) => block.startsWith("/*\n")) ?? "")
-    .split("\n")
-    .flatMap((line) => {
-      const header = line.match(/^\s+([^:]+):\s*(.+)$/);
-      return header ? [[header[1].toLowerCase(), header[2]]] : [];
-    }),
+	(
+		readFileSync("dist/_headers", "utf8")
+			.split(/^(?=\S)/m)
+			.find((block) => block.startsWith("/*\n")) ?? ""
+	)
+		.split("\n")
+		.flatMap((line) => {
+			const header = line.match(/^\s+([^:]+):\s*(.+)$/);
+			return header ? [[header[1].toLowerCase(), header[2]]] : [];
+		}),
 );
 const wrangler = url ? undefined : await serve();
 const base = url ?? wrangler.url;
 
 try {
-  await checkRoutes();
-  await checkServer();
+	await checkRoutes();
+	await checkServer();
 } catch (error) {
-  // Why the Worker stopped answering, if it did, is only in wrangler dev's own output.
-  if (wrangler) {
-    console.error(`wrangler dev's output:\n${wrangler.log()}`);
-  }
-  throw error;
+	// Why the Worker stopped answering, if it did, is only in wrangler dev's own output.
+	if (wrangler) {
+		console.error(`wrangler dev's output:\n${wrangler.log()}`);
+	}
+	throw error;
 } finally {
-  wrangler?.process.kill();
+	wrangler?.process.kill();
 }
 
 if (problems.length) {
-  console.error(problems.map((problem) => `✗ ${problem}`).join("\n"));
-  process.exit(1);
+	console.error(problems.map((problem) => `✗ ${problem}`).join("\n"));
+	process.exit(1);
 }
 console.log(`✓ The MCP server at ${base}/mcp serves the standard as the site publishes it.`);
 
 // Each docs page's `title`, by its path: content/docs/3.components/button/2.ux.md
 // is /docs/components/button/ux, as docsPath in server/lib/raw.ts serves it.
 function docsTitles() {
-  return new Map(
-    readdirSync("content/docs", { recursive: true, encoding: "utf8" })
-      .filter((file) => file.endsWith(".md"))
-      .map((file) => {
-        const path = docsPath(file);
-        const frontmatter = readFileSync(join("content/docs", file), "utf8").match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
-        return [path, parse(frontmatter)?.title];
-      }),
-  );
+	return new Map(
+		readdirSync("content/docs", { recursive: true, encoding: "utf8" })
+			.filter((file) => file.endsWith(".md"))
+			.map((file) => {
+				const path = docsPath(file);
+				const frontmatter =
+					readFileSync(join("content/docs", file), "utf8").match(
+						/^---\r?\n([\s\S]*?)\r?\n---/,
+					)?.[1] ?? "";
+				return [path, parse(frontmatter)?.title];
+			}),
+	);
 }
 
 // The parts of each split page, by the page's path, from content/docs: the files
 // beside an index.md, as isPart in server/lib/raw.ts reads them.
 // content/docs/3.components/button/2.ux.md is a part of /docs/components/button.
 function docsParts() {
-  const parts = new Map();
-  for (const file of readdirSync("content/docs", { recursive: true, encoding: "utf8" })) {
-    const folder = dirname(file);
-    if (!file.endsWith(".md") || basename(file) === "index.md" || !existsSync(join("content/docs", folder, "index.md"))) {
-      continue;
-    }
-    const whole = docsPath(join(folder, "index.md"));
-    parts.set(whole, [...(parts.get(whole) ?? []), docsPath(file)]);
-  }
-  return parts;
+	const parts = new Map();
+	for (const file of readdirSync("content/docs", { recursive: true, encoding: "utf8" })) {
+		const folder = dirname(file);
+		if (
+			!file.endsWith(".md") ||
+			basename(file) === "index.md" ||
+			!existsSync(join("content/docs", folder, "index.md"))
+		) {
+			continue;
+		}
+		const whole = docsPath(join(folder, "index.md"));
+		parts.set(whole, [...(parts.get(whole) ?? []), docsPath(file)]);
+	}
+	return parts;
 }
 
 // The path a file in content/docs is served at, as docsPath in server/lib/raw.ts
 // gives it: 3.components/button/2.ux.md is /docs/components/button/ux.
 function docsPath(file) {
-  return `/docs/${file.replace(/\.md$/, "").replaceAll(/(^|\/)\d+\./g, "$1").replace(/\/index$/, "")}`;
+	return `/docs/${file
+		.replace(/\.md$/, "")
+		.replaceAll(/(^|\/)\d+\./g, "$1")
+		.replace(/\/index$/, "")}`;
 }
 
 // Serves the Worker on a free port, the way `npx wrangler dev -c mcp/wrangler.jsonc` does.
 async function serve() {
-  if (!existsSync("mcp/.output/server/index.mjs")) {
-    throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
-  }
-  const port = await new Promise((resolve) => {
-    const server = createServer().listen(0, "127.0.0.1", () => {
-      const { port } = server.address();
-      server.close(() => resolve(port));
-    });
-  });
-  const child = spawn("node_modules/.bin/wrangler", ["dev", "-c", "mcp/wrangler.jsonc", "--ip", "127.0.0.1", "--port", String(port)], {
-    env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  let log = "";
-  child.stdout.on("data", (data) => (log += data));
-  child.stderr.on("data", (data) => (log += data));
-  const url = `http://127.0.0.1:${port}`;
-  for (let attempt = 0; attempt < 120; attempt++) {
-    if (child.exitCode !== null) {
-      break;
-    }
-    // Any response will do: `/` redirects to the site.
-    if (await fetch(url, { redirect: "manual" }).then(() => true, () => false)) {
-      return { url, process: child, log: () => log };
-    }
-    await new Promise((resolve) => {
-      setTimeout(resolve, 500);
-    });
-  }
-  child.kill();
-  throw new Error(`wrangler dev didn't start:\n${log}`);
+	if (!existsSync("mcp/.output/server/index.mjs")) {
+		throw new Error("mcp/.output is missing: run `pnpm build:mcp` first.");
+	}
+	const port = await new Promise((resolve) => {
+		const server = createServer().listen(0, "127.0.0.1", () => {
+			const { port } = server.address();
+			server.close(() => resolve(port));
+		});
+	});
+	const child = spawn(
+		"node_modules/.bin/wrangler",
+		["dev", "-c", "mcp/wrangler.jsonc", "--ip", "127.0.0.1", "--port", String(port)],
+		{
+			env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
+			stdio: ["ignore", "pipe", "pipe"],
+		},
+	);
+	let log = "";
+	child.stdout.on("data", (data) => (log += data));
+	child.stderr.on("data", (data) => (log += data));
+	const url = `http://127.0.0.1:${port}`;
+	for (let attempt = 0; attempt < 120; attempt++) {
+		if (child.exitCode !== null) {
+			break;
+		}
+		// Any response will do: `/` redirects to the site.
+		if (
+			await fetch(url, { redirect: "manual" }).then(
+				() => true,
+				() => false,
+			)
+		) {
+			return { url, process: child, log: () => log };
+		}
+		await new Promise((resolve) => {
+			setTimeout(resolve, 500);
+		});
+	}
+	child.kill();
+	throw new Error(`wrangler dev didn't start:\n${log}`);
 }
 
 // What browsers and other routes get from the Worker.
 async function checkRoutes() {
-  // People who open the server, or its subdomain, land on the page about connecting to it.
-  for (const path of ["/", "/mcp"]) {
-    const browser = await fetch(`${base}${path}`, { headers: { accept: "text/html" }, redirect: "manual" });
-    const location = new URL(browser.headers.get("location") ?? "", base);
-    check(browser.status === 302, `GET ${path} from a browser returned ${browser.status}, not a redirect`);
-    check(
-      location.origin === SITE && existsSync(join("dist", `${location.pathname}.html`)),
-      `GET ${path} from a browser redirects to ${location}, which isn't a page on ${SITE}`,
-    );
-  }
+	// People who open the server, or its subdomain, land on the page about connecting to it.
+	for (const path of ["/", "/mcp"]) {
+		const browser = await fetch(`${base}${path}`, {
+			headers: { accept: "text/html" },
+			redirect: "manual",
+		});
+		const location = new URL(browser.headers.get("location") ?? "", base);
+		check(
+			browser.status === 302,
+			`GET ${path} from a browser returned ${browser.status}, not a redirect`,
+		);
+		check(
+			location.origin === SITE && existsSync(join("dist", `${location.pathname}.html`)),
+			`GET ${path} from a browser redirects to ${location}, which isn't a page on ${SITE}`,
+		);
+	}
 
-  // The toolkit's install badge, which writes its query into the SVG unescaped,
-  // is turned away, along with anything else the server doesn't have.
-  for (const path of ["/mcp/badge.svg?color=%22%3E%3Cscript%3E", "/mcp/nope", "/nope"]) {
-    const response = await fetch(`${base}${path}`);
-    const body = await response.text();
-    check(response.status === 404 && !body.includes("<script"), `GET ${path} returned ${response.status}, not a 404`);
-  }
+	// The toolkit's install badge, which writes its query into the SVG unescaped,
+	// is turned away, along with anything else the server doesn't have.
+	for (const path of ["/mcp/badge.svg?color=%22%3E%3Cscript%3E", "/mcp/nope", "/nope"]) {
+		const response = await fetch(`${base}${path}`);
+		const body = await response.text();
+		check(
+			response.status === 404 && !body.includes("<script"),
+			`GET ${path} returned ${response.status}, not a 404`,
+		);
+	}
 
-  const deeplink = await fetch(`${base}/mcp/deeplink`);
-  const install = await deeplink.text();
-  check(
-    deeplink.status === 200 && install.includes("cursor://anysphere.cursor-deeplink/mcp/install?name=open-components"),
-    `GET /mcp/deeplink, Docus's "Add MCP Server" link, returned ${deeplink.status} without Cursor's install link`,
-  );
-  // Web-based clients on other origins can call it.
-  const preflight = await fetch(`${base}/mcp`, {
-    method: "OPTIONS",
-    headers: { origin: "https://example.com", "access-control-request-method": "POST" },
-  });
-  check(
-    preflight.status === 204 && preflight.headers.get("access-control-allow-origin") === "*",
-    `A CORS preflight for /mcp returned ${preflight.status} without Access-Control-Allow-Origin`,
-  );
-  const crossOrigin = await fetch(`${base}/mcp`, {
-    method: "POST",
-    headers: { origin: "https://example.com", "content-type": "application/json", accept: "application/json, text/event-stream" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }),
-  });
-  check(crossOrigin.status === 200, `A request to /mcp from another origin returned ${crossOrigin.status}`);
+	const deeplink = await fetch(`${base}/mcp/deeplink`);
+	const install = await deeplink.text();
+	check(
+		deeplink.status === 200 &&
+			install.includes("cursor://anysphere.cursor-deeplink/mcp/install?name=open-components"),
+		`GET /mcp/deeplink, Docus's "Add MCP Server" link, returned ${deeplink.status} without Cursor's install link`,
+	);
+	// Web-based clients on other origins can call it.
+	const preflight = await fetch(`${base}/mcp`, {
+		method: "OPTIONS",
+		headers: { origin: "https://example.com", "access-control-request-method": "POST" },
+	});
+	check(
+		preflight.status === 204 && preflight.headers.get("access-control-allow-origin") === "*",
+		`A CORS preflight for /mcp returned ${preflight.status} without Access-Control-Allow-Origin`,
+	);
+	const crossOrigin = await fetch(`${base}/mcp`, {
+		method: "POST",
+		headers: {
+			origin: "https://example.com",
+			"content-type": "application/json",
+			accept: "application/json, text/event-stream",
+		},
+		body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }),
+	});
+	check(
+		crossOrigin.status === 200,
+		`A request to /mcp from another origin returned ${crossOrigin.status}`,
+	);
 
-  // The Worker's responses carry the site's security headers.
-  check(Object.keys(HEADERS).length > 0, "dist/_headers has no headers for every path");
-  for (const [name, value] of Object.entries(HEADERS)) {
-    check(crossOrigin.headers.get(name) === value, `/mcp responses don't have the site's ${name} header`);
-  }
-  // It's an API, so no response of its own is indexed: not the redirect from its
-  // subdomain, not /mcp, and not a file it doesn't have, like robots.txt. The site
-  // itself never sends noindex for every path (scripts/check-seo.mjs).
-  check(!/noindex/i.test(HEADERS["x-robots-tag"] ?? ""), "dist/_headers sends noindex for every path of the site");
-  for (const [path, init] of [
-    ["/", { headers: { accept: "text/html" }, redirect: "manual" }],
-    ["/mcp", { headers: { accept: "text/html" }, redirect: "manual" }],
-    ["/robots.txt", {}],
-  ]) {
-    const response = await fetch(`${base}${path}`, init);
-    check(response.headers.get("x-robots-tag") === "noindex", `GET ${path} returned ${response.status} without X-Robots-Tag: noindex`);
-  }
-  check(crossOrigin.headers.get("x-robots-tag") === "noindex", "/mcp responses don't have X-Robots-Tag: noindex");
+	// The Worker's responses carry the site's security headers.
+	check(Object.keys(HEADERS).length > 0, "dist/_headers has no headers for every path");
+	for (const [name, value] of Object.entries(HEADERS)) {
+		check(
+			crossOrigin.headers.get(name) === value,
+			`/mcp responses don't have the site's ${name} header`,
+		);
+	}
+	// It's an API, so no response of its own is indexed: not the redirect from its
+	// subdomain, not /mcp, and not a file it doesn't have, like robots.txt. The site
+	// itself never sends noindex for every path (scripts/check-seo.mjs).
+	check(
+		!/noindex/i.test(HEADERS["x-robots-tag"] ?? ""),
+		"dist/_headers sends noindex for every path of the site",
+	);
+	for (const [path, init] of [
+		["/", { headers: { accept: "text/html" }, redirect: "manual" }],
+		["/mcp", { headers: { accept: "text/html" }, redirect: "manual" }],
+		["/robots.txt", {}],
+	]) {
+		const response = await fetch(`${base}${path}`, init);
+		check(
+			response.headers.get("x-robots-tag") === "noindex",
+			`GET ${path} returned ${response.status} without X-Robots-Tag: noindex`,
+		);
+	}
+	check(
+		crossOrigin.headers.get("x-robots-tag") === "noindex",
+		"/mcp responses don't have X-Robots-Tag: noindex",
+	);
 }
 
 async function checkServer() {
-  const client = new Client({ name: "check-mcp", version: "1.0.0" });
-  await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`)));
+	const client = new Client({ name: "check-mcp", version: "1.0.0" });
+	await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`)));
 
-  const call = async (name, args) => {
-    const result = await client.callTool({ name, arguments: args });
-    const text = result.content?.map((part) => part.text ?? "").join("\n") ?? "";
-    check(text.length < MAX_RESULT, `${name} ${JSON.stringify(args)} returned ${text.length} characters, too long for an agent's context`);
-    return { ...result, text };
-  };
+	const call = async (name, args) => {
+		const result = await client.callTool({ name, arguments: args });
+		const text = result.content?.map((part) => part.text ?? "").join("\n") ?? "";
+		check(
+			text.length < MAX_RESULT,
+			`${name} ${JSON.stringify(args)} returned ${text.length} characters, too long for an agent's context`,
+		);
+		return { ...result, text };
+	};
 
-  check(client.getServerVersion()?.name === "open-components", `The server is named ${client.getServerVersion()?.name}`);
-  const instructions = client.getInstructions() ?? "";
+	check(
+		client.getServerVersion()?.name === "open-components",
+		`The server is named ${client.getServerVersion()?.name}`,
+	);
+	const instructions = client.getInstructions() ?? "";
 
-  // Every tool and prompt is there, read-only, and only names the tools there are.
-  const { tools } = await client.listTools();
-  const { prompts } = await client.listPrompts();
-  for (const [kind, served, expected] of [
-    ["tool", tools, TOOLS],
-    ["prompt", prompts, PROMPTS],
-  ]) {
-    const names = served.map(({ name }) => name);
-    for (const name of names) {
-      check(expected.includes(name), `The server has a ${kind}, ${name}, that check-mcp doesn't list`);
-    }
-    for (const name of expected) {
-      check(names.includes(name), `The server has no ${kind} named ${name}`);
-    }
-  }
-  // Every tool works with each of the examples it gives agents.
-  for (const tool of tools) {
-    check(tool.annotations?.readOnlyHint === true, `${tool.name} isn't marked read-only`);
-    for (const example of tool._meta?.inputExamples ?? [{}]) {
-      const { isError, text } = await call(tool.name, example);
-      check(!isError, `${tool.name} ${JSON.stringify(example)}, one of its examples, failed: ${text.slice(0, 200)}`);
-    }
-  }
-  for (const [where, text] of [["The instructions", instructions], ...tools.map((tool) => [tool.name, tool.description ?? ""])]) {
-    for (const name of named(text)) {
-      check(TOOLS.includes(name), `${where} name a tool that doesn't exist: ${name}`);
-    }
-  }
+	// Every tool and prompt is there, read-only, and only names the tools there are.
+	const { tools } = await client.listTools();
+	const { prompts } = await client.listPrompts();
+	for (const [kind, served, expected] of [
+		["tool", tools, TOOLS],
+		["prompt", prompts, PROMPTS],
+	]) {
+		const names = served.map(({ name }) => name);
+		for (const name of names) {
+			check(
+				expected.includes(name),
+				`The server has a ${kind}, ${name}, that check-mcp doesn't list`,
+			);
+		}
+		for (const name of expected) {
+			check(names.includes(name), `The server has no ${kind} named ${name}`);
+		}
+	}
+	// Every tool works with each of the examples it gives agents.
+	for (const tool of tools) {
+		check(tool.annotations?.readOnlyHint === true, `${tool.name} isn't marked read-only`);
+		for (const example of tool._meta?.inputExamples ?? [{}]) {
+			const { isError, text } = await call(tool.name, example);
+			check(
+				!isError,
+				`${tool.name} ${JSON.stringify(example)}, one of its examples, failed: ${text.slice(0, 200)}`,
+			);
+		}
+	}
+	for (const [where, text] of [
+		["The instructions", instructions],
+		...tools.map((tool) => [tool.name, tool.description ?? ""]),
+	]) {
+		for (const name of named(text)) {
+			check(TOOLS.includes(name), `${where} name a tool that doesn't exist: ${name}`);
+		}
+	}
 
-  // What the standard covers. Arguments are optional when every one of them is.
-  const bare = await client.callTool({ name: "list-components" });
-  check(!bare.isError, "list-components without arguments failed");
-  const { structuredContent: catalog } = await call("list-components", {});
-  const shipped = catalog.components.filter((component) => component.status === "shipped");
-  check(shipped.some((component) => component.key === "button"), "list-components doesn't list the Button");
-  check(catalog.components.some((component) => component.status === "planned"), "list-components lists no planned components");
+	// What the standard covers. Arguments are optional when every one of them is.
+	const bare = await client.callTool({ name: "list-components" });
+	check(!bare.isError, "list-components without arguments failed");
+	const { structuredContent: catalog } = await call("list-components", {});
+	const shipped = catalog.components.filter((component) => component.status === "shipped");
+	check(
+		shipped.some((component) => component.key === "button"),
+		"list-components doesn't list the Button",
+	);
+	check(
+		catalog.components.some((component) => component.status === "planned"),
+		"list-components lists no planned components",
+	);
 
-  // Contracts: the same bytes as the site's, with every rule.
-  let rules = 0;
-  for (const component of shipped) {
-    const path = new URL(component.contractUrl).pathname;
-    const file = readFileSync(join("dist", path), "utf8");
-    const { text } = await call("get-contract", { component: component.key });
-    check(text === file, `get-contract {component: ${component.key}} isn't the same as ${path}`);
-    rules += parse(file).rules?.length ?? 0;
-  }
-  // list-rules pages them, so every page fits under MAX_RESULT, which `call` checks.
-  const all = [];
-  for (let offset = 0; offset !== undefined; ) {
-    const { structuredContent: page, isError, text } = await call("list-rules", offset ? { offset } : {});
-    if (isError) {
-      check(false, `list-rules {offset: ${offset}} failed: ${text.slice(0, 200)}`);
-      break;
-    }
-    check(page.total === rules, `list-rules {offset: ${offset}} has a total of ${page.total} rules, while the contracts have ${rules}`);
-    all.push(...page.rules);
-    offset = page.nextOffset;
-  }
-  check(all.length === rules, `list-rules lists ${all.length} rules across its pages, while the contracts have ${rules}`);
-  // An empty list filters nothing, since some clients send every optional field.
-  const { structuredContent: empty } = await call("list-rules", { ids: [], scope: [], layer: [], level: [], check: [] });
-  check(empty.total === rules, `list-rules with empty lists lists ${empty.total} rules, not ${rules}`);
+	// Contracts: the same bytes as the site's, with every rule.
+	let rules = 0;
+	for (const component of shipped) {
+		const path = new URL(component.contractUrl).pathname;
+		const file = readFileSync(join("dist", path), "utf8");
+		const { text } = await call("get-contract", { component: component.key });
+		check(text === file, `get-contract {component: ${component.key}} isn't the same as ${path}`);
+		rules += parse(file).rules?.length ?? 0;
+	}
+	// list-rules pages them, so every page fits under MAX_RESULT, which `call` checks.
+	const all = [];
+	for (let offset = 0; offset !== undefined;) {
+		const {
+			structuredContent: page,
+			isError,
+			text,
+		} = await call("list-rules", offset ? { offset } : {});
+		if (isError) {
+			check(false, `list-rules {offset: ${offset}} failed: ${text.slice(0, 200)}`);
+			break;
+		}
+		check(
+			page.total === rules,
+			`list-rules {offset: ${offset}} has a total of ${page.total} rules, while the contracts have ${rules}`,
+		);
+		all.push(...page.rules);
+		offset = page.nextOffset;
+	}
+	check(
+		all.length === rules,
+		`list-rules lists ${all.length} rules across its pages, while the contracts have ${rules}`,
+	);
+	// An empty list filters nothing, since some clients send every optional field.
+	const { structuredContent: empty } = await call("list-rules", {
+		ids: [],
+		scope: [],
+		layer: [],
+		level: [],
+		check: [],
+	});
+	check(
+		empty.total === rules,
+		`list-rules with empty lists lists ${empty.total} rules, not ${rules}`,
+	);
 
-  const pages = readdirSync("dist/raw/docs", { recursive: true, encoding: "utf8" })
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => `/docs/${file.replace(/\.md$/, "")}`);
-  // A page split into parts, like the Button's, has a page per part under its path,
-  // /docs/components/button/ux, while the server reads it as one page. Its parts are
-  // the files beside its index.md, as isPart in server/lib/raw.ts reads them, not
-  // every page under its path: the components hub, /docs/components, has the
-  // component pages under its path but no parts of its own.
-  const split = docsParts();
-  const partsOf = (pathname) => split.get(pathname) ?? [];
-  const wholeOf = (pathname) => pages.find((other) => partsOf(other).includes(pathname)) ?? pathname;
-  // Each page's IDs and each part's title are read once. Reading and searching the
-  // pages again for every rule kept the event loop busy for seconds, long enough for
-  // wrangler dev to close the client's idle connection, which the next call then
-  // found closed ("other side closed").
-  const read = new Map();
-  const once = (key, load) => read.get(key) ?? read.set(key, load()).get(key);
-  const ids = (pathname) =>
-    once(`ids:${pathname}`, () => new Set([...readFileSync(join("dist", `${pathname}.html`), "utf8").matchAll(/ id="([^"]*)"/g)].map((match) => match[1])));
-  // A part's title is the heading it has on the whole page, from its frontmatter.
-  // Its markdown copy is headed by its seo.title instead, like "Button - User
-  // Experience (UX)", while an Overview's copy keeps its title, like "Button",
-  // whatever its seo.title (rawTitle in server/lib/raw.ts).
-  const title = (part) => once("titles", docsTitles).get(part);
-  // Every anchor the server links agents to is on its page, or on one of its parts.
-  // A part's own section, like the Button's #user-experience-ux, is the top of the
-  // part's page, and a rules table, like #ui-rules, is headed "UI Checklist" there
-  // (#ui-checklist): the site sends both anchors there (app/middleware/split-pages.global.ts).
-  const has = (pathname, anchor) =>
-    [pathname, ...partsOf(pathname)].some((path) => ids(path).has(anchor)) ||
-    partsOf(pathname).some((part) => ids(part).has(anchor.replace(/-rules$/, "-checklist"))) ||
-    partsOf(pathname).some((part) => slug(title(part)) === anchor);
-  for (const rule of all) {
-    const { pathname, hash } = new URL(rule.url);
-    check(has(pathname, hash.slice(1)), `${rule.id} links to ${rule.url}, which isn't on the page`);
-  }
-  for (const pathname of pages) {
-    // An unknown section lists the page's sections, with their anchors.
-    const { text, isError } = await call("get-page", { path: pathname, sections: ["?"] });
-    check(isError, `get-page {path: ${pathname}, sections: ["?"]} didn't fail`);
-    for (const [, anchor] of text.matchAll(/\(#([^)]+)\)/g)) {
-      check(has(wholeOf(pathname), anchor), `get-page lists #${anchor} on ${pathname}, which isn't on the page`);
-    }
-    const page = await call("get-page", { path: pathname });
-    check(!page.isError && page.text.startsWith("# "), `get-page {path: ${pathname}} failed: ${page.text.slice(0, 200)}`);
-    check(!/^\s*:{2,}|:roadmap-check|\{external/m.test(page.text), `get-page {path: ${pathname}} has MDC syntax left in it`);
-  }
+	const pages = readdirSync("dist/raw/docs", { recursive: true, encoding: "utf8" })
+		.filter((file) => file.endsWith(".md"))
+		.map((file) => `/docs/${file.replace(/\.md$/, "")}`);
+	// A page split into parts, like the Button's, has a page per part under its path,
+	// /docs/components/button/ux, while the server reads it as one page. Its parts are
+	// the files beside its index.md, as isPart in server/lib/raw.ts reads them, not
+	// every page under its path: the components hub, /docs/components, has the
+	// component pages under its path but no parts of its own.
+	const split = docsParts();
+	const partsOf = (pathname) => split.get(pathname) ?? [];
+	const wholeOf = (pathname) =>
+		pages.find((other) => partsOf(other).includes(pathname)) ?? pathname;
+	// Each page's IDs and each part's title are read once. Reading and searching the
+	// pages again for every rule kept the event loop busy for seconds, long enough for
+	// wrangler dev to close the client's idle connection, which the next call then
+	// found closed ("other side closed").
+	const read = new Map();
+	const once = (key, load) => read.get(key) ?? read.set(key, load()).get(key);
+	const ids = (pathname) =>
+		once(
+			`ids:${pathname}`,
+			() =>
+				new Set(
+					[
+						...readFileSync(join("dist", `${pathname}.html`), "utf8").matchAll(/ id="([^"]*)"/g),
+					].map((match) => match[1]),
+				),
+		);
+	// A part's title is the heading it has on the whole page, from its frontmatter.
+	// Its markdown copy is headed by its seo.title instead, like "Button - User
+	// Experience (UX)", while an Overview's copy keeps its title, like "Button",
+	// whatever its seo.title (rawTitle in server/lib/raw.ts).
+	const title = (part) => once("titles", docsTitles).get(part);
+	// Every anchor the server links agents to is on its page, or on one of its parts.
+	// A part's own section, like the Button's #user-experience-ux, is the top of the
+	// part's page, and a rules table, like #ui-rules, is headed "UI Checklist" there
+	// (#ui-checklist): the site sends both anchors there (app/middleware/split-pages.global.ts).
+	const has = (pathname, anchor) =>
+		[pathname, ...partsOf(pathname)].some((path) => ids(path).has(anchor)) ||
+		partsOf(pathname).some((part) => ids(part).has(anchor.replace(/-rules$/, "-checklist"))) ||
+		partsOf(pathname).some((part) => slug(title(part)) === anchor);
+	for (const rule of all) {
+		const { pathname, hash } = new URL(rule.url);
+		check(has(pathname, hash.slice(1)), `${rule.id} links to ${rule.url}, which isn't on the page`);
+	}
+	for (const pathname of pages) {
+		// An unknown section lists the page's sections, with their anchors.
+		const { text, isError } = await call("get-page", { path: pathname, sections: ["?"] });
+		check(isError, `get-page {path: ${pathname}, sections: ["?"]} didn't fail`);
+		for (const [, anchor] of text.matchAll(/\(#([^)]+)\)/g)) {
+			check(
+				has(wholeOf(pathname), anchor),
+				`get-page lists #${anchor} on ${pathname}, which isn't on the page`,
+			);
+		}
+		const page = await call("get-page", { path: pathname });
+		check(
+			!page.isError && page.text.startsWith("# "),
+			`get-page {path: ${pathname}} failed: ${page.text.slice(0, 200)}`,
+		);
+		check(
+			!/^\s*:{2,}|:roadmap-check|\{external/m.test(page.text),
+			`get-page {path: ${pathname}} has MDC syntax left in it`,
+		);
+	}
 
-  // A long page comes as its outline, and a section in one framework.
-  const outline = await call("get-page", { path: "button" });
-  check(outline.text.includes("(#loading)") && !outline.text.includes("```"), "get-page {path: button} isn't the page's outline");
-  const loading = await call("get-page", { path: "button", sections: ["Loading"], framework: "react" });
-  check(loading.text.includes("```tsx") && !loading.text.includes("```vue"), "get-page's Loading section in React has other frameworks' code");
-  const linked = await call("get-page", { path: `${SITE}/docs/components/button#loading` });
-  check(linked.text.includes("#### Loading") && !linked.text.includes("(#loading)"), "get-page with a link to #loading doesn't read that section");
-  // A part's page, like the Button's UX, reaches the whole page.
-  const part = await call("get-page", { path: `${SITE}/docs/components/button/ux#loading` });
-  check(part.text.includes("#### Loading") && !part.text.includes("(#loading)"), "get-page with a link to the Button's UX page's #loading doesn't read that section");
-  const together = await call("get-page", { path: "button", sections: ["User Interface (UI)", "User Experience (UX)", "Reference implementation"] });
-  check(together.text.includes("too long to return together"), "get-page returns sections that are too long together instead of their outline");
-  // Every page split into parts, like the Button's: each part reaches the whole page,
-  // its rules come from its layer pages, and its Overview's cards come back as links
-  // in its introduction.
-  for (const whole of pages.filter((pathname) => partsOf(pathname).length)) {
-    const key = whole.split("/").at(-1);
-    const wholeOutline = await call("get-page", { path: whole });
-    // The page's headings, from its outline, as `{ depth, text, anchor, size }`, the size
-    // in tokens, roughly.
-    const headings = [...wholeOutline.text.matchAll(/^( *)- (.+) \(#([^)]+)\) ~([\d.]+)(k?)/gm)].map(([, indent, text, anchor, size, k]) => ({
-      depth: indent.length / 2,
-      text,
-      anchor,
-      size: Number(size) * (k ? 1000 : 1),
-    }));
-    for (const pathname of partsOf(whole)) {
-      const partOutline = await call("get-page", { path: pathname });
-      check(partOutline.text === wholeOutline.text, `get-page {path: ${pathname}} isn't the page at ${whole}`);
-      // A section on the part's page, like the Button's UX page's #loading: the shortest
-      // one under the part's own whose anchor the page doesn't repeat.
-      const own = headings.findIndex(({ depth, text }) => depth === 0 && text === title(pathname));
-      const end = headings.findIndex(({ depth }, i) => i > own && depth === 0);
-      const [section] = headings
-        .slice(own + 1, end === -1 ? undefined : end)
-        .filter(({ anchor }) => !/-\d+$/.test(anchor))
-        .sort((a, b) => a.size - b.size);
-      if (own === -1 || !section) {
-        check(false, `get-page's outline of ${whole} has no section under ${title(pathname)} to read`);
-        continue;
-      }
-      const linked = await call("get-page", { path: `${SITE}${pathname}#${section.anchor}` });
-      check(
-        linked.text.includes(`${SITE}${whole}#${section.anchor}`) && linked.text.includes(`${"#".repeat(section.depth + 2)} `) && !linked.text.includes(`(#${section.anchor})`),
-        `get-page with a link to ${pathname}#${section.anchor} doesn't read that section`,
-      );
-    }
-    const uxRules = await call("get-page", { path: whole, sections: ["UX rules"] });
-    const ux = all.filter((rule) => rule.component === key && rule.layer === "ux");
-    check(ux.length && ux.some((rule) => uxRules.text.includes(`\`${rule.id}\``)), `get-page's UX rules section of ${whole} has none of its UX rules`);
-    const intro = await call("get-page", { path: whole, sections: [readFileSync(join("dist/raw", `${whole}.md`), "utf8").match(/^# (.+)$/m)[1]] });
-    check(
-      partsOf(whole).every((pathname) => intro.text.includes(`](${SITE}${pathname})`)),
-      `get-page's introduction of ${whole} doesn't link its layer pages`,
-    );
-  }
-  const every = await call("get-page", { path: "button", sections: ["Variants"] });
-  check(every.text.includes("**React**") && every.text.includes("**Vanilla**"), "get-page's Variants section doesn't label each framework");
+	// A long page comes as its outline, and a section in one framework.
+	const outline = await call("get-page", { path: "button" });
+	check(
+		outline.text.includes("(#loading)") && !outline.text.includes("```"),
+		"get-page {path: button} isn't the page's outline",
+	);
+	const loading = await call("get-page", {
+		path: "button",
+		sections: ["Loading"],
+		framework: "react",
+	});
+	check(
+		loading.text.includes("```tsx") && !loading.text.includes("```vue"),
+		"get-page's Loading section in React has other frameworks' code",
+	);
+	const linked = await call("get-page", { path: `${SITE}/docs/components/button#loading` });
+	check(
+		linked.text.includes("#### Loading") && !linked.text.includes("(#loading)"),
+		"get-page with a link to #loading doesn't read that section",
+	);
+	// A part's page, like the Button's UX, reaches the whole page.
+	const part = await call("get-page", { path: `${SITE}/docs/components/button/ux#loading` });
+	check(
+		part.text.includes("#### Loading") && !part.text.includes("(#loading)"),
+		"get-page with a link to the Button's UX page's #loading doesn't read that section",
+	);
+	const together = await call("get-page", {
+		path: "button",
+		sections: ["User Interface (UI)", "User Experience (UX)", "Reference implementation"],
+	});
+	check(
+		together.text.includes("too long to return together"),
+		"get-page returns sections that are too long together instead of their outline",
+	);
+	// Every page split into parts, like the Button's: each part reaches the whole page,
+	// its rules come from its layer pages, and its Overview's cards come back as links
+	// in its introduction.
+	for (const whole of pages.filter((pathname) => partsOf(pathname).length)) {
+		const key = whole.split("/").at(-1);
+		const wholeOutline = await call("get-page", { path: whole });
+		// The page's headings, from its outline, as `{ depth, text, anchor, size }`, the size
+		// in tokens, roughly.
+		const headings = [
+			...wholeOutline.text.matchAll(/^( *)- (.+) \(#([^)]+)\) ~([\d.]+)(k?)/gm),
+		].map(([, indent, text, anchor, size, k]) => ({
+			depth: indent.length / 2,
+			text,
+			anchor,
+			size: Number(size) * (k ? 1000 : 1),
+		}));
+		for (const pathname of partsOf(whole)) {
+			const partOutline = await call("get-page", { path: pathname });
+			check(
+				partOutline.text === wholeOutline.text,
+				`get-page {path: ${pathname}} isn't the page at ${whole}`,
+			);
+			// A section on the part's page, like the Button's UX page's #loading: the shortest
+			// one under the part's own whose anchor the page doesn't repeat.
+			const own = headings.findIndex(({ depth, text }) => depth === 0 && text === title(pathname));
+			const end = headings.findIndex(({ depth }, i) => i > own && depth === 0);
+			const [section] = headings
+				.slice(own + 1, end === -1 ? undefined : end)
+				.filter(({ anchor }) => !/-\d+$/.test(anchor))
+				.sort((a, b) => a.size - b.size);
+			if (own === -1 || !section) {
+				check(
+					false,
+					`get-page's outline of ${whole} has no section under ${title(pathname)} to read`,
+				);
+				continue;
+			}
+			const linked = await call("get-page", { path: `${SITE}${pathname}#${section.anchor}` });
+			check(
+				linked.text.includes(`${SITE}${whole}#${section.anchor}`) &&
+					linked.text.includes(`${"#".repeat(section.depth + 2)} `) &&
+					!linked.text.includes(`(#${section.anchor})`),
+				`get-page with a link to ${pathname}#${section.anchor} doesn't read that section`,
+			);
+		}
+		const uxRules = await call("get-page", { path: whole, sections: ["UX rules"] });
+		const ux = all.filter((rule) => rule.component === key && rule.layer === "ux");
+		check(
+			ux.length && ux.some((rule) => uxRules.text.includes(`\`${rule.id}\``)),
+			`get-page's UX rules section of ${whole} has none of its UX rules`,
+		);
+		const intro = await call("get-page", {
+			path: whole,
+			sections: [readFileSync(join("dist/raw", `${whole}.md`), "utf8").match(/^# (.+)$/m)[1]],
+		});
+		check(
+			partsOf(whole).every((pathname) => intro.text.includes(`](${SITE}${pathname})`)),
+			`get-page's introduction of ${whole} doesn't link its layer pages`,
+		);
+	}
+	const every = await call("get-page", { path: "button", sections: ["Variants"] });
+	check(
+		every.text.includes("**React**") && every.text.includes("**Vanilla**"),
+		"get-page's Variants section doesn't label each framework",
+	);
 
-  // Search and the reference implementation.
-  const { structuredContent: search } = await call("search-docs", { query: "aria-pressed" });
-  check(search.results.slice(0, 3).some((result) => result.rule?.id === "button/toggle-pressed"), 'search-docs {query: "aria-pressed"} misses button/toggle-pressed');
-  const reference = await call("get-reference-implementation", { component: "button" });
-  for (const file of readdirSync("app/reference/button")) {
-    const content = readFileSync(join("app/reference/button", file), "utf8").trim();
-    check(reference.text.includes(content), `get-reference-implementation {component: button} doesn't have ${file} as it is`);
-  }
+	// Search and the reference implementation.
+	const { structuredContent: search } = await call("search-docs", { query: "aria-pressed" });
+	check(
+		search.results.slice(0, 3).some((result) => result.rule?.id === "button/toggle-pressed"),
+		'search-docs {query: "aria-pressed"} misses button/toggle-pressed',
+	);
+	const reference = await call("get-reference-implementation", { component: "button" });
+	for (const file of readdirSync("app/reference/button")) {
+		const content = readFileSync(join("app/reference/button", file), "utf8").trim();
+		check(
+			reference.text.includes(content),
+			`get-reference-implementation {component: button} doesn't have ${file} as it is`,
+		);
+	}
 
-  // Wrong input gets an error that helps the agent fix it.
-  const typo = await call("list-rules", { ids: ["button/keep-focused"] });
-  check(typo.isError && typo.text.includes("button/keep-focus"), "list-rules with a mistyped ID doesn't suggest the right one");
-  const past = await call("list-rules", { offset: rules });
-  check(past.isError && past.text.includes("offset"), "list-rules with an offset past the last rule doesn't fail");
-  const unknown = await call("get-page", { path: "nope" });
-  check(unknown.isError && unknown.text.includes("/docs/components/button"), "get-page with an unknown path doesn't list the pages");
+	// Wrong input gets an error that helps the agent fix it.
+	const typo = await call("list-rules", { ids: ["button/keep-focused"] });
+	check(
+		typo.isError && typo.text.includes("button/keep-focus"),
+		"list-rules with a mistyped ID doesn't suggest the right one",
+	);
+	const past = await call("list-rules", { offset: rules });
+	check(
+		past.isError && past.text.includes("offset"),
+		"list-rules with an offset past the last rule doesn't fail",
+	);
+	const unknown = await call("get-page", { path: "nope" });
+	check(
+		unknown.isError && unknown.text.includes("/docs/components/button"),
+		"get-page with an unknown path doesn't list the pages",
+	);
 
-  // Bad input to a resource or a prompt is a bad argument (-32602), not a server error.
-  for (const [what, request] of [
-    ["A missing page resource", () => client.readResource({ uri: `${SITE}/raw/docs/components/nope.md` })],
-    ["build-component for a component that doesn't exist", () => client.getPrompt({ name: "build-component", arguments: { component: "nope" } })],
-  ]) {
-    const error = await request().then(() => undefined, (error) => error);
-    check(error?.code === -32_602, `${what} returned ${error ? `error ${error.code}` : "no error"}, not -32602`);
-  }
+	// Bad input to a resource or a prompt is a bad argument (-32602), not a server error.
+	for (const [what, request] of [
+		[
+			"A missing page resource",
+			() => client.readResource({ uri: `${SITE}/raw/docs/components/nope.md` }),
+		],
+		[
+			"build-component for a component that doesn't exist",
+			() => client.getPrompt({ name: "build-component", arguments: { component: "nope" } }),
+		],
+	]) {
+		const error = await request().then(
+			() => undefined,
+			(error) => error,
+		);
+		check(
+			error?.code === -32_602,
+			`${what} returned ${error ? `error ${error.code}` : "no error"}, not -32602`,
+		);
+	}
 
-  // Resources: the same bytes as the files the site publishes at their URIs.
-  const { resources } = await client.listResources();
-  const { resourceTemplates } = await client.listResourceTemplates();
-  check(resources.length > pages.filter((pathname) => wholeOf(pathname) === pathname).length, `There are only ${resources.length} resources`);
-  // Codex reads a resource's priority as a number type that values like 0.9 don't
-  // fit, and then drops every resource the server lists.
-  for (const resource of [...resources, ...resourceTemplates]) {
-    check(resource.annotations?.priority === undefined, `${resource.uri ?? resource.uriTemplate} has a priority, which Codex can't read`);
-  }
-  for (const resource of resources) {
-    const { contents } = await client.readResource({ uri: resource.uri });
-    const path = resource.uri.slice(SITE.length);
-    check(contents[0]?.text === readFileSync(join("dist", path), "utf8"), `The resource ${resource.uri} isn't the same as ${path}`);
-  }
+	// Resources: the same bytes as the files the site publishes at their URIs.
+	const { resources } = await client.listResources();
+	const { resourceTemplates } = await client.listResourceTemplates();
+	check(
+		resources.length > pages.filter((pathname) => wholeOf(pathname) === pathname).length,
+		`There are only ${resources.length} resources`,
+	);
+	// Codex reads a resource's priority as a number type that values like 0.9 don't
+	// fit, and then drops every resource the server lists.
+	for (const resource of [...resources, ...resourceTemplates]) {
+		check(
+			resource.annotations?.priority === undefined,
+			`${resource.uri ?? resource.uriTemplate} has a priority, which Codex can't read`,
+		);
+	}
+	for (const resource of resources) {
+		const { contents } = await client.readResource({ uri: resource.uri });
+		const path = resource.uri.slice(SITE.length);
+		check(
+			contents[0]?.text === readFileSync(join("dist", path), "utf8"),
+			`The resource ${resource.uri} isn't the same as ${path}`,
+		);
+	}
 
-  // Prompts only name tools that exist.
-  const filled = {
-    "build-component": { component: "button", framework: "react" },
-    "review-component": { component: "button" },
-    "review-usage": { component: "button" },
-    "adopt-token-paths": {},
-  };
-  for (const prompt of prompts) {
-    if (!(prompt.name in filled)) {
-      check(false, `check-mcp has no arguments for the ${prompt.name} prompt: add them to \`filled\``);
-      continue;
-    }
-    const { messages } = await client.getPrompt({ name: prompt.name, arguments: filled[prompt.name] });
-    const text = messages.map((message) => message.content.text).join("\n");
-    check(text.includes(SITE), `The ${prompt.name} prompt doesn't link to the standard`);
-    for (const name of named(text)) {
-      check(TOOLS.includes(name), `The ${prompt.name} prompt names a tool that doesn't exist: ${name}`);
-    }
-  }
+	// Prompts only name tools that exist.
+	const filled = {
+		"build-component": { component: "button", framework: "react" },
+		"review-component": { component: "button" },
+		"review-usage": { component: "button" },
+		"adopt-token-paths": {},
+	};
+	for (const prompt of prompts) {
+		if (!(prompt.name in filled)) {
+			check(
+				false,
+				`check-mcp has no arguments for the ${prompt.name} prompt: add them to \`filled\``,
+			);
+			continue;
+		}
+		const { messages } = await client.getPrompt({
+			name: prompt.name,
+			arguments: filled[prompt.name],
+		});
+		const text = messages.map((message) => message.content.text).join("\n");
+		check(text.includes(SITE), `The ${prompt.name} prompt doesn't link to the standard`);
+		for (const name of named(text)) {
+			check(
+				TOOLS.includes(name),
+				`The ${prompt.name} prompt names a tool that doesn't exist: ${name}`,
+			);
+		}
+	}
 
-  await client.close();
+	await client.close();
 }

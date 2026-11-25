@@ -6,17 +6,17 @@ import Input from "~/reference/input/Input.vue";
 </script>
 
 <template>
-  <FieldExample>
-    <Field
-      id="input-email"
-      label="Email address"
-      hint="We'll only use it to send your receipt"
-      error="Enter your email address"
-      required
-      class="w-full max-w-sm"
-    >
-      <Input type="email" autocomplete="email" />
-    </Field>
-    <template v-if="$slots.default" #code><slot /></template>
-  </FieldExample>
+	<FieldExample>
+		<Field
+			id="input-email"
+			label="Email address"
+			hint="We'll only use it to send your receipt"
+			error="Enter your email address"
+			required
+			class="w-full max-w-sm"
+		>
+			<Input type="email" autocomplete="email" />
+		</Field>
+		<template v-if="$slots.default" #code><slot /></template>
+	</FieldExample>
 </template>

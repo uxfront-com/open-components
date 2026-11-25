@@ -1,165 +1,216 @@
 // @vitest-environment node
 import type { ContentNavigationItem } from "@nuxt/content";
 import { describe, expect, it } from "vitest";
+
 import { findSurround, sortNavigation } from "./navigation";
 
 // A page, and a folder split into an Overview and its parts, as Nuxt Content's
 // navigation lists them.
 const page = (path: string, title: string): ContentNavigationItem => ({ path, title, stem: path });
-const folder = (path: string, title: string, ...parts: Array<ContentNavigationItem>): ContentNavigationItem => ({
-  path,
-  title,
-  stem: path,
-  children: [page(path, "Overview"), ...parts],
+const folder = (
+	path: string,
+	title: string,
+	...parts: Array<ContentNavigationItem>
+): ContentNavigationItem => ({
+	path,
+	title,
+	stem: path,
+	children: [page(path, "Overview"), ...parts],
 });
-const section = (path: string, title: string, ...children: Array<ContentNavigationItem>): ContentNavigationItem => ({
-  path,
-  title,
-  stem: path,
-  page: false,
-  children,
+const section = (
+	path: string,
+	title: string,
+	...children: Array<ContentNavigationItem>
+): ContentNavigationItem => ({
+	path,
+	title,
+	stem: path,
+	page: false,
+	children,
 });
 
 const checkbox = folder(
-  "/docs/components/checkbox",
-  "Checkbox",
-  page("/docs/components/checkbox/ui", "User Interface"),
-  page("/docs/components/checkbox/ax", "Agentic Experience"),
+	"/docs/components/checkbox",
+	"Checkbox",
+	page("/docs/components/checkbox/ui", "User Interface"),
+	page("/docs/components/checkbox/ax", "Agentic Experience"),
 );
 
 // The docs in Nuxt Content's order, by file path, which puts `checkbox-group`
 // before `checkbox/index`, since `-` comes before `/`.
 const docs = (checkboxGroup: ContentNavigationItem) => [
-  section(
-    "/docs",
-    "Docs",
-    section(
-      "/docs/getting-started",
-      "Getting started",
-      page("/docs/getting-started/introduction", "Introduction"),
-      page("/docs/getting-started/roadmap", "Roadmap"),
-    ),
-    section("/docs/foundations", "Foundations", page("/docs/foundations/design-tokens", "Design Tokens")),
-    section(
-      "/docs/components",
-      "Components",
-      folder("/docs/components/button", "Button", page("/docs/components/button/ui", "User Interface")),
-      page("/docs/components/card", "Card"),
-      checkboxGroup,
-      checkbox,
-      page("/docs/components/dialog", "Dialog"),
-    ),
-  ),
+	section(
+		"/docs",
+		"Docs",
+		section(
+			"/docs/getting-started",
+			"Getting started",
+			page("/docs/getting-started/introduction", "Introduction"),
+			page("/docs/getting-started/roadmap", "Roadmap"),
+		),
+		section(
+			"/docs/foundations",
+			"Foundations",
+			page("/docs/foundations/design-tokens", "Design Tokens"),
+		),
+		section(
+			"/docs/components",
+			"Components",
+			folder(
+				"/docs/components/button",
+				"Button",
+				page("/docs/components/button/ui", "User Interface"),
+			),
+			page("/docs/components/card", "Card"),
+			checkboxGroup,
+			checkbox,
+			page("/docs/components/dialog", "Dialog"),
+		),
+	),
 ];
 
 // The docs with the components hub, the Components section's own page
 // (content/docs/3.components/index.md), which Nuxt Content lists first, by file path,
 // under whatever title its sidebar shows.
 const withHub = (title: string) =>
-  docs(page("/docs/components/checkbox-group", "Checkbox Group")).map((root) => ({
-    ...root,
-    children: root.children?.map((child) =>
-      child.path === "/docs/components"
-        ? { ...child, page: undefined, children: [page("/docs/components", title), ...(child.children ?? [])] }
-        : child,
-    ),
-  }));
+	docs(page("/docs/components/checkbox-group", "Checkbox Group")).map((root) => ({
+		...root,
+		children: root.children?.map((child) =>
+			child.path === "/docs/components"
+				? {
+						...child,
+						page: undefined,
+						children: [page("/docs/components", title), ...(child.children ?? [])],
+					}
+				: child,
+		),
+	}));
 
 const titles = (items: Array<ContentNavigationItem> = []) => items.map(({ title }) => title);
-const at = (navigation: Array<ContentNavigationItem>, path: string): ContentNavigationItem | undefined =>
-  navigation.reduce<ContentNavigationItem | undefined>(
-    (found, item) => found ?? (item.path === path && item.children ? item : at(item.children ?? [], path)),
-    undefined,
-  );
+const at = (
+	navigation: Array<ContentNavigationItem>,
+	path: string,
+): ContentNavigationItem | undefined =>
+	navigation.reduce<ContentNavigationItem | undefined>(
+		(found, item) =>
+			found ?? (item.path === path && item.children ? item : at(item.children ?? [], path)),
+		undefined,
+	);
 
 describe("sortNavigation", () => {
-  it.each([
-    ["a page", page("/docs/components/checkbox-group", "Checkbox Group")],
-    ["a folder", folder("/docs/components/checkbox-group", "Checkbox Group")],
-  ])("lists the Checkbox before the Checkbox Group when the Checkbox is a folder and the group %s", (_, group) => {
-    const navigation = sortNavigation(docs(group));
+	it.each([
+		["a page", page("/docs/components/checkbox-group", "Checkbox Group")],
+		["a folder", folder("/docs/components/checkbox-group", "Checkbox Group")],
+	])(
+		"lists the Checkbox before the Checkbox Group when the Checkbox is a folder and the group %s",
+		(_, group) => {
+			const navigation = sortNavigation(docs(group));
 
-    expect(titles(at(navigation, "/docs/components")?.children)).toEqual([
-      "Button",
-      "Card",
-      "Checkbox",
-      "Checkbox Group",
-      "Dialog",
-    ]);
-  });
+			expect(titles(at(navigation, "/docs/components")?.children)).toEqual([
+				"Button",
+				"Card",
+				"Checkbox",
+				"Checkbox Group",
+				"Dialog",
+			]);
+		},
+	);
 
-  it("keeps the numbered sections and the parts of a folder in the order Nuxt Content gives them", () => {
-    const navigation = sortNavigation(docs(page("/docs/components/checkbox-group", "Checkbox Group")));
+	it("keeps the numbered sections and the parts of a folder in the order Nuxt Content gives them", () => {
+		const navigation = sortNavigation(
+			docs(page("/docs/components/checkbox-group", "Checkbox Group")),
+		);
 
-    expect(titles(at(navigation, "/docs")?.children)).toEqual(["Getting started", "Foundations", "Components"]);
-    expect(titles(at(navigation, "/docs/getting-started")?.children)).toEqual(["Introduction", "Roadmap"]);
-    expect(titles(at(navigation, "/docs/components/checkbox")?.children)).toEqual([
-      "Overview",
-      "User Interface",
-      "Agentic Experience",
-    ]);
-  });
+		expect(titles(at(navigation, "/docs")?.children)).toEqual([
+			"Getting started",
+			"Foundations",
+			"Components",
+		]);
+		expect(titles(at(navigation, "/docs/getting-started")?.children)).toEqual([
+			"Introduction",
+			"Roadmap",
+		]);
+		expect(titles(at(navigation, "/docs/components/checkbox")?.children)).toEqual([
+			"Overview",
+			"User Interface",
+			"Agentic Experience",
+		]);
+	});
 
-  it.each(["All components", "Zebra"])(
-    "lists the components hub first, titled %s, then the components by name",
-    (title) => {
-      const navigation = sortNavigation(withHub(title));
+	it.each(["All components", "Zebra"])(
+		"lists the components hub first, titled %s, then the components by name",
+		(title) => {
+			const navigation = sortNavigation(withHub(title));
 
-      expect(titles(at(navigation, "/docs/components")?.children)).toEqual([
-        title,
-        "Button",
-        "Card",
-        "Checkbox",
-        "Checkbox Group",
-        "Dialog",
-      ]);
-    },
-  );
+			expect(titles(at(navigation, "/docs/components")?.children)).toEqual([
+				title,
+				"Button",
+				"Card",
+				"Checkbox",
+				"Checkbox Group",
+				"Dialog",
+			]);
+		},
+	);
 
-  it("leaves the navigation it's given as it was", () => {
-    const navigation = docs(page("/docs/components/checkbox-group", "Checkbox Group"));
-    sortNavigation(navigation);
+	it("leaves the navigation it's given as it was", () => {
+		const navigation = docs(page("/docs/components/checkbox-group", "Checkbox Group"));
+		sortNavigation(navigation);
 
-    expect(titles(at(navigation, "/docs/components")?.children)).toEqual([
-      "Button",
-      "Card",
-      "Checkbox Group",
-      "Checkbox",
-      "Dialog",
-    ]);
-  });
+		expect(titles(at(navigation, "/docs/components")?.children)).toEqual([
+			"Button",
+			"Card",
+			"Checkbox Group",
+			"Checkbox",
+			"Dialog",
+		]);
+	});
 });
 
 describe("findSurround", () => {
-  const navigation = sortNavigation(docs(page("/docs/components/checkbox-group", "Checkbox Group")));
-  const paths = (path: string) => findSurround(navigation, path).map((item) => item?.path ?? null);
+	const navigation = sortNavigation(
+		docs(page("/docs/components/checkbox-group", "Checkbox Group")),
+	);
+	const paths = (path: string) => findSurround(navigation, path).map((item) => item?.path ?? null);
 
-  it("goes from the Card to the Checkbox's Overview, and from its last part to the Checkbox Group", () => {
-    expect(paths("/docs/components/card")).toEqual([
-      "/docs/components/button/ui",
-      "/docs/components/checkbox",
-    ]);
-    expect(paths("/docs/components/checkbox/ax")).toEqual([
-      "/docs/components/checkbox/ui",
-      "/docs/components/checkbox-group",
-    ]);
-  });
+	it("goes from the Card to the Checkbox's Overview, and from its last part to the Checkbox Group", () => {
+		expect(paths("/docs/components/card")).toEqual([
+			"/docs/components/button/ui",
+			"/docs/components/checkbox",
+		]);
+		expect(paths("/docs/components/checkbox/ax")).toEqual([
+			"/docs/components/checkbox/ui",
+			"/docs/components/checkbox-group",
+		]);
+	});
 
-  it("crosses from one section to the next, and has nothing before the first page or after the last", () => {
-    expect(paths("/docs/getting-started/introduction")).toEqual([null, "/docs/getting-started/roadmap"]);
-    expect(paths("/docs/foundations/design-tokens")).toEqual([
-      "/docs/getting-started/roadmap",
-      "/docs/components/button",
-    ]);
-    expect(paths("/docs/components/dialog")).toEqual(["/docs/components/checkbox-group", null]);
-  });
+	it("crosses from one section to the next, and has nothing before the first page or after the last", () => {
+		expect(paths("/docs/getting-started/introduction")).toEqual([
+			null,
+			"/docs/getting-started/roadmap",
+		]);
+		expect(paths("/docs/foundations/design-tokens")).toEqual([
+			"/docs/getting-started/roadmap",
+			"/docs/components/button",
+		]);
+		expect(paths("/docs/components/dialog")).toEqual(["/docs/components/checkbox-group", null]);
+	});
 
-  it("goes from the Design Tokens to the components hub, and from the hub to the Button's Overview", () => {
-    const hub = sortNavigation(withHub("All components"));
-    const around = (path: string) => findSurround(hub, path).map((item) => item?.path ?? null);
+	it("goes from the Design Tokens to the components hub, and from the hub to the Button's Overview", () => {
+		const hub = sortNavigation(withHub("All components"));
+		const around = (path: string) => findSurround(hub, path).map((item) => item?.path ?? null);
 
-    expect(around("/docs/components")).toEqual(["/docs/foundations/design-tokens", "/docs/components/button"]);
-    expect(around("/docs/foundations/design-tokens")).toEqual(["/docs/getting-started/roadmap", "/docs/components"]);
-    expect(around("/docs/components/button")).toEqual(["/docs/components", "/docs/components/button/ui"]);
-  });
+		expect(around("/docs/components")).toEqual([
+			"/docs/foundations/design-tokens",
+			"/docs/components/button",
+		]);
+		expect(around("/docs/foundations/design-tokens")).toEqual([
+			"/docs/getting-started/roadmap",
+			"/docs/components",
+		]);
+		expect(around("/docs/components/button")).toEqual([
+			"/docs/components",
+			"/docs/components/button/ui",
+		]);
+	});
 });

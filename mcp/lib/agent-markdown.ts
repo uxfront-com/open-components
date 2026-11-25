@@ -25,73 +25,84 @@ import { collapse, heading, scan } from "./markdown";
  * `nuxt build mcp` warns about and `pnpm test` fails on, and the page goes
  * without agent markdown.
  */
-export function agentMarkdown(body: string, page: { site: string; path: string; frameworks: Array<string> }): string {
-  const lines: Array<string> = [];
-  // The components the line is in: a component's content is indented as far as
-  // its opening line, like an `:::accordion-item` inside an `::accordion`.
-  const open: Array<{ name: string; indent: number }> = [];
+export function agentMarkdown(
+	body: string,
+	page: { site: string; path: string; frameworks: Array<string> },
+): string {
+	const lines: Array<string> = [];
+	// The components the line is in: a component's content is indented as far as
+	// its opening line, like an `:::accordion-item` inside an `::accordion`.
+	const open: Array<{ name: string; indent: number }> = [];
 
-  for (const { text, code } of scan(body)) {
-    const indent = open.at(-1)?.indent ?? 0;
-    const line = text.slice(Math.min(indent, text.length - text.trimStart().length));
-    if (code) {
-      lines.push(line);
-      continue;
-    }
+	for (const { text, code } of scan(body)) {
+		const indent = open.at(-1)?.indent ?? 0;
+		const line = text.slice(Math.min(indent, text.length - text.trimStart().length));
+		if (code) {
+			lines.push(line);
+			continue;
+		}
 
-    const start = text.match(/^(\s*):{2,}([a-z][\w-]*)\s*(\{.*\})?\s*$/);
-    if (start) {
-      // The indent and the name take part in every match, so their defaults never apply.
-      const [, space = "", name = "", props] = start;
-      open.push({ name, indent: space.length });
-      if (name === "framework-switcher") {
-        lines.push(SWITCHER);
-      }
-      const label = prop(props, "label");
-      if ((name === "accordion-item" || name === "tabs-item") && label) {
-        lines.push(`**${label}**`, "");
-      }
-      const [title, to] = name === "card" ? [prop(props, "title"), prop(props, "to")] : [];
-      if (title) {
-        lines.push(to ? `[**${title}**](${to.startsWith("/") ? page.site : ""}${to})` : `**${title}**`, "");
-      }
-      continue;
-    }
-    if (/^\s*:{2,}\s*$/.test(text)) {
-      if (open.pop()?.name === "framework-switcher") {
-        lines.push(SWITCHER_END);
-      }
-      continue;
-    }
-    if (open.some((component) => component.name === "framework-switcher") && heading(line)) {
-      throw new Error(`${page.path}: a framework switcher has a heading in it, "${line.trim()}". Put it above the switcher.`);
-    }
-    const framework = open.at(-1)?.name === "framework-switcher" && line.match(/^#([a-z][\w-]*)\s*$/)?.[1];
-    if (framework) {
-      if (!page.frameworks.includes(framework)) {
-        throw new Error(`${page.path}: a framework switcher has a #${framework} slot, which isn't one of ${page.frameworks.join(", ")}`);
-      }
-      lines.push(slot(framework));
-      continue;
-    }
+		const start = text.match(/^(\s*):{2,}([a-z][\w-]*)\s*(\{.*\})?\s*$/);
+		if (start) {
+			// The indent and the name take part in every match, so their defaults never apply.
+			const [, space = "", name = "", props] = start;
+			open.push({ name, indent: space.length });
+			if (name === "framework-switcher") {
+				lines.push(SWITCHER);
+			}
+			const label = prop(props, "label");
+			if ((name === "accordion-item" || name === "tabs-item") && label) {
+				lines.push(`**${label}**`, "");
+			}
+			const [title, to] = name === "card" ? [prop(props, "title"), prop(props, "to")] : [];
+			if (title) {
+				lines.push(
+					to ? `[**${title}**](${to.startsWith("/") ? page.site : ""}${to})` : `**${title}**`,
+					"",
+				);
+			}
+			continue;
+		}
+		if (/^\s*:{2,}\s*$/.test(text)) {
+			if (open.pop()?.name === "framework-switcher") {
+				lines.push(SWITCHER_END);
+			}
+			continue;
+		}
+		if (open.some((component) => component.name === "framework-switcher") && heading(line)) {
+			throw new Error(
+				`${page.path}: a framework switcher has a heading in it, "${line.trim()}". Put it above the switcher.`,
+			);
+		}
+		const framework =
+			open.at(-1)?.name === "framework-switcher" && line.match(/^#([a-z][\w-]*)\s*$/)?.[1];
+		if (framework) {
+			if (!page.frameworks.includes(framework)) {
+				throw new Error(
+					`${page.path}: a framework switcher has a #${framework} slot, which isn't one of ${page.frameworks.join(", ")}`,
+				);
+			}
+			lines.push(slot(framework));
+			continue;
+		}
 
-    lines.push(
-      line
-        .replaceAll(":roadmap-check{shipped}", "[x]")
-        .replaceAll(/:roadmap-check\b/g, "[ ]")
-        .replaceAll(/(\]\([^)\s]*\))\{external(?:=""|='')?\}/g, "$1")
-        .replaceAll("](#", `](${page.site}${page.path}#`)
-        .replaceAll("](/", `](${page.site}/`),
-    );
-  }
-  if (open.length) {
-    throw new Error(`${page.path}: ::${open.at(-1)?.name} is never closed`);
-  }
-  return collapse(lines.join("\n"));
+		lines.push(
+			line
+				.replaceAll(":roadmap-check{shipped}", "[x]")
+				.replaceAll(/:roadmap-check\b/g, "[ ]")
+				.replaceAll(/(\]\([^)\s]*\))\{external(?:=""|='')?\}/g, "$1")
+				.replaceAll("](#", `](${page.site}${page.path}#`)
+				.replaceAll("](/", `](${page.site}/`),
+		);
+	}
+	if (open.length) {
+		throw new Error(`${page.path}: ::${open.at(-1)?.name} is never closed`);
+	}
+	return collapse(lines.join("\n"));
 }
 
 // A component's prop, like `label` in {label="Why not?"}, in double or single quotes.
 function prop(props: string | undefined, name: string): string | undefined {
-  const match = props?.match(new RegExp(`(?:^|[\\s{])${name}=(?:"([^"]*)"|'([^']*)')`));
-  return match ? (match[1] ?? match[2]) : undefined;
+	const match = props?.match(new RegExp(`(?:^|[\\s{])${name}=(?:"([^"]*)"|'([^']*)')`));
+	return match ? (match[1] ?? match[2]) : undefined;
 }

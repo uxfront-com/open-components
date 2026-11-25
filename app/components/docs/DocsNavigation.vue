@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ContentNavigationItem } from "@nuxt/content";
+
 import theme from "#build/ui/content/content-navigation";
 import { tv } from "#ui/utils/tv";
 import { sortNavigation } from "~/lib/navigation";
@@ -20,18 +21,21 @@ const appConfig = useAppConfig();
 const variants = useUIConfig("contentNavigation");
 // Each of the theme's slots, like `link`, as a function from its variants to classes.
 const ui = computed(
-  () =>
-    tv({ extend: theme, ...(appConfig.ui?.contentNavigation || {}) })({
-      color: variants.value.color,
-      variant: variants.value.variant ?? "link",
-      highlight: variants.value.highlight ?? true,
-      highlightColor: variants.value.highlightColor || variants.value.color,
-    } as never) as unknown as Record<keyof typeof theme.slots, (variants?: { active?: boolean; level?: boolean; disabled?: boolean }) => string>,
+	() =>
+		tv({ extend: theme, ...(appConfig.ui?.contentNavigation || {}) })({
+			color: variants.value.color,
+			variant: variants.value.variant ?? "link",
+			highlight: variants.value.highlight ?? true,
+			highlightColor: variants.value.highlightColor || variants.value.color,
+		} as never) as unknown as Record<
+			keyof typeof theme.slots,
+			(variants?: { active?: boolean; level?: boolean; disabled?: boolean }) => string
+		>,
 );
 </script>
 
 <template>
-  <nav data-slot="root" :class="ui.root()">
-    <DocsNavigationList :navigation :ui />
-  </nav>
+	<nav data-slot="root" :class="ui.root()">
+		<DocsNavigationList :navigation :ui />
+	</nav>
 </template>
