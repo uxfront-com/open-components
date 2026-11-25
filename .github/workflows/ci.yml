@@ -55,7 +55,7 @@ jobs:
       - run: pnpm test
 
   lint:
-    name: Lint
+    name: Format and lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -67,10 +67,19 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - name: Install
+        id: install
+        run: pnpm install --frozen-lockfile
+      # oxfmt with the shared @uxfront config (oxfmt.config.ts): fails on any file that
+      # `pnpm format` would change.
+      - name: Format
+        run: pnpm format:check
+      # The checks are independent, so each one reports even when an earlier one failed.
       # oxlint with the shared @uxfront config (oxlint.config.ts). Errors fail the job, and
       # warnings only annotate the PR.
-      - run: pnpm lint --format=github
+      - name: Lint
+        if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+        run: pnpm lint --format=github
 
   build:
     name: Build
