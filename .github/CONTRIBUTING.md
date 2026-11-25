@@ -18,6 +18,7 @@ pnpm check-types      # type-check the .ts and .vue sources, the MCP server's in
 pnpm check-reference  # check the component pages show app/reference/ as it is
 pnpm lint             # lint with oxlint and the shared @uxfront config (oxlint.config.ts), as CI does
 pnpm format           # format with oxfmt and the shared @uxfront config (oxfmt.config.ts)
+pnpm format:check     # check the formatting without changing files, as CI does
 pnpm check-mcp        # after both builds: serve the MCP server with wrangler dev, and check every tool, resource and prompt against the built site
 pnpm check-seo        # after pnpm build: check what search engines and AI crawlers get (see "Keeping 100s")
 pnpm test             # run the reference implementations' tests (app/reference/<component>/*.test.ts), validate the contracts and test the MCP server and the agent plugin
@@ -25,6 +26,12 @@ pnpm lighthouse       # Lighthouse CI against dist, fails below 95 in any catego
 ```
 
 Building needs Node 22.13 or later: Nuxt Content reads the docs with the built-in `node:sqlite`. `better-sqlite3`, its fallback, is installed but never built (`allowBuilds` in `pnpm-workspace.yaml`).
+
+The commit that first formatted the code is listed in `.git-blame-ignore-revs`, so GitHub's blame view skips it. To make `git blame` skip it too, run this once in your clone:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
 
 ## Deploying to Cloudflare
 
