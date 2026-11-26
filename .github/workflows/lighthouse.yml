@@ -26,7 +26,7 @@ jobs:
     uses: uxfront-com/.github/.github/workflows/lighthouse.yml@d2f86bc4b9602818601b0415509c5be0348bb8bc # main
     with:
       build: pnpm build
-      # Serves dist and fails below 0.95 in any category (lighthouserc.json), using
+      # Serves dist and fails below 0.95 in any category (lighthouserc.mjs), using
       # the runner's Chrome.
       audit: pnpm lighthouse
       reports: .lighthouseci

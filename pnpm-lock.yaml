@@ -75,6 +75,9 @@ importers:
       '@uxfront/oxlint-config':
         specifier: ^0.2.0
         version: 0.2.0(eslint@10.11.0(jiti@2.7.0))(oxlint@1.94.0)
+      '@uxfront/site-checks':
+        specifier: 0.1.0
+        version: 0.1.0
       '@vitejs/plugin-vue':
         specifier: ^6.0.9
         version: 6.0.9(vite@8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.43(typescript@6.0.3))
@@ -3741,6 +3744,11 @@ packages:
 
   '@uxfront/scene@0.5.1':
     resolution: {integrity: sha512-SCbqe1f/8TQ5+dcEC8cvxw0sSF1kPojdKop1rTme7FCrjuOAOukhdLbJVrQBi5QB1N+sHMCa1Y+Sl8+GE8ZkvQ==}
+
+  '@uxfront/site-checks@0.1.0':
+    resolution: {integrity: sha512-BKWlKNj6IIvV2AFBY8uVFGZTmq57tMbUC4RQ2Pc2gUy+ptd7H0NqrT8qQ6z78FCC4Ifjmlw45GFZhOa7V+oEqg==}
+    engines: {node: '>=24'}
+    hasBin: true
 
   '@uxfront/ui@0.9.1':
     resolution: {integrity: sha512-DxPtNRTboMmEuuBkcn6pWUbMo5StnukV3f8ctFmcPow32JbOYNBKDyTzMeTLaTordwiyI6iHDZN53aQBhnWkzA==}
@@ -11867,6 +11875,8 @@ snapshots:
       - vite-plus
 
   '@uxfront/scene@0.5.1': {}
+
+  '@uxfront/site-checks@0.1.0': {}
 
   '@uxfront/ui@0.9.1(vue@3.5.43(typescript@6.0.3))':
     dependencies:

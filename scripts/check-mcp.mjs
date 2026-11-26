@@ -236,7 +236,7 @@ async function checkRoutes() {
 	}
 	// It's an API, so no response of its own is indexed: not the redirect from its
 	// subdomain, not /mcp, and not a file it doesn't have, like robots.txt. The site
-	// itself never sends noindex for every path (scripts/check-seo.mjs).
+	// itself never sends noindex for every path (sitemap-indexable in site-checks.config.mjs).
 	check(
 		!/noindex/i.test(HEADERS["x-robots-tag"] ?? ""),
 		"dist/_headers sends noindex for every path of the site",
