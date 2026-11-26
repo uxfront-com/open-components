@@ -6,13 +6,13 @@ import Tooltip from "~/reference/tooltip/Tooltip.vue";
 </script>
 
 <template>
-  <TooltipExample>
-    <Tooltip label="Archived projects stay in search" v-slot="{ trigger }">
-      <Button v-bind="trigger" variant="outline">
-        <template #leading><UIcon name="i-lucide-archive" mode="svg" /></template>
-        Archive
-      </Button>
-    </Tooltip>
-    <template v-if="$slots.default" #code><slot /></template>
-  </TooltipExample>
+	<TooltipExample>
+		<Tooltip label="Archived projects stay in search" v-slot="{ trigger }">
+			<Button v-bind="trigger" variant="outline">
+				<template #leading><UIcon name="i-lucide-archive" mode="svg" /></template>
+				Archive
+			</Button>
+		</Tooltip>
+		<template v-if="$slots.default" #code><slot /></template>
+	</TooltipExample>
 </template>

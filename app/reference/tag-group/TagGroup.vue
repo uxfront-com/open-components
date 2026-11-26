@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, useAttrs, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import Tag, { type TagProps } from "../tag/Tag.vue";
+import Tag from "../tag/Tag.vue";
+import type { TagProps } from "../tag/Tag.vue";
 
 export interface TagGroupItem {
   /** The tag's key, unique in the group, and what `remove` hands back. */
@@ -18,7 +19,7 @@ export interface TagGroupItem {
 
 export interface TagGroupProps {
   /** The tags, in order. The group shows them and never changes the list itself. */
-  tags: TagGroupItem[];
+  tags: Array<TagGroupItem>;
   /** Names the list, like "Labels", for screen readers. Or point `aria-labelledby` at a visible heading. */
   label?: string;
   size?: TagProps["size"];
@@ -69,9 +70,9 @@ defineSlots<{
 // and everything else, like a class or an id, to the root.
 defineOptions({ inheritAttrs: false });
 const attrs = useAttrs();
-const NAMING = ["aria-label", "aria-labelledby", "aria-describedby"];
-const rootAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => !NAMING.includes(key))));
-const listAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => NAMING.includes(key))));
+const NAMING = new Set(["aria-label", "aria-labelledby", "aria-describedby"]);
+const rootAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => !NAMING.has(key))));
+const listAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => NAMING.has(key))));
 
 const root = useTemplateRef<HTMLElement>("root");
 const list = useTemplateRef<HTMLElement>("list");
@@ -101,6 +102,12 @@ function focusList(element: HTMLElement) {
 // labels of the tags that went are only in the copy.
 let previousTags = [...tags];
 
+// A candidate that can't take focus, like a disabled button, gives way to the next.
+const focused = (target: HTMLElement | null) => {
+  target?.focus();
+  return !!target && document.activeElement === target;
+};
+
 // Runs before the list re-renders, while the removed tags are still in the DOM, to see
 // where focus is. Once they've gone, focus moves to the next remove button, then to
 // fallbackFocus, then to the previous remove button, and with no tags left, to the empty
@@ -112,7 +119,9 @@ watch(
     const labels = new Map(previousTags.map((tag) => [tag.value, tag.label]));
     previousTags = [...tags];
     const removed = previous.filter((value) => !next.includes(value));
-    if (!removed.length) return;
+    if (!removed.length) {
+      return;
+    }
     const before = list.value ? [...list.value.children] : [];
     const active = document.activeElement;
     const focusedIndex = before.findIndex((item) => item.contains(active));
@@ -120,36 +129,42 @@ watch(
     // Focus moves when it was on a tag that's gone, or when a tag whose button was pressed
     // went and focus is nowhere, like after a click in Safari, which doesn't focus buttons.
     // Anywhere else, like a dialog that asked first, it stays.
-    let anchor = focusedIndex >= 0 && removed.includes(previous[focusedIndex]!) ? focusedIndex : -1;
-    if (anchor < 0 && focusWasLost) anchor = previous.findIndex((value) => removed.includes(value) && pressed.has(value));
+    let anchor = focusedIndex >= 0 && removed.some((value) => value === previous[focusedIndex]) ? focusedIndex : -1;
+    if (anchor < 0 && focusWasLost) {
+      anchor = previous.findIndex((value) => removed.includes(value) && pressed.has(value));
+    }
     const announced = removed.filter((value) => pressed.has(value));
-    for (const value of removed) pressed.delete(value);
+    for (const value of removed) {
+      pressed.delete(value);
+    }
 
     nextTick(() => {
       if (anchor >= 0) {
         const items = list.value ? [...list.value.children] : [];
         const after = previous.slice(anchor + 1).filter((value) => next.includes(value));
         const prior = previous.slice(0, anchor).filter((value) => next.includes(value)).reverse();
-        const find = (values: string[]) =>
+        const find = (values: Array<string>) =>
           values.map((value) => removeButton(items[next.indexOf(value)])).find(Boolean) ?? null;
-        // A candidate that can't take focus, like a disabled button, gives way to the next.
-        const focused = (target: HTMLElement | null) => {
-          target?.focus();
-          return !!target && document.activeElement === target;
-        };
         if (!focused(find(after)) && !focused(resolve(fallbackFocus)) && !focused(find(prior))) {
-          if (list.value) focusList(list.value);
-          else empty.value?.focus();
+          if (list.value) {
+            focusList(list.value);
+          } else {
+            empty.value?.focus();
+          }
         }
       }
-      for (const value of announced) announce(removedLabel(labels.get(value) ?? value));
+      for (const value of announced) {
+        announce(removedLabel(labels.get(value) ?? value));
+      }
     });
   },
   { flush: "pre" },
 );
 
 onMounted(() => {
-  if (removable) prepareAnnouncer();
+  if (removable) {
+    prepareAnnouncer();
+  }
   if (import.meta.env.DEV && !label && !listAttrs.value["aria-label"] && !listAttrs.value["aria-labelledby"]) {
     console.warn(
       "[TagGroup] has no name, so screen readers can't say what its tags are: give it a label, or aria-labelledby.",

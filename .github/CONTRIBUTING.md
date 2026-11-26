@@ -18,6 +18,7 @@ pnpm check-types      # type-check the .ts and .vue sources, the MCP server's in
 pnpm check-reference  # check the component pages show app/reference/ as it is
 pnpm lint             # lint with oxlint and the shared @uxfront config (oxlint.config.ts), as CI does
 pnpm format           # format with oxfmt and the shared @uxfront config (oxfmt.config.ts)
+pnpm format:check     # check the formatting without changing files, as CI does
 pnpm check-mcp        # after both builds: serve the MCP server with wrangler dev, and check every tool, resource and prompt against the built site
 pnpm check-seo        # after pnpm build: check what search engines and AI crawlers get (see "Keeping 100s")
 pnpm test             # run the reference implementations' tests (app/reference/<component>/*.test.ts), validate the contracts and test the MCP server and the agent plugin
@@ -25,6 +26,12 @@ pnpm lighthouse       # Lighthouse CI against dist, fails below 95 in any catego
 ```
 
 Building needs Node 22.13 or later: Nuxt Content reads the docs with the built-in `node:sqlite`. `better-sqlite3`, its fallback, is installed but never built (`allowBuilds` in `pnpm-workspace.yaml`).
+
+The commit that first formatted the code is listed in `.git-blame-ignore-revs`, so GitHub's blame view skips it. To make `git blame` skip it too, run this once in your clone:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
 
 ## Deploying to Cloudflare
 
@@ -249,7 +256,7 @@ Amplitude Analytics and Session Replay come from `modules/amplitude.ts`, a local
 - The rest of the site tracks events with `window.amplitude?.track()`, which Partytown forwards to the worker. `app/plugins/framework-selected.client.ts` tracks "Framework Selected" when a reader picks a framework in the Framework select. Only track what keeps the reader on the page: an event tracked as it unloads, like a click on a link to another page, doesn't reach the worker in time.
 - Session Replay records the DOM, which a worker can't, so it runs on the main thread with the standalone SDK, once the page is idle (`modules/amplitude/runtime/session-replay.ts`). The worker hands it the device and session IDs the Browser SDK tracks under, and the new ones when a session ends, and Amplitude links each replay to its session's events by them. `amplitude.sessionReplaySampleRate` in `nuxt.config.ts` sets the share of sessions it records until the project's Session Replay settings set one.
 - `pnpm-workspace.yaml` overrides the Partytown version `@nuxtjs/partytown` asks for with 1.0.5. Older versions read deprecated members as they mirror the page for the worker, like every element's `attributionSrc`, `HTMLFencedFrameElement` and `window.fence`. Chrome logs a deprecation for each, which drops Best Practices to 81 on every page. Drop the override once `@nuxtjs/partytown` depends on 1.0.5 or later.
-- CI builds without the key, so its Lighthouse run never loads Partytown. To check a Partytown change, build with a placeholder key set in that shell only, never the project's, serve `dist` with `npx wrangler dev`, and run Lighthouse's `deprecations` audit on a page, like `pnpm dlx lighthouse@12 http://localhost:8787/ --only-audits=deprecations`. The rest of Best Practices fails with a placeholder key, since Amplitude rejects it.
+- CI and the nightly Lighthouse workflow (`.github/workflows/lighthouse.yml`) build without the key, so the nightly audit never loads Partytown. To check a Partytown change, build with a placeholder key set in that shell only, never the project's, serve `dist` with `npx wrangler dev`, and run Lighthouse's `deprecations` audit on a page, like `pnpm dlx lighthouse@12 http://localhost:8787/ --only-audits=deprecations`. The rest of Best Practices fails with a placeholder key, since Amplitude rejects it.
 
 With Amplitude built in, the homepage keeps its Lighthouse scores in Performance (no added Total Blocking Time), Accessibility and SEO, and in Best Practices as long as the key is valid: Amplitude's errors for a wrong key fail it.
 

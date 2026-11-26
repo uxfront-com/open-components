@@ -7,13 +7,18 @@ import RadioGroup from "~/reference/radio-group/RadioGroup.vue";
 </script>
 
 <template>
-  <FieldExample>
-    <Field hint="Express arrives the next working day" error="Choose a delivery option" required class="w-full max-w-sm">
-      <RadioGroup name="radio-group-delivery" legend="Delivery">
-        <Radio value="standard">Standard</Radio>
-        <Radio value="express">Express</Radio>
-      </RadioGroup>
-    </Field>
-    <template v-if="$slots.default" #code><slot /></template>
-  </FieldExample>
+	<FieldExample>
+		<Field
+			hint="Express arrives the next working day"
+			error="Choose a delivery option"
+			required
+			class="w-full max-w-sm"
+		>
+			<RadioGroup name="radio-group-delivery" legend="Delivery">
+				<Radio value="standard">Standard</Radio>
+				<Radio value="express">Express</Radio>
+			</RadioGroup>
+		</Field>
+		<template v-if="$slots.default" #code><slot /></template>
+	</FieldExample>
 </template>

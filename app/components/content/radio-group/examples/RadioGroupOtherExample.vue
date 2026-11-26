@@ -8,17 +8,22 @@ const source = ref<string>();
 </script>
 
 <template>
-  <RadioGroupExample>
-    <div class="flex w-full max-w-sm flex-col">
-      <RadioGroup v-model="source" name="other-source" legend="How did you hear about us?">
-        <Radio value="friend">From a friend</Radio>
-        <Radio value="search">From a search engine</Radio>
-        <div class="flex w-full items-center gap-3">
-          <Radio value="other">Other</Radio>
-          <Input aria-label="Other, how you heard about us" name="other-source-detail" class="flex-1" @update:model-value="source = 'other'" />
-        </div>
-      </RadioGroup>
-    </div>
-    <template v-if="$slots.default" #code><slot /></template>
-  </RadioGroupExample>
+	<RadioGroupExample>
+		<div class="flex w-full max-w-sm flex-col">
+			<RadioGroup v-model="source" name="other-source" legend="How did you hear about us?">
+				<Radio value="friend">From a friend</Radio>
+				<Radio value="search">From a search engine</Radio>
+				<div class="flex w-full items-center gap-3">
+					<Radio value="other">Other</Radio>
+					<Input
+						aria-label="Other, how you heard about us"
+						name="other-source-detail"
+						class="flex-1"
+						@update:model-value="source = 'other'"
+					/>
+				</div>
+			</RadioGroup>
+		</div>
+		<template v-if="$slots.default" #code><slot /></template>
+	</RadioGroupExample>
 </template>

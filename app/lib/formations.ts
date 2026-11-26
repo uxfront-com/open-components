@@ -17,18 +17,20 @@ const PRIVATE = /\$([A-Za-z][A-Za-z0-9_]*)/g;
  * have to stay where the anchor was measured.
  */
 export function spotlight(formation: Formation, plate: number): Formation {
-  const anchor = formation.anchors[plate];
-  if (!anchor) throw new Error(`Formation "${formation.key}" has no anchor for plate ${plate}.`);
-  const at: Vec3 = [0, 0, 0];
-  anchor.place({ stage: 0, local: 1, approach: 1, presence: 1, time: 0 }, at);
-  return wrapMain(
-    formation,
-    "unlit",
-    `  Particle P = $unlit(id, sel, f);
+	const anchor = formation.anchors[plate];
+	if (!anchor) {
+		throw new Error(`Formation "${formation.key}" has no anchor for plate ${plate}.`);
+	}
+	const at: Vec3 = [0, 0, 0];
+	anchor.place({ stage: 0, local: 1, approach: 1, presence: 1, time: 0 }, at);
+	return wrapMain(
+		formation,
+		"unlit",
+		`  Particle P = $unlit(id, sel, f);
   float lit = 1.0 - smoothstep(0.2, 0.45, abs(P.pos.y - ${glslFloat(at[1])}));
   P.col *= mix(0.3, 1.3, lit);
   return P;`,
-  );
+	);
 }
 
 /**
@@ -42,20 +44,20 @@ export function spotlight(formation: Formation, plate: number): Formation {
  * Shared, every copy after the first is free.
  */
 export function share(formation: Formation, source: Formation): Formation {
-  return editShader(formation, ({ glsl, setup: _setup, update, ...shader }) => {
-    if (update) {
-      throw new Error(`Formation "${formation.key}" updates its uniforms every frame.`);
-    }
-    const names = new Set<string>();
-    const body = glsl.replace(UNIFORM, (_, name: string) => {
-      names.add(name);
-      return "";
-    });
-    return {
-      ...shader,
-      glsl: body.replace(PRIVATE, (match, name: string) =>
-        names.has(name) ? `${source.key}_${name}` : match,
-      ),
-    };
-  });
+	return editShader(formation, ({ glsl, setup: _setup, update, ...shader }) => {
+		if (update) {
+			throw new Error(`Formation "${formation.key}" updates its uniforms every frame.`);
+		}
+		const names = new Set<string>();
+		const body = glsl.replaceAll(UNIFORM, (_, name: string) => {
+			names.add(name);
+			return "";
+		});
+		return {
+			...shader,
+			glsl: body.replaceAll(PRIVATE, (match, name: string) =>
+				names.has(name) ? `${source.key}_${name}` : match,
+			),
+		};
+	});
 }

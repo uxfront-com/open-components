@@ -123,7 +123,9 @@ function onInput(event: Event) {
 function onMousedown(event: MouseEvent) {
   const target = event.target as Element;
   // The input itself, and the buttons in `actions`, do what they always do.
-  if (target.closest("input, button, a[href], select, textarea, [tabindex]")) return;
+  if (target.closest("input, button, a[href], select, textarea, [tabindex]")) {
+    return;
+  }
   event.preventDefault();
   input.value?.focus();
 }
@@ -374,7 +376,8 @@ onMounted(() => {
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import Input from "./Input.vue";
 
 const icon = () => h("svg");

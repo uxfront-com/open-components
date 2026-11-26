@@ -6,10 +6,15 @@ import Switch from "~/reference/switch/Switch.vue";
 </script>
 
 <template>
-  <FieldExample>
-    <Field id="switch-alerts" label="Price alerts" hint="We'll email you when the price drops" class="w-full max-w-sm">
-      <Switch />
-    </Field>
-    <template v-if="$slots.default" #code><slot /></template>
-  </FieldExample>
+	<FieldExample>
+		<Field
+			id="switch-alerts"
+			label="Price alerts"
+			hint="We'll email you when the price drops"
+			class="w-full max-w-sm"
+		>
+			<Switch />
+		</Field>
+		<template v-if="$slots.default" #code><slot /></template>
+	</FieldExample>
 </template>

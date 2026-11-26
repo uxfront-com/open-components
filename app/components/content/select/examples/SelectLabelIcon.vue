@@ -4,8 +4,8 @@ defineProps<{ value: string }>();
 </script>
 
 <template>
-  <UIcon v-if="value === 'bug'" name="i-lucide-bug" mode="svg" />
-  <UIcon v-else-if="value === 'feature'" name="i-lucide-sparkles" mode="svg" />
-  <UIcon v-else-if="value === 'docs'" name="i-lucide-book-open" mode="svg" />
-  <UIcon v-else name="i-lucide-circle-help" mode="svg" />
+	<UIcon v-if="value === 'bug'" name="i-lucide-bug" mode="svg" />
+	<UIcon v-else-if="value === 'feature'" name="i-lucide-sparkles" mode="svg" />
+	<UIcon v-else-if="value === 'docs'" name="i-lucide-book-open" mode="svg" />
+	<UIcon v-else name="i-lucide-circle-help" mode="svg" />
 </template>

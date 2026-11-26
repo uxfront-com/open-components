@@ -90,7 +90,7 @@ export interface CheckboxGroupOption {
 
 export interface CheckboxGroupProps {
   /** One checkbox per option, in this order. */
-  options: CheckboxGroupOption[];
+  options: Array<CheckboxGroupOption>;
   /** The name every checkbox shares, so the form sends the group as one field with a value per checked option. */
   name?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -108,7 +108,7 @@ defineOptions({ inheritAttrs: false });
 const { options, name, size = "md", orientation = "vertical", disabled = false, selectAll } = defineProps<CheckboxGroupProps>();
 
 /** The checked options' values, in the options' order, which `v-model:value` binds. Without it, the group keeps its own, and starts from `value`. */
-const value = defineModel<string[]>("value", { default: () => [] });
+const value = defineModel<Array<string>>("value", { default: () => [] });
 
 defineSlots<{
   /** The legend, which names the group. */
@@ -284,7 +284,8 @@ onMounted(() => {
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import CheckboxGroup from "./CheckboxGroup.vue";
 
 const options = [
@@ -352,12 +353,12 @@ describe("CheckboxGroup", () => {
 
   it("binds its value as a list with v-model, or keeps its own without it, starting from value", async () => {
     const user = userEvent.setup();
-    const picked = ref<string[]>(["mushrooms"]);
+    const picked = ref<Array<string>>(["mushrooms"]);
     render({
       render: () => [
         h(
           CheckboxGroup,
-          { name: "bound", options, value: picked.value, "onUpdate:value": (value: string[]) => (picked.value = value) },
+          { name: "bound", options, value: picked.value, "onUpdate:value": (value: Array<string>) => (picked.value = value) },
           () => "Bound",
         ),
         h(CheckboxGroup, { name: "unbound", options: [{ value: "yes", label: "Unbound option" }], value: ["yes"] }, () => "Unbound"),
@@ -421,7 +422,7 @@ describe("CheckboxGroup", () => {
 
   it("shows its select-all box checked, unchecked or mixed from its options, and checks or clears them all from it", async () => {
     const user = userEvent.setup();
-    const picked = ref<string[]>([]);
+    const picked = ref<Array<string>>([]);
     render({
       render: () =>
         h(
@@ -431,7 +432,7 @@ describe("CheckboxGroup", () => {
             options,
             selectAll: "All toppings",
             value: picked.value,
-            "onUpdate:value": (value: string[]) => (picked.value = value),
+            "onUpdate:value": (value: Array<string>) => (picked.value = value),
           },
           toppings,
         ),
@@ -492,7 +493,9 @@ describe("CheckboxGroup", () => {
     await user.click(screen.getByRole("checkbox", { name: "All toppings" }));
     await user.click(screen.getByText("Mushrooms"));
     expect(document.body).toHaveFocus();
-    for (const checkbox of screen.getAllByRole("checkbox")) expect(checkbox).toBeDisabled();
+    for (const checkbox of screen.getAllByRole("checkbox")) {
+      expect(checkbox).toBeDisabled();
+    }
     expect(screen.getByRole("checkbox", { name: "Mushrooms" })).not.toBeChecked();
     expect([...new FormData(container.querySelector("form")!)]).toEqual([]);
   });
@@ -526,7 +529,9 @@ describe("CheckboxGroup", () => {
     const root = row.firstElementChild!;
     expect(root).toHaveAttribute("data-orientation", "horizontal");
     expect(root).toHaveAttribute("data-size", "lg");
-    for (const checkbox of root.querySelectorAll(".checkbox")) expect(checkbox).toHaveAttribute("data-size", "lg");
+    for (const checkbox of root.querySelectorAll(".checkbox")) {
+      expect(checkbox).toHaveAttribute("data-size", "lg");
+    }
   });
 
   it("renders the same markup every time, with its parts in a fixed order, across states", async () => {

@@ -88,14 +88,15 @@ export type { SelectGroup, SelectItem, SelectOption, SelectSeparator } from "./l
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, useAttrs, useId, useTemplateRef, watch } from "vue";
 import { announce, prepareAnnouncer } from "../button/announce";
-import { type SelectItem, type SelectOption, usePlacement, useListbox } from "./listbox";
+import { usePlacement, useListbox } from "./listbox";
+import type { SelectItem, SelectOption } from "./listbox";
 import SelectPanel from "./SelectPanel.vue";
 import SelectTags from "./SelectTags.vue";
 import "./select.css";
 
 export interface SelectProps {
   /** What people pick from. A prop rather than child components, since both renderings need the same list. */
-  options: SelectItem[];
+  options: Array<SelectItem>;
   /** Picks any number of values, each shown as a tag, so the value is an array. */
   multiple?: boolean;
   /** Text shown while nothing is picked. It's never a value, so nothing submits. */
@@ -140,13 +141,13 @@ const {
  * The value, which `v-model` binds: a string, or an array of them with `multiple`. Without
  * it, the Select keeps its own, starting from the `value` attribute, and its form submits it.
  */
-const model = defineModel<string | string[]>();
+const model = defineModel<string | Array<string>>();
 
 defineSlots<{
   /** An icon before the value. It stays in both renderings. */
   leading?: () => unknown;
   /** How the picked value reads in the field. The native rendering draws its own text instead. */
-  value?: (props: { selected: SelectOption[] }) => unknown;
+  value?: (props: { selected: Array<SelectOption> }) => unknown;
   /** The chevron, which turns as the panel opens. It stays in both renderings. */
   arrow?: () => unknown;
   /** How an option reads in the panel. The check mark stays beside it. */
@@ -170,12 +171,12 @@ const attrs = useAttrs();
 // variables. What a form reads goes on the <select>, and so do `change` and `input`, since
 // it fires both in each rendering. Everything else goes on whichever control is active:
 // `id`, ARIA and the other listeners. Attrs aren't reactive, so these run on every render.
-const FORM_ATTRS = ["name", "form", "autocomplete", "onChange", "onInput"];
+const FORM_ATTRS = new Set(["name", "form", "autocomplete", "onChange", "onInput"]);
 const pick = (test: (key: string) => boolean) => Object.fromEntries(Object.entries(attrs).filter(([key]) => test(key)));
 const onRoot = (key: string) => key === "class" || key === "style";
 const rootAttrs = () => pick(onRoot);
-const formAttrs = () => pick((key) => FORM_ATTRS.includes(key));
-const activeAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.includes(key) && key !== "value");
+const formAttrs = () => pick((key) => FORM_ATTRS.has(key));
+const activeAttrs = () => pick((key) => !onRoot(key) && !FORM_ATTRS.has(key) && key !== "value");
 
 const root = useTemplateRef<HTMLElement>("root");
 const select = useTemplateRef<HTMLSelectElement>("select");
@@ -207,11 +208,13 @@ const { sections, flat, panelId, optionId, groupId, isEnabled, step, firstEnable
 });
 
 // Without `v-model`, the value starts from the `value` attribute.
-const initial = attrs.value as string | string[] | undefined;
+const initial = attrs.value as string | Array<string> | undefined;
 const current = computed(() => model.value ?? initial);
-const values = computed<string[]>(() => {
+const values = computed<Array<string>>(() => {
   const value = current.value;
-  if (multiple) return value === undefined ? [] : [value].flat();
+  if (multiple) {
+    return value === undefined ? [] : [value].flat();
+  }
   const one = Array.isArray(value) ? value[0] : value;
   return one !== undefined && flat.value.some((option) => option.value === one) ? [one] : [];
 });
@@ -235,14 +238,18 @@ const summary = computed(() =>
 const first = [...values.value];
 function setDefaults() {
   const el = select.value;
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   const list = Array.from(el.options);
-  const picked = list.map((option) => option.selected);
+  const picked = list.map((option) => [option, option.selected] as const);
   list.forEach((option, index) => {
     const placeholding = !multiple && index === 0;
     option.defaultSelected = placeholding ? !first.length : first.includes(option.value);
   });
-  list.forEach((option, index) => (option.selected = picked[index]!));
+  for (const [option, selected] of picked) {
+    option.selected = selected;
+  }
 }
 onUpdated(setDefaults);
 
@@ -259,12 +266,14 @@ function readSelect() {
 // read the new value in both renderings.
 function onNativeChange() {
   const next = readSelect();
-  if ([next].flat().join() !== values.value.join()) model.value = next;
+  if ([next].flat().join() !== values.value.join()) {
+    model.value = next;
+  }
 }
 
 // A selection in the panel changes the <select> too, once it has rendered, then fires the
 // events it would fire itself, so form-level listeners and form libraries hear it.
-function commit(next: string | string[]) {
+function commit(next: string | Array<string>) {
   model.value = next;
   nextTick(() => {
     select.value?.dispatchEvent(new Event("input", { bubbles: true }));
@@ -273,14 +282,18 @@ function commit(next: string | string[]) {
 }
 
 function pickOption(option: SelectOption) {
-  if (option.disabled) return;
+  if (option.disabled) {
+    return;
+  }
   if (multiple) {
     const next = isPicked(option) ? values.value.filter((value) => value !== option.value) : [...values.value, option.value];
     commit(flat.value.filter((item) => next.includes(item.value)).map((item) => item.value));
     return;
   }
   hide();
-  if (values.value[0] !== option.value) commit(option.value);
+  if (values.value[0] !== option.value) {
+    commit(option.value);
+  }
 }
 
 // The next tag's remove button takes focus, or the control when there's no tag after
@@ -289,11 +302,15 @@ async function remove(option: SelectOption, moveFocus = true) {
   const index = selected.value.indexOf(option);
   commit(selected.value.filter((item) => item !== option).map((item) => item.value));
   announce(removedLabel(option.label));
-  if (moveFocus && !(await tags.value?.focusAt(index))) control.value?.focus();
+  if (moveFocus && !(await tags.value?.focusAt(index))) {
+    control.value?.focus();
+  }
 }
 
 function show(to?: number) {
-  if (open.value || disabled || readonly || native.value) return;
+  if (open.value || disabled || readonly || native.value) {
+    return;
+  }
   const picked = flat.value.findIndex(isPicked);
   active.value = to ?? (picked >= 0 ? picked : firstEnabled());
   // The panel carries the control's name, which is the Field's <label>, or an aria-label.
@@ -306,11 +323,15 @@ function show(to?: number) {
 }
 
 function hide() {
-  if (open.value) panel.value?.hidePopover?.();
+  if (open.value) {
+    panel.value?.hidePopover?.();
+  }
 }
 
 function scrollToActive() {
-  if (open.value) panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  if (open.value) {
+    panel.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  }
 }
 watch(active, scrollToActive, { flush: "post" });
 
@@ -340,7 +361,7 @@ function typeahead(key: string) {
   const start = active.value + (search.length === 1 ? 1 : 0);
   for (let offset = 0; offset < count; offset++) {
     const index = (start + offset) % count;
-    if (isEnabled(index) && flat.value[index]!.label.toLowerCase().startsWith(search)) {
+    if (isEnabled(index) && flat.value[index]?.label.toLowerCase().startsWith(search)) {
       active.value = index;
       return;
     }
@@ -350,14 +371,19 @@ function typeahead(key: string) {
 // APG's keyboard model for a select-only combobox. DOM focus stays on the control the
 // whole time, and aria-activedescendant says which option is highlighted.
 function onKeydown(event: KeyboardEvent) {
-  if (readonly) return;
+  if (readonly) {
+    return;
+  }
   const { key } = event;
   const space = key === " ";
 
   if (!open.value) {
     if (key === "Backspace" && multiple && selected.value.length) {
       event.preventDefault();
-      remove(selected.value.at(-1)!, false);
+      const last = selected.value.at(-1);
+      if (last) {
+        remove(last, false);
+      }
     } else if (key === "ArrowDown" || key === "Enter" || space) {
       event.preventDefault();
       show();
@@ -371,9 +397,13 @@ function onKeydown(event: KeyboardEvent) {
       event.preventDefault();
       show();
       // With nothing picked, the first option is only a default, and a letter can land on it.
-      if (!selected.value.length) active.value = -1;
+      if (!selected.value.length) {
+        active.value = -1;
+      }
       typeahead(key);
-      if (active.value < 0) active.value = firstEnabled();
+      if (active.value < 0) {
+        active.value = firstEnabled();
+      }
     }
     return;
   }
@@ -389,7 +419,9 @@ function onKeydown(event: KeyboardEvent) {
   } else if (key === "ArrowUp" && event.altKey) {
     event.preventDefault();
     // Several values close and keep what people toggled, as Tab does.
-    if (option && !multiple) pickOption(option);
+    if (option && !multiple) {
+      pickOption(option);
+    }
     hide();
   } else if (key === "ArrowUp") {
     event.preventDefault();
@@ -405,11 +437,15 @@ function onKeydown(event: KeyboardEvent) {
     active.value = jump(key === "PageDown" ? 1 : -1);
   } else if (key === "Enter" || space) {
     event.preventDefault();
-    if (option) pickOption(option);
+    if (option) {
+      pickOption(option);
+    }
   } else if (key === "Tab") {
     // Not cancelled, so focus goes on. A single value takes the highlighted option, as
     // APG says, while several values keep what people toggled.
-    if (option && !multiple) pickOption(option);
+    if (option && !multiple) {
+      pickOption(option);
+    }
     hide();
   } else if (key === "Escape") {
     // It goes no further, so a Dialog or a Popover around the Select stays open.
@@ -427,7 +463,9 @@ function onKeydown(event: KeyboardEvent) {
 // `detail` can't tell the two apart, since a screen reader's activation has 0 as well.
 let fromLabel = false;
 function onDocumentClick(event: MouseEvent) {
-  if (event.target === control.value) return;
+  if (event.target === control.value) {
+    return;
+  }
   const label = (event.target as Element).closest?.("label");
   fromLabel = !!label && label.control === control.value;
 }
@@ -447,15 +485,20 @@ function onClick() {
     pressedWhileOpen = false;
     return;
   }
-  if (open.value) hide();
-  else show();
+  if (open.value) {
+    hide();
+  } else {
+    show();
+  }
 }
 
 // If the browser focuses the hidden <select> to report a problem, focus moves to the
 // control right away, in this handler: Chromium hides its validation bubble on any later
 // change of focus, so a deferred move would block the submit with no message.
 function onSelectFocus() {
-  if (!native.value) control.value?.focus();
+  if (!native.value) {
+    control.value?.focus();
+  }
 }
 
 // A form's reset puts back each option's default selectedness without a change event, so
@@ -496,8 +539,12 @@ onMounted(() => {
     nextTick(() => {
       const el = native.value ? select.value : control.value;
       const named = el?.labels?.length || el?.hasAttribute("aria-label") || el?.hasAttribute("aria-labelledby");
-      if (el && !named) console.warn("[Select] has no accessible name: give it a <label for>, or put it in a Field.", el);
-      if (el && !baseId()) console.warn("[Select] has no id or name: give it one, so the control can point at its options.", el);
+      if (el && !named) {
+        console.warn("[Select] has no accessible name: give it a <label for>, or put it in a Field.", el);
+      }
+      if (el && !baseId()) {
+        console.warn("[Select] has no id or name: give it one, so the control can point at its options.", el);
+      }
     });
   }
 });
@@ -769,7 +816,7 @@ const {
   popover = "auto",
 } = defineProps<{
   id?: string;
-  sections: Section[];
+  sections: Array<Section>;
   /** The highlighted option, which `aria-activedescendant` on the control points at. */
   active?: SelectOption;
   isPicked: (option: SelectOption) => boolean;
@@ -891,7 +938,7 @@ import type { SelectOption } from "./listbox";
 // after it, so Tab reaches the remove buttons after the control.
 
 const { selected, removable = true } = defineProps<{
-  selected: SelectOption[];
+  selected: Array<SelectOption>;
   /** Off while the control is disabled or read-only, which leaves the tags without their buttons. */
   removable?: boolean;
   removeLabel: (label: string) => string;
@@ -937,7 +984,8 @@ defineExpose({ focusAt });
 ```
 
 ```ts [listbox.ts]
-import { computed, type Ref } from "vue";
+import { computed } from "vue";
+import type { Ref } from "vue";
 
 // What the Select and the Combobox share about their list: its items, how they're walked
 // and where the panel goes. Both draw it with SelectPanel.vue, so neither keeps a copy.
@@ -951,7 +999,7 @@ export interface SelectOption {
 /** A heading over some of the options. */
 export interface SelectGroup {
   label: string;
-  options: SelectOption[];
+  options: Array<SelectOption>;
 }
 /** A rule between options or groups. */
 export interface SelectSeparator {
@@ -960,27 +1008,35 @@ export interface SelectSeparator {
 export type SelectItem = SelectOption | SelectGroup | SelectSeparator;
 
 /** A group, a run of options outside any group, or a separator, which the panel draws in turn. */
-export type Section = { separator?: true; label?: string; options: SelectOption[] };
+export type Section = { separator?: true; label?: string; options: Array<SelectOption> };
 
 export const isSeparator = (item: SelectItem): item is SelectSeparator => "separator" in item;
 export const isGroup = (item: SelectItem): item is SelectGroup => "options" in item;
 
-export function toSections(items: SelectItem[]) {
-  const result: Section[] = [];
+export function toSections(items: Array<SelectItem>) {
+  const result: Array<Section> = [];
   for (const item of items) {
-    if (isSeparator(item)) result.push({ separator: true, options: [] });
-    else if (isGroup(item)) result.push({ label: item.label, options: item.options });
-    else if (result.at(-1) && !result.at(-1)!.separator && result.at(-1)!.label === undefined) result.at(-1)!.options.push(item);
-    else result.push({ options: [item] });
+    if (isSeparator(item)) {
+      result.push({ separator: true, options: [] });
+    } else if (isGroup(item)) {
+      result.push({ label: item.label, options: item.options });
+    } else {
+      const last = result.at(-1);
+      if (last && !last.separator && last.label === undefined) {
+        last.options.push(item);
+      } else {
+        result.push({ options: [item] });
+      }
+    }
   }
   return result;
 }
 
 export interface ListboxOptions {
   /** What the panel shows. */
-  items: () => SelectItem[];
+  items: () => Array<SelectItem>;
   /** Every option, when the panel shows only some of them, so an option keeps its ID as the list narrows. */
-  all?: () => SelectItem[];
+  all?: () => Array<SelectItem>;
   /** The control's `id`, or its `name`, which every ID in the panel starts with. */
   baseId: () => string | undefined;
   /** The highlighted option's index in what the panel shows. */
@@ -998,10 +1054,17 @@ export function useListbox({ items, all = items, baseId, active }: ListboxOption
   const optionId = (option: SelectOption) => baseId() && `${baseId()}-option-${positions.value.get(option)}`;
   const groupId = (section: number) => baseId() && `${baseId()}-group-${section}`;
 
-  const isEnabled = (index: number) => flat.value[index] !== undefined && !flat.value[index]!.disabled;
+  const isEnabled = (index: number) => {
+    const option = flat.value[index];
+    return option !== undefined && !option.disabled;
+  };
   // The nearest enabled option in a direction, or `from` at either end, since a listbox doesn't wrap.
   function step(from: number, by: 1 | -1) {
-    for (let index = from + by; index >= 0 && index < flat.value.length; index += by) if (isEnabled(index)) return index;
+    for (let index = from + by; index >= 0 && index < flat.value.length; index += by) {
+      if (isEnabled(index)) {
+        return index;
+      }
+    }
     return from;
   }
   const firstEnabled = () => step(-1, 1);
@@ -1009,7 +1072,9 @@ export function useListbox({ items, all = items, baseId, active }: ListboxOption
   // PageDown and PageUp move ten options, stopping at either end.
   function jump(by: 1 | -1) {
     let index = active.value;
-    for (let count = 0; count < 10; count++) index = step(index, by);
+    for (let count = 0; count < 10; count++) {
+      index = step(index, by);
+    }
     return index;
   }
 
@@ -1039,11 +1104,16 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
   function place() {
     const el = panel();
     const field = anchor();
-    if (!el || !field) return;
+    if (!el || !field) {
+      return;
+    }
     const keyboard = keyboardUp();
     // The data attribute turns CSS anchor positioning off, so the styles below take over.
-    if (keyboard) el.dataset.fit = "visual";
-    else delete el.dataset.fit;
+    if (keyboard) {
+      el.dataset.fit = "visual";
+    } else {
+      delete el.dataset.fit;
+    }
     if (!keyboard && anchored()) {
       el.style.removeProperty("top");
       el.style.removeProperty("left");
@@ -1053,10 +1123,11 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
     }
     const a = field.getBoundingClientRect();
     // Its margin is the gap, on the block sides only, which `top` places it outside of.
-    const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+    const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
     const { clientWidth, clientHeight } = document.documentElement;
     // The part of the page people can see: all of it, or what the keyboard leaves.
-    const view = keyboard ? window.visualViewport! : undefined;
+    // The keyboard is only up where the browser has a visual viewport.
+    const view = keyboard ? window.visualViewport : undefined;
     const viewTop = view ? view.offsetTop : 0;
     const viewBottom = view ? view.offsetTop + view.height : clientHeight;
     const width = Math.min(a.width, clientWidth - 32);
@@ -1069,7 +1140,9 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
     // shrunk on the bigger one, with its options scrolling.
     const under = natural <= below || (natural > above && below >= above);
     const height = Math.min(natural, Math.max(under ? below : above, 0));
-    if (height < natural) el.style.maxHeight = `${height}px`;
+    if (height < natural) {
+      el.style.maxHeight = `${height}px`;
+    }
     const top = under ? a.bottom : a.top - 2 * gap - height;
     el.style.left = `${Math.max(0, Math.min(a.left, clientWidth - width))}px`;
     el.style.top = `${Math.max(viewTop - gap, Math.min(top, viewBottom - height - gap))}px`;
@@ -1080,7 +1153,9 @@ export function usePlacement({ panel, anchor, fitKeyboard = false }: PlacementOp
   let listening = false;
   function listen(open: boolean) {
     const on = open && (scripted() || fitKeyboard);
-    if (on === listening) return;
+    if (on === listening) {
+      return;
+    }
     listening = on;
     const method = on ? "addEventListener" : "removeEventListener";
     window[method]("scroll", place, { capture: true, passive: true } as AddEventListenerOptions);
@@ -1540,7 +1615,8 @@ import { createSSRApp, h, nextTick, ref } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
-import Select, { type SelectItem, type SelectProps } from "./Select.vue";
+import Select from "./Select.vue";
+import type { SelectItem, SelectProps } from "./Select.vue";
 
 // jsdom has no Popover API, matchMedia or scrollIntoView, so these stand in for them:
 // showing and hiding with `beforetoggle`, the light dismiss of a press outside the panel,
@@ -1552,41 +1628,59 @@ const mediaListeners = new Set<() => void>();
 
 function toggle(el: HTMLElement, newState: "open" | "closed") {
   el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState: newState === "open" ? "closed" : "open" }));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+  if (newState === "open") {
+    shown.add(el);
+  } else {
+    shown.delete(el);
+  }
   // jsdom can't match :popover-open, so this stands in for it.
   el.style.display = newState === "open" ? "block" : "none";
 }
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
   Element.prototype.scrollIntoView = vi.fn();
-  window.matchMedia = ((query: string) => ({
-    get matches() {
-      return query === "(pointer: coarse)" && coarse;
-    },
-    addEventListener: (_: string, listener: () => void) => mediaListeners.add(listener),
-    removeEventListener: (_: string, listener: () => void) => mediaListeners.delete(listener),
-  })) as unknown as typeof window.matchMedia;
+  window.matchMedia = (query: string) =>
+    ({
+      get matches() {
+        return query === "(pointer: coarse)" && coarse;
+      },
+      addEventListener: (_: string, listener: () => void) => {
+        mediaListeners.add(listener);
+      },
+      removeEventListener: (_: string, listener: () => void) => {
+        mediaListeners.delete(listener);
+      },
+    }) as MediaQueryList;
 
   // A press that starts outside every open panel closes them, before the click arrives.
   document.addEventListener(
     "pointerup",
     (event) => {
-      for (const el of shown) if (!el.contains(event.target as Node)) el.hidePopover();
+      for (const el of shown) {
+        if (!el.contains(event.target as Node)) {
+          el.hidePopover();
+        }
+      }
     },
     true,
   );
@@ -1604,13 +1698,13 @@ afterEach(() => {
   warn.mockRestore();
 });
 
-const countries: SelectItem[] = [
+const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany", disabled: true },
   { value: "es", label: "Spain" },
   { value: "nz", label: "New Zealand" },
 ];
-const fruit: SelectItem[] = [
+const fruit: Array<SelectItem> = [
   { label: "Citrus", options: [{ value: "lemon", label: "Lemon" }, { value: "lime", label: "Lime" }] },
   { separator: true },
   { value: "apple", label: "Apple" },
@@ -1639,8 +1733,8 @@ const listbox = () => document.querySelector<HTMLElement>('[role="listbox"]')!;
 // jsdom enters a selected option in the form data even when it's disabled, which the HTML
 // Standard and browsers don't, so this leaves those out. The checklist checks it in a browser too.
 const submitted = () => {
-  const disabled = Array.from(native().selectedOptions).filter((option) => option.disabled).map((option) => option.value);
-  return new FormData(form()).getAll("country").filter((value) => !disabled.includes(String(value)));
+  const disabled = new Set(Array.from(native().selectedOptions).filter((option) => option.disabled).map((option) => option.value));
+  return new FormData(form()).getAll("country").filter((value) => !disabled.has(String(value)));
 };
 const option = (name: string) => within(listbox()).getByRole("option", { name, hidden: true });
 const announcements = () => document.querySelector('[role="status"]')?.textContent ?? "";
@@ -2064,7 +2158,7 @@ describe("Select", () => {
     it("fires one update, in the list's order, when a value is removed", async () => {
       const user = userEvent.setup();
       const value = ref(["es", "fr", "de"]);
-      const update = vi.fn((next: unknown) => (value.value = next as string[]));
+      const update = vi.fn((next: unknown) => (value.value = next as Array<string>));
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -2193,7 +2287,7 @@ describe("Select", () => {
     it("has the new value by the time a listener on it hears input and change", async () => {
       const user = userEvent.setup();
       const value = ref("fr");
-      const heard: string[] = [];
+      const heard: Array<string> = [];
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -2217,7 +2311,9 @@ describe("Select", () => {
       const user = userEvent.setup();
       await page({ multiple: true, value: ["fr", "es"] });
       if (isCoarse) {
-        for (const item of Array.from(native().options)) item.selected = item.value === "nz";
+        for (const item of Array.from(native().options)) {
+          item.selected = item.value === "nz";
+        }
         native().dispatchEvent(new Event("change", { bubbles: true }));
       } else {
         await user.click(trigger());
@@ -2314,7 +2410,9 @@ describe("Select", () => {
     it("reports several values as an array", async () => {
       const update = vi.fn();
       await page({ multiple: true, "onUpdate:modelValue": update });
-      for (const option of Array.from(native().options)) option.selected = option.value !== "nz";
+      for (const option of Array.from(native().options)) {
+        option.selected = option.value !== "nz";
+      }
       native().dispatchEvent(new Event("change", { bubbles: true }));
       expect(update).toHaveBeenCalledWith(["fr", "de", "es"]);
     });
@@ -2430,7 +2528,7 @@ describe("Select", () => {
               {
                 leading: () => h("i", { "data-testid": "leading" }),
                 arrow: () => h("i", { "data-testid": "arrow" }),
-                value: ({ selected }: { selected: { label: string }[] }) => `Picked ${selected.length}`,
+                value: ({ selected }: { selected: Array<{ label: string }> }) => `Picked ${selected.length}`,
                 option: ({ option }: { option: { label: string } }) => `Fruit: ${option.label}`,
                 tag: ({ option }: { option: { label: string } }) => `Tag: ${option.label}`,
                 "group-label": ({ label }: { label: string }) => `Group: ${label}`,
@@ -2562,7 +2660,7 @@ describe("Select", () => {
       const app = createSSRApp({ render: form });
       app.mount(host);
       await nextTick();
-      expect(warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes("Hydration"))).toEqual([]);
+      expect(warn.mock.calls.filter((call: Array<unknown>) => String(call[0]).includes("Hydration"))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       app.unmount();
       host.remove();
@@ -2586,7 +2684,9 @@ describe("Select", () => {
         set(this: HTMLOptionElement, value: boolean) {
           const gaining = value && !this.hasAttribute("selected");
           defaultSelected.set!.call(this, value);
-          if (gaining) this.selected = true;
+          if (gaining) {
+            this.selected = true;
+          }
         },
       });
       const el = host.querySelector("select")!;

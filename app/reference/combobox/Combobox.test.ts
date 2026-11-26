@@ -7,7 +7,8 @@ import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
 import Select from "../select/Select.vue";
 import type { SelectItem } from "../select/listbox";
-import Combobox, { type ComboboxProps } from "./Combobox.vue";
+import Combobox from "./Combobox.vue";
+import type { ComboboxProps } from "./Combobox.vue";
 
 // jsdom has no Popover API or scrollIntoView, so these stand in for them: showing and
 // hiding with `beforetoggle`. The Combobox's panel is a manual popover, which the browser
@@ -17,30 +18,41 @@ const shown = new Set<HTMLElement>();
 
 function toggle(el: HTMLElement, newState: "open" | "closed") {
   el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState: newState === "open" ? "closed" : "open" }));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+  if (newState === "open") {
+    shown.add(el);
+  } else {
+    shown.delete(el);
+  }
   el.style.display = newState === "open" ? "block" : "none";
 }
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
   Element.prototype.scrollIntoView = vi.fn();
   // jsdom has no requestSubmit, so this does what a browser does: validate, then submit.
   HTMLFormElement.prototype.requestSubmit = function (this: HTMLFormElement) {
-    if (this.reportValidity()) this.dispatchEvent(new Event("submit", { cancelable: true }));
+    if (this.reportValidity()) {
+      this.dispatchEvent(new Event("submit", { cancelable: true }));
+    }
   };
 });
 
@@ -55,14 +67,14 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const countries: SelectItem[] = [
+const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany", disabled: true },
   { value: "es", label: "Spain" },
   { value: "ch", label: "Zürich" },
   { value: "nz", label: "New Zealand" },
 ];
-const places: SelectItem[] = [
+const places: Array<SelectItem> = [
   { label: "Europe", options: [{ value: "fr", label: "France" }, { value: "es", label: "Spain" }] },
   { separator: true },
   { label: "Oceania", options: [{ value: "nz", label: "New Zealand" }] },
@@ -353,6 +365,15 @@ describe("Combobox", () => {
       expect(listbox().querySelector('[data-slot="separator"]')).toBeNull();
     });
 
+    it("drops a separator that no match comes after", async () => {
+      const user = userEvent.setup();
+      await page({ options: places });
+      await user.click(input());
+      await user.type(input(), "spa");
+      expect(options()).toEqual(["Spain"]);
+      expect(listbox().querySelector('[data-slot="separator"]')).toBeNull();
+    });
+
     it("shows every option when it opens on a picked value, rather than only the one it shows", async () => {
       const user = userEvent.setup();
       await page({ value: "es" });
@@ -374,7 +395,7 @@ describe("Combobox", () => {
 
     // In Devanagari, a vowel sign is a combining mark, and a letter of its own: "कताब" isn't
     // "किताब" (a book) without one, so neither lists nor picks it.
-    const books: SelectItem[] = [
+    const books: Array<SelectItem> = [
       { value: "kitab", label: "किताब" },
       { value: "kalam", label: "कलम" },
     ];
@@ -481,7 +502,7 @@ describe("Combobox", () => {
 
     it("keeps the picked option when people leave without changing its text, even when another has the same label", async () => {
       const user = userEvent.setup();
-      const others: SelectItem[] = [
+      const others: Array<SelectItem> = [
         { label: "Europe", options: [{ value: "eu-other", label: "Other" }] },
         { label: "Asia", options: [{ value: "as-other", label: "Other" }] },
       ];
@@ -526,7 +547,7 @@ describe("Combobox", () => {
 
     it("reverts unmatched text with Enter on a closed panel, before the form submits", async () => {
       const user = userEvent.setup();
-      const values: unknown[] = [];
+      const values: Array<unknown> = [];
       const { submit } = await page({ value: "fr" });
       submit.mockImplementation((event: Event) => {
         event.preventDefault();
@@ -552,7 +573,7 @@ describe("Combobox", () => {
 
     it("submits the new value with Enter on a closed panel, once the value has changed", async () => {
       const user = userEvent.setup();
-      const values: unknown[] = [];
+      const values: Array<unknown> = [];
       const { submit } = await page({ allowCustomValue: true });
       submit.mockImplementation((event: Event) => {
         event.preventDefault();
@@ -570,8 +591,8 @@ describe("Combobox", () => {
       ["another option's label", {}, "es", "France", ["fr"]],
     ])("submits the new value with Enter on a closed panel when its value is bound, after %s", async (_, props, start, typed, expected) => {
       const user = userEvent.setup();
-      const value = ref<string | string[] | undefined>(start);
-      const values: unknown[] = [];
+      const value = ref<string | Array<string> | undefined>(start);
+      const values: Array<unknown> = [];
       const submit = vi.fn((event: Event) => {
         event.preventDefault();
         values.push(new FormData(event.target as HTMLFormElement).getAll("country"));
@@ -586,7 +607,7 @@ describe("Combobox", () => {
                 options: countries,
                 ...props,
                 modelValue: value.value,
-                "onUpdate:modelValue": (next?: string | string[]) => (value.value = next),
+                "onUpdate:modelValue": (next?: string | Array<string>) => (value.value = next),
               }),
             ),
             h("button", { type: "submit" }, "Save"),
@@ -745,6 +766,33 @@ describe("Combobox", () => {
       expect(submitted()).toEqual(["fr"]);
     });
 
+    it("keeps a value picked once its defaults are set, where a new selected attribute selects an untouched option", async () => {
+      const user = userEvent.setup();
+      await page();
+      // A browser selects an option whose selectedness was never set when it gains the
+      // `selected` attribute, like the placeholder once the Combobox sets its defaults.
+      // jsdom marks them all as set.
+      const defaultSelected = Object.getOwnPropertyDescriptor(HTMLOptionElement.prototype, "defaultSelected")!;
+      Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", {
+        ...defaultSelected,
+        set(this: HTMLOptionElement, value: boolean) {
+          const gaining = value && !this.hasAttribute("selected");
+          defaultSelected.set!.call(this, value);
+          if (gaining) {
+            this.selected = true;
+          }
+        },
+      });
+      try {
+        await user.click(input());
+        await user.click(option("Spain"));
+        await nextTick();
+        expect(submitted()).toEqual(["es"]);
+      } finally {
+        Object.defineProperty(HTMLOptionElement.prototype, "defaultSelected", defaultSelected);
+      }
+    });
+
     it("resets to a first value that was typed, with allowCustomValue", async () => {
       const user = userEvent.setup();
       await page({ value: "Lyon", allowCustomValue: true });
@@ -797,11 +845,11 @@ describe("Combobox", () => {
   describe("the API", () => {
     it("binds its value with v-model, and updates its text when the value changes", async () => {
       const user = userEvent.setup();
-      const value = ref<string | string[]>("fr");
+      const value = ref<string | Array<string>>("fr");
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
-            h(Combobox, { id: "country", options: countries, modelValue: value.value, "onUpdate:modelValue": (next?: string | string[]) => (value.value = next ?? "") }),
+            h(Combobox, { id: "country", options: countries, modelValue: value.value, "onUpdate:modelValue": (next?: string | Array<string>) => (value.value = next ?? "") }),
           ),
       });
       await nextTick();
@@ -815,7 +863,7 @@ describe("Combobox", () => {
 
     it("fires the select's input and change events when the value changes, not on every key", async () => {
       const user = userEvent.setup();
-      const fired: string[] = [];
+      const fired: Array<string> = [];
       await page({ onChange: () => fired.push("change"), onInput: () => fired.push("input") });
       await user.click(input());
       await user.type(input(), "sp");
@@ -958,9 +1006,11 @@ describe("Combobox", () => {
 
   describe("the on-screen keyboard", () => {
     const viewport = (height: number, offsetTop = 0) => {
-      const target = new EventTarget();
-      vi.stubGlobal("visualViewport", Object.assign(target, { height, offsetTop, width: 390 }));
+      const target = Object.assign(new EventTarget(), { height, offsetTop, width: 390 });
+      vi.stubGlobal("visualViewport", target);
       vi.spyOn(window, "innerHeight", "get").mockReturnValue(844);
+      // The stub, so a test can resize it the way the on-screen keyboard does.
+      return target;
     };
     afterEach(() => {
       vi.restoreAllMocks();
@@ -1006,11 +1056,11 @@ describe("Combobox", () => {
     });
 
     it("fits the panel when the keyboard comes up after it opened", async () => {
-      viewport(844);
+      const visual = viewport(844);
       const panel = await openOn({ top: 300, bottom: 336 }, 256);
       expect(panel).not.toHaveAttribute("data-fit");
-      (window.visualViewport as unknown as { height: number }).height = 400;
-      window.visualViewport!.dispatchEvent(new Event("resize"));
+      visual.height = 400;
+      visual.dispatchEvent(new Event("resize"));
       expect(panel).toHaveAttribute("data-fit", "visual");
       expect(panel.style.top).toBe(`${300 - 8 - 256}px`);
     });
@@ -1029,10 +1079,10 @@ describe("Combobox", () => {
     });
 
     it("goes back to anchor positioning once the keyboard closes", async () => {
-      viewport(400);
+      const visual = viewport(400);
       const panel = await openOn({ top: 300, bottom: 336 }, 256);
-      (window.visualViewport as unknown as { height: number }).height = 844;
-      window.visualViewport!.dispatchEvent(new Event("resize"));
+      visual.height = 844;
+      visual.dispatchEvent(new Event("resize"));
       expect(panel).not.toHaveAttribute("data-fit");
       expect(panel.style.top).toBe("");
     });
@@ -1049,7 +1099,7 @@ describe("Combobox", () => {
       const app = createSSRApp({ render: markup });
       app.mount(host);
       await nextTick();
-      expect(warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes("Hydration"))).toEqual([]);
+      expect(warn.mock.calls.filter((call: Array<unknown>) => String(call[0]).includes("Hydration"))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       expect(host.querySelector("input")).toHaveValue("New Zealand");
       app.unmount();

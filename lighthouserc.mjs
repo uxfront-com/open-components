@@ -3,6 +3,6 @@
 import { lighthouseConfig } from "@uxfront/site-checks/lighthouse";
 
 export default lighthouseConfig({
-  collect: { staticDistDir: "dist", url: ["http://localhost/"] },
-  categories: { seo: { minScore: 0.95 } },
+	collect: { staticDistDir: "dist", url: ["http://localhost/"] },
+	categories: { seo: { minScore: 0.95 } },
 });

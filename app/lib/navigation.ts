@@ -16,17 +16,21 @@ const COMPONENTS = "/docs/components";
  * comes first whatever its title, so renaming it in the sidebar can't move it in
  * among the components. It returns a new tree, since the one it's given is Docus's.
  */
-export function sortNavigation(navigation: ContentNavigationItem[]): ContentNavigationItem[] {
-  return navigation.map((item) => {
-    if (!item.children) return item;
-    const hubFirst = (a: ContentNavigationItem, b: ContentNavigationItem) =>
-      Number(b.path === COMPONENTS) - Number(a.path === COMPONENTS);
-    const children =
-      item.path === COMPONENTS
-        ? [...item.children].sort((a, b) => hubFirst(a, b) || a.title.localeCompare(b.title, "en"))
-        : sortNavigation(item.children);
-    return { ...item, children };
-  });
+export function sortNavigation(
+	navigation: Array<ContentNavigationItem>,
+): Array<ContentNavigationItem> {
+	return navigation.map((item) => {
+		if (!item.children) {
+			return item;
+		}
+		const hubFirst = (a: ContentNavigationItem, b: ContentNavigationItem) =>
+			Number(b.path === COMPONENTS) - Number(a.path === COMPONENTS);
+		const children =
+			item.path === COMPONENTS
+				? [...item.children].sort((a, b) => hubFirst(a, b) || a.title.localeCompare(b.title, "en"))
+				: sortNavigation(item.children);
+		return { ...item, children };
+	});
 }
 
 /**
@@ -36,20 +40,24 @@ export function sortNavigation(navigation: ContentNavigationItem[]): ContentNavi
  * with a page of its own, like the Button's Overview, is that page.
  */
 export function findSurround(
-  navigation: ContentNavigationItem[],
-  path: string,
+	navigation: Array<ContentNavigationItem>,
+	path: string,
 ): [ContentNavigationItem | null, ContentNavigationItem | null] {
-  const pages = flatten(navigation);
-  const index = pages.findIndex((page) => page.path === path);
-  if (index === -1) return [null, null];
-  return [pages[index - 1] ?? null, pages[index + 1] ?? null];
+	const pages = flatten(navigation);
+	const index = pages.findIndex((page) => page.path === path);
+	if (index === -1) {
+		return [null, null];
+	}
+	return [pages[index - 1] ?? null, pages[index + 1] ?? null];
 }
 
 // As Nuxt Content's flattedData(), which its package doesn't export.
-function flatten(navigation: ContentNavigationItem[]): ContentNavigationItem[] {
-  return navigation.flatMap((item) => {
-    const children = item.children ? flatten(item.children) : [];
-    if (item.page === false || children.some((child) => child.path === item.path)) return children;
-    return [{ ...item, children: undefined }, ...children];
-  });
+function flatten(navigation: Array<ContentNavigationItem>): Array<ContentNavigationItem> {
+	return navigation.flatMap((item) => {
+		const children = item.children ? flatten(item.children) : [];
+		if (item.page === false || children.some((child) => child.path === item.path)) {
+			return children;
+		}
+		return [{ ...item, children: undefined }, ...children];
+	});
 }

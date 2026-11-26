@@ -21,29 +21,29 @@ import "~/reference/button/tokens.css";
 </script>
 
 <template>
-  <div class="my-5">
-    <div
-      class="checkbox-example not-prose relative flex justify-center rounded-md border border-muted p-4"
-      :class="{ 'rounded-b-none border-b-0': $slots.code }"
-    >
-      <slot />
-    </div>
+	<div class="my-5">
+		<div
+			class="checkbox-example not-prose relative flex justify-center rounded-md border border-muted p-4"
+			:class="{ 'rounded-b-none border-b-0': $slots.code }"
+		>
+			<slot />
+		</div>
 
-    <div
-      v-if="$slots.code"
-      class="[&>div>pre]:rounded-t-none [&>div]:my-0 [&>p]:my-0 [&>p]:border-x [&>p]:border-muted [&>p]:px-4 [&>p]:py-2"
-    >
-      <slot name="code" />
-    </div>
-  </div>
+		<div
+			v-if="$slots.code"
+			class="[&>div>pre]:rounded-t-none [&>div]:my-0 [&>p]:my-0 [&>p]:border-x [&>p]:border-muted [&>p]:px-4 [&>p]:py-2"
+		>
+			<slot name="code" />
+		</div>
+	</div>
 </template>
 
 <style>
 /* The reference tokens use light-dark(), which follows color-scheme: follow the docs' colour mode. */
 .checkbox-example {
-  color-scheme: light;
+	color-scheme: light;
 }
 .dark .checkbox-example {
-  color-scheme: dark;
+	color-scheme: dark;
 }
 </style>

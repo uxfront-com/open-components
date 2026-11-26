@@ -12,14 +12,18 @@ import { rawContract } from "../lib/raw";
  * Its first line names the schema it follows (see rawContract in server/lib/raw.ts).
  */
 export default defineEventHandler(async (event) => {
-  const match = event.path.match(/^\/raw(\/.+?)\.yaml$/);
-  if (!match?.[1]) return;
+	const match = event.path.match(/^\/raw(\/.+?)\.yaml$/);
+	if (!match?.[1]) {
+		return;
+	}
 
-  const docs = await readDocsPage(event, match[1]);
-  const contract = docs && buildContract(docs.source);
-  if (!docs || !contract) return;
+	const docs = await readDocsPage(event, match[1]);
+	const contract = docs && buildContract(docs.source);
+	if (!docs || !contract) {
+		return;
+	}
 
-  const { siteUrl } = useRuntimeConfig(event).public;
-  setHeader(event, "Content-Type", "application/yaml; charset=utf-8");
-  return rawContract({ title: docs.page.title, path: match[1] }, contract, siteUrl);
+	const { siteUrl } = useRuntimeConfig(event).public;
+	setHeader(event, "Content-Type", "application/yaml; charset=utf-8");
+	return rawContract({ title: docs.page.title, path: match[1] }, contract, siteUrl);
 });

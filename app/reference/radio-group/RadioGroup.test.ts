@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { createSSRApp, h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { createSSRApp, h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Radio from "./Radio.vue";
 import RadioGroup from "./RadioGroup.vue";
@@ -151,7 +152,9 @@ describe("RadioGroup", () => {
       render: () => h("form", [h(RadioGroup, { name: "delivery", legend: "Delivery", required: true }, () => radios())]),
     });
 
-    for (const radio of screen.getAllByRole("radio")) expect(radio).toBeRequired();
+    for (const radio of screen.getAllByRole("radio")) {
+      expect(radio).toBeRequired();
+    }
     expect(screen.getByRole("radiogroup").closest("form")!.checkValidity()).toBe(false);
   });
 
@@ -271,7 +274,9 @@ describe("RadioGroup", () => {
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAttribute("aria-describedby", "delivery-hint delivery-error");
     expect(group).toHaveAccessibleDescription("Express arrives the next working day Choose how you'd like your order delivered");
-    for (const radio of screen.getAllByRole("radio")) expect(radio).not.toHaveAttribute("aria-invalid");
+    for (const radio of screen.getAllByRole("radio")) {
+      expect(radio).not.toHaveAttribute("aria-invalid");
+    }
 
     await rerender({ error: undefined });
     expect(group).not.toHaveAttribute("aria-invalid");
@@ -311,7 +316,9 @@ describe("RadioGroup", () => {
     });
 
     expect(container.firstElementChild).toHaveAttribute("data-size", "lg");
-    for (const radio of container.querySelectorAll(".radio")) expect(radio).toHaveAttribute("data-size", "lg");
+    for (const radio of container.querySelectorAll(".radio")) {
+      expect(radio).toHaveAttribute("data-size", "lg");
+    }
   });
 
   it("mirrors its orientation as a data attribute, keeps its radios in their own part, and never sets aria-orientation", async () => {

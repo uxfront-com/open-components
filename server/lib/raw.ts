@@ -10,7 +10,9 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
+
 import { parseDocument } from "yaml";
+
 import { anchors, heading, scan } from "../../mcp/lib/markdown";
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
@@ -21,10 +23,10 @@ const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
  * /docs/getting-started/roadmap.
  */
 export function docsPath(file: string): string {
-  return `/docs/${file
-    .replace(/\.md$/, "")
-    .replace(/(^|\/)\d+\./g, "$1")
-    .replace(/\/index$/, "")}`;
+	return `/docs/${file
+		.replace(/\.md$/, "")
+		.replaceAll(/(^|\/)\d+\./g, "$1")
+		.replace(/\/index$/, "")}`;
 }
 
 /**
@@ -32,8 +34,8 @@ export function docsPath(file: string): string {
  * frontmatter. The title is the copy's heading, from rawTitle().
  */
 export function rawPage(page: { title: string; description: string }, source: string): string {
-  const body = source.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
-  return `# ${page.title}\n\n> ${page.description}\n\n${body}\n`;
+	const body = source.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
+	return `# ${page.title}\n\n> ${page.description}\n\n${body}\n`;
 }
 
 /**
@@ -51,7 +53,7 @@ export function rawPage(page: { title: string; description: string }, source: st
  * (mcp/lib/standard.ts), and get-page finds the page's sections by that name.
  */
 export function rawTitle(page: { stem: string; title: string; seo?: { title?: string } }): string {
-  return basename(page.stem) === "index" ? page.title : page.seo?.title || page.title;
+	return basename(page.stem) === "index" ? page.title : page.seo?.title || page.title;
 }
 
 /**
@@ -59,14 +61,18 @@ export function rawTitle(page: { stem: string; title: string; seo?: { title?: st
  * under a first line naming the schema it follows, public/schemas/contract.json,
  * which editors that use the YAML language server check it against.
  */
-export function rawContract(page: { title: string; path: string }, contract: string, siteUrl: string): string {
-  return [
-    `# yaml-language-server: $schema=${siteUrl}/schemas/contract.json`,
-    `# The ${page.title} contract, with every rule from its checklist.`,
-    `# The page explains why each one exists: ${siteUrl}/raw${page.path}.md`,
-    "",
-    contract,
-  ].join("\n");
+export function rawContract(
+	page: { title: string; path: string },
+	contract: string,
+	siteUrl: string,
+): string {
+	return [
+		`# yaml-language-server: $schema=${siteUrl}/schemas/contract.json`,
+		`# The ${page.title} contract, with every rule from its checklist.`,
+		`# The page explains why each one exists: ${siteUrl}/raw${page.path}.md`,
+		"",
+		contract,
+	].join("\n");
 }
 
 /**
@@ -89,51 +95,72 @@ export function rawContract(page: { title: string; path: string }, contract: str
  * it, and its questions, under `## FAQ`, go into one `## FAQ` before the
  * Overview's `## Sources`.
  */
-export function joinPage(index: string, parts: string[]): string {
-  const blocks = new Map<string, string[]>();
-  const gathered = { rules: [] as string[], faq: [] as string[] };
-  for (const source of parts) {
-    const { title, before, body } = readPart(source);
-    const sections = { own: [] as string[], rules: [] as string[], faq: [] as string[] };
-    let section: keyof typeof sections = "own";
-    for (const { text, code } of scan(body)) {
-      const match = !code && heading(text);
-      if (match && match.level === 2) {
-        section = RULES.test(match.text) ? "rules" : match.text === "FAQ" ? "faq" : "own";
-        // One `## FAQ` heads every part's questions.
-        if (section === "faq") continue;
-        if (section === "rules") {
-          sections.rules.push(`### ${wholeRules(match.text)}`);
-          continue;
-        }
-      }
-      sections[section].push(match ? `#${text}` : text);
-    }
-    blocks.set(before, [...(blocks.get(before) ?? []), `## ${title}\n\n${sections.own.join("\n").trim()}\n\n`]);
-    for (const key of ["rules", "faq"] as const) {
-      if (sections[key].length) gathered[key].push(sections[key].join("\n").trim());
-    }
-  }
+export function joinPage(index: string, parts: Array<string>): string {
+	const blocks = new Map<string, Array<string>>();
+	const gathered = { rules: [] as Array<string>, faq: [] as Array<string> };
+	for (const source of parts) {
+		const { title, before, body } = readPart(source);
+		const sections = {
+			own: [] as Array<string>,
+			rules: [] as Array<string>,
+			faq: [] as Array<string>,
+		};
+		let section: keyof typeof sections = "own";
+		for (const { text, code } of scan(body)) {
+			const match = !code && heading(text);
+			if (match && match.level === 2) {
+				section = RULES.test(match.text) ? "rules" : match.text === "FAQ" ? "faq" : "own";
+				// One `## FAQ` heads every part's questions.
+				if (section === "faq") {
+					continue;
+				}
+				if (section === "rules") {
+					sections.rules.push(`### ${wholeRules(match.text)}`);
+					continue;
+				}
+			}
+			sections[section].push(match ? `#${text}` : text);
+		}
+		blocks.set(before, [
+			...(blocks.get(before) ?? []),
+			`## ${title}\n\n${sections.own.join("\n").trim()}\n\n`,
+		]);
+		for (const key of ["rules", "faq"] as const) {
+			if (sections[key].length) {
+				gathered[key].push(sections[key].join("\n").trim());
+			}
+		}
+	}
 
-  // The rules go at the end of the Checklist, before the section after it, and
-  // the questions before the Sources.
-  let rules = gathered.rules.length ? `${gathered.rules.join("\n\n")}\n\n` : "";
-  let faq = gathered.faq.length ? `## FAQ\n\n${gathered.faq.join("\n\n")}\n\n` : "";
-  let section = "";
-  const joined = scan(index).map(({ text, code }) => {
-    const match = !code && heading(text);
-    if (!match || match.level !== 2) return text;
-    let before = "";
-    if (section === "Checklist") [before, rules] = [rules, ""];
-    if (match.text === "Sources") [before, faq] = [before + faq, ""];
-    before += blocks.get(match.text)?.join("") ?? "";
-    blocks.delete(match.text);
-    section = match.text;
-    return `${before}${text}`;
-  });
-  const missing = [...blocks.keys(), ...(rules ? ["Checklist"] : []), ...(faq ? ["Sources"] : [])];
-  if (missing.length) throw new Error(`A split page has no section named ${missing.join(", ")} for its parts to go before or into`);
-  return joined.join("\n");
+	// The rules go at the end of the Checklist, before the section after it, and
+	// the questions before the Sources.
+	let rules = gathered.rules.length ? `${gathered.rules.join("\n\n")}\n\n` : "";
+	let faq = gathered.faq.length ? `## FAQ\n\n${gathered.faq.join("\n\n")}\n\n` : "";
+	let section = "";
+	const joined = scan(index).map(({ text, code }) => {
+		const match = !code && heading(text);
+		if (!match || match.level !== 2) {
+			return text;
+		}
+		let before = "";
+		if (section === "Checklist") {
+			[before, rules] = [rules, ""];
+		}
+		if (match.text === "Sources") {
+			[before, faq] = [before + faq, ""];
+		}
+		before += blocks.get(match.text)?.join("") ?? "";
+		blocks.delete(match.text);
+		section = match.text;
+		return `${before}${text}`;
+	});
+	const missing = [...blocks.keys(), ...(rules ? ["Checklist"] : []), ...(faq ? ["Sources"] : [])];
+	if (missing.length) {
+		throw new Error(
+			`A split page has no section named ${missing.join(", ")} for its parts to go before or into`,
+		);
+	}
+	return joined.join("\n");
 }
 
 /**
@@ -149,30 +176,38 @@ export function joinPage(index: string, parts: string[]): string {
  * A rules table's anchor on the whole page, like `ui-rules`, goes to its heading
  * on the part, like `/docs/components/button/ui#ui-checklist`.
  */
-export function splitAnchors(parts: { path: string; source: string }[]): Record<string, string> {
-  const found = parts.flatMap(({ path, source }) => {
-    const { title, body } = readPart(source);
-    const lines = scan(body);
-    const slug = anchors();
-    const headings = lines.flatMap(({ text, code }, start) => {
-      const match = !code && heading(text);
-      return match ? [{ ...match, start }] : [];
-    });
-    return [
-      { anchor: anchors()(title), target: path, length: lines.length },
-      ...headings.flatMap(({ level, text, start }) => {
-        const end = headings.find((other) => other.start > start && other.level <= level)?.start ?? lines.length;
-        const anchor = slug(text);
-        const entry = { anchor, target: `${path}#${anchor}`, length: end - start };
-        return level === 2 && RULES.test(text) ? [entry, { ...entry, anchor: anchors()(wholeRules(text)) }] : [entry];
-      }),
-    ];
-  });
-  const map: Record<string, { target: string; length: number }> = {};
-  for (const { anchor, target, length } of found) {
-    if (!map[anchor] || length > map[anchor].length) map[anchor] = { target, length };
-  }
-  return Object.fromEntries(Object.entries(map).map(([anchor, { target }]) => [anchor, target]));
+export function splitAnchors(
+	parts: Array<{ path: string; source: string }>,
+): Record<string, string> {
+	const found = parts.flatMap(({ path, source }) => {
+		const { title, body } = readPart(source);
+		const lines = scan(body);
+		const slug = anchors();
+		const headings = lines.flatMap(({ text, code }, start) => {
+			const match = !code && heading(text);
+			return match ? [{ ...match, start }] : [];
+		});
+		return [
+			{ anchor: anchors()(title), target: path, length: lines.length },
+			...headings.flatMap(({ level, text, start }) => {
+				const end =
+					headings.find((other) => other.start > start && other.level <= level)?.start ??
+					lines.length;
+				const anchor = slug(text);
+				const entry = { anchor, target: `${path}#${anchor}`, length: end - start };
+				return level === 2 && RULES.test(text)
+					? [entry, { ...entry, anchor: anchors()(wholeRules(text)) }]
+					: [entry];
+			}),
+		];
+	});
+	const map: Record<string, { target: string; length: number }> = {};
+	for (const { anchor, target, length } of found) {
+		if (!map[anchor] || length > map[anchor].length) {
+			map[anchor] = { target, length };
+		}
+	}
+	return Object.fromEntries(Object.entries(map).map(([anchor, { target }]) => [anchor, target]));
 }
 
 // A layer page's rules table is headed like `## UI Checklist`, which is
@@ -180,14 +215,24 @@ export function splitAnchors(parts: { path: string; source: string }[]): Record<
 const RULES = / Checklist$/;
 const wholeRules = (text: string) => text.replace(RULES, " rules");
 
-// A part's title, the section it goes before and its body, from its source.
-function readPart(source: string): { title: string; before: string; body: string } {
-  // Read the way Nuxt Content reads it, which builds past a YAML slip.
-  const { title, before } = (parseDocument(source.match(FRONTMATTER)?.[1] ?? "").toJSON() ?? {}) as { title?: unknown; before?: unknown };
-  if (typeof title !== "string" || typeof before !== "string") {
-    throw new Error(`A part of a split page needs a title and the section it goes before: ${source.slice(0, 200)}`);
-  }
-  return { title, before, body: source.replace(FRONTMATTER, "").trim() };
+// A part's title, the section it goes before and its body.
+interface Part {
+	title: string;
+	before: string;
+	body: string;
+}
+
+// A part, from its source.
+function readPart(source: string): Part {
+	// Read the way Nuxt Content reads it, which builds past a YAML slip.
+	const { title, before } = (parseDocument(source.match(FRONTMATTER)?.[1] ?? "").toJSON() ??
+		{}) as { title?: unknown; before?: unknown };
+	if (typeof title !== "string" || typeof before !== "string") {
+		throw new Error(
+			`A part of a split page needs a title and the section it goes before: ${source.slice(0, 200)}`,
+		);
+	}
+	return { title, before, body: source.replace(FRONTMATTER, "").trim() };
 }
 
 /**
@@ -195,9 +240,14 @@ function readPart(source: string): { title: string; before: string; body: string
  * index.md comes joined with its parts (see joinPage).
  */
 export function readPage(dir: string, file: string): string {
-  const source = readFileSync(join(dir, file), "utf8");
-  const parts = partsOf(dir, file);
-  return parts.length ? joinPage(source, parts.map((part) => readFileSync(join(dir, part), "utf8"))) : source;
+	const source = readFileSync(join(dir, file), "utf8");
+	const parts = partsOf(dir, file);
+	return parts.length
+		? joinPage(
+				source,
+				parts.map((part) => readFileSync(join(dir, part), "utf8")),
+			)
+		: source;
 }
 
 /**
@@ -205,11 +255,13 @@ export function readPage(dir: string, file: string): string {
  * lists them. The parts of a split page aren't pages of their own here: their
  * index.md stands for the whole page, and lists their files in `parts`.
  */
-export function readPages(dir: string): { file: string; source: string; parts: string[] }[] {
-  return readdirSync(dir, { recursive: true, encoding: "utf8" })
-    .filter((file) => file.endsWith(".md") && !isPart(dir, file))
-    .sort(byNumber)
-    .map((file) => ({ file, source: readPage(dir, file), parts: partsOf(dir, file) }));
+export function readPages(
+	dir: string,
+): Array<{ file: string; source: string; parts: Array<string> }> {
+	return readdirSync(dir, { recursive: true, encoding: "utf8" })
+		.filter((file) => file.endsWith(".md") && !isPart(dir, file))
+		.sort(byNumber)
+		.map((file) => ({ file, source: readPage(dir, file), parts: partsOf(dir, file) }));
 }
 
 /**
@@ -218,32 +270,39 @@ export function readPages(dir: string): { file: string; source: string; parts: s
  * `/docs/components/button/ux#loading`.
  */
 export function readSplitAnchors(dir: string): Record<string, Record<string, string>> {
-  return Object.fromEntries(
-    readPages(dir)
-      .filter(({ parts }) => parts.length)
-      .map(({ file, parts }) => [
-        docsPath(file),
-        splitAnchors(parts.map((part) => ({ path: docsPath(part), source: readFileSync(join(dir, part), "utf8") }))),
-      ]),
-  );
+	return Object.fromEntries(
+		readPages(dir)
+			.filter(({ parts }) => parts.length)
+			.map(({ file, parts }) => [
+				docsPath(file),
+				splitAnchors(
+					parts.map((part) => ({
+						path: docsPath(part),
+						source: readFileSync(join(dir, part), "utf8"),
+					})),
+				),
+			]),
+	);
 }
 
 /** Whether a file in `dir` is a part of a split page, next to its index.md. */
 export function isPart(dir: string, file: string): boolean {
-  return basename(file) !== "index.md" && existsSync(join(dir, dirname(file), "index.md"));
+	return basename(file) !== "index.md" && existsSync(join(dir, dirname(file), "index.md"));
 }
 
 // The files of an index.md's parts, in file order, or none for any other page.
-function partsOf(dir: string, file: string): string[] {
-  if (basename(file) !== "index.md") return [];
-  const folder = dirname(file);
-  return readdirSync(join(dir, folder))
-    .filter((name) => name.endsWith(".md") && name !== "index.md")
-    .sort(byNumber)
-    .map((name) => join(folder, name));
+function partsOf(dir: string, file: string): Array<string> {
+	if (basename(file) !== "index.md") {
+		return [];
+	}
+	const folder = dirname(file);
+	return readdirSync(join(dir, folder))
+		.filter((name) => name.endsWith(".md") && name !== "index.md")
+		.sort(byNumber)
+		.map((name) => join(folder, name));
 }
 
 // File names in the order the sidebar lists them: 2.ux.md before 10.faq.md.
 function byNumber(a: string, b: string): number {
-  return a.localeCompare(b, "en", { numeric: true });
+	return a.localeCompare(b, "en", { numeric: true });
 }

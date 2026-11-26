@@ -1,25 +1,26 @@
 import { queryCollection } from "@nuxt/content/server";
 import type { H3Event } from "h3";
+
 import { rawTitle } from "../lib/raw";
 
 // The fields read below. Nitro's types don't see the collections Docus defines.
 interface DocsPage {
-  path: string;
-  stem: string;
-  title: string;
-  seo?: { title?: string };
+	path: string;
+	stem: string;
+	title: string;
+	seo?: { title?: string };
 }
 
 interface Llms {
-  sections: { links?: { title: string; href: string }[] }[];
+	sections: Array<{ links?: Array<{ title: string; href: string }> }>;
 }
 
 // nuxt-llms (which Docus installs) calls this hook as it writes llms.txt. Its own
 // declaration isn't in this app's types, since the app doesn't depend on it.
 declare module "nitropack/types" {
-  interface NitroRuntimeHooks {
-    "llms:generate": (event: H3Event, llms: Llms) => void | Promise<void>;
-  }
+	interface NitroRuntimeHooks {
+		"llms:generate": (event: H3Event, llms: Llms) => void | Promise<void>;
+	}
 }
 
 /**
@@ -35,13 +36,15 @@ declare module "nitropack/types" {
  * added its links by the time this runs.
  */
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("llms:generate", async (event, llms) => {
-    const pages = (await queryCollection(event, "docs" as never).all()) as DocsPage[];
-    const titles = new Map(pages.map((page) => [page.path, rawTitle(page)]));
-    for (const link of llms.sections.flatMap((section) => section.links ?? [])) {
-      const path = link.href.match(/^https?:\/\/[^/]+\/raw(\/docs\/.+)\.md$/)?.[1];
-      const title = path && titles.get(path);
-      if (title) link.title = title;
-    }
-  });
+	nitroApp.hooks.hook("llms:generate", async (event, llms) => {
+		const pages = (await queryCollection(event, "docs" as never).all()) as Array<DocsPage>;
+		const titles = new Map(pages.map((page) => [page.path, rawTitle(page)]));
+		for (const link of llms.sections.flatMap((section) => section.links ?? [])) {
+			const path = link.href.match(/^https?:\/\/[^/]+\/raw(\/docs\/.+)\.md$/)?.[1];
+			const title = path && titles.get(path);
+			if (title) {
+				link.title = title;
+			}
+		}
+	});
 });

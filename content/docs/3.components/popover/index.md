@@ -149,7 +149,7 @@ let frame: number | undefined;
 // isn't mistaken for a popover that's still open.
 let showing = false;
 // The parts of a Dialog around it, which it listens on while it's open.
-let hostParts: Element[] = [];
+let hostParts: Array<Element> = [];
 
 // Why it's closing. The popover closes itself on its close button and on Escape, and
 // `null` means your code closed it, which fires no `close`. Every other close is the
@@ -183,7 +183,7 @@ function initialFocus(el: HTMLElement) {
 }
 
 // The buttons that point at it with `popovertarget`.
-const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replace(/["\\]/g, "\\$&")}"]`);
+const triggers = () => document.querySelectorAll<HTMLElement>(`[popovertarget="${id.replaceAll(/["\\]/g, String.raw`\$&`)}"]`);
 
 // The trigger is the button the browser says opened it, where it says so, or else the
 // first one that points at it. TypeScript doesn't know `source` yet.
@@ -206,7 +206,12 @@ function unanchor() {
 }
 
 function onBeforetoggle(event: Event) {
-  const el = popover.value!;
+  const el = popover.value;
+  // The browser fires `beforetoggle` at once, while the popover is still in the page, so this
+  // only keeps TypeScript sure of it.
+  if (!el) {
+    return;
+  }
   if ((event as ToggleEvent).newState === "open") {
     showing = true;
     // Opening it again from another trigger before the browser said it closed leaves the
@@ -216,7 +221,9 @@ function onBeforetoggle(event: Event) {
     unanchor();
     trigger = findTrigger(event);
     opener = document.activeElement as HTMLElement | null;
-    if (trigger && anchorName.value) trigger.style.setProperty("anchor-name", anchorName.value);
+    if (trigger && anchorName.value) {
+      trigger.style.setProperty("anchor-name", anchorName.value);
+    }
     return;
   }
   showing = false;
@@ -228,7 +235,9 @@ function onBeforetoggle(event: Event) {
 }
 
 function onToggle(event: Event) {
-  const el = popover.value!;
+  // The browser fires `toggle` a task after it hides the popover, so when the popover
+  // unmounts while it's open, this runs once it has gone, and its trigger still needs focus.
+  const el = popover.value;
   if ((event as ToggleEvent).newState === "open") {
     state.value = "open";
     open.value = true;
@@ -236,9 +245,13 @@ function onToggle(event: Event) {
     listen(true);
     // Focus moves in, so keyboard and screen reader users start in the popover, unless
     // the browser already focused an `autofocus` control in it.
-    if (!el.contains(document.activeElement)) initialFocus(el)?.focus();
+    if (el && !el.contains(document.activeElement)) {
+      initialFocus(el)?.focus();
+    }
     nextTick(update);
-    if (arrow) nextTick(follow);
+    if (arrow) {
+      nextTick(follow);
+    }
     return;
   }
   state.value = "closed";
@@ -250,9 +263,13 @@ function onToggle(event: Event) {
   // Safari, where a click doesn't focus a button, isn't the trigger. So the trigger gets it,
   // unless focus has already moved somewhere else, like into another popover.
   const active = document.activeElement;
-  if (returnFocus && (!active || active === document.body || el.contains(active))) (trigger ?? opener)?.focus();
+  if (returnFocus && (!active || active === document.body || el?.contains(active))) {
+    (trigger ?? opener)?.focus();
+  }
   returnFocus = false;
-  if (reason) emit("close", reason);
+  if (reason) {
+    emit("close", reason);
+  }
 }
 
 // Escape closes the popover and goes no further, so a dialog around it stays open, whether
@@ -261,8 +278,12 @@ function onToggle(event: Event) {
 // that cancels it, close first and alone. Cancelling it also keeps the browser from closing
 // anything else on it. With a popover open inside this one, Escape is that one's.
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== "Escape" || event.defaultPrevented || !showing) return;
-  if (popover.value?.querySelector('[popover]:popover-open, .popover[data-state="open"]')) return;
+  if (event.key !== "Escape" || event.defaultPrevented || !showing) {
+    return;
+  }
+  if (popover.value?.querySelector('[popover]:popover-open, .popover[data-state="open"]')) {
+    return;
+  }
   event.preventDefault();
   event.stopPropagation();
   dismiss("escape");
@@ -274,7 +295,9 @@ function onKeydown(event: KeyboardEvent) {
 // Escape after the control that has focus and before the Dialog does.
 function onHostKeydown(event: KeyboardEvent) {
   const target = event.target as Node;
-  if (popover.value?.contains(target) || trigger?.contains(target)) return;
+  if (popover.value?.contains(target) || trigger?.contains(target)) {
+    return;
+  }
   onKeydown(event);
 }
 
@@ -282,12 +305,16 @@ function onHostKeydown(event: KeyboardEvent) {
 // take focus, none of its parts hears the key. So the Dialog does too, in the capture
 // phase, but only then: with no control focused, it takes the key from nobody.
 function onDialogKeydown(event: KeyboardEvent) {
-  if (event.target === event.currentTarget) onKeydown(event);
+  if (event.target === event.currentTarget) {
+    onKeydown(event);
+  }
 }
 
 // A Dialog that closes, like from its Done button, takes the popover with it.
 function onHostClose() {
-  if (showing) dismiss("closed");
+  if (showing) {
+    dismiss("closed");
+  }
 }
 
 function dismiss(why: PopoverCloseReason | null) {
@@ -302,11 +329,15 @@ function onPointerdown(event: PointerEvent) {
 }
 function onPointerup(event: PointerEvent) {
   const target = event.target as Node;
-  if (pressedOutside && !popover.value?.contains(target) && !trigger?.contains(target)) note("outside");
+  if (pressedOutside && !popover.value?.contains(target) && !trigger?.contains(target)) {
+    note("outside");
+  }
   pressedOutside = false;
 }
 function onPageKeydown(event: KeyboardEvent) {
-  if (event.key === "Escape" && !event.defaultPrevented) note("escape");
+  if (event.key === "Escape" && !event.defaultPrevented) {
+    note("escape");
+  }
 }
 function onTriggerClick() {
   note("trigger");
@@ -321,11 +352,17 @@ function listen(on: boolean) {
   trigger?.[method]("keydown", onKeydown as EventListener);
   trigger?.[method]("click", onTriggerClick);
   const host = popover.value?.parentElement?.closest("dialog");
-  if (on) hostParts = [...(host?.children ?? [])];
-  for (const part of hostParts) part[method]("keydown", onHostKeydown as EventListener);
+  if (on) {
+    hostParts = [...(host?.children ?? [])];
+  }
+  for (const part of hostParts) {
+    part[method]("keydown", onHostKeydown as EventListener);
+  }
   host?.[method]("keydown", onDialogKeydown as EventListener, true);
   host?.[method]("close", onHostClose);
-  if (!on) hostParts = [];
+  if (!on) {
+    hostParts = [];
+  }
   if (!anchored()) {
     window[method]("scroll", update, { capture: true, passive: true } as AddEventListenerOptions);
     window[method]("resize", update);
@@ -342,9 +379,14 @@ watch(
   open,
   (value) => {
     const el = popover.value;
-    if (!el?.showPopover) return;
-    if (value && !showing) el.showPopover();
-    else if (!value && showing) dismiss(null);
+    if (!el?.showPopover) {
+      return;
+    }
+    if (value && !showing) {
+      el.showPopover();
+    } else if (!value && showing) {
+      dismiss(null);
+    }
   },
   { flush: "post" },
 );
@@ -354,14 +396,20 @@ watch(
 const anchored = () => globalThis.CSS?.supports?.("position-area: top") ?? false;
 
 function update() {
-  if (!anchored()) place();
-  if (arrow) aim();
+  if (!anchored()) {
+    place();
+  }
+  if (arrow) {
+    aim();
+  }
 }
 
 // The arrow follows it on every frame while it's open, since the browser moves an anchored
 // popover after a scroll handler runs, and a flip can move it with no scroll at all.
 function follow() {
-  if (state.value !== "open") return;
+  if (state.value !== "open") {
+    return;
+  }
   aim();
   frame = requestAnimationFrame(follow);
 }
@@ -370,13 +418,15 @@ function follow() {
 // doesn't fit, centred on the trigger and kept inside the viewport.
 function place() {
   const el = popover.value;
-  if (!el || !trigger) return;
+  if (!el || !trigger) {
+    return;
+  }
   // Its margin is the gap, which `left` and `top` place it outside of.
-  const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+  const gap = Number.parseFloat(getComputedStyle(el).marginTop) || 0;
   const a = trigger.getBoundingClientRect();
   // Its exact size, without the scale it grows in from, which getBoundingClientRect() would include.
-  const width = parseFloat(getComputedStyle(el).width);
-  const height = parseFloat(getComputedStyle(el).height);
+  const width = Number.parseFloat(getComputedStyle(el).width);
+  const height = Number.parseFloat(getComputedStyle(el).height);
   const { clientWidth, clientHeight } = document.documentElement;
   const rtl = getComputedStyle(trigger).direction === "rtl";
   const sides = { top: "top", bottom: "bottom", start: rtl ? "right" : "left", end: rtl ? "left" : "right" } as const;
@@ -388,10 +438,14 @@ function place() {
     right: a.right + gap + width <= clientWidth,
   };
   let at: keyof typeof opposite = sides[placement];
-  if (!fits[at] && fits[opposite[at]]) at = opposite[at];
+  if (!fits[at] && fits[opposite[at]]) {
+    at = opposite[at];
+  }
   // Beside a trigger with room on neither side, like on a phone, it goes below it or above it,
   // rather than over it.
-  else if (!fits[at] && (at === "left" || at === "right")) at = fits.bottom || !fits.top ? "bottom" : "top";
+  else if (!fits[at] && (at === "left" || at === "right")) {
+    at = fits.bottom || !fits.top ? "bottom" : "top";
+  }
   const across = at === "top" || at === "bottom";
   const x = across ? a.left + (a.width - width) / 2 : at === "left" ? a.left - gap - width : a.right + gap;
   const y = across ? (at === "top" ? a.top - gap - height : a.bottom + gap) : a.top + (a.height - height) / 2;
@@ -406,7 +460,9 @@ function place() {
 function aim() {
   const el = popover.value;
   const part = arrowPart.value;
-  if (!el || !part || !trigger) return;
+  if (!el || !part || !trigger) {
+    return;
+  }
   const a = trigger.getBoundingClientRect();
   const p = el.getBoundingClientRect();
   const x = p.left + p.width / 2;
@@ -414,17 +470,21 @@ function aim() {
   side.value = p.right <= a.left ? "left" : p.left >= a.right ? "right" : p.bottom <= a.top ? "top" : "bottom";
   const across = side.value === "top" || side.value === "bottom";
   const box = getComputedStyle(el);
-  const length = parseFloat(across ? box.width : box.height);
+  const length = Number.parseFloat(across ? box.width : box.height);
   const centre = across ? a.left + a.width / 2 - (x - length / 2) : a.top + a.height / 2 - (y - length / 2);
-  const clear = parseFloat(box.borderTopLeftRadius) + parseFloat(getComputedStyle(part).width) / Math.SQRT2;
+  const clear = Number.parseFloat(box.borderTopLeftRadius) + Number.parseFloat(getComputedStyle(part).width) / Math.SQRT2;
   const offset = clear * 2 < length ? Math.max(clear, Math.min(centre, length - clear)) : length / 2;
   part.style.left = across ? `${offset - el.clientLeft}px` : "";
   part.style.top = across ? "" : `${offset - el.clientTop}px`;
 }
 
 onMounted(() => {
-  for (const el of triggers()) expand(el, false);
-  if (open.value) popover.value?.showPopover?.();
+  for (const el of triggers()) {
+    expand(el, false);
+  }
+  if (open.value) {
+    popover.value?.showPopover?.();
+  }
 
   if (import.meta.env.DEV && !title.trim()) {
     console.warn("[Popover] has no title: give it one, since it's what names the popover.", popover.value);
@@ -432,7 +492,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (showing) dismiss(null);
+  if (showing) {
+    dismiss(null);
+  }
   listen(false);
   expand(trigger, false);
   unanchor();
@@ -671,10 +733,12 @@ onBeforeUnmount(() => {
 import { render, screen, within } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type VNodeChild } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { VNodeChild } from "vue";
 import Dialog from "../dialog/Dialog.vue";
 import Tooltip from "../tooltip/Tooltip.vue";
-import Popover, { type PopoverProps } from "./Popover.vue";
+import Popover from "./Popover.vue";
+import type { PopoverProps } from "./Popover.vue";
 
 // jsdom has no Popover API, so these stand in for the parts the Popover relies on: showing
 // and hiding with `beforetoggle` and `toggle`, giving focus back to whatever had it before,
@@ -702,15 +766,20 @@ function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | 
     // where a click doesn't focus the button.
     const before = previous.get(el);
     if (focusPrevious && el.contains(document.activeElement)) {
-      if (before instanceof HTMLElement && before !== document.body) before.focus();
-      else (document.activeElement as HTMLElement).blur();
+      if (before instanceof HTMLElement && before !== document.body) {
+        before.focus();
+      } else {
+        (document.activeElement as HTMLElement).blur();
+      }
     }
   }
   // jsdom hides every popover, as browsers hide a closed one, but can't match :popover-open,
   // which shows an open one, so this stands in for it.
   el.style.display = newState === "open" ? "flex" : "";
   const fire = (old: string) => el.dispatchEvent(Object.assign(new Event("toggle"), { newState, oldState: old, source }));
-  if (!deferToggle) return fire(oldState);
+  if (!deferToggle) {
+    return fire(oldState);
+  }
   const pending = pendingToggle.get(el);
   clearTimeout(pending?.timer);
   const old = pending?.oldState ?? oldState;
@@ -725,16 +794,22 @@ function toggle(el: HTMLElement, newState: "open" | "closed", source: Element | 
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
@@ -742,11 +817,15 @@ beforeAll(() => {
   document.addEventListener("click", (event) => {
     const invoker = (event.target as Element).closest<HTMLElement>("[popovertarget]");
     const target = invoker && document.getElementById(invoker.getAttribute("popovertarget")!);
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     queueMicrotask(() => (shown.has(target) ? toggle(target, "closed", invoker) : toggle(target, "open", invoker)));
   });
   window.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || event.defaultPrevented) return;
+    if (event.key !== "Escape" || event.defaultPrevented) {
+      return;
+    }
     queueMicrotask(() => [...shown].at(-1)?.hidePopover());
   });
   let down: EventTarget | null = null;
@@ -767,15 +846,20 @@ beforeAll(() => {
 // Escape stand-ins show or hide the popover in a microtask, which may not have run yet when
 // this starts, so it waits a task at a time until no `toggle` is left.
 async function toggled() {
-  do await new Promise((resolve) => setTimeout(resolve));
-  while (pendingToggle.size);
+  do {
+    await new Promise((resolve) => {
+      setTimeout(resolve);
+    });
+  } while (pendingToggle.size);
 }
 
 afterEach(() => {
   shown.clear();
   deferToggle = false;
   // A `toggle` still on its way would reach a popover the next test can't see.
-  for (const { timer } of pendingToggle.values()) clearTimeout(timer);
+  for (const { timer } of pendingToggle.values()) {
+    clearTimeout(timer);
+  }
   pendingToggle.clear();
 });
 
@@ -1223,6 +1307,27 @@ describe("Popover", () => {
     expect(screen.getByRole("button", { name: "Filters" })).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("gives focus back to its trigger when it unmounts while it's open, with the toggle a task late", async () => {
+    const shownPopover = ref(true);
+    render({
+      render: () => [
+        button("Filters", { popovertarget: "filters" }),
+        shownPopover.value ? h(Popover, { id: "filters", title: "Filters" }, () => field("open-only", "Open issues only")) : null,
+      ],
+    });
+    deferToggle = true;
+    const trigger = screen.getByRole("button", { name: "Filters" });
+    // As in Safari, where a click doesn't focus the button.
+    trigger.click();
+    await toggled();
+    expect(screen.getByRole("textbox", { name: "Open issues only" })).toHaveFocus();
+
+    shownPopover.value = false;
+    await nextTick();
+    await toggled();
+    expect(trigger).toHaveFocus();
+  });
+
   it("opens again when your code closes it and opens it again before the browser says it closed", async () => {
     deferToggle = true;
     const open = ref(false);
@@ -1340,9 +1445,12 @@ describe("Popover", () => {
     const fallback = render(Popover, { props: { id: "hint", title: "Hint" } });
     expect(fallback.container.querySelector(".popover")).toHaveAttribute("data-placement", "bottom");
     // The close button is a Button, with parts of its own.
-    const parts = [...el.querySelectorAll("[data-slot]")]
+    const parts = el
+      .querySelectorAll("[data-slot]")
+      .values()
       .filter((part) => !part.parentElement?.closest('[data-slot="close"]'))
-      .map((part) => part.getAttribute("data-slot"));
+      .map((part) => part.getAttribute("data-slot"))
+      .toArray();
     expect(parts).toEqual(["header", "title", "close", "body", "arrow"]);
   });
 
@@ -1351,7 +1459,7 @@ describe("Popover", () => {
     const first = render(Popover, options).container.innerHTML;
     const { container, rerender } = render(Popover, options);
     // The anchor's name is generated once it mounts, so it's left out of the comparison.
-    const strip = (html: string) => html.replace(/ style="[^"]*"/g, "");
+    const strip = (html: string) => html.replaceAll(/ style="[^"]*"/g, "");
     expect(strip(container.innerHTML)).toBe(strip(first));
     expect(first).not.toMatch(/id="(?!filters)/);
 
@@ -1390,7 +1498,7 @@ describe("Popover", () => {
     screen.getByRole("button", { name: "Filters" }).getBoundingClientRect = () => new DOMRect(0, 300, 10, 30);
     popover().getBoundingClientRect = () => new DOMRect(0, 170, 200, 120);
     await vi.waitFor(() => expect(popover()).toHaveAttribute("data-side", "top"));
-    expect(parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
+    expect(Number.parseFloat((arrow as HTMLElement).style.left)).toBeCloseTo(8 + 12 / Math.SQRT2);
   });
 
   it("points its arrow from the side it opened on when the screen's edge pushes it off the trigger's centre", async () => {
@@ -1419,7 +1527,9 @@ describe("Popover", () => {
     await openFrom(user);
     expect(popover()).toHaveAttribute("data-state", "open");
     expect(popover().querySelector('[data-slot="arrow"]')).toBeNull();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
+    });
     expect(popover()).not.toHaveAttribute("data-side");
   });
 
@@ -1442,7 +1552,7 @@ describe("Popover", () => {
     expect(anchor).toMatch(/^--popover-/);
     expect(popover().style.getPropertyValue("position-anchor")).toBe(anchor);
     // Its start is the trigger's right in right-to-left text: past its right edge, at 500.
-    expect(parseFloat(popover().style.left)).toBe(500);
+    expect(Number.parseFloat(popover().style.left)).toBe(500);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -1465,7 +1575,7 @@ describe("Popover", () => {
     await openFrom(user);
     await nextTick();
     // Its end is the trigger's left: 200px wide, before its left edge at 400.
-    expect(parseFloat(popover().style.left)).toBe(200);
+    expect(Number.parseFloat(popover().style.left)).toBe(200);
     unmount();
 
     page();
@@ -1474,7 +1584,7 @@ describe("Popover", () => {
     size();
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(640);
+    expect(Number.parseFloat(popover().style.top)).toBe(640);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();
@@ -1492,7 +1602,7 @@ describe("Popover", () => {
 
     await openFrom(user);
     await nextTick();
-    expect(parseFloat(popover().style.top)).toBe(336);
+    expect(Number.parseFloat(popover().style.top)).toBe(336);
     Reflect.deleteProperty(document.documentElement, "clientWidth");
     Reflect.deleteProperty(document.documentElement, "clientHeight");
     supports.mockRestore();

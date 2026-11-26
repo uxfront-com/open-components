@@ -5,14 +5,14 @@ import Switch from "~/reference/switch/Switch.vue";
 </script>
 
 <template>
-  <SwitchExample>
-    <div class="flex w-full max-w-sm items-start justify-between gap-4">
-      <div class="flex flex-col gap-0.5">
-        <label for="label-replies" class="text-sm font-medium">Email me about replies</label>
-        <p id="label-replies-hint" class="text-muted text-sm">At most one email a day</p>
-      </div>
-      <Switch id="label-replies" aria-describedby="label-replies-hint" />
-    </div>
-    <template v-if="$slots.default" #code><slot /></template>
-  </SwitchExample>
+	<SwitchExample>
+		<div class="flex w-full max-w-sm items-start justify-between gap-4">
+			<div class="flex flex-col gap-0.5">
+				<label for="label-replies" class="text-sm font-medium">Email me about replies</label>
+				<p id="label-replies-hint" class="text-muted text-sm">At most one email a day</p>
+			</div>
+			<Switch id="label-replies" aria-describedby="label-replies-hint" />
+		</div>
+		<template v-if="$slots.default" #code><slot /></template>
+	</SwitchExample>
 </template>

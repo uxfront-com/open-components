@@ -24,11 +24,13 @@ const DEFAULT_TARGET = "react";
  * as `button/ButtonVariants` gives `src/components/button/examples/ButtonVariants`.
  */
 export function inklineExampleId(example: string): string {
-  const [component, name, ...rest] = example.split("/");
-  if (!component || !name || rest.length) {
-    throw new Error(`An Inkline example is "<component>/<Name>", like "button/ButtonVariants", not ${JSON.stringify(example)}.`);
-  }
-  return `src/components/${component}/examples/${name}`;
+	const [component, name, ...rest] = example.split("/");
+	if (!component || !name || rest.length) {
+		throw new Error(
+			`An Inkline example is "<component>/<Name>", like "button/ButtonVariants", not ${JSON.stringify(example)}.`,
+		);
+	}
+	return `src/components/${component}/examples/${name}`;
 }
 
 /**
@@ -39,14 +41,18 @@ export function inklineExampleId(example: string): string {
  * would show a message in place of the component.
  */
 export function inklineTarget(framework: string | undefined, { controls = false } = {}): string {
-  if (!framework || !TARGETS.has(framework)) return DEFAULT_TARGET;
-  if (controls && framework === "astro") return DEFAULT_TARGET;
-  return framework;
+	if (!framework || !TARGETS.has(framework)) {
+		return DEFAULT_TARGET;
+	}
+	if (controls && framework === "astro") {
+		return DEFAULT_TARGET;
+	}
+	return framework;
 }
 
 /** The embed's mode for the site's colour mode: `dark` stays dark, and anything else is light. */
 export function embedTheme(mode: string | undefined): EmbedTheme {
-  return mode === "dark" ? "dark" : "light";
+	return mode === "dark" ? "dark" : "light";
 }
 
 /**
@@ -54,28 +60,30 @@ export function embedTheme(mode: string | undefined): EmbedTheme {
  * ignores the messages that change it, and always asks for its height.
  */
 export function inklineEmbedUrl({
-  example,
-  target,
-  theme,
-  controls = false,
+	example,
+	target,
+	theme,
+	controls = false,
 }: {
-  example: string;
-  target: string;
-  theme: EmbedTheme;
-  controls?: boolean;
+	example: string;
+	target: string;
+	theme: EmbedTheme;
+	controls?: boolean;
 }): string {
-  const url = new URL("/embed.html", INKLINE_PREVIEW_ORIGIN);
-  url.searchParams.set("example", inklineExampleId(example));
-  url.searchParams.set("target", target);
-  if (controls) url.searchParams.set("controls", "true");
-  url.searchParams.set("theme", theme);
-  url.searchParams.set("resize", "true");
-  return url.href;
+	const url = new URL("/embed.html", INKLINE_PREVIEW_ORIGIN);
+	url.searchParams.set("example", inklineExampleId(example));
+	url.searchParams.set("target", target);
+	if (controls) {
+		url.searchParams.set("controls", "true");
+	}
+	url.searchParams.set("theme", theme);
+	url.searchParams.set("resize", "true");
+	return url.href;
 }
 
 /** The message that changes an embed's mode in place, with no reload. */
 export function themeMessage(theme: EmbedTheme) {
-  return { type: MESSAGE_TYPE, kind: "theme", theme } as const;
+	return { type: MESSAGE_TYPE, kind: "theme", theme } as const;
 }
 
 /**
@@ -84,15 +92,21 @@ export function themeMessage(theme: EmbedTheme) {
  * so another frame, or another page, can't resize it.
  */
 export function readResizeMessage(
-  event: { origin: string; source: unknown; data: unknown },
-  frame: unknown,
+	event: { origin: string; source: unknown; data: unknown },
+	frame: unknown,
 ): number | undefined {
-  if (event.origin !== INKLINE_PREVIEW_ORIGIN || !frame || event.source !== frame) return undefined;
-  const data = event.data as { type?: unknown; kind?: unknown; height?: unknown } | null;
-  if (typeof data !== "object" || data === null) return undefined;
-  if (data.type !== MESSAGE_TYPE || data.kind !== "resize") return undefined;
-  const { height } = data;
-  return typeof height === "number" && Number.isFinite(height) && height > 0 ? height : undefined;
+	if (event.origin !== INKLINE_PREVIEW_ORIGIN || !frame || event.source !== frame) {
+		return undefined;
+	}
+	const data = event.data as { type?: unknown; kind?: unknown; height?: unknown } | null;
+	if (typeof data !== "object" || data === null) {
+		return undefined;
+	}
+	if (data.type !== MESSAGE_TYPE || data.kind !== "resize") {
+		return undefined;
+	}
+	const { height } = data;
+	return typeof height === "number" && Number.isFinite(height) && height > 0 ? height : undefined;
 }
 
 /**
@@ -102,5 +116,5 @@ export function readResizeMessage(
  * is lost, and it loads in the mode its URL had.
  */
 export function themeOnReady(urlTheme: EmbedTheme, current: EmbedTheme): EmbedTheme | undefined {
-  return urlTheme === current ? undefined : current;
+	return urlTheme === current ? undefined : current;
 }

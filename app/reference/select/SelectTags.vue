@@ -7,7 +7,7 @@ import type { SelectOption } from "./listbox";
 // after it, so Tab reaches the remove buttons after the control.
 
 const { selected, removable = true } = defineProps<{
-  selected: SelectOption[];
+  selected: Array<SelectOption>;
   /** Off while the control is disabled or read-only, which leaves the tags without their buttons. */
   removable?: boolean;
   removeLabel: (label: string) => string;

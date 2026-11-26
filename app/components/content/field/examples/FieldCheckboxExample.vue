@@ -6,16 +6,16 @@ import Field from "~/reference/field/Field.vue";
 </script>
 
 <template>
-  <FieldExample>
-    <Field
-      id="checkbox-terms"
-      hint="You can read them before you sign up"
-      error="Agree to the terms to create an account"
-      required
-      class="w-full max-w-sm"
-    >
-      <Checkbox name="terms">I agree to the terms</Checkbox>
-    </Field>
-    <template v-if="$slots.default" #code><slot /></template>
-  </FieldExample>
+	<FieldExample>
+		<Field
+			id="checkbox-terms"
+			hint="You can read them before you sign up"
+			error="Agree to the terms to create an account"
+			required
+			class="w-full max-w-sm"
+		>
+			<Checkbox name="terms">I agree to the terms</Checkbox>
+		</Field>
+		<template v-if="$slots.default" #code><slot /></template>
+	</FieldExample>
 </template>

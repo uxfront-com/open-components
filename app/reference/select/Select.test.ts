@@ -5,7 +5,8 @@ import { createSSRApp, h, nextTick, ref } from "vue";
 import { renderToString } from "vue/server-renderer";
 import Dialog from "../dialog/Dialog.vue";
 import Field from "../field/Field.vue";
-import Select, { type SelectItem, type SelectProps } from "./Select.vue";
+import Select from "./Select.vue";
+import type { SelectItem, SelectProps } from "./Select.vue";
 
 // jsdom has no Popover API, matchMedia or scrollIntoView, so these stand in for them:
 // showing and hiding with `beforetoggle`, the light dismiss of a press outside the panel,
@@ -17,41 +18,59 @@ const mediaListeners = new Set<() => void>();
 
 function toggle(el: HTMLElement, newState: "open" | "closed") {
   el.dispatchEvent(Object.assign(new Event("beforetoggle"), { newState, oldState: newState === "open" ? "closed" : "open" }));
-  if (newState === "open") shown.add(el);
-  else shown.delete(el);
+  if (newState === "open") {
+    shown.add(el);
+  } else {
+    shown.delete(el);
+  }
   // jsdom can't match :popover-open, so this stands in for it.
   el.style.display = newState === "open" ? "block" : "none";
 }
 
 beforeAll(() => {
   HTMLElement.prototype.showPopover = function (this: HTMLElement) {
-    if (!shown.has(this)) toggle(this, "open");
+    if (!shown.has(this)) {
+      toggle(this, "open");
+    }
   };
   HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
-    if (shown.has(this)) toggle(this, "closed");
+    if (shown.has(this)) {
+      toggle(this, "closed");
+    }
   };
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.open = true;
   };
   HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    if (!this.open) return;
+    if (!this.open) {
+      return;
+    }
     this.open = false;
     this.dispatchEvent(new Event("close"));
   };
   Element.prototype.scrollIntoView = vi.fn();
-  window.matchMedia = ((query: string) => ({
-    get matches() {
-      return query === "(pointer: coarse)" && coarse;
-    },
-    addEventListener: (_: string, listener: () => void) => mediaListeners.add(listener),
-    removeEventListener: (_: string, listener: () => void) => mediaListeners.delete(listener),
-  })) as unknown as typeof window.matchMedia;
+  window.matchMedia = (query: string) =>
+    ({
+      get matches() {
+        return query === "(pointer: coarse)" && coarse;
+      },
+      addEventListener: (_: string, listener: () => void) => {
+        mediaListeners.add(listener);
+      },
+      removeEventListener: (_: string, listener: () => void) => {
+        mediaListeners.delete(listener);
+      },
+    }) as MediaQueryList;
 
   // A press that starts outside every open panel closes them, before the click arrives.
   document.addEventListener(
     "pointerup",
     (event) => {
-      for (const el of shown) if (!el.contains(event.target as Node)) el.hidePopover();
+      for (const el of shown) {
+        if (!el.contains(event.target as Node)) {
+          el.hidePopover();
+        }
+      }
     },
     true,
   );
@@ -69,13 +88,13 @@ afterEach(() => {
   warn.mockRestore();
 });
 
-const countries: SelectItem[] = [
+const countries: Array<SelectItem> = [
   { value: "fr", label: "France" },
   { value: "de", label: "Germany", disabled: true },
   { value: "es", label: "Spain" },
   { value: "nz", label: "New Zealand" },
 ];
-const fruit: SelectItem[] = [
+const fruit: Array<SelectItem> = [
   { label: "Citrus", options: [{ value: "lemon", label: "Lemon" }, { value: "lime", label: "Lime" }] },
   { separator: true },
   { value: "apple", label: "Apple" },
@@ -104,8 +123,8 @@ const listbox = () => document.querySelector<HTMLElement>('[role="listbox"]')!;
 // jsdom enters a selected option in the form data even when it's disabled, which the HTML
 // Standard and browsers don't, so this leaves those out. The checklist checks it in a browser too.
 const submitted = () => {
-  const disabled = Array.from(native().selectedOptions).filter((option) => option.disabled).map((option) => option.value);
-  return new FormData(form()).getAll("country").filter((value) => !disabled.includes(String(value)));
+  const disabled = new Set(Array.from(native().selectedOptions).filter((option) => option.disabled).map((option) => option.value));
+  return new FormData(form()).getAll("country").filter((value) => !disabled.has(String(value)));
 };
 const option = (name: string) => within(listbox()).getByRole("option", { name, hidden: true });
 const announcements = () => document.querySelector('[role="status"]')?.textContent ?? "";
@@ -529,7 +548,7 @@ describe("Select", () => {
     it("fires one update, in the list's order, when a value is removed", async () => {
       const user = userEvent.setup();
       const value = ref(["es", "fr", "de"]);
-      const update = vi.fn((next: unknown) => (value.value = next as string[]));
+      const update = vi.fn((next: unknown) => (value.value = next as Array<string>));
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -658,7 +677,7 @@ describe("Select", () => {
     it("has the new value by the time a listener on it hears input and change", async () => {
       const user = userEvent.setup();
       const value = ref("fr");
-      const heard: string[] = [];
+      const heard: Array<string> = [];
       render({
         render: () =>
           h(Field, { label: "Country" }, () =>
@@ -682,7 +701,9 @@ describe("Select", () => {
       const user = userEvent.setup();
       await page({ multiple: true, value: ["fr", "es"] });
       if (isCoarse) {
-        for (const item of Array.from(native().options)) item.selected = item.value === "nz";
+        for (const item of Array.from(native().options)) {
+          item.selected = item.value === "nz";
+        }
         native().dispatchEvent(new Event("change", { bubbles: true }));
       } else {
         await user.click(trigger());
@@ -779,7 +800,9 @@ describe("Select", () => {
     it("reports several values as an array", async () => {
       const update = vi.fn();
       await page({ multiple: true, "onUpdate:modelValue": update });
-      for (const option of Array.from(native().options)) option.selected = option.value !== "nz";
+      for (const option of Array.from(native().options)) {
+        option.selected = option.value !== "nz";
+      }
       native().dispatchEvent(new Event("change", { bubbles: true }));
       expect(update).toHaveBeenCalledWith(["fr", "de", "es"]);
     });
@@ -895,7 +918,7 @@ describe("Select", () => {
               {
                 leading: () => h("i", { "data-testid": "leading" }),
                 arrow: () => h("i", { "data-testid": "arrow" }),
-                value: ({ selected }: { selected: { label: string }[] }) => `Picked ${selected.length}`,
+                value: ({ selected }: { selected: Array<{ label: string }> }) => `Picked ${selected.length}`,
                 option: ({ option }: { option: { label: string } }) => `Fruit: ${option.label}`,
                 tag: ({ option }: { option: { label: string } }) => `Tag: ${option.label}`,
                 "group-label": ({ label }: { label: string }) => `Group: ${label}`,
@@ -1027,7 +1050,7 @@ describe("Select", () => {
       const app = createSSRApp({ render: form });
       app.mount(host);
       await nextTick();
-      expect(warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes("Hydration"))).toEqual([]);
+      expect(warn.mock.calls.filter((call: Array<unknown>) => String(call[0]).includes("Hydration"))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       app.unmount();
       host.remove();
@@ -1051,7 +1074,9 @@ describe("Select", () => {
         set(this: HTMLOptionElement, value: boolean) {
           const gaining = value && !this.hasAttribute("selected");
           defaultSelected.set!.call(this, value);
-          if (gaining) this.selected = true;
+          if (gaining) {
+            this.selected = true;
+          }
         },
       });
       const el = host.querySelector("select")!;

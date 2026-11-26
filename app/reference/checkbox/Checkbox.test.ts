@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { h, nextTick, ref, type ComponentPublicInstance } from "vue";
+import { h, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
 import Checkbox from "./Checkbox.vue";
 
 const terms = () => "I agree to the terms";
@@ -125,7 +126,7 @@ describe("Checkbox", () => {
   it("binds checked with v-model, or keeps its own state without it, starting from checked", async () => {
     const user = userEvent.setup();
     const agreed = ref(false);
-    const seen: boolean[] = [];
+    const seen: Array<boolean> = [];
     render({
       render: () => [
         h(
