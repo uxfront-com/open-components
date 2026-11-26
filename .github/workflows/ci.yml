@@ -23,15 +23,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # Installs the version pinned by `packageManager` in package.json.
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .node-version
-          cache: pnpm
       # Also runs `nuxt prepare` for the site and the MCP server (postinstall), which
       # writes the .nuxt tsconfigs.
-      - run: pnpm install --frozen-lockfile
+      - name: Setup
+        uses: uxfront-com/.github/.github/actions/setup@35f7cdaf9b3c62c04b411c6c454c6f75ae43e54b # main
       - run: pnpm check-types
       # The component pages show app/reference/ as code: fails if they drift apart.
       - run: pnpm check-reference
@@ -44,12 +39,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - name: Setup
+        uses: uxfront-com/.github/.github/actions/setup@35f7cdaf9b3c62c04b411c6c454c6f75ae43e54b # main
       # The reference implementations' tests, which the component pages show as code,
       # and the contracts, validated against public/schemas/contract.json.
       - run: pnpm test
@@ -62,14 +53,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - name: Install
+      - name: Setup
         id: install
-        run: pnpm install --frozen-lockfile
+        uses: uxfront-com/.github/.github/actions/setup@35f7cdaf9b3c62c04b411c6c454c6f75ae43e54b # main
       # oxfmt with the shared @uxfront config (oxfmt.config.ts): fails on any file that
       # `pnpm format` would change.
       - name: Format
@@ -89,12 +75,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - name: Setup
+        uses: uxfront-com/.github/.github/actions/setup@35f7cdaf9b3c62c04b411c6c454c6f75ae43e54b # main
       # Fails on any page that doesn't prerender (`failOnError` in nuxt.config.ts).
       - run: pnpm build
       # What search engines and AI crawlers get: the sitemap's pages and their head
