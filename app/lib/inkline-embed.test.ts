@@ -12,6 +12,12 @@ import {
 	themeOnReady,
 } from "./inkline-embed";
 
+describe("INKLINE_PREVIEW_ORIGIN", () => {
+	it("is Inkline's preview host", () => {
+		expect(INKLINE_PREVIEW_ORIGIN).toBe("https://preview.inkline.io");
+	});
+});
+
 describe("inklineExampleId", () => {
 	it("finds an example in its component's examples folder", () => {
 		expect(inklineExampleId("button/ButtonVariants")).toBe(

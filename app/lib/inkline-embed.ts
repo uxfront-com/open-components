@@ -3,7 +3,7 @@
 // Unframework's contract (its preview docs, "Embed an example"). The only link
 // to Inkline is this origin, so moving the preview to another domain changes
 // this one line.
-export const INKLINE_PREVIEW_ORIGIN = "https://inkline-preview.blue-water-0397.workers.dev";
+export const INKLINE_PREVIEW_ORIGIN = "https://preview.inkline.io";
 
 // The `type` both of the embed's messages carry.
 const MESSAGE_TYPE = "unframework:embed";
