@@ -49,6 +49,7 @@
 
 -   [The standard](#the-standard)
 -   [Reading the standard](#reading-the-standard)
+-   [Where this fits](#where-this-fits)
 -   [For agents](#for-agents)
 -   [Bugs and feature requests](#bugs-and-feature-requests)
 -   [Contributing](#contributing)
@@ -75,6 +76,16 @@ your agents write it.
 Start with the [Introduction](https://opencomponents.dev/docs/getting-started/introduction), which walks through the three
 layers and what each one asks of a component. The guidelines live as markdown in
 [`content/docs/`](./content/docs), so you can also read them right here on GitHub.
+
+## Where this fits
+
+Open Components is the standard of the UXFront projects: it says what a component must do, and
+why, and every component is defined here first, before it's styled or built. Inkline, the UI
+library, builds on it: each Inkline component follows its Open Components standard, takes its look
+from a recipe written with Styleframe and is compiled to every framework by Unframework. The
+standard leaves the code to those layers, so its pages are moving to Inkline's live examples,
+starting with the Button's. The [UXFront vision](https://github.com/uxfront-com/.github/blob/main/VISION.md)
+says how the five projects connect and what each one's docs keep.
 
 ## For agents
 

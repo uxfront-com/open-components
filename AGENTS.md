@@ -4,6 +4,8 @@ Open Components is a standard for UI components, with guidelines for their user 
 
 Most changes here are to the guidelines themselves, so how they read matters as much as what they say. [Writing the docs](#writing-the-docs) covers the voice, style and format. [`.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md) explains how every part of the site works, so read the section on the part you're changing.
 
+Before you plan, build or write docs here, read the [UXFront vision](https://raw.githubusercontent.com/uxfront-com/.github/main/VISION.md). It says how Open Components, Unframework, Styleframe and Inkline connect, what each layer owns and what each docs site keeps, so you'll know whether a change belongs in the standard or in another project, and when to link rather than repeat.
+
 ## Commands
 
 ```bash
